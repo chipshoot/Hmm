@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utility", "Utility", "{35E0
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.Utility", "src\Hmm.Utility\Hmm.Utility.csproj", "{FA3B5A83-66B4-4254-A89A-B2F23443873C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HmmCore", "HmmCore", "{A8FC641A-9B63-4163-BD00-E0E2214AD262}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hmm.Core", "Hmm.Core", "{A8FC641A-9B63-4163-BD00-E0E2214AD262}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.Core", "src\Hmm.Core\Hmm.Core.csproj", "{17765E1D-72F0-4AE7-8AB6-DCDA227C612A}"
 EndProject
@@ -21,13 +21,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.Core.Dal.EF", "src\Hmm.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.Core.Dal.EF.Tests", "src\Hmm.Core.Dal.EF.Tests\Hmm.Core.Dal.EF.Tests.csproj", "{49995799-C24B-4391-8FA3-A3579B20F649}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HmmAutomobile", "src\HmmAutomobile\HmmAutomobile.csproj", "{3E0231C4-D1FF-45ED-A1CF-CF8649A0F46F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.BigCalendar", "src\Hmm.BigCalendar\Hmm.BigCalendar.csproj", "{B0FFDEA9-3E5B-46A7-BDB8-3F2AE329A858}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HmmAutomobile.Tests", "src\HmmAutomobile.Tests\HmmAutomobile.Tests.csproj", "{F1F24A30-1F7A-45CD-BB85-5F2629158D3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.BigCalendar.Test", "src\Hmm.BigCalendar.Test\Hmm.BigCalendar.Test.csproj", "{36B7D196-1776-470F-871D-117E5EAB2B57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hmm.BigCalendar", "src\Hmm.BigCalendar\Hmm.BigCalendar.csproj", "{B0FFDEA9-3E5B-46A7-BDB8-3F2AE329A858}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.Automobile", "src\Hmm.Automobile\Hmm.Automobile.csproj", "{A2ED49E9-CB9F-4E44-ABC4-C48A3FAE2443}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hmm.BigCalendar.Test", "src\Hmm.BigCalendar.Test\Hmm.BigCalendar.Test.csproj", "{36B7D196-1776-470F-871D-117E5EAB2B57}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.Automobile.Tests", "src\Hmm.Automobile.Tests\Hmm.Automobile.Tests.csproj", "{16FC8FF7-F5EE-48A1-997F-3400F4128803}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,14 +59,6 @@ Global
 		{49995799-C24B-4391-8FA3-A3579B20F649}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49995799-C24B-4391-8FA3-A3579B20F649}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49995799-C24B-4391-8FA3-A3579B20F649}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3E0231C4-D1FF-45ED-A1CF-CF8649A0F46F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3E0231C4-D1FF-45ED-A1CF-CF8649A0F46F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3E0231C4-D1FF-45ED-A1CF-CF8649A0F46F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3E0231C4-D1FF-45ED-A1CF-CF8649A0F46F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F1F24A30-1F7A-45CD-BB85-5F2629158D3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F1F24A30-1F7A-45CD-BB85-5F2629158D3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F1F24A30-1F7A-45CD-BB85-5F2629158D3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F1F24A30-1F7A-45CD-BB85-5F2629158D3A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B0FFDEA9-3E5B-46A7-BDB8-3F2AE329A858}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B0FFDEA9-3E5B-46A7-BDB8-3F2AE329A858}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0FFDEA9-3E5B-46A7-BDB8-3F2AE329A858}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -75,6 +67,14 @@ Global
 		{36B7D196-1776-470F-871D-117E5EAB2B57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36B7D196-1776-470F-871D-117E5EAB2B57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36B7D196-1776-470F-871D-117E5EAB2B57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2ED49E9-CB9F-4E44-ABC4-C48A3FAE2443}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2ED49E9-CB9F-4E44-ABC4-C48A3FAE2443}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2ED49E9-CB9F-4E44-ABC4-C48A3FAE2443}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2ED49E9-CB9F-4E44-ABC4-C48A3FAE2443}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16FC8FF7-F5EE-48A1-997F-3400F4128803}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16FC8FF7-F5EE-48A1-997F-3400F4128803}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16FC8FF7-F5EE-48A1-997F-3400F4128803}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16FC8FF7-F5EE-48A1-997F-3400F4128803}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,7 +86,7 @@ Global
 		{BBBDB8C5-4481-423A-952A-794A3DD8E101} = {4BDAD672-E38F-4FBB-BCB4-6BB0E7D1CA3A}
 		{D8C6637E-1190-4BF1-ACE2-FE2391F3B98F} = {A8FC641A-9B63-4163-BD00-E0E2214AD262}
 		{49995799-C24B-4391-8FA3-A3579B20F649} = {4BDAD672-E38F-4FBB-BCB4-6BB0E7D1CA3A}
-		{F1F24A30-1F7A-45CD-BB85-5F2629158D3A} = {4BDAD672-E38F-4FBB-BCB4-6BB0E7D1CA3A}
+		{16FC8FF7-F5EE-48A1-997F-3400F4128803} = {4BDAD672-E38F-4FBB-BCB4-6BB0E7D1CA3A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E2E0B1A5-8168-40C4-A2AD-123A52065484}
