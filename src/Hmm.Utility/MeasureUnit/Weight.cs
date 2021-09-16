@@ -1,9 +1,7 @@
-﻿using Hmm.Utility.Misc;
+﻿using Hmm.Utility.HmmNoteContentMap;
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using System.Xml.Linq;
-using Hmm.Utility.HmmNoteContentMap;
 
 namespace Hmm.Utility.MeasureUnit
 {
@@ -21,7 +19,7 @@ namespace Hmm.Utility.MeasureUnit
     ///  </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public struct Weight : IEquatable<Weight>, IComparable<Weight>, IMeasureXmlSerializable<Weight>
+    public struct Weight : IEquatable<Weight>, IComparable<Weight>
     {
         #region private fields
 
@@ -275,63 +273,5 @@ namespace Hmm.Utility.MeasureUnit
         }
 
         #endregion override public methods of System.ValueType
-
-        #region implementation of interface IHmmSerializable
-
-        public XElement Measure2Xml(XNamespace ns)
-        {
-            if (ns != null)
-            {
-                return new XElement(ns + "Weight",
-                    new XElement(ns + "Value", Value),
-                    new XElement(ns + "Unit", Unit));
-            }
-
-            return new XElement("Weight",
-                new XElement("Value", Value),
-                new XElement("Unit", Unit));
-        }
-
-        public Weight Xml2Measure(XElement xmlContent)
-        {
-            var ns = xmlContent.GetDefaultNamespace();
-            var doc = new XDocument(xmlContent);
-            var root = GetXElement("Weight", doc, ns);
-            if (root == null)
-            {
-                throw new ArgumentException("The XML element does not contains Volume element");
-            }
-
-            var wv = GetXElement("Value", root, ns);
-            if (!long.TryParse(wv?.Value, out var value))
-            {
-                throw new ArgumentException("The XML element does not contains valid value element");
-            }
-
-            var unit = GetXElement("Unit", root, ns);
-            if (string.IsNullOrEmpty(unit?.Value))
-            {
-                throw new ArgumentException("The XML element does not contains unit element");
-            }
-
-            if (!Enum.TryParse(unit.Value, true, out WeightUnit unitType))
-            {
-                throw new ArgumentException("The XML element does not contains unit element");
-            }
-
-            var weight = new Weight(value, unitType);
-            return weight;
-        }
-
-        #endregion implementation of interface IHmmSerializable
-
-        #region private methods
-
-        private static XElement GetXElement(string ename, XContainer content, XNamespace ns)
-        {
-            return ns != null ? content?.Element(ns + ename) : content?.Element(ename);
-        }
-
-        #endregion private methods
     }
 }

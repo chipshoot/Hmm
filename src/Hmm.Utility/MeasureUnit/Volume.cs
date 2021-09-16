@@ -1,10 +1,8 @@
 ﻿using Hmm.Utility.HmmNoteContentMap;
-using Hmm.Utility.Misc;
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Hmm.Utility.MeasureUnit
 {
@@ -35,7 +33,7 @@ namespace Hmm.Utility.MeasureUnit
     /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public struct Volume : IComparable<Volume>, IMeasureXmlSerializable<Volume>
+    public struct Volume : IComparable<Volume>
     {
         private const string ErrorMsg = "No volume object found";
 
@@ -488,57 +486,6 @@ namespace Hmm.Utility.MeasureUnit
                 default:
                     throw new NotImplementedException(nameof(VolumeUnit));
             }
-        }
-
-        #endregion private methods
-
-        #region implementation of interface IHmmSerializable
-
-        public XElement Measure2Xml(XNamespace ns)
-        {
-            return new XElement("Volume",
-                new XElement("Value", Value),
-                new XElement("Unit", Unit));
-        }
-
-        public Volume Xml2Measure(XElement xmlContent)
-        {
-            var ns = xmlContent.GetDefaultNamespace();
-            var doc = new XDocument(xmlContent);
-            var root = GetXElement("Volume", doc, ns);
-            if (root == null)
-            {
-                throw new ArgumentException("The XML element does not contains Volume element");
-            }
-
-            var dv = GetXElement("Value", root, ns);
-            if (!double.TryParse(dv?.Value, out var value))
-            {
-                throw new ArgumentException("The XML element does not contains valid value element");
-            }
-
-            var unit = GetXElement("Unit", root, ns);
-            if (string.IsNullOrEmpty(unit?.Value))
-            {
-                throw new ArgumentException("The XML element does not contains unit element");
-            }
-
-            if (!Enum.TryParse(unit.Value, true, out VolumeUnit unitType))
-            {
-                throw new ArgumentException("The XML element does not contains unit element");
-            }
-
-            var vol = new Volume(value, unitType);
-            return vol;
-        }
-
-        #endregion implementation of interface IHmmSerializable
-
-        #region private methods
-
-        private static XElement GetXElement(string ename, XContainer content, XNamespace ns)
-        {
-            return ns != null ? content?.Element(ns + ename) : content?.Element(ename);
         }
 
         #endregion private methods

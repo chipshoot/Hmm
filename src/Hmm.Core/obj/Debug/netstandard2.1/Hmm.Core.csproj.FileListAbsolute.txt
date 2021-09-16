@@ -1,0 +1,13 @@
+G:\Projects2\Hmm\src\Hmm.Core\bin\Debug\netstandard2.1\Hmm.Core.deps.json
+G:\Projects2\Hmm\src\Hmm.Core\bin\Debug\netstandard2.1\Hmm.Core.dll
+G:\Projects2\Hmm\src\Hmm.Core\bin\Debug\netstandard2.1\Hmm.Core.pdb
+G:\Projects2\Hmm\src\Hmm.Core\bin\Debug\netstandard2.1\Hmm.Utility.dll
+G:\Projects2\Hmm\src\Hmm.Core\bin\Debug\netstandard2.1\Hmm.Utility.pdb
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.csproj.AssemblyReference.cache
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.GeneratedMSBuildEditorConfig.editorconfig
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.AssemblyInfoInputs.cache
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.AssemblyInfo.cs
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.csproj.CoreCompileInputs.cache
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.csproj.CopyComplete
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.dll
+G:\Projects2\Hmm\src\Hmm.Core\obj\Debug\netstandard2.1\Hmm.Core.pdb

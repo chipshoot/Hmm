@@ -68,6 +68,11 @@ namespace Hmm.Utility.Misc
 
         public void PropagandaResult(ProcessingResult innerResult)
         {
+            if (innerResult == null)
+            {
+                return;
+            }
+
             Rest();
             Success = innerResult.Success;
             MessageList.AddRange(innerResult.MessageList);

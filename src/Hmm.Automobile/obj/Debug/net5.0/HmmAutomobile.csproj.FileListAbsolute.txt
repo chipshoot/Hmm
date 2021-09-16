@@ -1,0 +1,17 @@
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\HmmAutomobile.deps.json
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\HmmAutomobile.dll
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\ref\HmmAutomobile.dll
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\HmmAutomobile.pdb
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\Hmm.Core.dll
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\Hmm.Utility.dll
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\Hmm.Core.pdb
+G:\Projects2\Hmm\src\HmmAutomobile\bin\Debug\net5.0\Hmm.Utility.pdb
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.GeneratedMSBuildEditorConfig.editorconfig
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.AssemblyInfoInputs.cache
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.AssemblyInfo.cs
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.csproj.CoreCompileInputs.cache
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.csproj.CopyComplete
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.dll
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\ref\HmmAutomobile.dll
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.pdb
+G:\Projects2\Hmm\src\HmmAutomobile\obj\Debug\net5.0\HmmAutomobile.csproj.AssemblyReference.cache

@@ -23,7 +23,7 @@ namespace Hmm.Core.NoteSerializer
             Catalog = catalog;
         }
 
-        private XNamespace ContentNamespace { get; }
+        protected XNamespace ContentNamespace { get; }
         
         private XmlSchemaSet Schemas => _schemas ??= GetSchema();
 
@@ -47,22 +47,25 @@ namespace Hmm.Core.NoteSerializer
                 return null;
             }
 
-            // if entity is HmmNote or its child
-            if (entity is HmmNote hmmNote)
+            switch (entity)
             {
-                var note = new HmmNote
+                // if entity is HmmNote or its child
+                case HmmNote hmmNote:
                 {
-                    Subject = hmmNote.Subject,
-                    Content = GetNoteSerializationText(entity),
-                    CreateDate = hmmNote.CreateDate,
-                    Description = hmmNote.Description,
-                    Author = hmmNote.Author,
-                    Catalog = hmmNote.Catalog
-                };
-                return note;
+                    var note = new HmmNote
+                    {
+                        Subject = hmmNote.Subject,
+                        Content = GetNoteSerializationText(entity),
+                        CreateDate = hmmNote.CreateDate,
+                        Description = hmmNote.Description,
+                        Author = hmmNote.Author,
+                        Catalog = hmmNote.Catalog
+                    };
+                    return note;
+                }
+                default:
+                    return null;
             }
-
-            return null;
         }
 
         public virtual string GetNoteSerializationText(T entity)
@@ -130,7 +133,7 @@ namespace Hmm.Core.NoteSerializer
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, ex.Message);
+                    ProcessResult.WrapException(ex);
                     xml.Root.Element("Content").Value = noteContent;
                 }
             }
@@ -157,8 +160,7 @@ namespace Hmm.Core.NoteSerializer
             catch (Exception ex)
             {
                 // ReSharper disable PossibleNullReferenceException
-                ProcessResult.AddErrorMessage(ex.Message);
-                Logger.LogError(ex, ex.Message);
+                ProcessResult.WrapException(ex);
                 xml.Root.Element("Content").Value = contentXml.ToString();
             }
 

@@ -11,11 +11,8 @@ namespace Hmm.Core.NoteSerializer
         protected NoteSerializerBase(ILogger logger)
         {
             Guard.Against<ArgumentNullException>(logger == null, nameof(logger));
-            Logger = logger;
             ProcessResult = new ProcessingResult(logger);
         }
-
-        protected ILogger Logger { get; }
 
         public abstract T GetEntity(HmmNote note);
 

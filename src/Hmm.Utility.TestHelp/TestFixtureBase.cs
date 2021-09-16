@@ -40,90 +40,62 @@ namespace Hmm.Utility.TestHelp
 
         protected IDateTimeProvider DateProvider { get; private set; }
 
-        protected void InsertSeedRecords(bool isSetupDiscount = false, bool isSetupAutomobile = false)
+        protected virtual void InsertSeedRecords(
+            List<Subsystem> systems = null,
+            List<Author> authors = null,
+            List<NoteRender> renders = null,
+            List<NoteCatalog> catalogs = null)
         {
-            var systems = new List<Subsystem>
-            {
+            systems ??= new List<Subsystem>();
+            authors ??= new List<Author>();
+            renders ??= new List<NoteRender>();
+            catalogs ??= new List<NoteCatalog>();
+
+            // Add subsystem records
+            systems.Add(
                 new Subsystem
                 {
                     Name = "HmmNote",
                     Description = "Default HMM note management"
-                },
+                });
 
-                new Subsystem
-                {
-                    Name = "Automobile",
-                    Description = "A Basic information manage system for the car"
-                }
-            };
-
-            var authors = new List<Author>
-            {
+            // Add authors records
+            authors.Add(
                 new Author
                 {
                     AccountName = "jfang",
                     IsActivated = true,
                     Description = "testing user"
-                },
+                });
+            authors.Add(
                 new Author
                 {
                     AccountName = "awang",
                     IsActivated = true,
                     Description = "testing user"
-                }
-            };
-            var renders = new List<NoteRender>
-            {
+                });
+
+            // Add default note render records
+            renders.Add(
                 new NoteRender
                 {
                     Name = "DefaultNoteRender",
                     Namespace = "Hmm.Renders",
                     IsDefault = true,
                     Description = "Testing default note render"
-                },
-                new NoteRender
-                {
-                    Name = "GasLog",
-                    Namespace = "Hmm.Renders",
-                    Description = "Testing default note render"
-                }
-            };
-            var catalogs = new List<NoteCatalog>
-            {
+                });
+
+            // Add default note catalogs
+            catalogs.Add(
                 new NoteCatalog
                 {
                     Name = "DefaultNoteCatalog",
                     Schema = "DefaultSchema",
                     Render = renders[0],
-                    Subsystem = new Subsystem{ Name =  "default subsystem" },
+                    Subsystem = new Subsystem { Name = "default subsystem" },
                     IsDefault = true,
                     Description = "Testing catalog"
-                },
-                new NoteCatalog
-                {
-                    Name = "GasLog",
-                    Schema = "GasLogSchema",
-                    Subsystem = new Subsystem{ Name =  "default subsystem" },
-                    Render = renders[1],
-                    Description = "Testing catalog"
-                },
-                new NoteCatalog
-                {
-                    Name = "Automobile",
-                    Schema = "AutomobileSchema",
-                    Subsystem = new Subsystem{ Name =  "default subsystem" },
-                    Render = renders[0],
-                    Description = "Testing automobile note"
-                },
-                new NoteCatalog
-                {
-                    Name = "GasDiscount",
-                    Schema = "GasDiscount",
-                    Subsystem = new Subsystem{ Name =  "default subsystem" },
-                    Render = renders[0],
-                    Description = "Testing discount note"
-                }
-            };
+                });
 
             SetupRecords(authors, renders, catalogs, systems);
         }
@@ -192,6 +164,34 @@ namespace Hmm.Utility.TestHelp
             _renders.Clear();
             _catalogs.Clear();
             _notes.Clear();
+        }
+
+        protected void AddEntity<T>(T entity)
+        {
+            switch (entity)
+            {
+                case HmmNote note:
+                    _notes.Add(note);
+                    break;
+
+                case NoteCatalog cat:
+                    _catalogs.Add(cat);
+                    break;
+            }
+        }
+
+        protected static string GetRandomString(int length)
+        {
+            if (length < 0)
+            {
+                return null;
+            }
+
+            var random = new Random();
+
+            const string chars = "ABCEDFGHIJKLMNOPQRSTUVWXYZ1234567890";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         private void SetMockEnvironment()
@@ -332,7 +332,8 @@ namespace Hmm.Utility.TestHelp
             });
             mockRender.Setup(c => c.Update(It.IsAny<NoteRender>())).Returns((NoteRender render) =>
             {
-                var oldRender = _renders.FirstOrDefault(c => c.Id == render.Id);
+                var renderId = render.Id;
+                var oldRender = _renders.FirstOrDefault(c => c.Id == renderId);
                 if (oldRender == null)
                 {
                     return null;
@@ -394,20 +395,6 @@ namespace Hmm.Utility.TestHelp
             });
             mockNotes.Setup(a => a.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>())).Returns(() => _notes.AsQueryable());
             return mockNotes.Object;
-        }
-
-        protected static string GetRandomString(int length)
-        {
-            if (length < 0)
-            {
-                return null;
-            }
-
-            var random = new Random();
-
-            const string chars = "ABCEDFGHIJKLMNOPQRSTUVWXYZ1234567890";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

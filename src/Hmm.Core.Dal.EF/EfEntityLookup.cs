@@ -1,6 +1,7 @@
 ﻿using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -99,5 +100,7 @@ namespace Hmm.Core.Dal.EF
 
             return entities;
         }
+
+        public ProcessingResult ProcessResult { get; } = new();
     }
 }

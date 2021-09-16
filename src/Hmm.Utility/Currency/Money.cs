@@ -1,10 +1,8 @@
-﻿using Hmm.Utility.Misc;
+﻿using Hmm.Utility.HmmNoteContentMap;
 using Hmm.Utility.Validation;
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using System.Xml.Linq;
-using Hmm.Utility.HmmNoteContentMap;
 
 namespace Hmm.Utility.Currency
 {
@@ -37,7 +35,7 @@ namespace Hmm.Utility.Currency
     /// </Summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public class Money : IComparable<Money>, IEquatable<Money>, ICloneable, IMeasureXmlSerializable<Money>
+    public class Money : IComparable<Money>, IEquatable<Money>, ICloneable
     {
         #region private fields
 
@@ -380,63 +378,5 @@ namespace Hmm.Utility.Currency
                 throw new ArgumentException($"Different money found {first.CurrencyName} {operation} {second.CurrencyName}");
             }
         }
-
-        #region implementation of interface IMeasureXmlSerializable<Money>
-
-        public XElement Measure2Xml(XNamespace ns)
-        {
-            if (ns != null)
-            {
-                return new XElement(ns + "Money",
-                    new XElement(ns + "Value", InternalAmount),
-                    new XElement(ns + "Code", CurrencyCode));
-            }
-
-            return new XElement("Money",
-                new XElement("Value", InternalAmount),
-                new XElement("Code", CurrencyCode));
-        }
-
-        public Money Xml2Measure(XElement xmlContent)
-        {
-            var ns = xmlContent.GetDefaultNamespace();
-            var doc = new XDocument(xmlContent);
-            var root = GetXElement("Money", doc, ns);
-            if (root == null)
-            {
-                throw new ArgumentException("The XML element does not contains Money element");
-            }
-
-            var dv = GetXElement("Value", root, ns);
-            if (!double.TryParse(dv?.Value, out var value))
-            {
-                throw new ArgumentException("The Money XML element does not contains valid value element");
-            }
-
-            var code = GetXElement("Code", root, ns);
-            if (string.IsNullOrEmpty(code?.Value))
-            {
-                throw new ArgumentException("The Money XML element does not contains code element");
-            }
-
-            if (!Enum.TryParse(code.Value, true, out CurrencyCodeType codeType))
-            {
-                throw new ArgumentException("The Money XML element does not contains valid code element");
-            }
-
-            var money = new Money(value, codeType);
-            return money;
-        }
-
-        #endregion implementation of interface IMeasureXmlSerializable<Money>
-
-        #region private methods
-
-        private static XElement GetXElement(string eName, XContainer content, XNamespace ns)
-        {
-            return ns != null ? content?.Element(ns + eName) : content?.Element(eName);
-        }
-
-        #endregion private methods
     }
 }

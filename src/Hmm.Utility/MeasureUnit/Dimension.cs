@@ -1,10 +1,8 @@
 ﻿using Hmm.Utility.HmmNoteContentMap;
-using Hmm.Utility.Misc;
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Hmm.Utility.MeasureUnit
 {
@@ -36,7 +34,7 @@ namespace Hmm.Utility.MeasureUnit
     /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public struct Dimension : IComparable<Dimension>, IMeasureXmlSerializable<Dimension>
+    public struct Dimension : IComparable<Dimension>
     {
         #region private fields
 
@@ -432,65 +430,6 @@ namespace Hmm.Utility.MeasureUnit
                 default:
                     return (long)Math.Round(value * 10.0, 0);
             }
-        }
-
-        #endregion private methods
-
-        #region implementation of interface IMeasureXmlSerializable
-
-        public XElement Measure2Xml(XNamespace ns)
-        {
-            if (ns != null)
-            {
-                return new XElement(ns + "Dimension",
-                    new XElement(ns + "Value", Value),
-                    new XElement(ns + "Unit", Unit));
-            }
-
-            return new XElement("Dimension",
-                new XElement("Value", Value),
-                new XElement("Unit", Unit));
-        }
-
-        public Dimension Xml2Measure(XElement xmlContent)
-        {
-            var ns = xmlContent.GetDefaultNamespace();
-            var doc = new XDocument(xmlContent);
-            var root = GetXElement("Dimension", doc, ns);
-            if (root == null)
-            {
-                throw new ArgumentException("The XML element does not contains Dimension element");
-            }
-
-            var dv = GetXElement("Value", root, ns);
-            if (!double.TryParse(dv?.Value, out var value))
-            {
-                throw new ArgumentException("The XML element does not contains valid value element");
-            }
-
-            var unit = GetXElement("Unit", root, ns);
-            if (string.IsNullOrEmpty(unit?.Value))
-            {
-                throw new ArgumentException("The XML element does not contains unit element");
-            }
-
-            if (!Enum.TryParse(unit.Value, true, out DimensionUnit unitType))
-            {
-                throw new ArgumentException("The XML element does not contains unit element");
-            }
-
-            var dim = new Dimension(value, unitType);
-
-            return dim;
-        }
-
-        #endregion implementation of interface IMeasureXmlSerializable
-
-        #region private methods
-
-        private static XElement GetXElement(string ename, XContainer content, XNamespace ns)
-        {
-            return ns != null ? content?.Element(ns + ename) : content?.Element(ename);
         }
 
         #endregion private methods
