@@ -5,7 +5,7 @@ using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Validation;
 
-namespace Hmm.Core.DefaultManager.Validation
+namespace Hmm.Core.DefaultManager.Validator
 {
     public class NoteValidator : ValidatorBase<HmmNote>
     {

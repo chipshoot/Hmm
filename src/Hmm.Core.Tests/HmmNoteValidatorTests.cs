@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Hmm.Core.DefaultManager;
-using Hmm.Core.DefaultManager.Validation;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;

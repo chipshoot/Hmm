@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="DefaultManager\Validation\ExistsUserValidator.cs" />
-    <Compile Remove="DefaultManager\Validation\HmmNoteValidator.cs" />
+    <Compile Remove="DefaultManager\Validator\ExistsUserValidator.cs" />
+    <Compile Remove="DefaultManager\Validator\HmmNoteValidator.cs" />
   </ItemGroup>
 
   <ItemGroup>

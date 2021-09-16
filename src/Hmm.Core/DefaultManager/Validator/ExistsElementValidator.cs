@@ -4,7 +4,7 @@ using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 
-namespace Hmm.Core.DefaultManager.Validation
+namespace Hmm.Core.DefaultManager.Validator
 {
     public class ExistsElementValidator<T> : AbstractValidator<T> where T : Entity
     {

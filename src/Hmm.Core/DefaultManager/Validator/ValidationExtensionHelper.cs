@@ -2,7 +2,7 @@
 using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 
-namespace Hmm.Core.DefaultManager.Validation
+namespace Hmm.Core.DefaultManager.Validator
 {
     public static class ValidationExtensionHelper
     {
