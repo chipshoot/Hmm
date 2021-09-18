@@ -74,6 +74,17 @@ namespace Hmm.Utility.Misc
             LogMessage();
         }
 
+        public void AddInfoMessage(string message, bool clearOldMessage = false)
+        {
+            if (clearOldMessage)
+            {
+                MessageList.Clear();
+            }
+
+            MessageList.Add(new ReturnMessage { Message = message, Type = MessageType.Info });
+            LogMessage();
+        }
+
         public void PropagandaResult(ProcessingResult innerResult)
         {
             if (innerResult == null)

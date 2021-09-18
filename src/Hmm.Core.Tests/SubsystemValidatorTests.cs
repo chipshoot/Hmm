@@ -8,12 +8,11 @@ namespace Hmm.Core.Tests
 {
     public class SubsystemValidatorTests : TestFixtureBase
     {
-        private readonly SubsystemValidator _validator;
+        private SubsystemValidator _validator;
 
         public SubsystemValidatorTests()
         {
-            InsertSeedRecords();
-            _validator = new SubsystemValidator();
+            SetupTestEnv();
         }
 
         [Theory]
@@ -68,6 +67,12 @@ namespace Hmm.Core.Tests
             {
                 Assert.NotEmpty(processResult.MessageList[0].Message);
             }
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _validator = new SubsystemValidator();
         }
     }
 }

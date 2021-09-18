@@ -1,32 +1,28 @@
-﻿using System;
-using System.Linq;
-using Hmm.Core.DefaultManager;
+﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using System;
+using System.Linq;
 using Xunit;
 
 namespace Hmm.Core.Tests
 {
     public class HmmNoteValidatorTests : TestFixtureBase
     {
-        private readonly IHmmNoteManager _manager;
-        private readonly Author _user;
-        private readonly NoteValidator _validator;
+        private IHmmNoteManager _manager;
+        private Author _user;
+        private NoteValidator _validator;
 
         public HmmNoteValidatorTests()
         {
-            InsertSeedRecords();
-            _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
-            _validator = new NoteValidator(NoteRepository);
-            _manager = new HmmNoteManager(NoteRepository, _validator, DateProvider);
+            SetupTestEnv();
         }
 
         [Fact]
         public void CannotChangeAuthorForExistsNote()
         {
-
             // Arrange
             var note = new HmmNote
             {
@@ -170,7 +166,6 @@ namespace Hmm.Core.Tests
         [Fact]
         public void NoteCatalogMustValid()
         {
-
             // Arrange
             var note = new HmmNote
             {
@@ -189,5 +184,12 @@ namespace Hmm.Core.Tests
             Assert.False(result);
         }
 
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
+            _validator = new NoteValidator(NoteRepository);
+            _manager = new HmmNoteManager(NoteRepository, _validator, DateProvider);
+        }
     }
 }

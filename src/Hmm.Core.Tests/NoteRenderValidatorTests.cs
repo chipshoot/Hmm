@@ -8,12 +8,11 @@ namespace Hmm.Core.Tests
 {
     public class NoteRenderValidatorTests : TestFixtureBase
     {
-        private readonly NoteRenderValidator _validator;
+        private NoteRenderValidator _validator;
 
         public NoteRenderValidatorTests()
         {
-            InsertSeedRecords();
-            _validator = new NoteRenderValidator();
+            SetupTestEnv();
         }
 
         [Theory]
@@ -95,6 +94,12 @@ namespace Hmm.Core.Tests
             {
                 Assert.NotEmpty(processResult.MessageList[0].Message);
             }
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _validator = new NoteRenderValidator();
         }
     }
 }

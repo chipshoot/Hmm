@@ -12,14 +12,12 @@ namespace Hmm.Core.Tests
 {
     public class SubsystemManagerTests : TestFixtureBase
     {
-        private readonly ISubsystemManager _manager;
-        private readonly FakeValidator _testValidator;
+        private ISubsystemManager _manager;
+        private FakeValidator _testValidator;
 
         public SubsystemManagerTests()
         {
-            InsertSeedRecords();
-            _testValidator = new FakeValidator();
-            _manager = new SubsystemManager(SubsystemRepository, _testValidator);
+            SetupTestEnv();
         }
 
         [Fact]
@@ -116,6 +114,13 @@ namespace Hmm.Core.Tests
                     ? new ValidationResult(new List<ValidationFailure> { new("Subsystem", "Subsystem validator error") })
                     : new ValidationResult();
             }
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _testValidator = new FakeValidator();
+            _manager = new SubsystemManager(SubsystemRepository, _testValidator);
         }
     }
 }

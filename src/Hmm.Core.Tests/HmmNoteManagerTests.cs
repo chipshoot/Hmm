@@ -14,16 +14,13 @@ namespace Hmm.Core.Tests
 {
     public class HmmNoteManagerTests : TestFixtureBase
     {
-        private readonly IHmmNoteManager _manager;
-        private readonly Author _user;
-        private readonly FakeValidator _testValidator;
+        private IHmmNoteManager _manager;
+        private Author _user;
+        private FakeValidator _testValidator;
 
         public HmmNoteManagerTests()
         {
-            InsertSeedRecords();
-            _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
-            _testValidator = new FakeValidator(NoteRepository);
-            _manager = new HmmNoteManager(NoteRepository, _testValidator, DateProvider);
+            SetupTestEnv();
         }
 
         [Fact]
@@ -213,6 +210,14 @@ namespace Hmm.Core.Tests
                     ? new ValidationResult(new List<ValidationFailure> { new("Author", "Author cannot change") })
                     : new ValidationResult();
             }
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
+            _testValidator = new FakeValidator(NoteRepository);
+            _manager = new HmmNoteManager(NoteRepository, _testValidator, DateProvider);
         }
     }
 }

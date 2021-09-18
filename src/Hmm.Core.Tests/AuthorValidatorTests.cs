@@ -8,12 +8,11 @@ namespace Hmm.Core.Tests
 {
     public class AuthorValidatorTests : TestFixtureBase
     {
-        private readonly AuthorValidator _validator;
+        private AuthorValidator _validator;
 
         public AuthorValidatorTests()
         {
-            InsertSeedRecords();
-            _validator = new AuthorValidator(AuthorRepository);
+            SetupTestEnv();
         }
 
         [Theory]
@@ -87,6 +86,12 @@ namespace Hmm.Core.Tests
             // Assert
             Assert.False(result);
             Assert.NotEmpty(processResult.MessageList[0].Message);
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _validator = new AuthorValidator(AuthorRepository);
         }
     }
 }

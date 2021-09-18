@@ -12,16 +12,13 @@ namespace Hmm.Core.Tests
 {
     public class NoteCatalogManagerTests : TestFixtureBase
     {
-        private readonly INoteCatalogManager _manager;
-        private readonly FakeValidator _testValidator;
-        private readonly NoteRender _render;
+        private INoteCatalogManager _manager;
+        private FakeValidator _testValidator;
+        private NoteRender _render;
 
         public NoteCatalogManagerTests()
         {
-            InsertSeedRecords();
-            _testValidator = new FakeValidator();
-            _render = new NoteRender();
-            _manager = new NoteCatalogManager(CatalogRepository, _testValidator);
+            SetupTestEnv();
         }
 
         [Fact]
@@ -122,6 +119,14 @@ namespace Hmm.Core.Tests
                     ? new ValidationResult(new List<ValidationFailure> { new("Catalog", "Catalog validator error") })
                     : new ValidationResult();
             }
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _testValidator = new FakeValidator();
+            _render = new NoteRender();
+            _manager = new NoteCatalogManager(CatalogRepository, _testValidator);
         }
     }
 }

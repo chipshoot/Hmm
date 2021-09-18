@@ -1,8 +1,8 @@
-﻿using System.IO;
-using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.DomainEntity;
 using Hmm.Core.NoteSerializer;
 using Hmm.Utility.TestHelp;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -12,25 +12,20 @@ namespace Hmm.Core.Tests
     public class DefaultXmlNoteSerializerTests : TestFixtureBase
     {
         private const string Namespace = @"http://schema.hmm.com/2020";
-        private readonly INoteSerializer<HmmNote> _noteSerializer;
-        private readonly Author _user;
+        private INoteSerializer<HmmNote> _noteSerializer;
+        private Author _user;
 
         public DefaultXmlNoteSerializerTests()
         {
-            InsertSeedRecords();
-            _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
-            XNamespace xmlNameSpace = Namespace;
-            var schemaStr = File.ReadAllText("NotebaseSchema.xsd");
-            var catalog = new NoteCatalog { Schema = schemaStr };
-            _noteSerializer = new DefaultXmlNoteSerializer<HmmNote>(xmlNameSpace, catalog, new NullLogger<DefaultXmlNoteSerializer<HmmNote>>());
+            SetupTestEnv();
         }
 
         [Theory]
         [InlineData("Test content",
-            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>")]
+            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>", false, true)]
         [InlineData("<InnerText xmlns=\"http://schema.hmm.com/2020\"><Content>Test content</Content></InnerText>",
-            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>")]
-        public void Can_Parse_Note_String_Content(string contentText, string xmlContent)
+            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>", true, false)]
+        public void Can_Parse_Note_String_Content(string contentText, string xmlContent, bool hasWarning, bool hasError)
         {
             // Arrange
             var xmlDoc = XDocument.Parse(string.Format(xmlContent, Namespace, contentText));
@@ -47,6 +42,8 @@ namespace Hmm.Core.Tests
 
             // Assert
             Assert.True(_noteSerializer.ProcessResult.Success);
+            Assert.Equal(hasWarning, _noteSerializer.ProcessResult.HasWarning);
+            Assert.Equal(hasError, _noteSerializer.ProcessResult.HasError);
             Assert.NotNull(newNote);
             Assert.Equal("Testing note", newNote.Subject);
             Assert.Equal(newNote.Content, xmlDoc.ToString(SaveOptions.DisableFormatting));
@@ -130,6 +127,16 @@ namespace Hmm.Core.Tests
             // Assert
             Assert.Null(newNote);
             Assert.True(_noteSerializer.ProcessResult.MessageList.Count > 0);
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
+            XNamespace xmlNameSpace = Namespace;
+            var schemaStr = File.ReadAllText("NotebaseSchema.xsd");
+            var catalog = new NoteCatalog { Schema = schemaStr };
+            _noteSerializer = new DefaultXmlNoteSerializer<HmmNote>(xmlNameSpace, catalog, new NullLogger<DefaultXmlNoteSerializer<HmmNote>>());
         }
     }
 }

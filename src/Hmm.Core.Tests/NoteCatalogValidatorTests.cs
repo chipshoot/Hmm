@@ -8,12 +8,11 @@ namespace Hmm.Core.Tests
 {
     public class NoteCatalogValidatorTests : TestFixtureBase
     {
-        private readonly NoteCatalogValidator _validator;
+        private NoteCatalogValidator _validator;
 
         public NoteCatalogValidatorTests()
         {
-            InsertSeedRecords();
-            _validator = new NoteCatalogValidator();
+            SetupTestEnv();
         }
 
         [Theory]
@@ -130,6 +129,12 @@ namespace Hmm.Core.Tests
             {
                 Assert.NotEmpty(processResult.MessageList[0].Message);
             }
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _validator = new NoteCatalogValidator();
         }
     }
 }

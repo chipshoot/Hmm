@@ -24,7 +24,7 @@ namespace Hmm.Core.NoteSerializer
         }
 
         protected XNamespace ContentNamespace { get; }
-        
+
         private XmlSchemaSet Schemas => _schemas ??= GetSchema();
 
         protected readonly NoteCatalog Catalog;
@@ -51,18 +51,18 @@ namespace Hmm.Core.NoteSerializer
             {
                 // if entity is HmmNote or its child
                 case HmmNote hmmNote:
-                {
-                    var note = new HmmNote
                     {
-                        Subject = hmmNote.Subject,
-                        Content = GetNoteSerializationText(entity),
-                        CreateDate = hmmNote.CreateDate,
-                        Description = hmmNote.Description,
-                        Author = hmmNote.Author,
-                        Catalog = hmmNote.Catalog
-                    };
-                    return note;
-                }
+                        var note = new HmmNote
+                        {
+                            Subject = hmmNote.Subject,
+                            Content = GetNoteSerializationText(entity),
+                            CreateDate = hmmNote.CreateDate,
+                            Description = hmmNote.Description,
+                            Author = hmmNote.Author,
+                            Catalog = hmmNote.Catalog
+                        };
+                        return note;
+                    }
                 default:
                     return null;
             }
@@ -88,7 +88,6 @@ namespace Hmm.Core.NoteSerializer
 
         protected virtual XDocument GetNoteContent(string noteContent)
         {
-            var isXmlContent = false;
             var xml = GetRootXmlDoc();
 
             // ReSharper disable PossibleNullReferenceException
@@ -104,43 +103,53 @@ namespace Hmm.Core.NoteSerializer
                 var contentXml = XDocument.Parse(noteContent);
 
                 // the content can be parsed by XDocument, it's valid XML string
-                isXmlContent = true;
-                var errors = false;
                 if (Schemas != null)
                 {
-                    contentXml.Validate(_schemas, (o, e) => { errors = true; });
+                    contentXml.Validate(_schemas, (obj, e) =>
+                    {
+                        switch (e.Severity)
+                        {
+                            case XmlSeverityType.Warning:
+                                ProcessResult.AddInfoMessage(e.Message);
+                                break;
+
+                            case XmlSeverityType.Error:
+                                ProcessResult.AddWaningMessage(e.Message);
+                                break;
+
+                            default:
+                                ProcessResult.AddInfoMessage(e.Message);
+                                break;
+                        }
+                    });
                 }
 
                 // content is already valid note XML content, return without any change
-                if (!errors)
+                if (!(ProcessResult.HasWarning || ProcessResult.HasInfo))
                 {
                     return contentXml;
                 }
             }
             catch (Exception ex)
             {
-                ProcessResult.AddWaningMessage(ex.Message);
+                // Cannot parse string as XML, apply plain text as content
+                ProcessResult.AddErrorMessage(ex.Message, false, false);
+                xml.Root.Element("Content").Value = noteContent;
+                return ApplyNameSpace(xml);
             }
 
             Debug.Assert(!string.IsNullOrEmpty(noteContent));
 
-            if (isXmlContent)
+            try
             {
-                try
-                {
-                    var innerElement = XElement.Parse(noteContent);
-                    xml.Root?.Element("Content")?.Add(innerElement);
-                }
-                catch (Exception ex)
-                {
-                    ProcessResult.WrapException(ex);
-                    xml.Root.Element("Content").Value = noteContent;
-                }
+                var innerElement = XElement.Parse(noteContent);
+                xml.Root?.Element("Content")?.Add(innerElement);
             }
-            else
+            catch (Exception ex)
             {
+                // Cannot parse string as XML, apply plain text as content
+                ProcessResult.WrapException(ex);
                 xml.Root.Element("Content").Value = noteContent;
-                // ReSharper restore PossibleNullReferenceException
             }
 
             return ApplyNameSpace(xml);

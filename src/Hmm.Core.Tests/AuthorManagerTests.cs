@@ -17,16 +17,14 @@ namespace Hmm.Core.Tests
     {
         #region private fields
 
-        private readonly IAuthorManager _authorManager;
-        private readonly FakeValidator _testValidator;
+        private IAuthorManager _authorManager;
+        private FakeValidator _testValidator;
 
         #endregion private fields
 
         public AuthorManagerTests()
         {
-            InsertSeedRecords();
-            _testValidator = new FakeValidator(AuthorRepository);
-            _authorManager = new AuthorManager(AuthorRepository, _testValidator);
+            SetupTestEnv();
         }
 
         [Fact]
@@ -194,6 +192,13 @@ namespace Hmm.Core.Tests
                     ? new ValidationResult(new List<ValidationFailure> { new("Author", "Author is invalid") })
                     : new ValidationResult();
             }
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _testValidator = new FakeValidator(AuthorRepository);
+            _authorManager = new AuthorManager(AuthorRepository, _testValidator);
         }
     }
 }
