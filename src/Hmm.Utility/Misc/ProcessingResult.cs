@@ -34,6 +34,14 @@ namespace Hmm.Utility.Misc
 
         public ILogger Logger { get; }
 
+        public bool HasInfo => HasMessageOf(MessageType.Info);
+
+        public bool HasWarning => HasMessageOf(MessageType.Warning);
+
+        public bool HasError => HasMessageOf(MessageType.Error) || HasMessageOf(MessageType.Fatal);
+
+        public bool HasFatal => HasMessageOf(MessageType.Fatal);
+
         public void Rest()
         {
             Success = true;
@@ -125,6 +133,12 @@ namespace Hmm.Utility.Misc
                         throw new ArgumentOutOfRangeException();
                 }
             }
+        }
+
+        private bool HasMessageOf(MessageType msgType)
+        {
+            var hasMsg = MessageList != null && MessageList.Any(m => m.Type == msgType);
+            return hasMsg;
         }
     }
 }
