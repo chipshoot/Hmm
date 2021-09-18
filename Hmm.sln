@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Automobile", "Automobile", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BigCalender", "BigCalender", "{B8C2F91C-2F16-4DCB-B913-867D11F54978}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hmm.Utility.Tests", "src\Hmm.Utility.Tests\Hmm.Utility.Tests.csproj", "{B56C30D9-017E-4E0C-BAE2-7A50CA82B484}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,10 @@ Global
 		{16FC8FF7-F5EE-48A1-997F-3400F4128803}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16FC8FF7-F5EE-48A1-997F-3400F4128803}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16FC8FF7-F5EE-48A1-997F-3400F4128803}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B56C30D9-017E-4E0C-BAE2-7A50CA82B484}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B56C30D9-017E-4E0C-BAE2-7A50CA82B484}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B56C30D9-017E-4E0C-BAE2-7A50CA82B484}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B56C30D9-017E-4E0C-BAE2-7A50CA82B484}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,6 +100,7 @@ Global
 		{36B7D196-1776-470F-871D-117E5EAB2B57} = {B8C2F91C-2F16-4DCB-B913-867D11F54978}
 		{A2ED49E9-CB9F-4E44-ABC4-C48A3FAE2443} = {4725A85A-0735-44A4-81F9-D9846C6EF0EC}
 		{16FC8FF7-F5EE-48A1-997F-3400F4128803} = {4725A85A-0735-44A4-81F9-D9846C6EF0EC}
+		{B56C30D9-017E-4E0C-BAE2-7A50CA82B484} = {4BDAD672-E38F-4FBB-BCB4-6BB0E7D1CA3A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E2E0B1A5-8168-40C4-A2AD-123A52065484}
