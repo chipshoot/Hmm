@@ -103,26 +103,7 @@ namespace Hmm.Core.NoteSerializer
                 var contentXml = XDocument.Parse(noteContent);
 
                 // the content can be parsed by XDocument, it's valid XML string
-                if (Schemas != null)
-                {
-                    contentXml.Validate(_schemas, (obj, e) =>
-                    {
-                        switch (e.Severity)
-                        {
-                            case XmlSeverityType.Warning:
-                                ProcessResult.AddInfoMessage(e.Message);
-                                break;
-
-                            case XmlSeverityType.Error:
-                                ProcessResult.AddWaningMessage(e.Message);
-                                break;
-
-                            default:
-                                ProcessResult.AddInfoMessage(e.Message);
-                                break;
-                        }
-                    });
-                }
+                ValidateContent(contentXml);
 
                 // content is already valid note XML content, return without any change
                 if (!(ProcessResult.HasWarning || ProcessResult.HasInfo))
@@ -174,6 +155,36 @@ namespace Hmm.Core.NoteSerializer
             }
 
             return ApplyNameSpace(xml);
+        }
+
+        protected void ValidateContent(XDocument xml)
+        {
+            if (xml == null)
+            {
+                return;
+            }
+
+            // the content can be parsed by XDocument, it's valid XML string
+            if (Schemas != null)
+            {
+                xml.Validate(_schemas, (obj, e) =>
+                {
+                    switch (e.Severity)
+                    {
+                        case XmlSeverityType.Warning:
+                            ProcessResult.AddInfoMessage(e.Message);
+                            break;
+
+                        case XmlSeverityType.Error:
+                            ProcessResult.AddWaningMessage(e.Message);
+                            break;
+
+                        default:
+                            ProcessResult.AddInfoMessage(e.Message);
+                            break;
+                    }
+                });
+            }
         }
 
         private static XDocument GetRootXmlDoc()

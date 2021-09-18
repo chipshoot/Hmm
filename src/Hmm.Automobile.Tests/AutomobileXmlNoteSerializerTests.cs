@@ -13,6 +13,9 @@ namespace Hmm.Automobile.Tests
 {
     public class AutomobileXmlNoteSerializerTests : AutoTestFixtureBase
     {
+        private const string NoteXmlTextBase =
+            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>";
+
         private INoteSerializer<AutomobileInfo> _noteSerializer;
         private Author _user;
 
@@ -22,12 +25,11 @@ namespace Hmm.Automobile.Tests
         }
 
         [Theory]
-        [InlineData("<Automobile><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>",
-            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>")]
-        public void Can_Parse_Automobile_String_Content(string contentText, string xmlContent)
+        [InlineData("<Automobile><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>")]
+        public void Can_Parse_Automobile_String_Content(string contentText)
         {
             // Arrange
-            var xmlDoc = XDocument.Parse(string.Format(xmlContent, XmlNamespace, contentText));
+            var xmlDoc = XDocument.Parse(string.Format(NoteXmlTextBase, XmlNamespace, contentText));
 
             var auto = new AutomobileInfo
             {
@@ -148,10 +150,41 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(note);
         }
 
-        [Fact]
-        public void Can_Valid_Xml_Content_Against_Schema()
+        [Theory]
+        [InlineData("Not a automobile content", false, false, true)]
+        [InlineData("<Automobile><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", true, true, false)]
+        [InlineData("<Automobile><Dealer>Subaru Mississauga</Dealer><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", true, true, false)]
+        [InlineData("<Automobile><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", true, false, false)]
+        public void Can_Valid_Xml_Content_Against_Schema(string content, bool expectSuccess, bool expectWarning, bool expectError)
         {
             // ToDo: Add xml schema validate
+            // Arrange
+            var noteContent = string.Format(NoteXmlTextBase, XmlNamespace, content);
+            var note = new HmmNote
+            {
+                Id = 1,
+                Author = _user,
+                Subject = AutomobileConstant.AutoMobileRecordSubject,
+                Content = noteContent,
+                CreateDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now
+            };
+
+            // Act
+            var car = _noteSerializer.GetEntity(note);
+
+            // Assert
+            Assert.Equal(expectSuccess, _noteSerializer.ProcessResult.Success);
+            Assert.Equal(expectWarning, _noteSerializer.ProcessResult.HasWarning);
+            Assert.Equal(expectError, _noteSerializer.ProcessResult.HasError);
+            if (_noteSerializer.ProcessResult.Success)
+            {
+                Assert.NotNull(car);
+            }
+            else
+            {
+                Assert.Null(car);
+            }
         }
 
         [Fact]

@@ -2,6 +2,7 @@
 using Hmm.Core;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
@@ -57,16 +58,16 @@ namespace Hmm.Automobile
 
             var note = entity.GetNote(NoteSerializer, DefaultAuthor);
             NoteManager.Create(note);
-            switch (NoteManager.ProcessResult.Success)
+            if (NoteManager.ProcessResult.HasReturnedMessage())
             {
-                case false:
-                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
-                    return null;
-
-                default:
-
-                    return GetEntityById(note.Id);
+                ProcessResult.PropagandaResult(NoteManager.ProcessResult);
             }
+
+            return NoteManager.ProcessResult.Success switch
+            {
+                false => null,
+                _ => GetEntityById(note.Id)
+            };
         }
 
         public override AutomobileInfo Update(AutomobileInfo entity)

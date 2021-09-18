@@ -2,6 +2,7 @@
 using Hmm.Core.DomainEntity;
 using Hmm.Core.NoteSerializer;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Xml.Linq;
 
 namespace Hmm.Automobile.NoteSerializer
@@ -39,18 +40,29 @@ namespace Hmm.Automobile.NoteSerializer
                 return (null, null);
             }
 
-            var noteStr = note.Content;
-            var noteXml = XDocument.Parse(noteStr);
-            var ns = noteXml.Root?.GetDefaultNamespace();
-            var discountRoot = noteXml.Root?.Element(ns + "Content")?.Element(ns + subject);
-            switch (discountRoot)
+            try
             {
-                case null:
-                    ProcessResult.AddWaningMessage("Null gas discount found when try to serializing entity to note", true);
-                    return (null, null);
+                var noteStr = note.Content;
+                var noteXml = XDocument.Parse(noteStr);
+                var ns = noteXml.Root?.GetDefaultNamespace();
 
-                default:
-                    return (discountRoot, ns);
+                // validate against schema
+                ValidateContent(noteXml);
+                var entityRoot = noteXml.Root?.Element(ns + "Content")?.Element(ns + subject);
+                switch (entityRoot)
+                {
+                    case null:
+                        ProcessResult.AddErrorMessage("Null entity found when try to serializing entity to note", true);
+                        return (null, null);
+
+                    default:
+                        return (entityRoot, ns);
+                }
+            }
+            catch (Exception e)
+            {
+                ProcessResult.WrapException(e);
+                return (null, null);
             }
         }
     }
