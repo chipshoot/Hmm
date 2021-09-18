@@ -7,6 +7,8 @@ namespace Hmm.Automobile.DomainEntity
 {
     public class GasLog : AutomobileBase
     {
+        public DateTime Date { get; set; }
+
         public AutomobileInfo Car { get; set; }
 
         public Dimension Distance { get; set; }
