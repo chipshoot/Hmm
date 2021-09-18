@@ -2,6 +2,7 @@
 using Hmm.Core;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
@@ -11,11 +12,15 @@ namespace Hmm.Automobile
 {
     public class GasLogManager : EntityManagerBase<GasLog>
     {
-        public GasLogManager(INoteSerializer<GasLog> noteSerializer, IHmmNoteManager noteManager, IEntityLookup lookupRepo, Author defaultAuthor) 
+        private readonly IDateTimeProvider _dateProvider;
+
+        public GasLogManager(INoteSerializer<GasLog> noteSerializer, IHmmNoteManager noteManager, IEntityLookup lookupRepo, IDateTimeProvider dateProvider, Author defaultAuthor)
             : base(noteManager, lookupRepo, defaultAuthor)
         {
             Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
+            Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));
             NoteSerializer = noteSerializer;
+            _dateProvider = dateProvider;
         }
 
         public override IEnumerable<GasLog> GetEntities()
@@ -38,6 +43,9 @@ namespace Hmm.Automobile
                 return null;
             }
 
+            // ToDo: Update related automobile's meter reading information
+            // ReSharper disable once PossibleNullReferenceException
+            entity.CreateDate = _dateProvider.UtcNow;
             var note = entity.GetNote(NoteSerializer, DefaultAuthor);
             NoteManager.Create(note);
             switch (NoteManager.ProcessResult.Success)
@@ -64,6 +72,7 @@ namespace Hmm.Automobile
                 return null;
             }
 
+            // ToDo: When update note's distance and current meter reading, also update related automobile's meter reading information
             curLog.Car = entity.Car;
             curLog.Gas = entity.Gas;
             curLog.Price = entity.Price;

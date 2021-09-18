@@ -1,7 +1,7 @@
 using Hmm.Automobile.DomainEntity;
 using Hmm.Automobile.NoteSerializer;
 using Hmm.Core.DefaultManager;
-using Hmm.Core.DefaultManager.Validation;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;

@@ -1,12 +1,12 @@
-﻿using System;
-using Hmm.Automobile.DomainEntity;
+﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Automobile.NoteSerializer;
 using Hmm.Core.DefaultManager;
-using Hmm.Core.DefaultManager.Validation;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Currency;
 using Hmm.Utility.MeasureUnit;
 using Microsoft.Extensions.Logging.Abstractions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -32,8 +32,10 @@ namespace Hmm.Automobile.Tests
             const string comment = "This is a test gas log";
             var car = _autoManager.GetEntityById(1);
             var discount = _discountManager.GetEntities().FirstOrDefault();
+            var logDate = new DateTime(2019, 12, 25);
             var gasLog = new GasLog
             {
+                Date = logDate,
                 Car = car,
                 Station = "Costco",
                 Gas = Volume.FromLiter(40),
@@ -66,6 +68,7 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(0.8m.GetCad(), newGas.Discounts.First().Amount);
             Assert.True(newGas.Discounts.Any());
             Assert.True(newGas.Discounts.FirstOrDefault()?.Amount.Amount == 0.8m);
+            Assert.Equal(logDate, newGas.Date);
             Assert.Equal(CurrentTime, newGas.CreateDate);
         }
 
@@ -155,7 +158,7 @@ namespace Hmm.Automobile.Tests
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasLogCatalogName);
             Assert.NotNull(logCat);
             var gasLogNoteSerializer = new GasLogXmlNoteSerializer(XmlNamespace, logCat, new NullLogger<GasLogXmlNoteSerializer>(), _autoManager, _discountManager);
-            _manager = new GasLogManager(gasLogNoteSerializer, noteManager, LookupRepo, _defaultAuthor);
+            _manager = new GasLogManager(gasLogNoteSerializer, noteManager, LookupRepo, DateProvider, _defaultAuthor);
 
             // Insert car
             var car = new AutomobileInfo

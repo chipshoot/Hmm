@@ -1,13 +1,12 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Automobile.NoteSerializer;
 using Hmm.Core.DefaultManager;
-using Hmm.Core.DefaultManager.Validation;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Currency;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Xunit;
 
 namespace Hmm.Automobile.Tests

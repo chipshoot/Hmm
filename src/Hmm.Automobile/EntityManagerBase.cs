@@ -39,6 +39,7 @@ namespace Hmm.Automobile
             }
         }
 
+        // ToDo: Add validating object to valid new gas log
         protected bool AuthorValid()
         {
             if (DefaultAuthor == null)

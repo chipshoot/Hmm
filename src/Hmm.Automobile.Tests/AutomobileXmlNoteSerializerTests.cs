@@ -55,6 +55,8 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange - note with null content
             var xmlDoc = XDocument.Parse($"<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{XmlNamespace}\"><Content><Automobile><Maker>Subaru</Maker><Brand>&lt;Outback&gt;</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile></Content></Note>");
+
+            // Note: Outback is surrounding by bracket to test escape special character in class
             var auto = new AutomobileInfo
             {
                 Maker = "Subaru",
@@ -147,7 +149,13 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public void Get_Null_Fro_Null_Note()
+        public void Can_Valid_Xml_Content_Against_Schema()
+        {
+            // ToDo: Add xml schema validate
+        }
+
+        [Fact]
+        public void Get_Null_For_Null_Note()
         {
             // Arrange & Act
             var note = _noteSerializer.GetNote(null);

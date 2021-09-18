@@ -99,7 +99,7 @@ namespace Hmm.Automobile
                 default:
 
                     return GetEntityById(curAuto.Id);
-            };
+            }
         }
 
         public override INoteSerializer<AutomobileInfo> NoteSerializer { get; }

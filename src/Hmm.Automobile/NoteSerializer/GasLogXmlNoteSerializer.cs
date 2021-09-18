@@ -41,11 +41,10 @@ namespace Hmm.Automobile.NoteSerializer
                 }
                 _ = int.TryParse(gasLogRoot.Element(ns + "Automobile")?.Value, out var carId);
                 var car = _autoManager.GetEntityById(carId);
-                var createTimeString = gasLogRoot.Element(ns + "CreateDate")?.Value;
-                var createTime = DateTime.ParseExact(string.IsNullOrEmpty(createTimeString) ? DateTime.MinValue.ToString(TimeStampFormatString) : createTimeString, TimeStampFormatString, null);
 
                 var gasLog = new GasLog
                 {
+                    Date = GetDate(gasLogRoot.Element(ns + "Date")),
                     Id = note.Id,
                     Car = car,
                     Station = gasLogRoot.Element(ns + "GasStation")?.Value,
@@ -53,7 +52,7 @@ namespace Hmm.Automobile.NoteSerializer
                     CurrentMeterReading = gasLogRoot.Element(ns + "CurrentMeterReading")?.GetDimension() ?? 0.GetKilometer(),
                     Gas = gasLogRoot.Element(ns + "Gas")?.GetVolume() ?? 0d.GetDeciliter(),
                     Price = gasLogRoot.Element(ns + "Price")?.GetMoney() ?? 0m.GetCad(),
-                    CreateDate = createTime,
+                    CreateDate = GetDate(gasLogRoot.Element(ns + "CreateDate")),
                     Comment = gasLogRoot.Element(ns + "Comment")?.Value,
                     AuthorId = note.Author.Id
                 };
@@ -81,6 +80,7 @@ namespace Hmm.Automobile.NoteSerializer
             }
 
             var xml = new XElement(AutomobileConstant.GasLogRecordSubject,
+                new XElement("Date", entity.Date.ToString(TimeStampFormatString)),
                 new XElement("Distance", entity.Distance.SerializeToXml(ContentNamespace)),
                 new XElement("CurrentMeterReading", entity.CurrentMeterReading.SerializeToXml(ContentNamespace)),
                 new XElement("Gas", entity.Gas.SerializeToXml(ContentNamespace)),
@@ -88,7 +88,8 @@ namespace Hmm.Automobile.NoteSerializer
                 new XElement("GasStation", entity.Station),
                 new XElement("Discounts", ""),
                 new XElement("Automobile", entity.Car.Id),
-                new XElement("Comment", entity.Comment ?? ""));
+                new XElement("Comment", entity.Comment ?? ""),
+                new XElement("CreateDate", entity.CreateDate.ToString(TimeStampFormatString)));
 
             if (entity.Discounts.Any())
             {
@@ -151,6 +152,13 @@ namespace Hmm.Automobile.NoteSerializer
             }
 
             return infos;
+        }
+
+        private DateTime GetDate(XElement dateNode)
+        {
+            var dateString = dateNode?.Value;
+            var logDate = DateTime.ParseExact(string.IsNullOrEmpty(dateString) ? DateTime.MinValue.ToString(TimeStampFormatString) : dateString, TimeStampFormatString, null);
+            return logDate;
         }
     }
 }
