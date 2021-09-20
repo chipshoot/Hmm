@@ -111,7 +111,7 @@ namespace Hmm.Automobile.NoteSerializer
             return GetNoteContent(xml).ToString(SaveOptions.DisableFormatting);
         }
 
-        private List<GasDiscountInfo> GetDiscountInfos(XElement discountRoot, XNamespace ns)
+        private List<GasDiscountInfo> GetDiscountInfos(XContainer discountRoot, XNamespace ns)
         {
             var infos = new List<GasDiscountInfo>();
             if (discountRoot == null)
