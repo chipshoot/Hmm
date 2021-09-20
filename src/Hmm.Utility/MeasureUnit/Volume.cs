@@ -428,7 +428,8 @@ namespace Hmm.Utility.MeasureUnit
 
         public int CompareTo(Volume other)
         {
-            throw new NotImplementedException();
+            var localValue = _value;
+            return localValue.CompareTo(other._value);
         }
 
         #endregion implementation of interface IComparable
