@@ -67,7 +67,6 @@ namespace Hmm.Automobile.Tests
     /// </summary>
     public class GasLogXmlNoteSerializerTests : AutoTestFixtureBase
     {
-        //MUST DONE QUICK: need add testing for gas log xml serialize
         private INoteSerializer<GasLog> _noteSerializer;
         private AutomobileInfo _defaultCar;
         private GasDiscount _defaultDiscount;
