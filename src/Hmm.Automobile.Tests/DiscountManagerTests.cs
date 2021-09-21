@@ -3,7 +3,7 @@ using Hmm.Automobile.NoteSerializer;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
-using Hmm.Utility.Currency;
+using Hmm.Utility.MeasureUnit;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,7 @@ namespace Hmm.Automobile.Tests
             var discount = new GasDiscount
             {
                 Program = "Costco membership",
-                Amount = new Money(0.6),
+                Amount = 0.6m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
                 Comment = "Test Discount",
                 IsActive = true,
@@ -97,7 +97,7 @@ namespace Hmm.Automobile.Tests
             var discount = new GasDiscount
             {
                 Program = "Costco membership",
-                Amount = new Money(0.6),
+                Amount = 0.6m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
                 Comment = "Test Discount",
                 IsActive = true,
@@ -108,7 +108,7 @@ namespace Hmm.Automobile.Tests
             discount = new GasDiscount
             {
                 Program = "Petro-Canada membership",
-                Amount = new Money(0.2),
+                Amount = 0.2m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
                 Comment = "Test Discount 2",
                 IsActive = true,
@@ -128,9 +128,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(catalog);
             var noteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<GasDiscountXmlNoteSerializer>());
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
-            var author = AuthorRepository.GetEntities().FirstOrDefault();
-            Assert.NotNull(author);
-            _manager = new DiscountManager(noteSerializer, noteManager, LookupRepo, author);
+            _manager = new DiscountManager(noteSerializer, noteManager, LookupRepo, DefaultAuthor);
         }
     }
 }

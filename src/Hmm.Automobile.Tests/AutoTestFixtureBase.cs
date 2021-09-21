@@ -2,6 +2,7 @@
 using Hmm.Utility.TestHelp;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Hmm.Automobile.Tests
@@ -9,6 +10,12 @@ namespace Hmm.Automobile.Tests
     public class AutoTestFixtureBase : TestFixtureBase
     {
         protected readonly XNamespace XmlNamespace = @"http://schema.hmm.com/2020";
+        private Author _user;
+
+        protected const string NoteXmlTextBase =
+            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>";
+
+        protected Author DefaultAuthor => _user ??= LookupRepo.GetEntities<Author>().FirstOrDefault();
 
         protected override void InsertSeedRecords(
             List<Subsystem> systems = null,

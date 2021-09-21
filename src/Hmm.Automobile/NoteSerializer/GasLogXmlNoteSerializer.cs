@@ -13,6 +13,7 @@ namespace Hmm.Automobile.NoteSerializer
     public class GasLogXmlNoteSerializer : EntityXmlNoteSerializerBase<GasLog>
     {
         private const string TimeStampFormatString = "yyyyMMddHHmmssffff";
+        private const string XmlTimeStampFormatString = "yyyy-MM-ddTHH:mm:ssZ";
         private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
 
@@ -80,7 +81,7 @@ namespace Hmm.Automobile.NoteSerializer
             }
 
             var xml = new XElement(AutomobileConstant.GasLogRecordSubject,
-                new XElement("Date", entity.Date.ToString(TimeStampFormatString)),
+                new XElement("Date", entity.Date.ToString("o")),
                 new XElement("Distance", entity.Distance.SerializeToXml(ContentNamespace)),
                 new XElement("CurrentMeterReading", entity.CurrentMeterReading.SerializeToXml(ContentNamespace)),
                 new XElement("Gas", entity.Gas.SerializeToXml(ContentNamespace)),
@@ -89,7 +90,7 @@ namespace Hmm.Automobile.NoteSerializer
                 new XElement("Discounts", ""),
                 new XElement("Automobile", entity.Car.Id),
                 new XElement("Comment", entity.Comment ?? ""),
-                new XElement("CreateDate", entity.CreateDate.ToString(TimeStampFormatString)));
+                new XElement("CreateDate", entity.CreateDate.ToString("o")));
 
             if (entity.Discounts.Any())
             {
@@ -154,11 +155,33 @@ namespace Hmm.Automobile.NoteSerializer
             return infos;
         }
 
-        private DateTime GetDate(XElement dateNode)
+        private static DateTime GetDate(XElement dateNode)
         {
             var dateString = dateNode?.Value;
-            var logDate = DateTime.ParseExact(string.IsNullOrEmpty(dateString) ? DateTime.MinValue.ToString(TimeStampFormatString) : dateString, TimeStampFormatString, null);
-            return logDate;
+            DateTime logDate;
+            try
+            {
+                logDate = DateTime.ParseExact(string.IsNullOrEmpty(dateString) ? DateTime.MinValue.ToString("o") : dateString, "o", null);
+                return logDate;
+            }
+            catch (FormatException)
+            {
+                try
+                {
+                    logDate = DateTime.ParseExact(
+                        string.IsNullOrEmpty(dateString) ? DateTime.MinValue.ToString(TimeStampFormatString) : dateString,
+                        TimeStampFormatString, null);
+                    return logDate;
+                }
+                catch (FormatException)
+                {
+                    logDate = DateTime.ParseExact(
+                        string.IsNullOrEmpty(dateString)
+                            ? DateTime.MinValue.ToString(XmlTimeStampFormatString)
+                            : dateString, XmlTimeStampFormatString, null);
+                    return logDate;
+                }
+            }
         }
     }
 }

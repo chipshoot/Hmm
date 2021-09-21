@@ -18,7 +18,6 @@ namespace Hmm.Automobile.Tests
         private IAutoEntityManager<GasLog> _manager;
         private IAutoEntityManager<AutomobileInfo> _autoManager;
         private IAutoEntityManager<GasDiscount> _discountManager;
-        private Author _defaultAuthor;
 
         public GasLogManagerTests()
         {
@@ -62,7 +61,7 @@ namespace Hmm.Automobile.Tests
             Assert.True(newGas.Id >= 1, "newGas.Id >= 1");
             Assert.NotNull(newGas.Car);
             Assert.NotNull(newGas.Discounts);
-            Assert.Equal(_defaultAuthor.Id, newGas.AuthorId);
+            Assert.Equal(DefaultAuthor.Id, newGas.AuthorId);
             Assert.Equal(comment, newGas.Comment);
             Assert.Equal(Dimension.FromKilometer(12000), newGas.CurrentMeterReading);
             Assert.Equal(0.8m.GetCad(), newGas.Discounts.First().Amount);
@@ -99,7 +98,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var gas = InsertSampleGasLog();
             Assert.NotNull(gas);
-            Assert.NotNull(_defaultAuthor);
+            Assert.NotNull(DefaultAuthor);
 
             // Act
             var updatedGasLog = _manager.Update(gas);
@@ -107,7 +106,7 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.True(_manager.ProcessResult.Success);
             Assert.NotNull(updatedGasLog);
-            Assert.Equal(_defaultAuthor.Id, updatedGasLog.AuthorId);
+            Assert.Equal(DefaultAuthor.Id, updatedGasLog.AuthorId);
         }
 
         [Fact]
@@ -134,9 +133,6 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
 
-            // setup default author
-            _defaultAuthor = AuthorRepository.GetEntities().FirstOrDefault();
-            Assert.NotNull(_defaultAuthor);
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
 
             // setup automobile manager
@@ -144,26 +140,26 @@ namespace Hmm.Automobile.Tests
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(autoCat);
             var autoNoteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, autoCat, new NullLogger<AutomobileXmlNoteSerializer>());
-            _autoManager = new AutomobileManager(autoNoteSerializer, noteManager, LookupRepo, _defaultAuthor);
+            _autoManager = new AutomobileManager(autoNoteSerializer, noteManager, LookupRepo, DefaultAuthor);
 
             // setup discount manager
             var discountCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(discountCat);
             var discountNoteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, discountCat, new NullLogger<GasDiscountXmlNoteSerializer>());
-            _discountManager = new DiscountManager(discountNoteSerializer, noteManager, LookupRepo, _defaultAuthor);
+            _discountManager = new DiscountManager(discountNoteSerializer, noteManager, LookupRepo, DefaultAuthor);
 
             // setup gas log manager
             var logCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasLogCatalogName);
             Assert.NotNull(logCat);
             var gasLogNoteSerializer = new GasLogXmlNoteSerializer(XmlNamespace, logCat, new NullLogger<GasLogXmlNoteSerializer>(), _autoManager, _discountManager);
-            _manager = new GasLogManager(gasLogNoteSerializer, noteManager, LookupRepo, DateProvider, _defaultAuthor);
+            _manager = new GasLogManager(gasLogNoteSerializer, noteManager, LookupRepo, DateProvider, DefaultAuthor);
 
             // Insert car
             var car = new AutomobileInfo
             {
-                AuthorId = _defaultAuthor.Id,
+                AuthorId = DefaultAuthor.Id,
                 Brand = "AutoBack",
                 Maker = "Subaru",
                 MeterReading = 100,
@@ -176,7 +172,7 @@ namespace Hmm.Automobile.Tests
             // Insert discount
             var discount = new GasDiscount
             {
-                AuthorId = _defaultAuthor.Id,
+                AuthorId = DefaultAuthor.Id,
                 Amount = 0.8m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
                 IsActive = true,

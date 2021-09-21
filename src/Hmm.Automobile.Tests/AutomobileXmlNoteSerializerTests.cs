@@ -5,7 +5,6 @@ using Hmm.Core.DomainEntity;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 using Xunit;
 
@@ -13,11 +12,7 @@ namespace Hmm.Automobile.Tests
 {
     public class AutomobileXmlNoteSerializerTests : AutoTestFixtureBase
     {
-        private const string NoteXmlTextBase =
-            "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>";
-
         private INoteSerializer<AutomobileInfo> _noteSerializer;
-        private Author _user;
 
         public AutomobileXmlNoteSerializerTests()
         {
@@ -89,7 +84,7 @@ namespace Hmm.Automobile.Tests
             var note = new HmmNote
             {
                 Id = 1,
-                Author = _user,
+                Author = DefaultAuthor,
                 Subject = AutomobileConstant.AutoMobileRecordSubject,
                 Content = xmlDoc.ToString(SaveOptions.DisableFormatting),
                 CreateDate = DateTime.Now,
@@ -99,7 +94,7 @@ namespace Hmm.Automobile.Tests
             var autoExpected = new AutomobileInfo
             {
                 Id = 1,
-                AuthorId = _user.Id,
+                AuthorId = DefaultAuthor.Id,
                 Maker = "Subaru",
                 Brand = "Outback",
                 Year = "2017",
@@ -151,23 +146,23 @@ namespace Hmm.Automobile.Tests
         }
 
         [Theory]
-        [InlineData("Not a automobile content", false, false, true)]
-        [InlineData("<Automobile><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", true, true, false)]
-        [InlineData("<Automobile><Dealer>Subaru Mississauga</Dealer><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", true, true, false)]
-        [InlineData("<Automobile><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", true, false, false)]
-        public void Can_Valid_Xml_Content_Against_Schema(string content, bool expectSuccess, bool expectWarning, bool expectError)
+        [InlineData("Not a automobile content", "Content is not xml", false, false, true)]
+        [InlineData("<Automobile><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", "Content is missing automobile element from schema definition", true, true, false)]
+        [InlineData("<Automobile><Dealer>Subaru Mississauga</Dealer><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", "Content contains more element than schema definition", true, true, false)]
+        [InlineData("<Automobile><Maker>Subaru</Maker><Brand>Outback</Brand><Year>2017</Year><Color>Blue</Color><Pin>135</Pin><Plate>BCTT208</Plate><MeterReading>1234535</MeterReading></Automobile>", "Content meet schema definition", true, false, false)]
+        public void Can_Valid_Xml_Content_Against_Schema(string content, string comment, bool expectSuccess, bool expectWarning, bool expectError)
         {
-            // ToDo: Add xml schema validate
             // Arrange
             var noteContent = string.Format(NoteXmlTextBase, XmlNamespace, content);
             var note = new HmmNote
             {
                 Id = 1,
-                Author = _user,
+                Author = DefaultAuthor,
                 Subject = AutomobileConstant.AutoMobileRecordSubject,
                 Content = noteContent,
                 CreateDate = DateTime.Now,
-                LastModifiedDate = DateTime.Now
+                LastModifiedDate = DateTime.Now,
+                Description = comment
             };
 
             // Act
@@ -201,7 +196,6 @@ namespace Hmm.Automobile.Tests
         private void SetupDevEnv()
         {
             InsertSeedRecords();
-            _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
             var schemaStr = File.ReadAllText("Automobile.xsd");
             var catalog = new NoteCatalog { Schema = schemaStr };
             _noteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<AutomobileXmlNoteSerializer>());

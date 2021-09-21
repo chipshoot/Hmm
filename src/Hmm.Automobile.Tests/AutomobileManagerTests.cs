@@ -6,7 +6,6 @@ using Hmm.Core.DomainEntity;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -106,9 +105,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(catalog);
             var noteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<AutomobileXmlNoteSerializer>());
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
-            var author = AuthorRepository.GetEntities().FirstOrDefault();
-            Assert.NotNull(author);
-            _manager = new AutomobileManager(noteSerializer, noteManager, LookupRepo, author);
+            _manager = new AutomobileManager(noteSerializer, noteManager, LookupRepo, DefaultAuthor);
         }
     }
 }
