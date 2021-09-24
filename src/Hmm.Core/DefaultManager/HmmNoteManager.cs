@@ -1,5 +1,4 @@
-﻿using Hmm.Core.DefaultManager.Validator;
-using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
@@ -14,12 +13,12 @@ namespace Hmm.Core.DefaultManager
         #region private fields
 
         private readonly IVersionRepository<HmmNote> _noteNoteRepo;
-        private readonly NoteValidator _validator;
+        private readonly IHmmValidator<HmmNote> _validator;
         private readonly IDateTimeProvider _dateProvider;
 
         #endregion private fields
 
-        public HmmNoteManager(IVersionRepository<HmmNote> noteRepo, NoteValidator validator, IDateTimeProvider dateProvider)
+        public HmmNoteManager(IVersionRepository<HmmNote> noteRepo, IHmmValidator<HmmNote> validator, IDateTimeProvider dateProvider)
         {
             Guard.Against<ArgumentNullException>(noteRepo == null, nameof(noteRepo));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
@@ -93,7 +92,7 @@ namespace Hmm.Core.DefaultManager
 
         public IEnumerable<HmmNote> GetNotes(bool includeDeleted = false)
         {
-            var notes = includeDeleted? _noteNoteRepo.GetEntities():
+            var notes = includeDeleted ? _noteNoteRepo.GetEntities() :
                 _noteNoteRepo.GetEntities().Where(n => !n.IsDeleted);
 
             return notes;

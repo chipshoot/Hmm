@@ -94,7 +94,6 @@ namespace Hmm.Automobile.Tests
             var autoExpected = new AutomobileInfo
             {
                 Id = 1,
-                AuthorId = DefaultAuthor.Id,
                 Maker = "Subaru",
                 Brand = "Outback",
                 Year = "2017",
@@ -117,7 +116,7 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(autoExpected.Color, auto.Color);
             Assert.Equal(autoExpected.Pin, auto.Pin);
             Assert.Equal(autoExpected.Plate, auto.Plate);
-            Assert.Equal(autoExpected.AuthorId.ToString(), auto.AuthorId.ToString());
+            Assert.Equal(DefaultAuthor.Id.ToString(), auto.AuthorId.ToString());
         }
 
         [Fact]

@@ -7,6 +7,7 @@ using Hmm.Utility.MeasureUnit;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
+using Hmm.Automobile.Validator;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -39,6 +40,7 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.NotNull(savedDisc);
             Assert.True(savedDisc.Id >= 1, "savedDisc.Id>=1");
+            Assert.Equal(DefaultAuthor.Id.ToString(), savedDisc.AuthorId.ToString());
         }
 
         [Fact]
@@ -128,7 +130,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(catalog);
             var noteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<GasDiscountXmlNoteSerializer>());
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
-            _manager = new DiscountManager(noteSerializer, noteManager, LookupRepo, DefaultAuthor);
+            _manager = new DiscountManager(noteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
         }
     }
 }

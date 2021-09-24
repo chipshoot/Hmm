@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Hmm.Utility.Validation
 {
-    public abstract class ValidatorBase<T> : AbstractValidator<T>
+    public abstract class ValidatorBase<T> : AbstractValidator<T>, IHmmValidator<T>
     {
         public bool IsValidEntity(T entity, ProcessingResult processResult)
         {

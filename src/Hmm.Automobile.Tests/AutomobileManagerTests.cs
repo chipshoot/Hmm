@@ -6,6 +6,7 @@ using Hmm.Core.DomainEntity;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
+using Hmm.Automobile.Validator;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -30,6 +31,8 @@ namespace Hmm.Automobile.Tests
                 MeterReading = 100,
                 Year = "2018",
                 Pin = "1234",
+                Color = "Blue",
+                Plate = "BCTT208"
             };
 
             // Act
@@ -88,6 +91,8 @@ namespace Hmm.Automobile.Tests
                 MeterReading = 100,
                 Year = "2018",
                 Pin = "1234",
+                Plate = "BCTT208",
+                Color = "Blue"
             };
             Assert.NotNull(author);
             _manager.Create(car);
@@ -105,7 +110,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(catalog);
             var noteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<AutomobileXmlNoteSerializer>());
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
-            _manager = new AutomobileManager(noteSerializer, noteManager, LookupRepo, DefaultAuthor);
+            _manager = new AutomobileManager(noteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
         }
     }
 }

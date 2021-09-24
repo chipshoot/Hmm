@@ -11,9 +11,9 @@ namespace Hmm.Core.DefaultManager
     public class NoteCatalogManager : INoteCatalogManager
     {
         private readonly IRepository<NoteCatalog> _dataSource;
-        private readonly NoteCatalogValidator _validator;
+        private readonly IHmmValidator<NoteCatalog> _validator;
 
-        public NoteCatalogManager(IRepository<NoteCatalog> dataSource, NoteCatalogValidator validator)
+        public NoteCatalogManager(IRepository<NoteCatalog> dataSource, IHmmValidator<NoteCatalog> validator)
         {
             Guard.Against<ArgumentNullException>(dataSource == null, nameof(dataSource));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));

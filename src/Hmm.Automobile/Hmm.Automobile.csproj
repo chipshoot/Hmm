@@ -9,8 +9,4 @@
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Validator\" />
-  </ItemGroup>
-
 </Project>

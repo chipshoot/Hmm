@@ -29,7 +29,6 @@ namespace Hmm.Automobile.Tests
 
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
                 Program = "Petro-Canada membership",
                 Amount = 0.8m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
@@ -54,7 +53,7 @@ namespace Hmm.Automobile.Tests
 
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
+                //AuthorId = DefaultAuthor.Id,
                 Program = "<Costco> membership",
                 Amount = 0.2m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
@@ -91,7 +90,7 @@ namespace Hmm.Automobile.Tests
             var discountExpected = new GasDiscount
             {
                 Id = 1,
-                AuthorId = DefaultAuthor.Id,
+                //AuthorId = DefaultAuthor.Id,
                 Program = "<Petro>-\"Canada\" membership",
                 Amount = 0.8m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
@@ -109,7 +108,7 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(discountExpected.Amount, discount.Amount);
             Assert.Equal(discountExpected.DiscountType, discount.DiscountType);
             Assert.Equal(discountExpected.IsActive, discount.IsActive);
-            Assert.Equal(discountExpected.AuthorId.ToString(), discount.AuthorId.ToString());
+            Assert.Equal(DefaultAuthor.Id.ToString(), discount.AuthorId.ToString());
         }
 
         [Fact]
@@ -118,7 +117,7 @@ namespace Hmm.Automobile.Tests
             // Arrange - note with null content
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
+                //AuthorId = DefaultAuthor.Id,
                 Program = "Petro-Canada membership",
                 Amount = 0.8m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,

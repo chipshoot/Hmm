@@ -1,5 +1,6 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Automobile.NoteSerializer;
+using Hmm.Automobile.Validator;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
@@ -129,6 +130,11 @@ namespace Hmm.Automobile.Tests
             Assert.Equal("Petro-Canada Membership", disc.Program.Program);
         }
 
+        [Fact]
+        public void CannotCreateInvalidGasLog()
+        {
+        }
+
         private void SetupDevEnv()
         {
             InsertSeedRecords();
@@ -140,31 +146,32 @@ namespace Hmm.Automobile.Tests
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(autoCat);
             var autoNoteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, autoCat, new NullLogger<AutomobileXmlNoteSerializer>());
-            _autoManager = new AutomobileManager(autoNoteSerializer, noteManager, LookupRepo, DefaultAuthor);
+            _autoManager = new AutomobileManager(autoNoteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
 
             // setup discount manager
             var discountCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(discountCat);
             var discountNoteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, discountCat, new NullLogger<GasDiscountXmlNoteSerializer>());
-            _discountManager = new DiscountManager(discountNoteSerializer, noteManager, LookupRepo, DefaultAuthor);
+            _discountManager = new DiscountManager(discountNoteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
 
             // setup gas log manager
             var logCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasLogCatalogName);
             Assert.NotNull(logCat);
             var gasLogNoteSerializer = new GasLogXmlNoteSerializer(XmlNamespace, logCat, new NullLogger<GasLogXmlNoteSerializer>(), _autoManager, _discountManager);
-            _manager = new GasLogManager(gasLogNoteSerializer, noteManager, LookupRepo, DateProvider, DefaultAuthor);
+            _manager = new GasLogManager(gasLogNoteSerializer, new GasLogValidator(LookupRepo, DateProvider), noteManager, LookupRepo, DateProvider, DefaultAuthor);
 
             // Insert car
             var car = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
                 Brand = "AutoBack",
                 Maker = "Subaru",
                 MeterReading = 100,
                 Year = "2018",
-                Pin = "1234"
+                Pin = "1234",
+                Color = "Blue",
+                Plate = "BCTT208"
             };
             var savedCar = _autoManager.Create(car);
             Assert.NotNull(savedCar);
@@ -172,7 +179,6 @@ namespace Hmm.Automobile.Tests
             // Insert discount
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
                 Amount = 0.8m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
                 IsActive = true,
@@ -191,11 +197,13 @@ namespace Hmm.Automobile.Tests
 
             var gasLog = new GasLog
             {
+                Date = new DateTime(2021, 8, 9),
                 Car = car,
                 Station = "Costco",
                 Gas = Volume.FromLiter(40),
                 Price = new Money(40.0),
                 Distance = Dimension.FromKilometer(300),
+                CurrentMeterReading = Dimension.FromKilometer(23500),
                 Discounts = new List<GasDiscountInfo>
                         {
                             new()

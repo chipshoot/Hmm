@@ -11,9 +11,9 @@ namespace Hmm.Core.DefaultManager
     public class SubsystemManager : ISubsystemManager
     {
         private readonly IRepository<Subsystem> _dataSource;
-        private readonly SubsystemValidator _validator;
+        private readonly IHmmValidator<Subsystem> _validator;
 
-        public SubsystemManager(IRepository<Subsystem> dataSource, SubsystemValidator validator)
+        public SubsystemManager(IRepository<Subsystem> dataSource, IHmmValidator<Subsystem> validator)
         {
             Guard.Against<ArgumentNullException>(dataSource == null, nameof(dataSource));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));

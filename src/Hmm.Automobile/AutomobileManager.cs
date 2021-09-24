@@ -12,8 +12,8 @@ namespace Hmm.Automobile
 {
     public class AutomobileManager : EntityManagerBase<AutomobileInfo>
     {
-        public AutomobileManager(INoteSerializer<AutomobileInfo> noteSerializer, IHmmNoteManager noteManager, IEntityLookup lookupRepo, Author defaultAuthor)
-            : base(noteManager, lookupRepo, defaultAuthor)
+        public AutomobileManager(INoteSerializer<AutomobileInfo> noteSerializer, IHmmValidator<AutomobileInfo> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo, Author defaultAuthor)
+            : base(validator, noteManager, lookupRepo, defaultAuthor)
         {
             Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
             NoteSerializer = noteSerializer;
@@ -51,7 +51,9 @@ namespace Hmm.Automobile
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            if (!AuthorValid())
+            // ReSharper disable once PossibleNullReferenceException
+            entity.AuthorId = DefaultAuthor.Id;
+            if (!Validator.IsValidEntity(entity, ProcessResult))
             {
                 return null;
             }

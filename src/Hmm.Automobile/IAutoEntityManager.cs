@@ -1,15 +1,17 @@
-﻿using Hmm.Utility.Misc;
-using System;
-using System.Collections.Generic;
+﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
-using Hmm.Automobile.DomainEntity;
 using Hmm.Core.DomainEntity;
+using Hmm.Utility.Misc;
+using Hmm.Utility.Validation;
+using System.Collections.Generic;
 
 namespace Hmm.Automobile
 {
     public interface IAutoEntityManager<T> where T : AutomobileBase
     {
         INoteSerializer<T> NoteSerializer { get; }
+
+        IHmmValidator<T> Validator { get; }
 
         Author DefaultAuthor { get; }
 

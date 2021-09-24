@@ -14,8 +14,8 @@ namespace Hmm.Automobile
     {
         private readonly IDateTimeProvider _dateProvider;
 
-        public GasLogManager(INoteSerializer<GasLog> noteSerializer, IHmmNoteManager noteManager, IEntityLookup lookupRepo, IDateTimeProvider dateProvider, Author defaultAuthor)
-            : base(noteManager, lookupRepo, defaultAuthor)
+        public GasLogManager(INoteSerializer<GasLog> noteSerializer, IHmmValidator<GasLog> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo, IDateTimeProvider dateProvider, Author defaultAuthor)
+            : base(validator, noteManager, lookupRepo, defaultAuthor)
         {
             Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
             Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));
@@ -38,14 +38,17 @@ namespace Hmm.Automobile
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            if (!AuthorValid())
+            // ReSharper disable once PossibleNullReferenceException
+            entity.AuthorId = DefaultAuthor.Id;
+            entity.CreateDate = _dateProvider.UtcNow;
+            if (!Validator.IsValidEntity(entity, ProcessResult))
             {
                 return null;
             }
 
             // ToDo: Update related automobile's meter reading information
+
             // ReSharper disable once PossibleNullReferenceException
-            entity.CreateDate = _dateProvider.UtcNow;
             var note = entity.GetNote(NoteSerializer, DefaultAuthor);
             NoteManager.Create(note);
             switch (NoteManager.ProcessResult.Success)

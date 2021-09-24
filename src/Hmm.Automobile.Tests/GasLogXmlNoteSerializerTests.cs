@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Hmm.Automobile.Validator;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -21,7 +22,7 @@ namespace Hmm.Automobile.Tests
     /// <Note xmlns=\"{XmlNamespace}\">
     ///     <Content>
     ///         <GasLog>
-    ///             <Date>2021-10-18T00:00:00.0000000</Date>
+    ///             <Date>2021-08-18T00:00:00.0000000</Date>
     ///             <Distance>
     ///                 <Dimension>
     ///                     <Value>215</Value>
@@ -77,7 +78,7 @@ namespace Hmm.Automobile.Tests
         }
 
         [Theory]
-        [InlineData("<GasLog><Date>2021-10-15T00:00:00.0000000</Date><Distance><Dimension><Value>300</Value><Unit>Kilometre</Unit></Dimension></Distance><CurrentMeterReading><Dimension><Value>13000</Value><Unit>Kilometre</Unit></Dimension></CurrentMeterReading><Gas><Volume><Value>34</Value><Unit>Liter</Unit></Volume></Gas><Price><Money><Value>1.34</Value><Code>CAD</Code></Money></Price><GasStation>Costco</GasStation><Discounts></Discounts><Automobile>1</Automobile><Comment></Comment><CreateDate>2021-10-15T00:00:00.0000000</CreateDate></GasLog>")]
+        [InlineData("<GasLog><Date>2021-08-15T00:00:00.0000000</Date><Distance><Dimension><Value>300</Value><Unit>Kilometre</Unit></Dimension></Distance><CurrentMeterReading><Dimension><Value>13000</Value><Unit>Kilometre</Unit></Dimension></CurrentMeterReading><Gas><Volume><Value>34</Value><Unit>Liter</Unit></Volume></Gas><Price><Money><Value>1.34</Value><Code>CAD</Code></Money></Price><GasStation>Costco</GasStation><Discounts></Discounts><Automobile>1</Automobile><Comment></Comment><CreateDate>2021-10-15T00:00:00.0000000</CreateDate></GasLog>")]
         public void Can_Parse_GasLog_String_Content(string contentText)
         {
             // Arrange
@@ -86,8 +87,7 @@ namespace Hmm.Automobile.Tests
 
             var gasLog = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
-                Date = new DateTime(2021, 10, 15),
+                Date = new DateTime(2021, 8, 15),
                 Car = _defaultCar,
                 Distance = 300d.GetKilometer(),
                 CurrentMeterReading = 13000d.GetKilometer(),
@@ -117,7 +117,6 @@ namespace Hmm.Automobile.Tests
 
             var gasLog = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
                 Car = _defaultCar,
                 Date = new DateTime(2021, 10, 18),
                 Distance = 215d.GetKilometer(),
@@ -147,7 +146,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             Assert.NotNull(_defaultCar);
             Assert.NotNull(_defaultDiscount);
-            var xmlDoc = XDocument.Parse($"<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{XmlNamespace}\"><Content><GasLog><Date>2021-10-18T00:00:00.0000000</Date><Distance><Dimension><Value>250</Value><Unit>Kilometre</Unit></Dimension></Distance><CurrentMeterReading><Dimension><Value>13500</Value><Unit>Kilometre</Unit></Dimension></CurrentMeterReading><Gas><Volume><Value>50</Value><Unit>Liter</Unit></Volume></Gas><Price><Money><Value>1.30</Value><Code>CAD</Code></Money></Price><GasStation>Costco</GasStation><Discounts><Discount><Amount><Money><Value>0.8</Value><Code>CAD</Code></Money></Amount><Program>{_defaultDiscount.Id}</Program></Discount></Discounts><Automobile>{_defaultCar.Id}</Automobile><Comment>This is a comment</Comment><CreateDate>2021-10-17T00:00:00.0000000</CreateDate></GasLog></Content></Note>");
+            var xmlDoc = XDocument.Parse($"<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{XmlNamespace}\"><Content><GasLog><Date>2021-08-18T00:00:00.0000000</Date><Distance><Dimension><Value>250</Value><Unit>Kilometre</Unit></Dimension></Distance><CurrentMeterReading><Dimension><Value>13500</Value><Unit>Kilometre</Unit></Dimension></CurrentMeterReading><Gas><Volume><Value>50</Value><Unit>Liter</Unit></Volume></Gas><Price><Money><Value>1.30</Value><Code>CAD</Code></Money></Price><GasStation>Costco</GasStation><Discounts><Discount><Amount><Money><Value>0.8</Value><Code>CAD</Code></Money></Amount><Program>{_defaultDiscount.Id}</Program></Discount></Discounts><Automobile>{_defaultCar.Id}</Automobile><Comment>This is a comment</Comment><CreateDate>2021-10-17T00:00:00.0000000</CreateDate></GasLog></Content></Note>");
             var note = new HmmNote
             {
                 Id = 1,
@@ -161,8 +160,7 @@ namespace Hmm.Automobile.Tests
             var gasLogExpected = new GasLog
             {
                 Id = 1,
-                AuthorId = DefaultAuthor.Id,
-                Date = new DateTime(2021, 10, 18),
+                Date = new DateTime(2021, 8, 18),
                 Car = _defaultCar,
                 Distance = 250d.GetKilometer(),
                 CurrentMeterReading = 13500d.GetKilometer(),
@@ -193,7 +191,7 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(gasLogExpected.Distance, gasLog.Distance);
             Assert.Equal(gasLogExpected.Gas, gasLog.Gas);
             Assert.Equal(gasLogExpected.CurrentMeterReading, gasLog.CurrentMeterReading);
-            Assert.Equal(gasLogExpected.AuthorId.ToString(), gasLog.AuthorId.ToString());
+            Assert.Equal(DefaultAuthor.Id.ToString(), gasLog.AuthorId.ToString());
         }
 
         [Theory]
@@ -256,17 +254,18 @@ namespace Hmm.Automobile.Tests
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(autoCat);
             var autoNoteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, autoCat, new NullLogger<AutomobileXmlNoteSerializer>());
-            var autoManager = new AutomobileManager(autoNoteSerializer, noteManager, LookupRepo, DefaultAuthor);
+            var autoManager = new AutomobileManager(autoNoteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
 
             // Insert car
             var car = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
                 Brand = "AutoBack",
                 Maker = "Subaru",
                 MeterReading = 100,
                 Year = "2018",
-                Pin = "1234"
+                Pin = "1234",
+                Color = "Blue",
+                Plate = "BCTT208"
             };
             var savedCar = autoManager.Create(car);
             Assert.NotNull(savedCar);
@@ -276,12 +275,11 @@ namespace Hmm.Automobile.Tests
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(discountCat);
             var discountNoteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, discountCat, new NullLogger<GasDiscountXmlNoteSerializer>());
-            var discountManager = new DiscountManager(discountNoteSerializer, noteManager, LookupRepo, DefaultAuthor);
+            var discountManager = new DiscountManager(discountNoteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
 
             // Insert discount
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
                 Amount = 0.8m.GetCad(),
                 DiscountType = GasDiscountType.PerLiter,
                 IsActive = true,

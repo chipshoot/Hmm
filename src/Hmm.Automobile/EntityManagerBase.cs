@@ -12,50 +12,36 @@ namespace Hmm.Automobile
 {
     public abstract class EntityManagerBase<T> : IAutoEntityManager<T> where T : AutomobileBase
     {
-        protected EntityManagerBase(IHmmNoteManager noteManager, IEntityLookup lookupRepo, Author defaultAuthor)
+        protected EntityManagerBase(IHmmValidator<T> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo, Author defaultAuthor)
         {
+            Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
             Guard.Against<ArgumentNullException>(noteManager == null, nameof(noteManager));
             Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
             Guard.Against<ArgumentNullException>(defaultAuthor == null, nameof(defaultAuthor));
 
+            Validator = validator;
             NoteManager = noteManager;
             LookupRepo = lookupRepo;
             DefaultAuthor = defaultAuthor;
         }
 
+        public IHmmValidator<T> Validator { get; }
+
         protected IEnumerable<HmmNote> GetNotes(T entity)
         {
             var catId = entity.GetCatalogId(LookupRepo);
 
-            switch (AuthorValid())
+            var hasValidAuthor = DefaultAuthor != null && LookupRepo.GetEntity<Author>(DefaultAuthor.Id) != null;
+            switch (hasValidAuthor)
             {
                 case false:
+                    ProcessResult.AddErrorMessage("Cannot find default author", true);
                     return null;
 
                 default:
 
                     var notes = NoteManager.GetNotes().Where(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
                     return notes;
-            }
-        }
-
-        protected bool AuthorValid()
-        {
-            if (DefaultAuthor == null)
-            {
-                ProcessResult.AddErrorMessage("Cannot find default author", true);
-                return false;
-            }
-
-            var author = LookupRepo.GetEntity<Author>(DefaultAuthor.Id);
-            switch (author)
-            {
-                case null:
-                    ProcessResult.AddErrorMessage("Cannot find default author from database", true);
-                    return false;
-
-                default:
-                    return true;
             }
         }
 

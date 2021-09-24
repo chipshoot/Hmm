@@ -11,9 +11,9 @@ namespace Hmm.Core.DefaultManager
     public class NoteRenderManager : INoteRenderManager
     {
         private readonly IRepository<NoteRender> _dataSource;
-        private readonly NoteRenderValidator _validator;
+        private readonly IHmmValidator<NoteRender> _validator;
 
-        public NoteRenderManager(IRepository<NoteRender> dataSource, NoteRenderValidator validator)
+        public NoteRenderManager(IRepository<NoteRender> dataSource, IHmmValidator<NoteRender> validator)
         {
             Guard.Against<ArgumentNullException>(dataSource == null, nameof(dataSource));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));

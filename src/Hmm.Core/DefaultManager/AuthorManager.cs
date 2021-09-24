@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Hmm.Core.DefaultManager.Validator;
-using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hmm.Core.DefaultManager
 {
     public class AuthorManager : IAuthorManager
     {
         private readonly IGuidRepository<Author> _authorRepo;
-        private readonly AuthorValidator _validator;
+        private readonly IHmmValidator<Author> _validator;
 
-        public AuthorManager(IGuidRepository<Author> authorRepo, AuthorValidator validator)
+        public AuthorManager(IGuidRepository<Author> authorRepo, IHmmValidator<Author> validator)
         {
             Guard.Against<ArgumentNullException>(authorRepo == null, nameof(authorRepo));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
