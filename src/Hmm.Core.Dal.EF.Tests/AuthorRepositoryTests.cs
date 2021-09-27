@@ -23,7 +23,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Assert
             Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id != Guid.Empty, "savedRec.Id is not empty Guid 0");
+            Assert.True(savedRec.Id != Guid.Empty, "savedRec.Id is not empty GUID 0");
             Assert.Equal(author.Id, savedRec.Id);
         }
 
