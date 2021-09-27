@@ -5,6 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Hmm.Automobile.Tests</_Parameter1>
+    </AssemblyAttribute>
     <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
