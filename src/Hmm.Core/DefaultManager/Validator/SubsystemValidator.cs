@@ -9,6 +9,7 @@ namespace Hmm.Core.DefaultManager.Validator
         public SubsystemValidator()
         {
             RuleFor(r => r.Name).NotNull().Length(1, 200);
+            RuleFor(r => r.DefaultAuthor).NotNull();
             RuleFor(r => r.IsDefault).NotNull();
             RuleFor(r => r.Description).Length(1, 1000);
         }

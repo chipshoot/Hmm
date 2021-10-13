@@ -1,90 +1,21 @@
-﻿using Hmm.Utility.TestHelp;
+﻿using Hmm.Core.DomainEntity;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
-using Hmm.Core.DomainEntity;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
-    public class NoteRepositoryTests : DbTestFixtureBase
+    public class NoteRepositoryTests : CoreDalEFTestBase
     {
         private readonly Author _author;
         private readonly NoteCatalog _catalog;
 
         public NoteRepositoryTests()
         {
-            var systems = new List<Subsystem>
-            {
-                new Subsystem
-                {
-                    Name = "HmmNote",
-                    Description = "HMM note management"
-                },
-
-                new Subsystem
-                {
-                    Name = "Automobile",
-                    Description = "Car information management"
-                }
-            };
-
-            var authors = new List<Author>
-            {
-                new Author
-                {
-                    AccountName = "jfang",
-                    IsActivated = true,
-                    Description = "testing author"
-                },
-                new Author
-                {
-                    AccountName = "awang",
-                    IsActivated = true,
-                    Description = "testing author"
-                }
-            };
-            var renders = new List<NoteRender>
-            {
-                new NoteRender
-                {
-                    Name = "DefaultNoteRender",
-                    Namespace = "Hmm.Renders",
-                    IsDefault = true,
-                    Description = "Testing default note render"
-                },
-                new NoteRender
-                {
-                    Name = "GasLog",
-                    Namespace = "Hmm.Renders",
-                    Description = "Testing default note render"
-                }
-            };
-            var catalogs = new List<NoteCatalog>
-            {
-                new NoteCatalog
-                {
-                    Name = "DefaultNoteCatalog",
-                    Schema = "DefaultSchema",
-                    Render = renders[0],
-                    Subsystem = systems[0],
-                    IsDefault = true,
-                    Description = "Testing catalog"
-                },
-                new NoteCatalog
-                {
-                    Name = "Gas Log",
-                    Schema = "GasLogSchema",
-                    Render = renders[1],
-                    Subsystem = systems[1],
-                    Description = "Testing catalog"
-                }
-            };
-
-            SetupRecords(authors, renders, catalogs, systems);
-
+            SetupTestingEnv();
             _author = AuthorRepository.GetEntities().FirstOrDefault();
             _catalog = CatalogRepository.GetEntities().FirstOrDefault(cat => cat.IsDefault);
         }

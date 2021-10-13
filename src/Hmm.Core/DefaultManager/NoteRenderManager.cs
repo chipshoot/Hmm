@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Hmm.Core.DefaultManager.Validator;
-using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using System;
+using System.Collections.Generic;
 
 namespace Hmm.Core.DefaultManager
 {

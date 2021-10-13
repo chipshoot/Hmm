@@ -1,20 +1,28 @@
 using Hmm.Core.DomainEntity;
-using Hmm.Utility.TestHelp;
-using System;
 using System.Linq;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
-    public class SubsystemRepositoryTests : DbTestFixtureBase
+    public class SubsystemRepositoryTests : CoreDalEFTestBase
     {
-       [Fact]
+        private readonly Author _author;
+
+        public SubsystemRepositoryTests()
+        {
+            SetupTestingEnv();
+            _author = AuthorRepository.GetEntities().FirstOrDefault();
+        }
+
+        [Fact]
         public void Can_Add_Subsystem_To_DataSource()
         {
             // Arrange
+            Assert.NotNull(_author);
             var sys = new Subsystem
             {
                 Name = "Test subsystem",
+                DefaultAuthor = _author,
                 Description = "Default subsystem"
             };
 
@@ -32,9 +40,11 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Update_Subsystem()
         {
             // Arrange
+            Assert.NotNull(_author);
             var sys = new Subsystem
             {
                 Name = "Test Subsystem",
+                DefaultAuthor = _author,
                 Description = "Default Subsystem"
             };
             var newSys = SubsystemRepository.Add(sys);
@@ -51,14 +61,15 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(SubsystemRepository.ProcessMessage.Success);
         }
 
-
         [Fact]
         public void Can_Search_Subsystem_By_Id()
         {
             // Arrange
+            Assert.NotNull(_author);
             var sys = new Subsystem
             {
                 Name = "Test Subsystem",
+                DefaultAuthor = _author,
                 Description = "Default Subsystem"
             };
             var newSys = SubsystemRepository.Add(sys);
