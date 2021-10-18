@@ -4,7 +4,6 @@ using Hmm.Core;
 using Hmm.Core.DomainEntity;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
-using System.IO;
 using System.Xml.Linq;
 using Xunit;
 
@@ -13,6 +12,7 @@ namespace Hmm.Automobile.Tests
     public class AutomobileXmlNoteSerializerTests : AutoTestFixtureBase
     {
         private INoteSerializer<AutomobileInfo> _noteSerializer;
+        private Author _author;
 
         public AutomobileXmlNoteSerializerTests()
         {
@@ -84,7 +84,7 @@ namespace Hmm.Automobile.Tests
             var note = new HmmNote
             {
                 Id = 1,
-                Author = DefaultAuthor,
+                Author = _author,
                 Subject = AutomobileConstant.AutoMobileRecordSubject,
                 Content = xmlDoc.ToString(SaveOptions.DisableFormatting),
                 CreateDate = DateTime.Now,
@@ -116,7 +116,7 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(autoExpected.Color, auto.Color);
             Assert.Equal(autoExpected.Pin, auto.Pin);
             Assert.Equal(autoExpected.Plate, auto.Plate);
-            Assert.Equal(DefaultAuthor.Id.ToString(), auto.AuthorId.ToString());
+            Assert.Equal(_author.Id.ToString(), auto.AuthorId.ToString());
         }
 
         [Fact]
@@ -156,7 +156,7 @@ namespace Hmm.Automobile.Tests
             var note = new HmmNote
             {
                 Id = 1,
-                Author = DefaultAuthor,
+                Author = _author,
                 Subject = AutomobileConstant.AutoMobileRecordSubject,
                 Content = noteContent,
                 CreateDate = DateTime.Now,
@@ -195,9 +195,8 @@ namespace Hmm.Automobile.Tests
         private void SetupDevEnv()
         {
             InsertSeedRecords();
-            var schemaStr = File.ReadAllText("Automobile.xsd");
-            var catalog = new NoteCatalog { Schema = schemaStr };
-            _noteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<AutomobileXmlNoteSerializer>());
+            _noteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileXmlNoteSerializer>());
+            _author = Application.GetApplication().DefaultAuthor;
         }
     }
 }

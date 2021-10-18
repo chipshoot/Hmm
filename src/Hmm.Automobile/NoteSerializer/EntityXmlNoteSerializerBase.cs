@@ -9,7 +9,7 @@ namespace Hmm.Automobile.NoteSerializer
 {
     public class EntityXmlNoteSerializerBase<T> : DefaultXmlNoteSerializer<T> where T : AutomobileBase
     {
-        protected EntityXmlNoteSerializerBase(XNamespace noteRootNamespace, NoteCatalog catalog, ILogger logger) : base(noteRootNamespace, catalog, logger)
+        protected EntityXmlNoteSerializerBase(ILogger logger) : base(logger)
         {
         }
 

@@ -1,14 +1,19 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core.DomainEntity;
+using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Xml.Linq;
 
 namespace Hmm.Automobile.NoteSerializer
 {
+    // ToDO: REMOVE noteRootNamespace from constructor to easy the DI processing
     public class AutomobileXmlNoteSerializer : EntityXmlNoteSerializerBase<AutomobileInfo>
     {
-        public AutomobileXmlNoteSerializer(XNamespace noteRootNamespace, NoteCatalog catalog, ILogger logger) : base(noteRootNamespace, catalog, logger)
+        public AutomobileXmlNoteSerializer(IApplication app, ILogger logger) : base(logger)
         {
+            Guard.Against<ArgumentNullException>(app == null, nameof(app));
+            Catalog = app.GetCatalog(NoteCatalogType.Automobile);
         }
 
         public override AutomobileInfo GetEntity(HmmNote note)

@@ -14,8 +14,8 @@ namespace Hmm.Automobile
     {
         private readonly IDateTimeProvider _dateProvider;
 
-        public GasLogManager(INoteSerializer<GasLog> noteSerializer, IHmmValidator<GasLog> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo, IDateTimeProvider dateProvider, Author defaultAuthor)
-            : base(validator, noteManager, lookupRepo, defaultAuthor)
+        public GasLogManager(INoteSerializer<GasLog> noteSerializer, IHmmValidator<GasLog> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo, IDateTimeProvider dateProvider)
+            : base(validator, noteManager, lookupRepo)
         {
             Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
             Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));

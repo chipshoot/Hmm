@@ -19,6 +19,7 @@ namespace Hmm.Automobile.Tests
         private IAutoEntityManager<GasLog> _manager;
         private IAutoEntityManager<AutomobileInfo> _autoManager;
         private IAutoEntityManager<GasDiscount> _discountManager;
+        private Author _author;
 
         public GasLogManagerTests()
         {
@@ -62,7 +63,7 @@ namespace Hmm.Automobile.Tests
             Assert.True(newGas.Id >= 1, "newGas.Id >= 1");
             Assert.NotNull(newGas.Car);
             Assert.NotNull(newGas.Discounts);
-            Assert.Equal(DefaultAuthor.Id, newGas.AuthorId);
+            Assert.Equal(_author.Id, newGas.AuthorId);
             Assert.Equal(comment, newGas.Comment);
             Assert.Equal(Dimension.FromKilometer(12000), newGas.CurrentMeterReading);
             Assert.Equal(0.8m.GetCad(), newGas.Discounts.First().Amount);
@@ -99,7 +100,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var gas = InsertSampleGasLog();
             Assert.NotNull(gas);
-            Assert.NotNull(DefaultAuthor);
+            Assert.NotNull(_author);
 
             // Act
             var updatedGasLog = _manager.Update(gas);
@@ -107,7 +108,7 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.True(_manager.ProcessResult.Success);
             Assert.NotNull(updatedGasLog);
-            Assert.Equal(DefaultAuthor.Id, updatedGasLog.AuthorId);
+            Assert.Equal(_author.Id, updatedGasLog.AuthorId);
         }
 
         [Fact]
@@ -138,6 +139,7 @@ namespace Hmm.Automobile.Tests
         private void SetupDevEnv()
         {
             InsertSeedRecords();
+            _author = Application.GetApplication().DefaultAuthor;
 
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
 
@@ -145,22 +147,22 @@ namespace Hmm.Automobile.Tests
             var autoCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(autoCat);
-            var autoNoteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, autoCat, new NullLogger<AutomobileXmlNoteSerializer>());
-            _autoManager = new AutomobileManager(autoNoteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
+            var autoNoteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileXmlNoteSerializer>());
+            _autoManager = new AutomobileManager(autoNoteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo);
 
             // setup discount manager
             var discountCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(discountCat);
-            var discountNoteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, discountCat, new NullLogger<GasDiscountXmlNoteSerializer>());
-            _discountManager = new DiscountManager(discountNoteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
+            var discountNoteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscountXmlNoteSerializer>());
+            _discountManager = new DiscountManager(discountNoteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo);
 
             // setup gas log manager
             var logCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasLogCatalogName);
             Assert.NotNull(logCat);
-            var gasLogNoteSerializer = new GasLogXmlNoteSerializer(XmlNamespace, logCat, new NullLogger<GasLogXmlNoteSerializer>(), _autoManager, _discountManager);
-            _manager = new GasLogManager(gasLogNoteSerializer, new GasLogValidator(LookupRepo, DateProvider), noteManager, LookupRepo, DateProvider, DefaultAuthor);
+            var gasLogNoteSerializer = new GasLogXmlNoteSerializer(Application, new NullLogger<GasLogXmlNoteSerializer>(), _autoManager, _discountManager);
+            _manager = new GasLogManager(gasLogNoteSerializer, new GasLogValidator(LookupRepo, DateProvider), noteManager, LookupRepo, DateProvider);
 
             // Insert car
             var car = new AutomobileInfo

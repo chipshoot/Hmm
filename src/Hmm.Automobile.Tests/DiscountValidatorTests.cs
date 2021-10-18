@@ -3,6 +3,7 @@ using Hmm.Automobile.Validator;
 using Hmm.Utility.Currency;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using System;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -10,6 +11,7 @@ namespace Hmm.Automobile.Tests
     public class DiscountValidatorTests : AutoTestFixtureBase
     {
         private IHmmValidator<GasDiscount> _validator;
+        private Guid _authorId;
 
         public DiscountValidatorTests()
         {
@@ -22,7 +24,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Program = "Petro-Canada membership",
                 Amount = new Money(0.8),
                 DiscountType = GasDiscountType.PerLiter
@@ -65,7 +67,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Program = "",
                 Amount = new Money(0.8),
                 DiscountType = GasDiscountType.PerLiter
@@ -87,7 +89,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var discount = new GasDiscount
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Program = "Petro-Canada membership",
                 Amount = new Money(-1),
                 DiscountType = GasDiscountType.PerLiter
@@ -107,6 +109,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _validator = new GasDiscountValidator(LookupRepo);
+            _authorId = Application.GetApplication().DefaultAuthor.Id;
         }
     }
 }

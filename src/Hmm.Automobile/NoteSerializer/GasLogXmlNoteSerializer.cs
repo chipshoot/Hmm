@@ -18,15 +18,17 @@ namespace Hmm.Automobile.NoteSerializer
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
 
         public GasLogXmlNoteSerializer(
-            XNamespace noteRootNamespace,
-            NoteCatalog catalog,
+            IApplication app,
             ILogger logger,
             IAutoEntityManager<AutomobileInfo> autoManager,
             IAutoEntityManager<GasDiscount> discountManager)
-            : base(noteRootNamespace, catalog, logger)
+            : base(logger)
         {
+            Guard.Against<ArgumentNullException>(app == null, nameof(app));
             Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
             Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
+
+            Catalog = app.GetCatalog(NoteCatalogType.GasLog);
             _autoManager = autoManager;
             _discountManager = discountManager;
         }

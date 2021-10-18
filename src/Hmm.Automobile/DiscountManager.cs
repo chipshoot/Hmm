@@ -11,8 +11,8 @@ namespace Hmm.Automobile
 {
     public class DiscountManager : EntityManagerBase<GasDiscount>
     {
-        public DiscountManager(INoteSerializer<GasDiscount> noteSerializer, IHmmValidator<GasDiscount> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo, Author defaultAuthor) 
-            : base(validator, noteManager, lookupRepo, defaultAuthor)
+        public DiscountManager(INoteSerializer<GasDiscount> noteSerializer, IHmmValidator<GasDiscount> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo) 
+            : base(validator, noteManager, lookupRepo)
         {
             Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
             NoteSerializer = noteSerializer;

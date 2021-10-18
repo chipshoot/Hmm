@@ -12,6 +12,7 @@ namespace Hmm.Automobile.Tests
     public class GasLogValidatorTests : AutoTestFixtureBase
     {
         private IHmmValidator<GasLog> _validator;
+        private Guid _authorId;
 
         public GasLogValidatorTests()
         {
@@ -24,7 +25,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var log = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Date = DateProvider.UtcNow,
                 Car = new AutomobileInfo(),
                 CurrentMeterReading = 30000.GetKilometer(),
@@ -37,7 +38,7 @@ namespace Hmm.Automobile.Tests
                 {
                     new()
                     {
-                        Program = new GasDiscount{Amount = 0.8m.GetCad(), Program = "Petro-Canada membership", DiscountType = GasDiscountType.PerLiter, AuthorId = DefaultAuthor.Id},
+                        Program = new GasDiscount{Amount = 0.8m.GetCad(), Program = "Petro-Canada membership", DiscountType = GasDiscountType.PerLiter, AuthorId = _authorId},
                         Amount = 0.8m.GetCad()
                     }
                 },
@@ -92,7 +93,7 @@ namespace Hmm.Automobile.Tests
             var logDate = DateTime.Parse(date);
             var log = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Date = logDate,
                 Car = new AutomobileInfo(),
                 CurrentMeterReading = 30000.GetKilometer(),
@@ -121,7 +122,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var log = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Date = DateProvider.UtcNow,
                 Car = null,
                 CurrentMeterReading = 30000.GetKilometer(),
@@ -154,7 +155,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var log = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Date = DateProvider.UtcNow,
                 Car = new AutomobileInfo(),
                 Distance = distance.GetKilometer(),
@@ -183,7 +184,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var log = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Date = DateProvider.UtcNow,
                 Car = new AutomobileInfo(),
                 Distance = 100.GetKilometer(),
@@ -215,7 +216,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var log = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Date = DateProvider.UtcNow,
                 Car = new AutomobileInfo(),
                 Distance = 100.GetKilometer(),
@@ -251,7 +252,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var log = new GasLog
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Date = DateProvider.UtcNow,
                 Car = new AutomobileInfo(),
                 CurrentMeterReading = 30000.GetKilometer(),
@@ -264,7 +265,7 @@ namespace Hmm.Automobile.Tests
                 {
                     new()
                     {
-                        Program = new GasDiscount{Amount = 0.8m.GetCad(), Program = "Petro-Canada membership", DiscountType = GasDiscountType.PerLiter, AuthorId = DefaultAuthor.Id},
+                        Program = new GasDiscount{Amount = 0.8m.GetCad(), Program = "Petro-Canada membership", DiscountType = GasDiscountType.PerLiter, AuthorId = _authorId},
                         Amount = 0.8m.GetCad()
                     }
                 },
@@ -285,6 +286,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _validator = new GasLogValidator(LookupRepo, DateProvider);
+            _authorId = Application.GetApplication().DefaultAuthor.Id;
         }
     }
 }

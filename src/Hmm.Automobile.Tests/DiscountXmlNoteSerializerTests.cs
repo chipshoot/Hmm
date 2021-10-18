@@ -5,7 +5,6 @@ using Hmm.Core.DomainEntity;
 using Hmm.Utility.MeasureUnit;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
-using System.IO;
 using System.Xml.Linq;
 using Xunit;
 
@@ -14,6 +13,7 @@ namespace Hmm.Automobile.Tests
     public class DiscountXmlNoteSerializerTests : AutoTestFixtureBase
     {
         private INoteSerializer<GasDiscount> _noteSerializer;
+        private Author _author;
 
         public DiscountXmlNoteSerializerTests()
         {
@@ -80,7 +80,7 @@ namespace Hmm.Automobile.Tests
             var note = new HmmNote
             {
                 Id = 1,
-                Author = DefaultAuthor,
+                Author = _author,
                 Subject = AutomobileConstant.GasDiscountRecordSubject,
                 Content = xmlDoc.ToString(SaveOptions.DisableFormatting),
                 CreateDate = DateTime.Now,
@@ -108,7 +108,7 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(discountExpected.Amount, discount.Amount);
             Assert.Equal(discountExpected.DiscountType, discount.DiscountType);
             Assert.Equal(discountExpected.IsActive, discount.IsActive);
-            Assert.Equal(DefaultAuthor.Id.ToString(), discount.AuthorId.ToString());
+            Assert.Equal(_author.Id.ToString(), discount.AuthorId.ToString());
         }
 
         [Fact]
@@ -147,7 +147,7 @@ namespace Hmm.Automobile.Tests
             var note = new HmmNote
             {
                 Id = 1,
-                Author = DefaultAuthor,
+                Author = _author,
                 Subject = AutomobileConstant.AutoMobileRecordSubject,
                 Content = noteContent,
                 CreateDate = DateTime.Now,
@@ -186,9 +186,8 @@ namespace Hmm.Automobile.Tests
         private void SetupDevEnv()
         {
             InsertSeedRecords();
-            var schemaStr = File.ReadAllText("Discount.xsd");
-            var catalog = new NoteCatalog { Schema = schemaStr };
-            _noteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<GasDiscountXmlNoteSerializer>());
+            _noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscountXmlNoteSerializer>());
+            _author = Application.GetApplication().DefaultAuthor;
         }
     }
 }

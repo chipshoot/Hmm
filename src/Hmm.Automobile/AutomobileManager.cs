@@ -1,6 +1,5 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
-using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
@@ -10,10 +9,11 @@ using System.Linq;
 
 namespace Hmm.Automobile
 {
+    // TODO: REMOVE the default author from constructor to easy the DI processing
     public class AutomobileManager : EntityManagerBase<AutomobileInfo>
     {
-        public AutomobileManager(INoteSerializer<AutomobileInfo> noteSerializer, IHmmValidator<AutomobileInfo> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo, Author defaultAuthor)
-            : base(validator, noteManager, lookupRepo, defaultAuthor)
+        public AutomobileManager(INoteSerializer<AutomobileInfo> noteSerializer, IHmmValidator<AutomobileInfo> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
+            : base(validator, noteManager, lookupRepo)
         {
             Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
             NoteSerializer = noteSerializer;

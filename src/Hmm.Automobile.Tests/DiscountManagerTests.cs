@@ -1,4 +1,5 @@
-﻿using Hmm.Automobile.DomainEntity;
+﻿using System;
+using Hmm.Automobile.DomainEntity;
 using Hmm.Automobile.NoteSerializer;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
@@ -15,6 +16,7 @@ namespace Hmm.Automobile.Tests
     public class DiscountManagerTests : AutoTestFixtureBase
     {
         private IAutoEntityManager<GasDiscount> _manager;
+        private Guid _authorId;
 
         public DiscountManagerTests()
         {
@@ -40,7 +42,7 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.NotNull(savedDisc);
             Assert.True(savedDisc.Id >= 1, "savedDisc.Id>=1");
-            Assert.Equal(DefaultAuthor.Id.ToString(), savedDisc.AuthorId.ToString());
+            Assert.Equal(_authorId.ToString(), savedDisc.AuthorId.ToString());
         }
 
         [Fact]
@@ -128,9 +130,10 @@ namespace Hmm.Automobile.Tests
             var catalog = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(catalog);
-            var noteSerializer = new GasDiscountXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<GasDiscountXmlNoteSerializer>());
+            var noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscountXmlNoteSerializer>());
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
-            _manager = new DiscountManager(noteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
+            _manager = new DiscountManager(noteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo);
+            _authorId = Application.GetApplication().DefaultAuthor.Id;
         }
     }
 }

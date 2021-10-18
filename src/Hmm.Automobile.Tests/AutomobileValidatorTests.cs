@@ -2,6 +2,7 @@
 using Hmm.Automobile.Validator;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using System;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -9,6 +10,7 @@ namespace Hmm.Automobile.Tests
     public class AutomobileValidatorTests : AutoTestFixtureBase
     {
         private IHmmValidator<AutomobileInfo> _validator;
+        private Guid _authorId;
 
         public AutomobileValidatorTests()
         {
@@ -21,7 +23,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var auto = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Brand = "Outback",
                 Maker = "Subaru",
                 MeterReading = 100,
@@ -72,7 +74,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var auto = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Brand = "",
                 Maker = "Subaru",
                 MeterReading = 100,
@@ -98,7 +100,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var auto = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Brand = "Outback",
                 Maker = "Subaru",
                 MeterReading = 100,
@@ -124,7 +126,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var auto = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Brand = "Outback",
                 Maker = "Subaru",
                 MeterReading = -100,
@@ -150,7 +152,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var auto = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Brand = "Outback",
                 Maker = "Subaru",
                 MeterReading = 100,
@@ -176,7 +178,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var auto = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Brand = "Outback",
                 Maker = "Subaru",
                 MeterReading = 100,
@@ -202,7 +204,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var auto = new AutomobileInfo
             {
-                AuthorId = DefaultAuthor.Id,
+                AuthorId = _authorId,
                 Brand = "Outback",
                 Maker = "Subaru",
                 MeterReading = 100,
@@ -226,6 +228,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _validator = new AutomobileValidator(LookupRepo);
+            _authorId = Application.GetApplication().DefaultAuthor.Id;
         }
     }
 }

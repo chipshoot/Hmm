@@ -108,9 +108,9 @@ namespace Hmm.Automobile.Tests
             var catalog = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(catalog);
-            var noteSerializer = new AutomobileXmlNoteSerializer(XmlNamespace, catalog, new NullLogger<AutomobileXmlNoteSerializer>());
+            var noteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileXmlNoteSerializer>());
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
-            _manager = new AutomobileManager(noteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo, DefaultAuthor);
+            _manager = new AutomobileManager(noteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo);
         }
     }
 }
