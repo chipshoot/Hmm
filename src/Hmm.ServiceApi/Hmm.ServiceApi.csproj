@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+    <PackageReference Include="IdentityServer4" Version="4.1.2" />
+    <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="5.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.1.2" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\HmmNoteService\Validators\" />
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hmm.Automobile\Hmm.Automobile.csproj" />
+    <ProjectReference Include="..\Hmm.Contract\Hmm.Contract.csproj" />
+    <ProjectReference Include="..\Hmm.Core.Dal.EF\Hmm.Core.Dal.EF.csproj" />
+    <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />
+    <ProjectReference Include="..\Hmm.Infrastructure\Hmm.Infrastructure.csproj" />
+    <ProjectReference Include="..\Hmm.ServiceApi.DtoEntity\Hmm.ServiceApi.DtoEntity.csproj" />
+    <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
+  </ItemGroup>
+
+</Project>
