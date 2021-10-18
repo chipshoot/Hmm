@@ -5,10 +5,10 @@ IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' A
 IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'Phones')) DROP TABLE dbo.Phones
 IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'ContactInfoCatalogs')) DROP TABLE dbo.ContactInfoCatalogs
 IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'Notes')) DROP TABLE dbo.Notes
-IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'Authors')) DROP TABLE dbo.Authors
 IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'NoteCatalogs')) DROP TABLE dbo.NoteCatalogs
-IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'NoteRenders')) DROP TABLE dbo.NoteRenders
 IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'Subsystems')) DROP TABLE dbo.Subsystems
+IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'Authors')) DROP TABLE dbo.Authors
+IF (EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = 'NoteRenders')) DROP TABLE dbo.NoteRenders
 
 /****** Object:  Table [dbo].[Authors]    Script Date: 03/05/2018 16:05:01 ******/
 SET ANSI_NULLS ON
@@ -76,6 +76,7 @@ GO
 CREATE TABLE [dbo].[Subsystems](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](200) NOT NULL,
+	[DefaultAuthorID] [UNIQUEIDENTIFIER] NOT NULL,
 	[IsDefault] BIT NOT NULL,
 	[Description] [nvarchar](1000) NULL,
  CONSTRAINT [PK_Subsystems] PRIMARY KEY CLUSTERED 
@@ -138,6 +139,7 @@ CREATE TABLE [dbo].[Notes](
 	[Content] [xml] NOT NULL,
 	[CatalogId] [int] NOT NULL,
 	[AuthorID] [UNIQUEIDENTIFIER] NOT NULL,
+	[IsDeleted] [bit] NOT NULL,
 	[CreateDate] [datetime] NOT NULL,
 	[LastModifiedDate] [datetime] NOT NULL,
 	[Description] [nvarchar](1000) NULL,
@@ -147,6 +149,8 @@ CREATE TABLE [dbo].[Notes](
 	[ID] ASC
 )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Notes] ADD  CONSTRAINT [DF_Notes_IsDeleted]  DEFAULT ((0)) FOR [IsDeleted]
 GO
 
 /****** Object:  Table [dbo].[Emails]    Script Date: 03/05/2018 16:05:01 ******/
@@ -195,6 +199,10 @@ CREATE TABLE [dbo].[NoteTagRefs](
 ) ON [PRIMARY]
 GO
 
+/****** Object:  ForeignKey [FK_Subsystems_Authors]    Script Date: 03/05/2018 16:05:01 ******/
+ALTER TABLE [dbo].[Subsystems]  WITH CHECK ADD  CONSTRAINT [FK_Subsystems_Authors] FOREIGN KEY([DefaultAuthorID])
+REFERENCES [dbo].[Authors] ([ID])
+GO
 /****** Object:  ForeignKey [FK_Emails_ContactInfoCatalogs]    Script Date: 03/05/2018 16:05:01 ******/
 ALTER TABLE [dbo].[Emails]  WITH CHECK ADD  CONSTRAINT [FK_Emails_ContactInfoCatalogs] FOREIGN KEY([Catalog])
 REFERENCES [dbo].[ContactInfoCatalogs] ([ID])
