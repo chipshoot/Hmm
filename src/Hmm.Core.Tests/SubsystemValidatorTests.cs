@@ -1,4 +1,5 @@
-﻿using Hmm.Core.DefaultManager.Validator;
+﻿using System.Linq;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
@@ -9,6 +10,7 @@ namespace Hmm.Core.Tests
     public class SubsystemValidatorTests : TestFixtureBase
     {
         private SubsystemValidator _validator;
+        private Author _author;
 
         public SubsystemValidatorTests()
         {
@@ -26,6 +28,7 @@ namespace Hmm.Core.Tests
             var sys = new Subsystem
             {
                 Name = GetRandomString(nameLen),
+                DefaultAuthor = _author,
                 Description = "Default Subsystem"
             };
 
@@ -47,12 +50,13 @@ namespace Hmm.Core.Tests
         [InlineData(0, false)]
         [InlineData(1, true)]
         [InlineData(1005, false)]
-        public void NoteRender_Must_Has_Valid_Description_Length(int descLen, bool expected)
+        public void Subsystem_Must_Has_Valid_Description_Length(int descLen, bool expected)
         {
             // Arrange
             var sys = new Subsystem
             {
                 Name = "Test name",
+                DefaultAuthor = _author,
                 Description = GetRandomString(descLen)
             };
 
@@ -69,10 +73,31 @@ namespace Hmm.Core.Tests
             }
         }
 
+        [Fact]
+        public void SubSystem_Must_Has_Valid_DefaultAuthor()
+        {
+            var sys = new Subsystem
+            {
+                Name = "Test name",
+                DefaultAuthor = null,
+                Description = GetRandomString(50)
+            };
+
+            // Act
+
+            var processResult = new ProcessingResult();
+            var result = _validator.IsValidEntity(sys, processResult);
+
+            // Assert
+            Assert.False(result);
+        }
+
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _validator = new SubsystemValidator();
+            _validator = new SubsystemValidator(AuthorRepository);
+            _author = AuthorRepository.GetEntities().FirstOrDefault();
+            Assert.NotNull(_author);
         }
     }
 }

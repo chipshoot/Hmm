@@ -10,7 +10,7 @@ namespace Hmm.Core.DefaultManager.Validator
         {
             RuleFor(c => c.Name).NotNull().Length(1, 200);
             RuleFor(c => c.Schema).NotNull();
-            RuleFor(c => c.Render).NotNull();
+            RuleFor(c => c.Render).NotNull().SetValidator(new NoteRenderValidator());
             RuleFor(c => c.IsDefault).NotNull();
             RuleFor(c => c.Description).Length(0, 1000);
         }

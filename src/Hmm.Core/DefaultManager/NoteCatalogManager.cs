@@ -5,6 +5,7 @@ using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.Core.DefaultManager
 {
@@ -12,39 +13,28 @@ namespace Hmm.Core.DefaultManager
     {
         private readonly IRepository<NoteCatalog> _dataSource;
         private readonly IHmmValidator<NoteCatalog> _validator;
-        private readonly INoteRenderManager _renderMan;
+        private readonly IEntityLookup _lookupRepo;
 
-        public NoteCatalogManager(IRepository<NoteCatalog> dataSource, IHmmValidator<NoteCatalog> validator, INoteRenderManager renderMan)
+        public NoteCatalogManager(IRepository<NoteCatalog> dataSource, IHmmValidator<NoteCatalog> validator, IEntityLookup lookupRepo)
         {
             Guard.Against<ArgumentNullException>(dataSource == null, nameof(dataSource));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
-            Guard.Against<ArgumentNullException>(renderMan == null, nameof(renderMan));
+            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
 
             _dataSource = dataSource;
             _validator = validator;
-            _renderMan = renderMan;
+            _lookupRepo = lookupRepo;
         }
 
         public NoteCatalog Create(NoteCatalog catalog)
         {
-            if (!_validator.IsValidEntity(catalog, ProcessResult))
+            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
             {
                 return null;
             }
 
             try
             {
-                // if render does not exits, create render first
-                if (_renderMan.GetEntities().All(r => r.Id != catalog.Render.Id))
-                {
-                    var newRender = _renderMan.Create(catalog.Render);
-                    if (newRender == null)
-                    {
-                        ProcessResult.PropagandaResult(_renderMan.ProcessResult);
-                        return null;
-                    }
-                }
-
                 var addedCatalog = _dataSource.Add(catalog);
                 if (addedCatalog == null)
                 {
@@ -59,45 +49,26 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public bool BatchCreate(IEnumerable<NoteCatalog> catalogs)
-        {
-            Guard.Against<ArgumentNullException>(catalogs == null, nameof(catalogs));
-
-            var success = false;
-            // ReSharper disable AssignNullToNotNullAttribute
-            try
-            {
-                var noteCatalogs = catalogs.ToList();
-                success = noteCatalogs.All(catalog => _validator.IsValidEntity(catalog, ProcessResult));
-
-                if (!success)
-                {
-                    return false;
-                }
-
-                if (noteCatalogs.Select(Create).Any(newCatalog => newCatalog == null))
-                {
-                    success = false;
-                }
-
-                return success;
-            }
-            catch (Exception e)
-            {
-                ProcessResult.WrapException(e);
-                return success;
-            }
-
-            // ReSharper restore AssignNullToNotNullAttribute
-        }
-
         public NoteCatalog Update(NoteCatalog catalog)
         {
-            if (!_validator.IsValidEntity(catalog, ProcessResult))
+            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
             {
                 return null;
             }
 
+            // check if note render exists in data source
+            if (_lookupRepo.GetEntity<NoteRender>(catalog.Render.Id) == null)
+            {
+                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because note render does not exists in data source");
+                return null;
+
+            }
+            // update catalog record
+            if (GetEntities().All(c => c.Id != catalog.Id))
+            {
+                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
+                return null;
+            }
             var updatedCatalog = _dataSource.Update(catalog);
             if (updatedCatalog == null)
             {

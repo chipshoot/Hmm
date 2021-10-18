@@ -64,6 +64,11 @@ namespace Hmm.Core.DefaultManager
                     return null;
                 }
 
+                if (GetEntities().All(u => u.Id != authorInfo.Id))
+                {
+                    ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
+                    return null;
+                }
                 var updatedUser = _authorRepo.Update(authorInfo);
                 if (updatedUser == null)
                 {

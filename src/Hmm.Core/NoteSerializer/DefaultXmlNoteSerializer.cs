@@ -1,5 +1,4 @@
 ﻿using Hmm.Core.DomainEntity;
-using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -14,20 +13,16 @@ namespace Hmm.Core.NoteSerializer
     {
         private XmlSchemaSet _schemas;
 
-        public DefaultXmlNoteSerializer(XNamespace noteRootNamespace, NoteCatalog catalog, ILogger logger) : base(logger)
+        public DefaultXmlNoteSerializer(ILogger logger) : base(logger)
         {
-            Guard.Against<ArgumentNullException>(noteRootNamespace == null, nameof(noteRootNamespace));
-            Guard.Against<ArgumentNullException>(catalog == null, nameof(catalog));
-
-            ContentNamespace = noteRootNamespace;
-            Catalog = catalog;
+            ContentNamespace = CoreConstants.DefaultNoteNamespace;
         }
 
         protected XNamespace ContentNamespace { get; }
 
         private XmlSchemaSet Schemas => _schemas ??= GetSchema();
 
-        protected readonly NoteCatalog Catalog;
+        protected NoteCatalog Catalog { get; init; }
 
         public override T GetEntity(HmmNote note)
         {

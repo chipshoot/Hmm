@@ -4,6 +4,7 @@ using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hmm.Core.DefaultManager
 {
@@ -31,6 +32,10 @@ namespace Hmm.Core.DefaultManager
             try
             {
                 var addedRender = _dataSource.Add(render);
+                if (addedRender == null)
+                {
+                    ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
+                }
                 return addedRender;
             }
             catch (Exception ex)
@@ -47,6 +52,12 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
 
+            // make sure the render exists in system
+            if (GetEntities().All(r => r.Id != render.Id))
+            {
+                ProcessResult.AddErrorMessage($"Cannot update render: {render.Name}, because system cannot find it in data source");
+                return null;
+            }
             var updatedRender = _dataSource.Update(render);
             if (updatedRender == null)
             {

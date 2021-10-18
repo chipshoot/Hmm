@@ -25,7 +25,11 @@ namespace Hmm.Core.Tests
             var catalog = new NoteCatalog
             {
                 Name = GetRandomString(nameLen),
-                Render = new NoteRender(),
+                Render = new NoteRender
+                {
+                    Name = "Test Render",
+                    Namespace = "Test NameSpace"
+                },
                 Schema = ""
             };
 
@@ -49,7 +53,11 @@ namespace Hmm.Core.Tests
             var catalog = new NoteCatalog
             {
                 Name = "Test name",
-                Render = new NoteRender(),
+                Render = new NoteRender
+                {
+                    Name = "Test Render",
+                    Namespace = "Test NameSpace"
+                },
                 Schema = "Test schema"
             };
 
@@ -85,7 +93,11 @@ namespace Hmm.Core.Tests
             var catalog = new NoteCatalog
             {
                 Name = "Test name",
-                Render = new NoteRender(),
+                Render = new NoteRender
+                {
+                    Name = "Test Render",
+                    Namespace = "Test NameSpace"
+                },
                 Schema = GetRandomString(schemaLen)
             };
 
@@ -113,7 +125,11 @@ namespace Hmm.Core.Tests
             var catalog = new NoteCatalog
             {
                 Name = "Test name",
-                Render = new NoteRender(),
+                Render = new NoteRender
+                {
+                    Name = "Test Render",
+                    Namespace = "Test NameSpace"
+                },
                 Schema = "Test schema",
                 Description = GetRandomString(descLen)
             };

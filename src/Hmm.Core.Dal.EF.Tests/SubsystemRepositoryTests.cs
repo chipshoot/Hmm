@@ -1,10 +1,11 @@
 using Hmm.Core.DomainEntity;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
-    public class SubsystemRepositoryTests : CoreDalEFTestBase
+    public class SubsystemRepositoryTests : CoreDalEfTestBase
     {
         private readonly Author _author;
 
@@ -23,7 +24,32 @@ namespace Hmm.Core.Dal.EF.Tests
             {
                 Name = "Test subsystem",
                 DefaultAuthor = _author,
-                Description = "Default subsystem"
+                Description = "Default subsystem",
+                NoteCatalogs = new List<NoteCatalog>
+                {
+                    new()
+                    {
+                        Name = "Test Catalog1",
+                        Schema = "Test Catalog1 Schema",
+                        Render = new NoteRender
+                        {
+                            Name = "Test Catalog1 Render",
+                            Namespace = "Hmm.Render",
+                            Description = "This is description of test catalog1 render"
+                        }
+                    },
+                    new ()
+                    {
+                        Name = "Test Catalog2",
+                        Schema = "Test Catalog2 Schema",
+                        Render = new NoteRender
+                        {
+                            Name = "Test Catalog2 Render",
+                            Namespace = "Hmm.Render",
+                            Description = "This is description of test catalog2 render"
+                        }
+                    }
+                }
             };
 
             // Act
@@ -31,6 +57,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Assert
             Assert.NotNull(newSys);
+            Assert.Equal(2, newSys.NoteCatalogs.Count());
             Assert.True(newSys.Id > 0, "newSubsystem.Id >=1");
             Assert.Equal("Test subsystem", newSys.Name);
             Assert.True(SubsystemRepository.ProcessMessage.Success);
@@ -45,7 +72,32 @@ namespace Hmm.Core.Dal.EF.Tests
             {
                 Name = "Test Subsystem",
                 DefaultAuthor = _author,
-                Description = "Default Subsystem"
+                Description = "Default Subsystem",
+                NoteCatalogs = new List<NoteCatalog>
+                {
+                    new()
+                    {
+                        Name = "Test Catalog1",
+                        Schema = "Test Catalog1 Schema",
+                        Render = new NoteRender
+                        {
+                            Name = "Test Catalog1 Render",
+                            Namespace = "Hmm.Render",
+                            Description = "This is description of test catalog1 render"
+                        }
+                    },
+                    new ()
+                    {
+                        Name = "Test Catalog2",
+                        Schema = "Test Catalog2 Schema",
+                        Render = new NoteRender
+                        {
+                            Name = "Test Catalog2 Render",
+                            Namespace = "Hmm.Render",
+                            Description = "This is description of test catalog2 render"
+                        }
+                    }
+                }
             };
             var newSys = SubsystemRepository.Add(sys);
             var savedSys = LookupRepo.GetEntities<Subsystem>().FirstOrDefault(s => s.Id == newSys.Id);
@@ -53,6 +105,10 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             savedSys.Description = "changed default Subsystem";
+            var firstCatalog = savedSys.NoteCatalogs.First();
+            Assert.NotNull(firstCatalog);
+            firstCatalog.Name = "Updated Test Catalog1";
+            firstCatalog.Render.Name = "Update Test Catalog1 Render Name";
             var updatedSys = SubsystemRepository.Update(savedSys);
 
             // Assert

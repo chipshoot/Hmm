@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DefaultManager\Validator\ExistsElementValidator.cs" />
     <Compile Remove="DefaultManager\Validator\ExistsUserValidator.cs" />
     <Compile Remove="DefaultManager\Validator\HmmNoteValidator.cs" />
   </ItemGroup>

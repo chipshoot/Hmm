@@ -1,10 +1,6 @@
-using FluentValidation;
-using FluentValidation.Results;
 using Hmm.Core.DefaultManager;
-using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.TestHelp;
-using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -13,7 +9,7 @@ namespace Hmm.Core.Tests
     public class NoteRenderManagerTests : TestFixtureBase
     {
         private INoteRenderManager _manager;
-        private FakeValidator _testValidator;
+        private MockRenderValidator _testValidator;
 
         public NoteRenderManagerTests()
         {
@@ -85,6 +81,40 @@ namespace Hmm.Core.Tests
         }
 
         [Fact]
+        public void Cannot_Update_Non_Exists_Render()
+        {
+            // Arrange
+            var render = new NoteRender
+            {
+                Name = "Test Render",
+                Namespace = "Default NameSpace"
+            };
+
+            // Act
+            var updatedRender = _manager.Update(render);
+
+            // Assert
+            Assert.False(_manager.ProcessResult.Success);
+            Assert.Null(updatedRender);
+
+            // Arrange
+            _manager.ProcessResult.Rest();
+            render = new NoteRender
+            {
+                Id = 54,
+                Name = "Test Render",
+                Namespace = "Default NameSpace"
+            };
+
+            // Act
+            updatedRender = _manager.Update(render);
+
+            // Assert
+            Assert.False(_manager.ProcessResult.Success);
+            Assert.Null(updatedRender);
+        }
+
+        [Fact]
         public void Can_Search_Render_By_Id()
         {
             // Arrange
@@ -104,22 +134,10 @@ namespace Hmm.Core.Tests
             Assert.Equal(savedRender.Name, render.Name);
         }
 
-        private class FakeValidator : NoteRenderValidator
-        {
-            public bool GetInvalidResult { get; set; }
-
-            public override ValidationResult Validate(ValidationContext<NoteRender> context)
-            {
-                return GetInvalidResult
-                    ? new ValidationResult(new List<ValidationFailure> { new("Render", "Render validator error") })
-                    : new ValidationResult();
-            }
-        }
-
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _testValidator = new FakeValidator();
+            _testValidator = FakeRenderValidator;
             _manager = new NoteRenderManager(RenderRepository, _testValidator);
         }
     }

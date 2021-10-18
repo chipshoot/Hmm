@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
-    public class CoreDalEFTestBase : DbTestFixtureBase
+    public class CoreDalEfTestBase : DbTestFixtureBase
     {
         protected void SetupTestingEnv()
         {

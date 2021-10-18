@@ -28,6 +28,12 @@ namespace Hmm.Core.Dal.EF.Repositories
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
                 DataContext.Subsystems.Add(entity);
+
+                // ToDo: find a good way to attach object to current context
+                //foreach (var cat in entity.NoteCatalogs)
+                //{
+                //    DataContext.Renders.Attach(cat.Render);
+                //}
                 DataContext.Save();
                 return entity;
             }

@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
-    public class NoteRepositoryTests : CoreDalEFTestBase
+    public class NoteRepositoryTests : CoreDalEfTestBase
     {
         private readonly Author _author;
         private readonly NoteCatalog _catalog;

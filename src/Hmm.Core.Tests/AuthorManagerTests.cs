@@ -1,12 +1,7 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-using Hmm.Core.DefaultManager;
-using Hmm.Core.DefaultManager.Validator;
+﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.DomainEntity;
-using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.TestHelp;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -18,7 +13,7 @@ namespace Hmm.Core.Tests
         #region private fields
 
         private IAuthorManager _authorManager;
-        private FakeValidator _testValidator;
+        private MockAuthorValidator _testValidator;
 
         #endregion private fields
 
@@ -127,6 +122,40 @@ namespace Hmm.Core.Tests
         }
 
         [Fact]
+        public void Cannot_Update_Not_Exists_Author()
+        {
+            // Arrange - no id
+            var author = new Author
+            {
+                AccountName = "jfang2",
+                IsActivated = true,
+            };
+
+            //   Act
+            var newAuthor = _authorManager.Update(author);
+
+            //  Assert
+            Assert.False(_authorManager.ProcessResult.Success);
+            Assert.Null(newAuthor);
+
+            // Arrange - id not exist
+            _authorManager.ProcessResult.Rest();
+            author = new Author
+            {
+                Id = Guid.NewGuid(),
+                AccountName = "jfang2",
+                IsActivated = true,
+            };
+
+            // Act
+            newAuthor = _authorManager.Update(author);
+
+            //  Assert
+            Assert.False(_authorManager.ProcessResult.Success);
+            Assert.Null(newAuthor);
+        }
+
+        [Fact]
         public void Can_Deactivate_Author()
         {
             // Arrange
@@ -178,26 +207,10 @@ namespace Hmm.Core.Tests
             Assert.Throws<ArgumentNullException>(() => _authorManager.AuthorExists(id));
         }
 
-        private class FakeValidator : AuthorValidator
-        {
-            public FakeValidator(IGuidRepository<Author> authorRepo) : base(authorRepo)
-            {
-            }
-
-            public bool GetInvalidResult { get; set; }
-
-            public override ValidationResult Validate(ValidationContext<Author> context)
-            {
-                return GetInvalidResult
-                    ? new ValidationResult(new List<ValidationFailure> { new("Author", "Author is invalid") })
-                    : new ValidationResult();
-            }
-        }
-
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _testValidator = new FakeValidator(AuthorRepository);
+            _testValidator = FakeAuthorValidator;
             _authorManager = new AuthorManager(AuthorRepository, _testValidator);
         }
     }
