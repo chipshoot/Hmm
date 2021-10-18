@@ -1,4 +1,7 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -39,6 +42,14 @@ namespace Hmm.Utility.TestHelp
         protected IEntityLookup LookupRepo { get; private set; }
 
         protected IDateTimeProvider DateProvider { get; private set; }
+
+        protected MockAuthorValidator FakeAuthorValidator => new(AuthorRepository);
+
+        protected MockCatalogValidator FakeCatalogValidator => new();
+
+        protected MockRenderValidator FakeRenderValidator => new();
+
+        protected MockSubsystemValidator FakeSubsystemValidator => new(AuthorRepository);
 
         protected virtual void InsertSeedRecords(
             List<Subsystem> systems = null,
@@ -301,6 +312,17 @@ namespace Hmm.Utility.TestHelp
                 savedCat.Id += _catalogs.Count + 1;
                 _catalogs.Add(savedCat);
                 catalog = savedCat.Clone();
+                if (_renders.All(r => r.Id != catalog.Render.Id))
+                {
+                    var savedRender = catalog.Render.Clone();
+                    savedRender.Id += _renders.Count + 1;
+                    _renders.Add(savedRender);
+                    catalog.Render = savedRender.Clone();
+                }
+                else
+                {
+                    catalog.Render = _renders.FirstOrDefault(r => r.Id == catalog.Render.Id);
+                }
                 return catalog;
             });
             mockCatalogs.Setup(c => c.Update(It.IsAny<NoteCatalog>())).Returns((NoteCatalog cat) =>
@@ -356,6 +378,51 @@ namespace Hmm.Utility.TestHelp
                 savedSys.Id += _systems.Count + 1;
                 _systems.Add(savedSys);
                 system = savedSys.Clone();
+
+                if (_authors.All(a => a.Id != system.DefaultAuthor.Id))
+                {
+                    var savedAuthor = system.DefaultAuthor.Clone();
+                    savedAuthor.Id = Guid.NewGuid();
+                    _authors.Add(savedAuthor);
+                    system.DefaultAuthor = savedAuthor.Clone();
+                }
+                else
+                {
+                    system.DefaultAuthor = _authors.FirstOrDefault(u => u.Id == system.DefaultAuthor.Id);
+                }
+
+                if (system.NoteCatalogs != null && system.NoteCatalogs.Any())
+                {
+                    var newCatalogs = new List<NoteCatalog>();
+                    foreach (var catalog in system.NoteCatalogs)
+                    {
+                        if (_catalogs.All(c => c.Id != catalog.Id))
+                        {
+                            var savedCatalog = catalog.Clone();
+                            savedCatalog.Id += _catalogs.Count + 1;
+                            _catalogs.Add(savedCatalog);
+                            newCatalogs.Add(savedCatalog.Clone());
+                        }
+                        else
+                        {
+                            newCatalogs.Add(_catalogs.FirstOrDefault(c => c.Id == catalog.Id));
+                        }
+                        if (_renders.All(r => r.Id != catalog.Render.Id))
+                        {
+                            var savedRender = catalog.Render.Clone();
+                            savedRender.Id += _renders.Count + 1;
+                            _renders.Add(savedRender);
+                            catalog.Render = savedRender.Clone();
+                        }
+                        else
+                        {
+                            catalog.Render = _renders.FirstOrDefault(r => r.Id == catalog.Render.Id);
+                        }
+                    }
+
+                    system.NoteCatalogs = newCatalogs;
+                }
+
                 return system;
             });
             mockSystem.Setup(c => c.Update(It.IsAny<Subsystem>())).Returns((Subsystem system) =>
@@ -395,6 +462,62 @@ namespace Hmm.Utility.TestHelp
             });
             mockNotes.Setup(a => a.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>())).Returns(() => _notes.AsQueryable());
             return mockNotes.Object;
+        }
+
+        protected class MockSubsystemValidator : SubsystemValidator
+        {
+            public MockSubsystemValidator(IGuidRepository<Author> authorRepo) : base(authorRepo)
+            {
+            }
+
+            public bool GetInvalidResult { get; set; }
+
+            public override ValidationResult Validate(ValidationContext<Subsystem> context)
+            {
+                return GetInvalidResult
+                    ? new ValidationResult(new List<ValidationFailure> { new("Subsystem", "Subsystem validator error") })
+                    : new ValidationResult();
+            }
+        }
+
+        protected class MockAuthorValidator : AuthorValidator
+        {
+            public MockAuthorValidator(IGuidRepository<Author> authorRepo) : base(authorRepo)
+            {
+            }
+
+            public bool GetInvalidResult { get; set; }
+
+            public override ValidationResult Validate(ValidationContext<Author> context)
+            {
+                return GetInvalidResult
+                    ? new ValidationResult(new List<ValidationFailure> { new("Author", "Author is invalid") })
+                    : new ValidationResult();
+            }
+        }
+
+        protected class MockCatalogValidator : NoteCatalogValidator
+        {
+            public bool GetInvalidResult { get; set; }
+
+            public override ValidationResult Validate(ValidationContext<NoteCatalog> context)
+            {
+                return GetInvalidResult
+                    ? new ValidationResult(new List<ValidationFailure> { new("NoteCatalog", "note catalog is invalid") })
+                    : new ValidationResult();
+            }
+        }
+
+        protected class MockRenderValidator : NoteRenderValidator
+        {
+            public bool GetInvalidResult { get; set; }
+
+            public override ValidationResult Validate(ValidationContext<NoteRender> context)
+            {
+                return GetInvalidResult
+                    ? new ValidationResult(new List<ValidationFailure> { new("NoteRender", "note render is invalid") })
+                    : new ValidationResult();
+            }
         }
     }
 }

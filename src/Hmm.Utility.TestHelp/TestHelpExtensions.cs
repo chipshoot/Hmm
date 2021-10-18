@@ -1,5 +1,6 @@
 ﻿using Hmm.Core.DomainEntity;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Hmm.Utility.TestHelp
@@ -118,13 +119,16 @@ namespace Hmm.Utility.TestHelp
                 {
                     Id = source.Id,
                     Name = source.Name,
-                    Namespace = source.Namespace
+                    Namespace = source.Namespace,
+                    IsDefault = source.IsDefault,
+                    Description = source.Description
                 };
                 return target;
             }
 
             targetRender.Id = source.Id;
             targetRender.Name = source.Name;
+            targetRender.IsDefault = source.IsDefault;
             targetRender.Namespace = source.Namespace;
 
             return targetRender;
@@ -143,8 +147,16 @@ namespace Hmm.Utility.TestHelp
                 {
                     Id = source.Id,
                     Name = source.Name,
-                    Description = source.Description
+                    Description = source.Description,
+                    DefaultAuthor = source.DefaultAuthor.Clone(),
                 };
+
+                var targetCatalogs = new List<NoteCatalog>();
+                if (source.NoteCatalogs != null && source.NoteCatalogs.Any())
+                {
+                    targetCatalogs.AddRange(source.NoteCatalogs.Select(catalog => catalog.Clone()));
+                    target.NoteCatalogs = targetCatalogs;
+                }
                 return target;
             }
 

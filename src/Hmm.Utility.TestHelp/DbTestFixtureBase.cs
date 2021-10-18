@@ -14,6 +14,10 @@ using System.Linq;
 
 namespace Hmm.Utility.TestHelp
 {
+    /// <summary>
+    /// The help class for setting up testing db environment and clean the testing environment
+    /// by <see cref="Dispose()"/> method
+    /// </summary>
     public class DbTestFixtureBase : IDisposable
     {
         private IHmmDataContext _dbContext;
@@ -62,50 +66,58 @@ namespace Hmm.Utility.TestHelp
             Guard.Against<ArgumentNullException>(subsystems == null, nameof(subsystems));
 
             // ReSharper disable PossibleNullReferenceException
-            foreach (var user in authors)
+            try
             {
-                AuthorRepository.Add(user);
-            }
-
-            foreach (var render in renders)
-            {
-                RenderRepository.Add(render);
-            }
-
-            foreach (var sys in subsystems)
-            {
-                SubsystemRepository.Add(sys);
-            }
-
-            foreach (var catalog in catalogs)
-            {
-                if (catalog.Render != null)
+                foreach (var user in authors)
                 {
-                    var render = LookupRepo.GetEntities<NoteRender>()
-                        .FirstOrDefault(r => r.Name == catalog.Render.Name);
-                    if (render != null)
+                    AuthorRepository.Add(user);
+                }
+
+                foreach (var render in renders)
+                {
+                    RenderRepository.Add(render);
+                }
+
+                foreach (var sys in subsystems)
+                {
+                    SubsystemRepository.Add(sys);
+                }
+
+                foreach (var catalog in catalogs)
+                {
+                    if (catalog.Render != null)
                     {
-                        catalog.Render = render;
+                        var render = LookupRepo.GetEntities<NoteRender>()
+                            .FirstOrDefault(r => r.Name == catalog.Render.Name);
+                        if (render != null)
+                        {
+                            catalog.Render = render;
+                        }
+                        else
+                        {
+                            throw new InvalidDataException($"Cannot find render {catalog.Render.Name} from data source");
+                        }
                     }
                     else
                     {
-                        throw new InvalidDataException($"Cannot find render {catalog.Render.Name} from data source");
+                        var render = LookupRepo.GetEntities<NoteRender>().FirstOrDefault();
+                        if (render != null)
+                        {
+                            catalog.Render = render;
+                        }
+                        else
+                        {
+                            throw new InvalidDataException("Cannot find default render from data source");
+                        }
                     }
-                }
-                else
-                {
-                    var render = LookupRepo.GetEntities<NoteRender>().FirstOrDefault();
-                    if (render != null)
-                    {
-                        catalog.Render = render;
-                    }
-                    else
-                    {
-                        throw new InvalidDataException("Cannot find default render from data source");
-                    }
-                }
 
-                CatalogRepository.Add(catalog);
+                    CatalogRepository.Add(catalog);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
 
             // ReSharper restore PossibleNullReferenceException
@@ -118,6 +130,11 @@ namespace Hmm.Utility.TestHelp
                 context.Reset();
             }
 
+            var systems = LookupRepo.GetEntities<Subsystem>().ToList();
+            foreach (var sys in systems)
+            {
+                SubsystemRepository.Delete(sys);
+            }
             var notes = LookupRepo.GetEntities<HmmNote>().ToList();
             foreach (var note in notes)
             {
@@ -140,11 +157,6 @@ namespace Hmm.Utility.TestHelp
             foreach (var author in authors)
             {
                 AuthorRepository.Delete(author);
-            }
-            var systems = LookupRepo.GetEntities<Subsystem>().ToList();
-            foreach (var sys in systems)
-            {
-                SubsystemRepository.Delete(sys);
             }
 
             if (_dbContext is DbContext newContext)
