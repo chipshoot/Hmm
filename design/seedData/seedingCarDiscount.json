@@ -1,0 +1,25 @@
+{
+    "AutomobileInfos": [
+        {
+            "Maker": "Subaru",
+            "Brand": "Outback",
+            "Year": "2017",
+            "Color": "Blue",
+            "Pin": "123",
+            "Plate": "BCTT208",
+            "MeterReading": 123456
+        }
+    ],
+    "GasDiscounts": [
+        {
+            "Program": "Patrol Canada Membership",
+            "Amount": {
+                "Value": 0.2,
+                "Code": "CAD"
+            },
+            "DiscountType": 1,
+            "IsActive": true,
+            "Comment": "Save 0.2 doller per liter"
+        }
+    ]
+}
