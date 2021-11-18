@@ -1,14 +1,17 @@
 ﻿using AutoMapper;
 using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Validation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
@@ -29,55 +32,61 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             _mapper = mapper;
         }
 
-        // GET api/automobiles/5
-        [HttpGet("{id}", Name = "GetAutomobile")]
-        [HttpHead]
-        public IActionResult GetAutomobileById(int id)
+        // GET api/automobiles
+        [HttpGet(Name = "GetAutomobiles")]
+        [AutomobilesResultFilter]
+        public async Task<IActionResult> GetMobiles()
         {
-            var car = _automobileManager.GetEntityById(id);
+            var autos = await _automobileManager.GetEntitiesAsync();
+            if (!autos.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(autos);
+        }
+
+        // GET api/automobiles/1
+        [HttpGet("{id:int}", Name = "GetAutomobileById")]
+        [HttpHead]
+        [AutomobileResultFilter]
+        public async Task<IActionResult> GetAutomobileById(int id)
+        {
+            var car = await _automobileManager.GetEntityByIdAsync(id);
             if (car == null)
             {
                 return NotFound();
             }
 
-            var apiCar = _mapper.Map<ApiAutomobile>(car);
-            return Ok(apiCar);
-        }
-
-        // GET api/automobiles/
-        [HttpGet]
-        public ActionResult<IEnumerable<ApiAutomobile>> GetMobiles()
-        {
-            var apiCars = _mapper.Map<IEnumerable<ApiAutomobile>>(_automobileManager.GetEntities().ToList());
-            return Ok(apiCars);
+            return Ok(car);
         }
 
         // POST api/automobiles
-        [HttpPost]
-        public ActionResult CreateAutomobile(ApiAutomobileForCreate apiCar)
+        [HttpPost(Name = "AddAutomobile")]
+        [AutomobileResultFilter]
+        public async Task<ActionResult> CreateAutomobile(ApiAutomobileForCreate apiCar)
         {
-            var newApiCars = new List<ApiAutomobile>();
             var car = _mapper.Map<AutomobileInfo>(apiCar);
-            var newCar = _automobileManager.Create(car);
+            var newCar = await _automobileManager.CreateAsync(car);
 
             if (newCar == null || !_automobileManager.ProcessResult.Success)
             {
                 throw new Exception(_automobileManager.ProcessResult.GetWholeMessage());
             }
 
-            return Ok();
+            return Ok(newCar);
         }
 
-        // PUT api/automobiles/5
-        [HttpPut("{id}")]
-        public IActionResult UpdateAutomobile(int id, [FromBody] ApiAutomobile apiCar)
+        // PUT api/automobiles/4
+        [HttpPut("{id:int}", Name = "UpdateAutomobile")]
+        public async Task<IActionResult> UpdateAutomobile(int id, [FromBody] ApiAutomobileForUpdate apiCar)
         {
             if (apiCar == null)
             {
                 return NotFound();
             }
 
-            var curCar = _automobileManager.GetEntityById(id);
+            var curCar = await _automobileManager.GetEntityByIdAsync(id);
             if (curCar == null)
             {
                 return BadRequest(new ApiBadRequestResponse("Cannot find automobile"));
@@ -93,8 +102,43 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return NoContent();
         }
 
+        // PATCH api/automobiles/4
+        [HttpPatch("{id:int}", Name = "PatchAutomobile")]
+        public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<ApiAutomobileForUpdate> patchDoc)
+        {
+            if (patchDoc == null || id <= 0)
+            {
+                return BadRequest(new ApiBadRequestResponse("Patch information is null or invalid id found"));
+            }
+
+            try
+            {
+                var curAutomobile = await _automobileManager.GetEntityByIdAsync(id);
+                if (curAutomobile == null)
+                {
+                    return NotFound();
+                }
+
+                var automobile2Update = _mapper.Map<ApiAutomobileForUpdate>(curAutomobile);
+                patchDoc.ApplyTo(automobile2Update);
+                _mapper.Map(automobile2Update, curAutomobile);
+
+                var newAutomobile = await _automobileManager.UpdateAsync(curAutomobile);
+                if (newAutomobile == null)
+                {
+                    return BadRequest(_automobileManager.ProcessResult.MessageList);
+                }
+
+                return NoContent();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
         // DELETE api/automobiles/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}", Name = "DeleteAutomobile")]
         public IActionResult Delete(int id)
         {
             throw new NotImplementedException();

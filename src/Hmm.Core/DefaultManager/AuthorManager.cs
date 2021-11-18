@@ -5,6 +5,8 @@ using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Hmm.Core.DefaultManager
 {
@@ -43,6 +45,28 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
+        public async Task<Author> CreateAsync(Author authorInfo)
+        {
+            // reset user id to apply unique account name validation
+            authorInfo.Id = Guid.Empty;
+            if (!_validator.IsValidEntity(authorInfo, ProcessResult))
+            {
+                return null;
+            }
+
+            try
+            {
+                authorInfo.Id = Guid.NewGuid();
+                var addedUsr = await _authorRepo.AddAsync(authorInfo);
+                return addedUsr;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
         public bool AuthorExists(string id)
         {
             Guard.Against<ArgumentNullException>(string.IsNullOrEmpty(id), nameof(id));
@@ -55,6 +79,41 @@ namespace Hmm.Core.DefaultManager
             return GetEntities().Any(u => u.Id == userId);
         }
 
+        public Author GetAuthorById(Guid id)
+        {
+            var author = _authorRepo.GetEntity(id);
+            if (author == null)
+            {
+                ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
+            }
+
+            return author;
+        }
+
+        public async Task<Author> GetAuthorByIdAsync(Guid id)
+        {
+            var author = await _authorRepo.GetEntityAsync(id);
+            if (author == null)
+            {
+                ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
+            }
+
+            return author;
+        }
+
+        public async Task<bool> AuthorExistsAsync(string id)
+        {
+            Guard.Against<ArgumentNullException>(string.IsNullOrEmpty(id), nameof(id));
+
+            if (!Guid.TryParse(id, out var userId))
+            {
+                throw new ArgumentOutOfRangeException(nameof(id));
+            }
+
+            var author = await _authorRepo.GetEntityAsync(userId);
+            return author != null;
+        }
+
         public Author Update(Author authorInfo)
         {
             try
@@ -64,12 +123,42 @@ namespace Hmm.Core.DefaultManager
                     return null;
                 }
 
-                if (GetEntities().All(u => u.Id != authorInfo.Id))
+                if (!AuthorExists(authorInfo.Id.ToString()))
                 {
                     ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
                     return null;
                 }
                 var updatedUser = _authorRepo.Update(authorInfo);
+                if (updatedUser == null)
+                {
+                    ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
+                }
+
+                return updatedUser;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<Author> UpdateAsync(Author authorInfo)
+        {
+            try
+            {
+                if (!_validator.IsValidEntity(authorInfo, ProcessResult))
+                {
+                    return null;
+                }
+
+                var authorExists = await AuthorExistsAsync(authorInfo.Id.ToString());
+                if (!authorExists)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
+                    return null;
+                }
+                var updatedUser = await _authorRepo.UpdateAsync(authorInfo);
                 if (updatedUser == null)
                 {
                     ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
@@ -90,6 +179,20 @@ namespace Hmm.Core.DefaultManager
             {
                 var authors = _authorRepo.GetEntities();
 
+                return authors;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null)
+        {
+            try
+            {
+                var authors = await _authorRepo.GetEntitiesAsync(query);
                 return authors;
             }
             catch (Exception ex)
@@ -121,6 +224,29 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public ProcessingResult ProcessResult { get; } = new ProcessingResult();
+        public async Task DeActivateAsync(Guid id)
+        {
+            var users = await  _authorRepo.GetEntitiesAsync(u => u.Id == id && u.IsActivated);
+            var user = users.FirstOrDefault();
+            if (user == null)
+            {
+                ProcessResult.Success = false;
+                ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
+            }
+            else
+            {
+                try
+                {
+                    user.IsActivated = false;
+                    await _authorRepo.UpdateAsync(user);
+                }
+                catch (Exception ex)
+                {
+                    ProcessResult.WrapException(ex);
+                }
+            }
+        }
+
+        public ProcessingResult ProcessResult { get; } = new();
     }
 }

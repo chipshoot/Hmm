@@ -2,7 +2,7 @@
 {
     public class ApiAuthorForCreate : ApiEntity
     {
-        public string AccountNumber { get; set; }
+        public string AccountName { get; set; }
 
         public string Role { get; set; }
 

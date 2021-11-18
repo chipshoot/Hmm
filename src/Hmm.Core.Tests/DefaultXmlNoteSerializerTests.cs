@@ -1,11 +1,11 @@
 ﻿using Hmm.Core.DomainEntity;
 using Hmm.Core.NoteSerializer;
 using Hmm.Utility.TestHelp;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Hmm.Core.Tests
@@ -135,14 +135,21 @@ namespace Hmm.Core.Tests
             _user = LookupRepo.GetEntities<Author>().FirstOrDefault();
             var schemaStr = File.ReadAllText("NotebaseSchema.xsd");
             var catalog = new NoteCatalog { Schema = schemaStr };
-            _noteSerializer = new TestDefaultXmlNoteSerializer(new NullLogger<TestDefaultXmlNoteSerializer>(), catalog);
+            _noteSerializer = new TestDefaultXmlNoteSerializer(new NullLogger<HmmNote>(), catalog);
         }
 
         private class TestDefaultXmlNoteSerializer : DefaultXmlNoteSerializer<HmmNote>
         {
-            public TestDefaultXmlNoteSerializer(ILogger logger, NoteCatalog catalog) : base(logger)
+            private NoteCatalog _catalog;
+
+            public TestDefaultXmlNoteSerializer(ILogger<HmmNote> logger, NoteCatalog catalog) : base(logger)
             {
-                Catalog = catalog;
+                _catalog = catalog;
+            }
+
+            protected override NoteCatalog GetCatalog()
+            {
+                return _catalog;
             }
         }
     }

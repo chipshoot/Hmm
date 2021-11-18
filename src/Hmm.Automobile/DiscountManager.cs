@@ -1,27 +1,37 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
-using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
     public class DiscountManager : EntityManagerBase<GasDiscount>
     {
-        public DiscountManager(INoteSerializer<GasDiscount> noteSerializer, IHmmValidator<GasDiscount> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo) 
+        public DiscountManager(INoteSerializer<GasDiscount> noteSerializer, IHmmValidator<GasDiscount> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
             : base(validator, noteManager, lookupRepo)
         {
             Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
             NoteSerializer = noteSerializer;
         }
 
+        public override Task<GasDiscount> GetEntityByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IEnumerable<GasDiscount> GetEntities()
         {
             var notes = GetNotes(new GasDiscount());
             return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+        }
+
+        public override Task<IEnumerable<GasDiscount>> GetEntitiesAsync()
+        {
+            throw new NotImplementedException();
         }
 
         public override GasDiscount GetEntityById(int id)
@@ -33,6 +43,7 @@ namespace Hmm.Automobile
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            // ReSharper disable once PossibleNullReferenceException
             entity.AuthorId = DefaultAuthor.Id;
             if (!Validator.IsValidEntity(entity, ProcessResult))
             {
@@ -49,6 +60,11 @@ namespace Hmm.Automobile
                 default:
                     return GetEntityById(note.Id);
             }
+        }
+
+        public override Task<GasDiscount> CreateAsync(GasDiscount entity)
+        {
+            throw new NotImplementedException();
         }
 
         public override GasDiscount Update(GasDiscount entity)
@@ -81,6 +97,11 @@ namespace Hmm.Automobile
                 default:
                     return GetEntityById(curDiscount.Id);
             }
+        }
+
+        public override Task<GasDiscount> UpdateAsync(GasDiscount entity)
+        {
+            throw new NotImplementedException();
         }
 
         public override INoteSerializer<GasDiscount> NoteSerializer { get; }

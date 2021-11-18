@@ -228,7 +228,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _validator = new AutomobileValidator(LookupRepo);
-            _authorId = Application.GetApplication().DefaultAuthor.Id;
+            _authorId = ApplicationRegister.DefaultAuthor.Id;
         }
     }
 }

@@ -126,7 +126,21 @@ namespace Hmm.Core.Dal.EF.Tests
             {
                 Name = "Test Subsystem",
                 DefaultAuthor = _author,
-                Description = "Default Subsystem"
+                Description = "Default Subsystem",
+                NoteCatalogs = new List<NoteCatalog>
+                {
+                    new()
+                    {
+                        Name = "Test Catalog1",
+                        Schema = "Test Catalog1 Schema",
+                        Render = new NoteRender
+                        {
+                            Name = "Test Catalog1 Render",
+                            Namespace = "Hmm.Render",
+                            Description = "This is description of test catalog1 render"
+                        }
+                    }
+                }
             };
             var newSys = SubsystemRepository.Add(sys);
 

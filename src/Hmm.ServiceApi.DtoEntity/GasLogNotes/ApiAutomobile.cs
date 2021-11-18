@@ -12,6 +12,8 @@
 
         public string Year { get; set; }
 
+        public string Color { get; set; }
+
         public string Pin { get; set; }
     }
 }

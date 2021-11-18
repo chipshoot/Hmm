@@ -286,7 +286,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _validator = new GasLogValidator(LookupRepo, DateProvider);
-            _authorId = Application.GetApplication().DefaultAuthor.Id;
+            _authorId = ApplicationRegister.DefaultAuthor.Id;
         }
     }
 }

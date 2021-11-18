@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
 using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
-using Hmm.Core;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
 using Hmm.ServiceApi.Models.Validation;
 using Hmm.Utility.Currency;
 using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System;
@@ -16,169 +17,248 @@ using System.Linq;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
-    public class GaslogController : Controller
+    [ApiController]
+    [Route("api/automobiles/{autoId:int}/gaslogs")]
+    [ValidationModel]
+    public class GasLogController : Controller
     {
-        [Route("api/automobiles/gaslogs")]
-        [ValidationModel]
-        public class GasLogController : Controller
+        private readonly IAutoEntityManager<GasLog> _gasLogManager;
+
+        private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
+        private readonly IAutoEntityManager<GasDiscount> _discountManager;
+        private readonly IMapper _mapper;
+
+        public GasLogController(IAutoEntityManager<GasLog> gasLogManager, IMapper mapper,
+            IAutoEntityManager<AutomobileInfo> autoManager,
+            IAutoEntityManager<GasDiscount> discountManager)
         {
-            private readonly IAutoEntityManager<GasLog> _gasLogManager;
-            private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
-            private readonly IAutoEntityManager<GasDiscount> _discountManager;
-            private readonly IMapper _mapper;
-            private readonly IAuthorManager _userManager;
+            Guard.Against<ArgumentNullException>(gasLogManager == null, nameof(gasLogManager));
+            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
+            Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
 
-            public GasLogController(IAutoEntityManager<GasLog> gasLogManager, IMapper mapper,
-                IAuthorManager userManager, IAutoEntityManager<AutomobileInfo> autoManager,
-                IAutoEntityManager<GasDiscount> discountManager)
+            _gasLogManager = gasLogManager;
+            _mapper = mapper;
+            _autoManager = autoManager;
+            _discountManager = discountManager;
+        }
+
+        // GET api/automobiles/1/gaslogs
+        [HttpGet(Name = "GetGasLogs")]
+        public IActionResult Get(int autoId)
+        {
+            //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            //if (userId == null)
+            //{
+            //    var errorMsg = "Cannot get author information with null user id";
+            //    Log.Error(errorMsg);
+            //    return BadRequest(errorMsg);
+            //}
+
+            //var user = _userManager.GetEntities().FirstOrDefault(u => u.Id == Guid.Parse(userId));
+            //if (user == null)
+            //{
+            //    return Ok(new List<ApiGasLog>());
+            //}
+
+            var apiGasLogs = _mapper.Map<IEnumerable<ApiGasLog>>(_gasLogManager.GetEntities().Where(l=>l.Car.Id == autoId)).ToList();
+            if (!apiGasLogs.Any())
             {
-                Guard.Against<ArgumentNullException>(gasLogManager == null, nameof(gasLogManager));
-                Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-                Guard.Against<ArgumentNullException>(userManager == null, nameof(userManager));
-                Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
-                Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
-
-                _gasLogManager = gasLogManager;
-                _mapper = mapper;
-                _userManager = userManager;
-                _autoManager = autoManager;
-                _discountManager = discountManager;
+                return NotFound();
             }
 
-            // GET api/automobiles/gaslogs
-            [HttpGet]
-            public IActionResult Get()
+            foreach (var log in apiGasLogs)
             {
-                var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-                if (userId == null)
-                {
-                    var errorMsg = "Cannot get author information with null user id";
-                    Log.Error(errorMsg);
-                    return BadRequest(errorMsg);
-                }
+                log.Links = CreateLinksForGasLog(autoId, log.Id);
+            }
+            return Ok(apiGasLogs);
+        }
 
-                var user = _userManager.GetEntities().FirstOrDefault(u => u.Id == Guid.Parse(userId));
-                if (user == null)
-                {
-                    return Ok(new List<ApiGasLog>());
-                }
-
-                var gasLogs = _gasLogManager.GetEntities().ToList();
-                var apiGasLogs = _mapper.Map<List<ApiGasLog>>(gasLogs);
-                return Ok(apiGasLogs);
+        // GET api/automobiles/1/gaslogs/5
+        [HttpGet("{id:int}", Name = "GetGasLogById")]
+        public IActionResult Get(int autoId, int id)
+        {
+            var gasLog = _gasLogManager.GetEntityById(id);
+            if (gasLog == null || gasLog.Car.Id != autoId)
+            {
+                return NotFound();
             }
 
-            // GET api/automobiles/gaslogs/5
-            [HttpGet("{id}")]
-            public IActionResult Get(int id)
-            {
-                var gasLog = _gasLogManager.GetEntityById(id);
-                if (gasLog == null)
-                {
-                    return NotFound();
-                }
+            var apiGasLog = _mapper.Map<ApiGasLog>(gasLog);
+            apiGasLog.Links = CreateLinksForGasLog(autoId, apiGasLog.Id);
+            return Ok(apiGasLog);
+        }
 
-                var apiGasLog = _mapper.Map<ApiGasLog>(gasLog);
-                return Ok(apiGasLog);
+        // POST api/automobiles/1/gaslogs
+        [HttpPost(Name = "AddGasLog")]
+        public IActionResult Post(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
+        {
+            if (apiGasLog == null)
+            {
+                var errMsg = "null gas log found";
+                Log.Logger.Debug(errMsg);
+                return BadRequest(new ApiBadRequestResponse(errMsg));
             }
 
-            // POST api/automobiles/gaslogs
-            [HttpPost]
-            public IActionResult Post([FromBody] ApiGasLogForCreation apiGasLog)
+            try
             {
-                if (apiGasLog == null)
+                var gasLog = _mapper.Map<GasLog>(apiGasLog);
+
+                // get automobile
+                var car = _autoManager.GetEntityById(autoId);
+                if (car == null)
                 {
-                    var errMsg = "null gas log found";
+                    var errMsg = $"Cannot find automobile with id {apiGasLog.AutomobileId} from data source";
                     Log.Logger.Debug(errMsg);
                     return BadRequest(new ApiBadRequestResponse(errMsg));
                 }
 
-                try
+                gasLog.Car = car;
+
+                // get discount for gas log
+                var discounts = new List<GasDiscountInfo>();
+                if (apiGasLog.DiscountInfos != null)
                 {
-                    var gasLog = _mapper.Map<GasLog>(apiGasLog);
-
-                    // get automobile
-                    var car = _autoManager.GetEntityById(apiGasLog.AutomobileId);
-                    if (car == null)
+                    foreach (var disc in apiGasLog.DiscountInfos)
                     {
-                        var errMsg = $"Cannot find automobile with id {apiGasLog.AutomobileId} from data source";
-                        Log.Logger.Debug(errMsg);
-                        return BadRequest(new ApiBadRequestResponse(errMsg));
-                    }
-
-                    gasLog.Car = car;
-
-                    // get discount for gas log
-                    var discounts = new List<GasDiscountInfo>();
-                    if (apiGasLog.DiscountInfos != null)
-                    {
-                        foreach (var disc in apiGasLog.DiscountInfos)
+                        var discount = _discountManager.GetEntityById(disc.DiscountId);
+                        if (discount == null)
                         {
-                            var discount = _discountManager.GetEntityById(disc.DiscountId);
-                            if (discount == null)
-                            {
-                                var errMsg =
-                                    $"Cannot find discount information for discount with id {disc.DiscountId} from data source";
-                                return BadRequest(new ApiBadRequestResponse(errMsg));
-                            }
-
-                            discounts.Add(new GasDiscountInfo
-                            {
-                                Program = discount,
-                                Amount = new Money(disc.Amount)
-                            });
+                            var errMsg =
+                                $"Cannot find discount information for discount with id {disc.DiscountId} from data source";
+                            return BadRequest(new ApiBadRequestResponse(errMsg));
                         }
+
+                        discounts.Add(new GasDiscountInfo
+                        {
+                            Program = discount,
+                            Amount = new Money(disc.Amount)
+                        });
                     }
-
-                    gasLog.Discounts = discounts;
-
-                    var savedGasLog = _gasLogManager.Create(gasLog);
-                    if (savedGasLog == null)
-                    {
-                        return BadRequest(new ApiBadRequestResponse("Cannot add gas log"));
-                    }
-
-                    var apiSavedGasLog = _mapper.Map<ApiGasLog>(savedGasLog);
-                    return Ok(new ApiOkResponse(apiSavedGasLog));
                 }
-                catch (Exception)
+
+                gasLog.Discounts = discounts;
+
+                var savedGasLog = _gasLogManager.Create(gasLog);
+                if (savedGasLog == null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError);
+                    return BadRequest(new ApiBadRequestResponse("Cannot add gas log"));
                 }
-            }
 
-            // PUT api/automobiles/gaslogs/5
-            [HttpPut("{id}")]
-            public IActionResult Put(int id, [FromBody] ApiGasLogForUpdate apiGasLog)
+                var apiSavedGasLog = _mapper.Map<ApiGasLog>(savedGasLog);
+                apiSavedGasLog.Links = CreateLinksForGasLog(autoId, apiSavedGasLog.Id);
+                return Ok(new ApiOkResponse(apiSavedGasLog));
+            }
+            catch (Exception)
             {
-                if (apiGasLog == null)
-                {
-                    return BadRequest(new ApiBadRequestResponse("null gas log found"));
-                }
-
-                var gasLog = _gasLogManager.GetEntityById(id);
-                if (gasLog == null)
-                {
-                    return BadRequest(new ApiBadRequestResponse($"Cannot find gas log with id {id}"));
-                }
-
-                _mapper.Map(apiGasLog, gasLog);
-                var newLog = _gasLogManager.Update(gasLog);
-                if (newLog == null)
-                {
-                    return BadRequest(new ApiBadRequestResponse($"Cannot update gas log with id {id}"));
-                }
-
-                var newApiLog = _mapper.Map<ApiGasLog>(newLog);
-                return Ok(newApiLog);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
+        }
 
-            // DELETE api/automobiles/gaslogs/5
-            [HttpDelete("{id}")]
-            public IActionResult Delete(int id)
+        // PUT api/automobiles/1/gaslogs/5
+        [HttpPut("{id:int}", Name = "UpdateGasLog")]
+        public IActionResult Put(int id, [FromBody] ApiGasLogForUpdate apiGasLog)
+        {
+            if (apiGasLog == null)
             {
-                throw new NotImplementedException();
+                return BadRequest(new ApiBadRequestResponse("null gas log found"));
             }
+
+            var gasLog = _gasLogManager.GetEntityById(id);
+            if (gasLog == null)
+            {
+                return BadRequest(new ApiBadRequestResponse($"Cannot find gas log with id {id}"));
+            }
+
+            _mapper.Map(apiGasLog, gasLog);
+            var newLog = _gasLogManager.Update(gasLog);
+            if (newLog == null)
+            {
+                return BadRequest(new ApiBadRequestResponse($"Cannot update gas log with id {id}"));
+            }
+
+            var newApiLog = _mapper.Map<ApiGasLog>(newLog);
+            return Ok(newApiLog);
+        }
+
+        // PATCH api/automobiles/1/gaslogs/4
+        [HttpPatch("{id:int}", Name = "PatchGasLog")]
+        public IActionResult Patch(int autoId, int id, [FromBody] JsonPatchDocument<ApiGasLogForUpdate> patchDoc)
+        {
+            if (patchDoc == null || id <= 0)
+            {
+                return BadRequest(new ApiBadRequestResponse("Patch information is null or invalid id found"));
+            }
+
+            try
+            {
+                var curGasLog = _gasLogManager.GetEntities().FirstOrDefault(r => r.Id == id && r.Car.Id == autoId);
+                if (curGasLog == null)
+                {
+                    return NotFound();
+                }
+
+                var gasLog2Update = _mapper.Map<ApiGasLogForUpdate>(curGasLog);
+                patchDoc.ApplyTo(gasLog2Update);
+                _mapper.Map(gasLog2Update, curGasLog);
+
+                var newGasLog = _gasLogManager.Update(curGasLog);
+                if (newGasLog == null)
+                {
+                    return BadRequest(_gasLogManager.ProcessResult.MessageList);
+                }
+
+                return NoContent();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        // DELETE api/automobiles/1/gaslogs/5
+        [HttpDelete("{id:int}", Name = "DeleteGasLog")]
+        public IActionResult Delete(int autoId, int id)
+        {
+            return StatusCode(StatusCodes.Status405MethodNotAllowed);
+        }
+
+        private IEnumerable<Link> CreateLinksForGasLog(int autoId, int logId)
+        {
+            var links = new List<Link>
+            {
+                // self
+                new()
+                {
+                    Title = "self",
+                    Rel = "self",
+                    Href = Url.Link("GetGasLogById", new { autoId, id = logId }),
+                    Method = "Get"
+                },
+                new()
+                {
+                    Title = "AddGasLog",
+                    Rel = "create_gasLog",
+                    Href = Url.Link("AddGasLog", new { autoId}),
+                    Method = "POST"
+                },
+                new()
+                {
+                    Title = "UpdateGasLog",
+                    Rel = "update_gasLog",
+                    Href = Url.Link("UpdateGasLog", new {autoId, id = logId }),
+                    Method = "PUT"
+                },
+                new()
+                {
+                    Title = "PatchGasLog",
+                    Rel = "patch_gasLog",
+                    Href = Url.Link("PatchGasLog", new {autoId, id = logId }),
+                    Method = "PATCH"
+                }
+            };
+
+            return links;
         }
     }
 }

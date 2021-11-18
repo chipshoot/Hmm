@@ -7,6 +7,7 @@ using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
@@ -21,10 +22,16 @@ namespace Hmm.Automobile
             Validator = validator;
             NoteManager = noteManager;
             LookupRepo = lookupRepo;
+            DefaultAuthor = ApplicationRegister.DefaultAuthor;
         }
 
         public IHmmValidator<T> Validator { get; }
 
+        /// <summary>
+        /// Get notes for specific entity
+        /// </summary>
+        /// <param name="entity">The entity which used to get type and figure out the catalog</param>
+        /// <returns>The notes which belongs to entity type</returns>
         protected IEnumerable<HmmNote> GetNotes(T entity)
         {
             var catId = entity.GetCatalogId(LookupRepo);
@@ -38,8 +45,28 @@ namespace Hmm.Automobile
 
                 default:
 
-                    var notes = NoteManager.GetNotes().Where(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
+                    var notes = NoteManager.GetNotes().ToList().Where(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
                     return notes;
+            }
+        }
+
+        protected async Task<IEnumerable<HmmNote>> GetNotesAsync(T entity)
+        {
+            var catId = await entity.GetCatalogIdAsync(LookupRepo);
+            var author = await LookupRepo.GetEntityAsync<Author>(DefaultAuthor.Id);
+
+            var hasValidAuthor = DefaultAuthor != null && author != null;
+            switch (hasValidAuthor)
+            {
+                case false:
+                    ProcessResult.AddErrorMessage("Cannot find default author", true);
+                    return null;
+
+                default:
+
+                    var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
+                    var noteList = notes.ToList();
+                    return noteList;
             }
         }
 
@@ -49,7 +76,11 @@ namespace Hmm.Automobile
 
         #region method of interface IAutoEntityManager
 
+        public abstract Task<T> GetEntityByIdAsync(int id);
+
         public abstract IEnumerable<T> GetEntities();
+
+        public abstract Task<IEnumerable<T>> GetEntitiesAsync();
 
         public abstract INoteSerializer<T> NoteSerializer { get; }
 
@@ -59,7 +90,11 @@ namespace Hmm.Automobile
 
         public abstract T Create(T entity);
 
+        public abstract Task<T> CreateAsync(T entity);
+
         public abstract T Update(T entity);
+
+        public abstract Task<T> UpdateAsync(T entity);
 
         public bool IsEntityOwner(int id)
         {

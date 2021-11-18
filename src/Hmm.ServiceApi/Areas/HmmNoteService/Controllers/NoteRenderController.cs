@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
+using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
@@ -35,31 +37,49 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         #endregion constructor
 
-        [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        [HttpGet(Name = "GetNoteRenders")]
+        [NoteRendersResultFilter]
+        public async Task<IActionResult> Get()
         {
-            var render = _renderManager.GetEntities().FirstOrDefault(r => r.Id == id);
-            var ret = _mapper.Map<NoteRender, ApiNoteRender>(render);
-            return Ok(ret);
+            var renders = await _renderManager.GetEntitiesAsync();
+            var renderLst = renders.ToList();
+            if (!renderLst.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(renderLst);
+        }
+
+        [HttpGet("{id:int}", Name = "GetNoteRenderById")]
+        [NoteRendersResultFilter]
+        public async Task<IActionResult> Get(int id)
+        {
+            var render = await _renderManager.GetEntityByIdAsync(id);
+            if (render == null)
+            {
+                return NotFound($"The note render: {id} not found");
+            }
+
+            return Ok(render);
         }
 
         // POST api/renders
-        [HttpPost]
-        public IActionResult Post([FromBody] ApiNoteRenderForCreate render)
+        [HttpPost(Name = "AddNoteRender")]
+        [NoteRenderResultFilter]
+        public async Task<IActionResult> Post([FromBody] ApiNoteRenderForCreate render)
         {
             try
             {
                 var noteRender = _mapper.Map<ApiNoteRenderForCreate, NoteRender>(render);
-                var newRender = _renderManager.Create(noteRender);
+                var newRender = await _renderManager.CreateAsync(noteRender);
 
                 if (newRender == null)
                 {
-                    return BadRequest();
+                    return BadRequest($"Internal error found when try to insert note render: {render.Name}");
                 }
 
-                var apiNewRender = _mapper.Map<NoteRender, ApiNoteRender>(newRender);
-
-                return Ok(apiNewRender);
+                return Created("", newRender);
             }
             catch (Exception)
             {
@@ -68,8 +88,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         // PUT api/renders/5
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] ApiNoteRenderForUpdate render)
+        [HttpPut("{id:int}", Name = "UpdateNoteRender")]
+        public async Task<IActionResult> Put(int id, [FromBody] ApiNoteRenderForUpdate render)
         {
             if (render == null || id <= 0)
             {
@@ -78,14 +98,14 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curRender = _renderManager.GetEntities().FirstOrDefault(r => r.Id == id);
+                var curRender = await _renderManager.GetEntityByIdAsync(id);
                 if (curRender == null)
                 {
-                    return NotFound();
+                    return BadRequest($"The note render {id} cannot be found.");
                 }
 
                 curRender = _mapper.Map(render, curRender);
-                var apiNewRender = _renderManager.Update(curRender);
+                var apiNewRender = await _renderManager.UpdateAsync(curRender);
                 if (apiNewRender == null)
                 {
                     return BadRequest(_renderManager.ProcessResult.MessageList);
@@ -100,8 +120,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         // PATCH api/renders/5
-        [HttpPatch("{id}")]
-        public IActionResult Patch(int id, [FromBody] JsonPatchDocument<ApiNoteRenderForUpdate> patchDoc)
+        [HttpPatch("{id:int}", Name = "PatchNoteRender")]
+        public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<ApiNoteRenderForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)
             {
@@ -110,7 +130,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curRender = _renderManager.GetEntities().FirstOrDefault(r => r.Id == id);
+                var curRender = await _renderManager.GetEntityByIdAsync(id);
                 if (curRender == null)
                 {
                     return NotFound();
@@ -120,7 +140,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 patchDoc.ApplyTo(render2Update);
                 _mapper.Map(render2Update, curRender);
 
-                var newRender = _renderManager.Update(curRender);
+                var newRender = await _renderManager.UpdateAsync(curRender);
                 if (newRender == null)
                 {
                     return BadRequest(_renderManager.ProcessResult.MessageList);
@@ -135,7 +155,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         // DELETE api/renders/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
             return NoContent();

@@ -130,10 +130,10 @@ namespace Hmm.Automobile.Tests
             var catalog = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(catalog);
-            var noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscountXmlNoteSerializer>());
+            var noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscount>(), LookupRepo);
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
             _manager = new DiscountManager(noteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo);
-            _authorId = Application.GetApplication().DefaultAuthor.Id;
+            _authorId = ApplicationRegister.DefaultAuthor.Id;
         }
     }
 }

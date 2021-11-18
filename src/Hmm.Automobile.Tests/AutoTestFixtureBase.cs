@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.Automobile.Tests
 {
@@ -24,10 +25,12 @@ namespace Hmm.Automobile.Tests
             List<NoteRender> renders = null,
             List<NoteCatalog> catalogs = null)
         {
+            authors ??= new List<Author>();
             systems ??= new List<Subsystem>();
             renders ??= new List<NoteRender>();
             catalogs ??= new List<NoteCatalog>();
 
+            authors.Add(ApplicationRegister.DefaultAuthor);
             systems.Add(
                 new Subsystem
                 {
@@ -82,8 +85,8 @@ namespace Hmm.Automobile.Tests
             };
 
             var fakeApplication = new Mock<IApplication>();
-            fakeApplication.Setup(app => app.GetApplication()).Returns(system);
-            fakeApplication.Setup(app => app.GetCatalog(It.IsAny<NoteCatalogType>())).Returns((NoteCatalogType type) =>
+            fakeApplication.Setup(app => app.GetApplication(LookupRepo)).Returns(system);
+            fakeApplication.Setup(app => app.GetCatalog(It.IsAny<NoteCatalogType>(), It.IsAny<IEntityLookup>())).Returns((NoteCatalogType type, IEntityLookup lookupRepo) =>
             {
                 NoteCatalog catalog;
                 switch (type)

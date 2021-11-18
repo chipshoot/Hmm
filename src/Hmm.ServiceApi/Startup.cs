@@ -46,6 +46,7 @@ namespace Hmm.ServiceApi
                             setupAction.ReturnHttpNotAcceptable = true;
                         })
                             .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null)
+                            .AddNewtonsoftJson()
                             //.AddNewtonsoftJson(setupAction =>
                             //{
                             //    setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -99,7 +100,9 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmValidator<NoteRender>, NoteRenderValidator>()
                 .AddScoped<IHmmValidator<Subsystem>, SubsystemValidator>()
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
-                .AddAutoMapper(typeof(ApiEntity));
+                .AddAutoMapper(typeof(ApiEntity))
+                .AddSwaggerGen();
+
 
             var automobileStartup = new AutomobileInfoServiceStartup(services);
             automobileStartup.ConfigureServices();
@@ -112,16 +115,13 @@ namespace Hmm.ServiceApi
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                //app.UseSwagger();
-                //app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hmm.ServiceApi v1"));
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hmm.ServiceApi v1"));
             }
 
             app.UseHttpsRedirection();
-
             app.UseRouting();
-
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

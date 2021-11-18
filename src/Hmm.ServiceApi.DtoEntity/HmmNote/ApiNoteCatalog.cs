@@ -6,7 +6,9 @@
 
         public string Name { get; set; }
 
-        public ApiNoteRender Render { get; set; }
+        public int SubsystemId { get; set; }
+
+        public int RenderId { get; set; }
 
         public string Schema { get; set; }
 

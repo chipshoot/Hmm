@@ -186,8 +186,8 @@ namespace Hmm.Automobile.Tests
         private void SetupDevEnv()
         {
             InsertSeedRecords();
-            _noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscountXmlNoteSerializer>());
-            _author = Application.GetApplication().DefaultAuthor;
+            _noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscount>(), LookupRepo);
+            _author = ApplicationRegister.DefaultAuthor;
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Hmm.Core.NoteSerializer
 {
     public abstract class NoteSerializerBase<T> : INoteSerializer<T>
     {
-        protected NoteSerializerBase(ILogger logger)
+        protected NoteSerializerBase(ILogger<T> logger)
         {
             Guard.Against<ArgumentNullException>(logger == null, nameof(logger));
             ProcessResult = new ProcessingResult(logger);

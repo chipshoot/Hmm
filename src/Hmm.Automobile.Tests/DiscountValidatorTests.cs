@@ -109,7 +109,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _validator = new GasDiscountValidator(LookupRepo);
-            _authorId = Application.GetApplication().DefaultAuthor.Id;
+            _authorId = ApplicationRegister.DefaultAuthor.Id;
         }
     }
 }

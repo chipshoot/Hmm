@@ -1,4 +1,5 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using System.Threading.Tasks;
+using Hmm.Core.DomainEntity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hmm.Core.Dal.EF
@@ -16,5 +17,7 @@ namespace Hmm.Core.Dal.EF
         DbSet<NoteCatalog> Catalogs { get; set; }
 
         void Save();
+
+        Task SaveAsync();
     }
 }

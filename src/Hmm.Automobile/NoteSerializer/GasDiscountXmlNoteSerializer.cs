@@ -1,5 +1,6 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
 using System;
@@ -9,10 +10,15 @@ namespace Hmm.Automobile.NoteSerializer
 {
     public class GasDiscountXmlNoteSerializer : EntityXmlNoteSerializerBase<GasDiscount>
     {
-        public GasDiscountXmlNoteSerializer(IApplication app, ILogger logger) : base(logger)
+        private readonly IApplication _app;
+        private readonly IEntityLookup _lookupRepo;
+
+        public GasDiscountXmlNoteSerializer(IApplication app, ILogger<GasDiscount> logger, IEntityLookup lookupRepo) : base(logger)
         {
             Guard.Against<ArgumentNullException>(app == null, nameof(app));
-            Catalog = app.GetCatalog(NoteCatalogType.GasDiscount);
+            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            _app = app;
+            _lookupRepo = lookupRepo;
         }
 
         public override GasDiscount GetEntity(HmmNote note)
@@ -54,6 +60,11 @@ namespace Hmm.Automobile.NoteSerializer
                 );
 
             return GetNoteContent(xml).ToString(SaveOptions.DisableFormatting);
+        }
+
+        protected override NoteCatalog GetCatalog()
+        {
+            return _app.GetCatalog(NoteCatalogType.GasDiscount, _lookupRepo);
         }
     }
 }

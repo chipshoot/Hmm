@@ -18,12 +18,17 @@ namespace Hmm.Core.DefaultManager.Validator
 
             RuleFor(n => n.Subject).NotNull().Length(1, 1000);
             RuleFor(n => n.Author).NotNull().Must(AuthorNotChanged).WithMessage("Cannot update note's author");
-            RuleFor(n => n.Description).Length(1, 1000);
+            RuleFor(n => n.Description).Length(0, 1000);
             RuleFor(n => n.Catalog).NotNull();
         }
 
         private bool AuthorNotChanged(HmmNote note, Author author)
         {
+            if (author == null)
+            {
+                return false;
+            }
+
             var savedNote = _dataRepo.GetEntities().FirstOrDefault(n => n.Id == note.Id);
 
             // create new user, make sure account name is unique
@@ -33,10 +38,6 @@ namespace Hmm.Core.DefaultManager.Validator
                 return true;
             }
 
-            //if (_dataRepo is NoteEfRepository efRepo)
-            //{
-            //    return !efRepo.HasPropertyChanged(savedNote, "AuthorId");
-            //}
             return savedNote.Author.Id == authorId;
         }
     }

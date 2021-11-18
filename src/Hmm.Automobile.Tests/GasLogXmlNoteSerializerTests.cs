@@ -9,7 +9,6 @@ using Hmm.Utility.MeasureUnit;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -254,7 +253,7 @@ namespace Hmm.Automobile.Tests
             var autoCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(autoCat);
-            var autoNoteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileXmlNoteSerializer>());
+            var autoNoteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
             var autoManager = new AutomobileManager(autoNoteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo);
 
             // Insert car
@@ -275,7 +274,7 @@ namespace Hmm.Automobile.Tests
             var discountCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(discountCat);
-            var discountNoteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscountXmlNoteSerializer>());
+            var discountNoteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscount>(), LookupRepo);
             var discountManager = new DiscountManager(discountNoteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo);
 
             // Insert discount
@@ -290,11 +289,11 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(_defaultDiscount);
 
             // setup gas log xml note serialize
-            _noteSerializer = new GasLogXmlNoteSerializer(Application, new NullLogger<GasLogXmlNoteSerializer>(), autoManager, discountManager);
+            _noteSerializer = new GasLogXmlNoteSerializer(Application, new NullLogger<GasLog>(), autoManager, discountManager, LookupRepo);
             _defaultCar = autoManager.GetEntities().FirstOrDefault();
             Assert.NotNull(_defaultCar);
 
-            _author = Application.GetApplication().DefaultAuthor;
+            _author = ApplicationRegister.DefaultAuthor;
             Assert.NotNull(_author);
         }
     }

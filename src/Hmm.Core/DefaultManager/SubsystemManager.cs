@@ -5,6 +5,8 @@ using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Hmm.Core.DefaultManager
 {
@@ -40,7 +42,7 @@ namespace Hmm.Core.DefaultManager
                 }
 
                 // Add default author to system
-                if (system.DefaultAuthor == null )
+                if (system.DefaultAuthor == null)
                 {
                     ProcessResult.AddErrorMessage($"The application {system.Name}'s default author is null or invalid");
                     return null;
@@ -61,14 +63,67 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
+        public async Task<Subsystem> CreateAsync(Subsystem system)
+        {
+            if (!_validator.IsValidEntity(system, ProcessResult))
+            {
+                return null;
+            }
+
+            try
+            {
+                if (HasApplicationRegistered(system))
+                {
+                    ProcessResult.AddErrorMessage($"The application {system.Name} is existed in system");
+                    return null;
+                }
+
+                // Add default author to system
+                if (system.DefaultAuthor == null)
+                {
+                    ProcessResult.AddErrorMessage($"The application {system.Name}'s default author is null or invalid");
+                    return null;
+                }
+
+                // Add sub system to system
+                var addedSystem = await _dataSource.AddAsync(system);
+                if (addedSystem == null)
+                {
+                    ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
+                }
+                return addedSystem;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
         public Subsystem Update(Subsystem system)
         {
-            if (system==null || !_validator.IsValidEntity(system, ProcessResult))
+            if (system == null || !_validator.IsValidEntity(system, ProcessResult))
             {
                 return null;
             }
 
             var updatedSys = _dataSource.Update(system);
+            if (updatedSys == null)
+            {
+                ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
+            }
+
+            return updatedSys;
+        }
+
+        public async Task<Subsystem> UpdateAsync(Subsystem system)
+        {
+            if (system == null || !_validator.IsValidEntity(system, ProcessResult))
+            {
+                return null;
+            }
+
+            var updatedSys = await _dataSource.UpdateAsync(system);
             if (updatedSys == null)
             {
                 ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
@@ -91,7 +146,47 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public ProcessingResult ProcessResult { get; } = new ProcessingResult();
+        public async Task<IEnumerable<Subsystem>> GetEntitiesAsync(Expression<Func<Subsystem, bool>> query = null)
+        {
+            try
+            {
+                var sys = await _dataSource.GetEntitiesAsync(query);
+                return sys;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public Subsystem GetEntityById(int id)
+        {
+            try
+            {
+                var system = _dataSource.GetEntity(id);
+                return system;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<Subsystem> GetEntityByIdAsync(int id)
+        {
+            try
+            {
+                var system = await _dataSource.GetEntityAsync(id);
+                return system;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
 
         public bool Register(Subsystem subsystem)
         {
@@ -107,5 +202,7 @@ namespace Hmm.Core.DefaultManager
             }
             return GetEntities().FirstOrDefault(s => s.Name == subsystem.Name) != null;
         }
+
+        public ProcessingResult ProcessResult { get; } = new();
     }
 }

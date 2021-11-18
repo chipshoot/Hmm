@@ -8,10 +8,10 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 
         public string Content { get; set; }
 
-        public ApiAuthor Author { get; set; }
+        public Guid AuthorId { get; set; }
 
-        public DateTime CreateDate { get; set; }
+        public int NoteCatalogId { get; set; }
 
-        public DateTime LastModifiedDate { get; set; }
+        public string Description { get; set; }
     }
 }

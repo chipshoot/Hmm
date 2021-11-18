@@ -485,7 +485,7 @@ namespace Hmm.Utility.MeasureUnit
                     return (long)Math.Round(value * 35239100.0, 0);
 
                 default:
-                    throw new NotImplementedException(nameof(VolumeUnit));
+                    throw new InvalidEnumArgumentException(nameof(VolumeUnit));
             }
         }
 

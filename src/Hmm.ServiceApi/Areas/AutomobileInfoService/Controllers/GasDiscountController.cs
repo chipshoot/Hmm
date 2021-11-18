@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Validation;
@@ -29,9 +30,25 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             _mapper = mapper;
         }
 
+        // GET api/automobiles/gaslogs/discounts
+        [HttpGet(Name = "GetGasDiscounts")]
+        public ActionResult<IEnumerable<ApiDiscount>> GetDiscounts()
+        {
+            var discounts = _mapper.Map<IEnumerable<ApiDiscount>>(_discountManager.GetEntities()).ToList();
+            if (!discounts.Any())
+            {
+                return NotFound();
+            }
+
+            foreach (var discount in discounts)
+            {
+                discount.Links = CreateLinksForDiscount(discount.Id);
+            }
+            return Ok(discounts);
+        }
+
         // GET api/automobiles/gaslogs/discounts/1
-        [HttpGet("{id}", Name = "GetDiscount")]
-        [HttpHead]
+        [HttpGet("{id:int}", Name = "GetGasDiscountById")]
         public IActionResult GetDiscountById(int id)
         {
             var discount = _discountManager.GetEntityById(id);
@@ -41,19 +58,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
 
             var apiDiscount = _mapper.Map<ApiDiscount>(discount);
+            apiDiscount.Links = CreateLinksForDiscount(apiDiscount.Id);
             return Ok(apiDiscount);
         }
 
-        [HttpGet]
-        [HttpHead]
-        public ActionResult<IEnumerable<ApiDiscount>> GetDiscounts()
-        {
-            var discounts = _mapper.Map<IEnumerable<ApiDiscount>>(_discountManager.GetEntities().ToList());
-            return Ok(discounts);
-        }
-
-        // post api/automobiles/gaslogs/discounts?
-        [HttpPost]
+        // post api/automobiles/gaslogs/discounts
+        [HttpPost(Name = "AddGasDiscount")]
         public ActionResult<ApiDiscount> CreateGasDiscount(ApiDiscountForCreate apiDiscount)
         {
             var discount = _mapper.Map<GasDiscount>(apiDiscount);
@@ -64,13 +74,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
 
             var discountToReturn = _mapper.Map<ApiDiscount>(newDiscount);
-            return CreatedAtRoute("GetDiscount",
-                new { id = newDiscount.Id },
-                discountToReturn);
+            discountToReturn.Links = CreateLinksForDiscount(discountToReturn.Id);
+            return Ok(discountToReturn);
         }
 
         // PUT api/automobiles/gaslogs/discount/5
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}", Name = "UpdateGasDiscount")]
         public IActionResult UpdateDiscount(int id, ApiDiscountForUpdate apiDiscount)
         {
             var curDiscount = _discountManager.GetEntityById(id);
@@ -88,7 +97,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return NoContent();
         }
 
-        [HttpPatch("{id}")]
+        // PATCH api/automobiles/gaslogs/discounts/1
+        [HttpPatch("{id:int}", Name = "PatchGasDiscount")]
         public ActionResult PartialUpdateDiscount(int id, JsonPatchDocument<ApiDiscountForUpdate> patchDocument)
         {
             var discount = _discountManager.GetEntityById(id);
@@ -105,14 +115,14 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            _mapper.Map(discountToPatch, discountToPatch);
+            _mapper.Map(discountToPatch, discount);
             _discountManager.Update(discount);
 
             return NoContent();
         }
 
-        // DELETE api/automobiles/gaslogs/discount/1
-        [HttpDelete("{id}")]
+        // DELETE api/automobiles/gaslogs/discounts/1
+        [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
             try
@@ -130,12 +140,50 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError);
                 }
 
-                return Ok(true);
+                return Ok();
             }
             catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private IEnumerable<Link> CreateLinksForDiscount(int discountId)
+        {
+            var links = new List<Link>
+            {
+                // self
+                new()
+                {
+                    Title = "self",
+                    Rel = "self",
+                    Href = Url.Link("GetGasDiscountById", new { id = discountId }),
+                    Method = "Get"
+                },
+                new()
+                {
+                    Title = "AddGasDiscount",
+                    Rel = "create_gasDiscount",
+                    Href = Url.Link("AddGasDiscount", null),
+                    Method = "POST"
+                },
+                new()
+                {
+                    Title = "UpdateGasDiscount",
+                    Rel = "update_gasDiscount",
+                    Href = Url.Link("UpdateGasDiscount", new { id = discountId }),
+                    Method = "PUT"
+                },
+                new()
+                {
+                    Title = "PatchGasDiscount",
+                    Rel = "patch_gasDiscount",
+                    Href = Url.Link("PatchGasDiscount", new { id = discountId }),
+                    Method = "PATCH"
+                }
+            };
+
+            return links;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Hmm.Automobile.DomainEntity;
+﻿using System;
+using Hmm.Automobile.DomainEntity;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
@@ -6,7 +7,7 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
     {
         public string Program { get; set; }
 
-        public float Amount { get; set; }
+        public decimal Amount { get; set; }
 
         public GasDiscountType DiscountType { get; set; }
 

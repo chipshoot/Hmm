@@ -51,6 +51,8 @@ namespace Hmm.Utility.TestHelp
 
         protected MockSubsystemValidator FakeSubsystemValidator => new(AuthorRepository);
 
+        protected MockNoteValidator FakeNoteValidator => new(NoteRepository);
+
         protected virtual void InsertSeedRecords(
             List<Subsystem> systems = null,
             List<Author> authors = null,
@@ -516,6 +518,22 @@ namespace Hmm.Utility.TestHelp
             {
                 return GetInvalidResult
                     ? new ValidationResult(new List<ValidationFailure> { new("NoteRender", "note render is invalid") })
+                    : new ValidationResult();
+            }
+        }
+
+        protected class MockNoteValidator : NoteValidator
+        {
+            public MockNoteValidator(IVersionRepository<HmmNote> noteRepo) : base(noteRepo)
+            {
+            }
+
+            public bool GetInvalidResult { get; set; }
+
+            public override ValidationResult Validate(ValidationContext<HmmNote> context)
+            {
+                return GetInvalidResult
+                    ? new ValidationResult(new List<ValidationFailure> { new("Note", "note is invalid") })
                     : new ValidationResult();
             }
         }

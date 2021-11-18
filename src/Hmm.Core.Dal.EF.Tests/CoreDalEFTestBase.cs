@@ -10,13 +10,13 @@ namespace Hmm.Core.Dal.EF.Tests
         {
             var authors = new List<Author>
             {
-                new Author
+                new()
                 {
                     AccountName = "jfang",
                     IsActivated = true,
                     Description = "testing author"
                 },
-                new Author
+                new()
                 {
                     AccountName = "awang",
                     IsActivated = true,
@@ -26,14 +26,14 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var systems = new List<Subsystem>
             {
-                new Subsystem
+                new()
                 {
                     Name = "HmmNote",
                     DefaultAuthor = authors[0],
                     Description = "HMM note management"
                 },
 
-                new Subsystem
+                new()
                 {
                     Name = "Automobile",
                     DefaultAuthor = authors[0],
@@ -42,14 +42,14 @@ namespace Hmm.Core.Dal.EF.Tests
             };
             var renders = new List<NoteRender>
             {
-                new NoteRender
+                new()
                 {
                     Name = "DefaultNoteRender",
                     Namespace = "Hmm.Renders",
                     IsDefault = true,
                     Description = "Testing default note render"
                 },
-                new NoteRender
+                new()
                 {
                     Name = "GasLog",
                     Namespace = "Hmm.Renders",
@@ -58,7 +58,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
             var catalogs = new List<NoteCatalog>
             {
-                new NoteCatalog
+                new()
                 {
                     Name = "DefaultNoteCatalog",
                     Schema = "DefaultSchema",
@@ -67,7 +67,7 @@ namespace Hmm.Core.Dal.EF.Tests
                     IsDefault = true,
                     Description = "Testing catalog"
                 },
-                new NoteCatalog
+                new()
                 {
                     Name = "Gas Log",
                     Schema = "GasLogSchema",
@@ -76,6 +76,8 @@ namespace Hmm.Core.Dal.EF.Tests
                     Description = "Testing catalog"
                 }
             };
+            systems[0].NoteCatalogs = new List<NoteCatalog> { catalogs[0] };
+            systems[1].NoteCatalogs = new List<NoteCatalog> { catalogs[1] };
 
             SetupRecords(authors, renders, catalogs, systems);
         }

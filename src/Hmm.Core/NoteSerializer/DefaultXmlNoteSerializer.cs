@@ -12,8 +12,9 @@ namespace Hmm.Core.NoteSerializer
     public class DefaultXmlNoteSerializer<T> : NoteSerializerBase<T>
     {
         private XmlSchemaSet _schemas;
+        private NoteCatalog _catalog;
 
-        public DefaultXmlNoteSerializer(ILogger logger) : base(logger)
+        public DefaultXmlNoteSerializer(ILogger<T> logger) : base(logger)
         {
             ContentNamespace = CoreConstants.DefaultNoteNamespace;
         }
@@ -22,7 +23,7 @@ namespace Hmm.Core.NoteSerializer
 
         private XmlSchemaSet Schemas => _schemas ??= GetSchema();
 
-        protected NoteCatalog Catalog { get; init; }
+        protected NoteCatalog Catalog => _catalog ??= GetCatalog();
 
         public override T GetEntity(HmmNote note)
         {
@@ -71,7 +72,7 @@ namespace Hmm.Core.NoteSerializer
                 return string.Empty;
             }
 
-            if (!(entity is HmmNote note))
+            if (entity is not HmmNote note)
             {
                 return string.Empty;
             }
@@ -150,6 +151,12 @@ namespace Hmm.Core.NoteSerializer
             }
 
             return ApplyNameSpace(xml);
+        }
+
+        protected virtual NoteCatalog GetCatalog()
+        {
+            return new NoteCatalog();
+
         }
 
         protected void ValidateContent(XDocument xml)

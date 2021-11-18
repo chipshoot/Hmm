@@ -4,6 +4,7 @@ using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile.DomainEntity
 {
@@ -49,6 +50,48 @@ namespace Hmm.Automobile.DomainEntity
                 case GasLog:
                     var logCat = lookup.GetEntities<NoteCatalog>()
                         .FirstOrDefault(cat => cat.Name == AutomobileConstant.GasLogCatalogName);
+                    if (logCat != null)
+                    {
+                        catalogId = logCat.Id;
+                    }
+                    break;
+
+                default:
+                    catalogId = 0;
+                    break;
+            }
+
+            return catalogId;
+        }
+
+        public static async Task<int> GetCatalogIdAsync(this AutomobileBase entity, IEntityLookup lookup)
+        {
+            if (lookup == null) throw new ArgumentNullException(nameof(lookup));
+            var catalogId = 0;
+            switch (entity)
+            {
+                case AutomobileInfo:
+                    var autoCats = await lookup.GetEntitiesAsync<NoteCatalog>(cat =>
+                        cat.Name == AutomobileConstant.AutoMobileInfoCatalogName);
+                    var autoCat = autoCats.FirstOrDefault();
+                    if (autoCat != null)
+                    {
+                        catalogId = autoCat.Id;
+                    }
+                    break;
+
+                case GasDiscount:
+                    var discountCats = await lookup.GetEntitiesAsync<NoteCatalog>(cat => cat.Name == AutomobileConstant.GasDiscountCatalogName);
+                    var discountCat = discountCats.FirstOrDefault();
+                    if (discountCat != null)
+                    {
+                        catalogId = discountCat.Id;
+                    }
+                    break;
+
+                case GasLog:
+                    var logCats = await lookup.GetEntitiesAsync<NoteCatalog>(cat => cat.Name == AutomobileConstant.GasLogCatalogName);
+                    var logCat = logCats.FirstOrDefault();
                     if (logCat != null)
                     {
                         catalogId = logCat.Id;

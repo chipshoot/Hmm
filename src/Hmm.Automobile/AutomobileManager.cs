@@ -6,10 +6,10 @@ using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
-    // TODO: REMOVE the default author from constructor to easy the DI processing
     public class AutomobileManager : EntityManagerBase<AutomobileInfo>
     {
         public AutomobileManager(INoteSerializer<AutomobileInfo> noteSerializer, IHmmValidator<AutomobileInfo> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
@@ -41,9 +41,38 @@ namespace Hmm.Automobile
             }
         }
 
+        public override async Task<IEnumerable<AutomobileInfo>> GetEntitiesAsync()
+        {
+            try
+            {
+                var notes = await GetNotesAsync(new AutomobileInfo());
+                return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+            }
+            catch (Exception e)
+            {
+                if (NoteSerializer.ProcessResult.Success)
+                {
+                    ProcessResult.WrapException(e);
+                }
+                else
+                {
+                    ProcessResult.PropagandaResult(NoteSerializer.ProcessResult);
+                }
+
+                return null;
+            }
+        }
+
         public override AutomobileInfo GetEntityById(int id)
         {
             var car = GetEntities()?.FirstOrDefault(c => c.Id == id);
+            return car;
+        }
+
+        public override async Task<AutomobileInfo> GetEntityByIdAsync(int id)
+        {
+            var cars = await GetEntitiesAsync();
+            var car = cars.FirstOrDefault(c => c.Id == id);
             return car;
         }
 
@@ -70,6 +99,33 @@ namespace Hmm.Automobile
                 false => null,
                 _ => GetEntityById(note.Id)
             };
+        }
+
+        public override async Task<AutomobileInfo> CreateAsync(AutomobileInfo entity)
+        {
+            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            // ReSharper disable once PossibleNullReferenceException
+            entity.AuthorId = DefaultAuthor.Id;
+            if (!Validator.IsValidEntity(entity, ProcessResult))
+            {
+                return null;
+            }
+
+            var note = entity.GetNote(NoteSerializer, DefaultAuthor);
+            await NoteManager.CreateAsync(note);
+            if (NoteManager.ProcessResult.HasReturnedMessage())
+            {
+                ProcessResult.PropagandaResult(NoteManager.ProcessResult);
+            }
+
+            if (!NoteManager.ProcessResult.Success)
+            {
+                return null;
+            }
+
+            var newAuto = await GetEntityByIdAsync(note.Id);
+            return newAuto;
         }
 
         public override AutomobileInfo Update(AutomobileInfo entity)
@@ -103,6 +159,36 @@ namespace Hmm.Automobile
 
                     return GetEntityById(curAuto.Id);
             }
+        }
+
+        public override async Task<AutomobileInfo> UpdateAsync(AutomobileInfo entity)
+        {
+            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            // ReSharper disable once PossibleNullReferenceException
+            var curAuto = await GetEntityByIdAsync(entity.Id);
+            if (curAuto == null)
+            {
+                ProcessResult.AddErrorMessage("Cannot find automobile in data source");
+                return null;
+            }
+
+            curAuto.Brand = entity.Brand;
+            curAuto.Maker = entity.Maker;
+            curAuto.MeterReading = entity.MeterReading;
+            curAuto.Pin = entity.Pin;
+            curAuto.Year = entity.Year;
+
+            var curNote = curAuto.GetNote(NoteSerializer, DefaultAuthor);
+            await NoteManager.UpdateAsync(curNote);
+
+            if (!NoteManager.ProcessResult.Success)
+            {
+                return null;
+            }
+
+            var updatedAuto = await GetEntityByIdAsync(curAuto.Id);
+            return updatedAuto;
         }
 
         public override INoteSerializer<AutomobileInfo> NoteSerializer { get; }

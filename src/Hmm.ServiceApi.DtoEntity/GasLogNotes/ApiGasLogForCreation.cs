@@ -5,11 +5,11 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
     public class ApiGasLogForCreation : ApiEntity
     {
-        public DateTime CreateDate { get; set; }
+        public DateTime Date { get; set; }
 
         public float Distance { get; set; }
 
-        public float CurrentMetterReading { get; set; }
+        public float CurrentMeterReading { get; set; }
 
         public float Gas { get; set; }
 

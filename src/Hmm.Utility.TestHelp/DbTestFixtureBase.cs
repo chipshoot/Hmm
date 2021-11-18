@@ -73,45 +73,19 @@ namespace Hmm.Utility.TestHelp
                     AuthorRepository.Add(user);
                 }
 
-                foreach (var render in renders)
-                {
-                    RenderRepository.Add(render);
-                }
+                //foreach (var render in renders)
+                //{
+                //    RenderRepository.Add(render);
+                //}
+
+                //foreach (var catalog in catalogs)
+                //{
+                //    CatalogRepository.Add(catalog);
+                //}
 
                 foreach (var sys in subsystems)
                 {
                     SubsystemRepository.Add(sys);
-                }
-
-                foreach (var catalog in catalogs)
-                {
-                    if (catalog.Render != null)
-                    {
-                        var render = LookupRepo.GetEntities<NoteRender>()
-                            .FirstOrDefault(r => r.Name == catalog.Render.Name);
-                        if (render != null)
-                        {
-                            catalog.Render = render;
-                        }
-                        else
-                        {
-                            throw new InvalidDataException($"Cannot find render {catalog.Render.Name} from data source");
-                        }
-                    }
-                    else
-                    {
-                        var render = LookupRepo.GetEntities<NoteRender>().FirstOrDefault();
-                        if (render != null)
-                        {
-                            catalog.Render = render;
-                        }
-                        else
-                        {
-                            throw new InvalidDataException("Cannot find default render from data source");
-                        }
-                    }
-
-                    CatalogRepository.Add(catalog);
                 }
             }
             catch (Exception e)

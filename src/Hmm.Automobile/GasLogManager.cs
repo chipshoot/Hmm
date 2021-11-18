@@ -1,12 +1,12 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
-using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
@@ -23,10 +23,20 @@ namespace Hmm.Automobile
             _dateProvider = dateProvider;
         }
 
+        public override Task<GasLog> GetEntityByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public override IEnumerable<GasLog> GetEntities()
         {
             var notes = GetNotes(new GasLog());
             return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+        }
+
+        public override Task<IEnumerable<GasLog>> GetEntitiesAsync()
+        {
+            throw new NotImplementedException();
         }
 
         public override GasLog GetEntityById(int id)
@@ -61,6 +71,11 @@ namespace Hmm.Automobile
 
                     return GetEntityById(note.Id);
             }
+        }
+
+        public override Task<GasLog> CreateAsync(GasLog entity)
+        {
+            throw new NotImplementedException();
         }
 
         public override GasLog Update(GasLog entity)
@@ -98,6 +113,11 @@ namespace Hmm.Automobile
 
                     return GetEntityById(curLog.Id);
             }
+        }
+
+        public override Task<GasLog> UpdateAsync(GasLog entity)
+        {
+            throw new NotImplementedException();
         }
 
         public override INoteSerializer<GasLog> NoteSerializer { get; }

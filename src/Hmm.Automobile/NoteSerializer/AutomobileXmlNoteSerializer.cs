@@ -1,5 +1,6 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
 using System;
@@ -7,13 +8,17 @@ using System.Xml.Linq;
 
 namespace Hmm.Automobile.NoteSerializer
 {
-    // ToDO: REMOVE noteRootNamespace from constructor to easy the DI processing
     public class AutomobileXmlNoteSerializer : EntityXmlNoteSerializerBase<AutomobileInfo>
     {
-        public AutomobileXmlNoteSerializer(IApplication app, ILogger logger) : base(logger)
+        private readonly IApplication _app;
+        private readonly IEntityLookup _lookupRepo;
+
+        public AutomobileXmlNoteSerializer(IApplication app, ILogger<AutomobileInfo> logger, IEntityLookup lookupRepo) : base(logger)
         {
             Guard.Against<ArgumentNullException>(app == null, nameof(app));
-            Catalog = app.GetCatalog(NoteCatalogType.Automobile);
+            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            _app = app;
+            _lookupRepo = lookupRepo;
         }
 
         public override AutomobileInfo GetEntity(HmmNote note)
@@ -58,6 +63,11 @@ namespace Hmm.Automobile.NoteSerializer
             );
 
             return GetNoteContent(xml).ToString(SaveOptions.DisableFormatting);
+        }
+
+        protected override NoteCatalog GetCatalog()
+        {
+            return _app.GetCatalog(NoteCatalogType.Automobile, _lookupRepo);
         }
     }
 }

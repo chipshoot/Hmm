@@ -2,8 +2,8 @@
 {
     public enum AuthorRoleType
     {
-        Author,
+        Guest,
 
-        Guest
+        Author
     }
 }

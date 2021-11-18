@@ -1,11 +1,13 @@
 ﻿using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Hmm.Utility.Dal.Query;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Hmm.Core.DefaultManager
 {
@@ -49,6 +51,29 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
+        public async Task<NoteCatalog> CreateAsync(NoteCatalog catalog)
+        {
+            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
+            {
+                return null;
+            }
+
+            try
+            {
+                var addedCatalog = await _dataSource.AddAsync(catalog);
+                if (addedCatalog == null)
+                {
+                    ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
+                }
+                return addedCatalog;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
         public NoteCatalog Update(NoteCatalog catalog)
         {
             if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
@@ -61,7 +86,6 @@ namespace Hmm.Core.DefaultManager
             {
                 ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because note render does not exists in data source");
                 return null;
-
             }
             // update catalog record
             if (GetEntities().All(c => c.Id != catalog.Id))
@@ -70,6 +94,35 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
             var updatedCatalog = _dataSource.Update(catalog);
+            if (updatedCatalog == null)
+            {
+                ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
+            }
+
+            return updatedCatalog;
+        }
+
+        public async Task<NoteCatalog> UpdateAsync(NoteCatalog catalog)
+        {
+            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
+            {
+                return null;
+            }
+
+            // check if note render exists in data source
+            if (_lookupRepo.GetEntity<NoteRender>(catalog.Render.Id) == null)
+            {
+                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because note render does not exists in data source");
+                return null;
+            }
+            // update catalog record
+            var catalogs = await GetEntitiesAsync(c => c.Id == catalog.Id);
+            if (!catalogs.Any())
+            {
+                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
+                return null;
+            }
+            var updatedCatalog = await _dataSource.UpdateAsync(catalog);
             if (updatedCatalog == null)
             {
                 ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
@@ -92,6 +145,48 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public ProcessingResult ProcessResult { get; } = new ProcessingResult();
+        public async Task<IEnumerable<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query)
+        {
+            try
+            {
+                var catalogs = await _dataSource.GetEntitiesAsync(query);
+                return catalogs;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public NoteCatalog GetEntityById(int id)
+        {
+            try
+            {
+                var catalog = _dataSource.GetEntity(id);
+                return catalog;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<NoteCatalog> GetEntityByIdAsync(int id)
+        {
+            try
+            {
+                var catalog = await _dataSource.GetEntityAsync(id);
+                return catalog;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public ProcessingResult ProcessResult { get; } = new();
     }
 }

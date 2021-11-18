@@ -1,6 +1,7 @@
 ﻿using Hmm.Core.DomainEntity;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
 {
@@ -32,6 +33,11 @@ namespace Hmm.Core.Dal.EF
             }
         }
 
+        public async Task SaveAsync()
+        {
+            await base.SaveChangesAsync();
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<HmmNote>().ToTable("Notes")
@@ -39,12 +45,20 @@ namespace Hmm.Core.Dal.EF
                 .HasColumnName("Ts")
                 .IsConcurrencyToken()
                 .ValueGeneratedOnAddOrUpdate();
+            modelBuilder.Entity<HmmNote>()
+                .HasKey(n => n.Id);
             modelBuilder.Entity<Author>().ToTable("Authors");
             modelBuilder.Entity<Subsystem>().ToTable("Subsystems");
             modelBuilder.Entity<NoteCatalog>().ToTable("NoteCatalogs")
                 .HasOne(c => c.Subsystem)
                 .WithMany(s => s.NoteCatalogs);
             modelBuilder.Entity<NoteRender>().ToTable("NoteRenders");
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder
+                .EnableSensitiveDataLogging();
         }
     }
 }

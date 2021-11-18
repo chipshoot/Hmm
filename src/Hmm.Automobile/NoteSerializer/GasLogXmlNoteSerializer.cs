@@ -1,5 +1,6 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.MeasureUnit;
 using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
@@ -14,23 +15,28 @@ namespace Hmm.Automobile.NoteSerializer
     {
         private const string TimeStampFormatString = "yyyyMMddHHmmssffff";
         private const string XmlTimeStampFormatString = "yyyy-MM-ddTHH:mm:ssZ";
+        private readonly IApplication _app;
         private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
+        private readonly IEntityLookup _lookupRepo;
 
         public GasLogXmlNoteSerializer(
             IApplication app,
-            ILogger logger,
+            ILogger<GasLog> logger,
             IAutoEntityManager<AutomobileInfo> autoManager,
-            IAutoEntityManager<GasDiscount> discountManager)
+            IAutoEntityManager<GasDiscount> discountManager,
+            IEntityLookup lookupRepo)
             : base(logger)
         {
             Guard.Against<ArgumentNullException>(app == null, nameof(app));
             Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
             Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
+            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
 
-            Catalog = app.GetCatalog(NoteCatalogType.GasLog);
+            _app = app;
             _autoManager = autoManager;
             _discountManager = discountManager;
+            _lookupRepo = lookupRepo;
         }
 
         public override GasLog GetEntity(HmmNote note)
@@ -184,6 +190,11 @@ namespace Hmm.Automobile.NoteSerializer
                     return logDate;
                 }
             }
+        }
+
+        protected override NoteCatalog GetCatalog()
+        {
+            return _app.GetCatalog(NoteCatalogType.GasLog, _lookupRepo);
         }
     }
 }

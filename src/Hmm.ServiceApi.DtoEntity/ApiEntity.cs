@@ -9,6 +9,6 @@ namespace Hmm.ServiceApi.DtoEntity
             Links = new List<Link>();
         }
 
-        public List<Link> Links { get; }
+        public IEnumerable<Link> Links { get; set; }
     }
 }
