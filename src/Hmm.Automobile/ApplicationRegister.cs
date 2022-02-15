@@ -173,7 +173,7 @@ namespace Hmm.Automobile
             return app;
         }
 
-        public IEnumerable<AutomobileBase> GetSeedingEntities(string dataFileName)
+        public static IEnumerable<AutomobileBase> GetSeedingEntities(string dataFileName)
         {
             var entities = new List<AutomobileBase>();
 

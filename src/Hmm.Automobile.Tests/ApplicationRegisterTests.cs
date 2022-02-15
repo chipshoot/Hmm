@@ -73,7 +73,7 @@ namespace Hmm.Automobile.Tests
             Assert.True(File.Exists(dataFileName));
 
             // Act
-            var entities = ((ApplicationRegister)_application).GetSeedingEntities(dataFileName);
+            var entities = ApplicationRegister.GetSeedingEntities(dataFileName);
 
             // Assert
             Assert.NotNull(entities);

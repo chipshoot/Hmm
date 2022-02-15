@@ -1,4 +1,5 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\Chaoyang\.nuget\packages\microsoft.extensions.logging.abstractions\5.0.0\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
@@ -8,53 +9,7 @@
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Eslim_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=011c6852_002D35c6_002D469f_002D893f_002D00d41523c3cf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CanAddNoteToDataSource" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.ValidGasLogCanPassValidation&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Distance&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Date&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Gas&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Price&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Station&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net5.0::Hmm.Core.Dal.EF.Tests.AuthorRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net5.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net5.0::Hmm.Core.Dal.EF.Tests.NoteRenderRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net5.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net5.0::Hmm.Core.Dal.EF.Tests.SubsystemRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.SubsystemManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.SubsystemValidatorTests.Subsystem_Must_Has_Valid_Name_Length&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteRenderValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteRenderManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteCatalogValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteCatalogManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.HmmNoteValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.DefaultXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.AuthorValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.ApplicationRegisterTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.ApplicationRegisterTests.Can_Get_Application_Object&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.ApplicationRegisterTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.SubsystemValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::B56C30D9-017E-4E0C-BAE2-7A50CA82B484::net5.0::Hmm.Utility.Tests.ProcessingResultTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.AutomobileManagerTests.CanCreateAutoMobile&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.AutomobileManagerTests.CanUpdateAutoMobile&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.AutomobileManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.AutomobileValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.AutomobileXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.DiscountManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.DiscountValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.DiscountXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteManagerTests.Can_Add_Note_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteManagerTests.Can_Update_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteManagerTests.Cannot_Update_Invalid_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteManagerTests.Cannot_Update_Non_Exists_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteManagerTests.Can_Search_Note_By_Id&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Subject_Length&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net5.0::Hmm.Core.Tests.NoteValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests.Can_Get_Author&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=01b7e61c_002D614b_002D4708_002Dbe71_002D6aa19d452f4d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CanAddNoteToDataSource #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
@@ -109,7 +64,7 @@
     &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=11cbf6ca_002D109a_002D4cf9_002D87e3_002D289c7b476bd6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="NoteRepositoryTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=11cbf6ca_002D109a_002D4cf9_002D87e3_002D289c7b476bd6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="NoteRepositoryTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net5.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net5.0::Hmm.Core.Dal.EF.Tests.SubsystemRepositoryTests&lt;/TestId&gt;&#xD;
@@ -193,5 +148,6 @@
     &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Automobile&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=gaslogs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Petro/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
