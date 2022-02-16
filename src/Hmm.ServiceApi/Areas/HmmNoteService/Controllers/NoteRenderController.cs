@@ -14,7 +14,8 @@ using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
-    [Route("api/noterenders")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/noterenders")]
     public class NoteRenderController : Controller
     {
         #region private fields

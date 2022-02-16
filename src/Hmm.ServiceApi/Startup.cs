@@ -72,7 +72,12 @@ namespace Hmm.ServiceApi
                                     };
                                 };
                             });
-
+            services.AddApiVersioning(setup =>
+            {
+                setup.DefaultApiVersion = new ApiVersion(1, 0);
+                setup.AssumeDefaultVersionWhenUnspecified = true;
+                setup.ReportApiVersions = true;
+            });
             services.AddHttpClient(HmmServiceApiConstants.HttpClient.Idp, client =>
             {
                 client.BaseAddress = new Uri(_idpBaseAddress);

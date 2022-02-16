@@ -191,20 +191,9 @@ namespace Hmm.Core.DefaultManager
 
         public async Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false)
         {
-            if (!includeDeleted)
-            {
-                if (query != null)
-                {
-                    var compiled = query.Compile();
-                    query = n => compiled(n) && !n.IsDeleted;
-                }
-                else
-                {
-                    query = n => !n.IsDeleted;
-                }
-            }
             var notes = await _noteNoteRepo.GetEntitiesAsync(query);
-            return notes;
+
+            return !includeDeleted ? notes.Where(n => !n.IsDeleted) : notes;
         }
 
         public ProcessingResult ProcessResult { get; } = new();

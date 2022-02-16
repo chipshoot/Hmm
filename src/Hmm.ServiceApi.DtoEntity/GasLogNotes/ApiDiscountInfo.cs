@@ -1,6 +1,6 @@
 ﻿namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
-    public class ApiDiscountInfo : ApiEntity
+    public class ApiDiscountInfo 
     {
         public int DiscountId { get; set; }
 

@@ -14,11 +14,13 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
     [ApiController]
-    [Route("api/automobiles/{autoId:int}/gaslogs")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
     [ValidationModel]
     public class GasLogController : Controller
     {
@@ -45,6 +47,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/1/gaslogs
         [HttpGet(Name = "GetGasLogs")]
+        [GasLogsResultFilter]
         public IActionResult Get(int autoId)
         {
             //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
@@ -61,21 +64,18 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             //    return Ok(new List<ApiGasLog>());
             //}
 
-            var apiGasLogs = _mapper.Map<IEnumerable<ApiGasLog>>(_gasLogManager.GetEntities().Where(l=>l.Car.Id == autoId)).ToList();
-            if (!apiGasLogs.Any())
+            var gasLogs = _gasLogManager.GetEntities().Where(l=>l.Car.Id == autoId).ToList();
+            if (!gasLogs.Any())
             {
                 return NotFound();
             }
 
-            foreach (var log in apiGasLogs)
-            {
-                log.Links = CreateLinksForGasLog(autoId, log.Id);
-            }
-            return Ok(apiGasLogs);
+            return Ok(gasLogs);
         }
 
         // GET api/automobiles/1/gaslogs/5
         [HttpGet("{id:int}", Name = "GetGasLogById")]
+        [GasLogResultFilter]
         public IActionResult Get(int autoId, int id)
         {
             var gasLog = _gasLogManager.GetEntityById(id);
@@ -84,13 +84,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 return NotFound();
             }
 
-            var apiGasLog = _mapper.Map<ApiGasLog>(gasLog);
-            apiGasLog.Links = CreateLinksForGasLog(autoId, apiGasLog.Id);
-            return Ok(apiGasLog);
+            return Ok(gasLog);
         }
 
         // POST api/automobiles/1/gaslogs
         [HttpPost(Name = "AddGasLog")]
+        [GasLogResultFilter]
         public IActionResult Post(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
         {
             if (apiGasLog == null)
@@ -144,10 +143,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 {
                     return BadRequest(new ApiBadRequestResponse("Cannot add gas log"));
                 }
-
-                var apiSavedGasLog = _mapper.Map<ApiGasLog>(savedGasLog);
-                apiSavedGasLog.Links = CreateLinksForGasLog(autoId, apiSavedGasLog.Id);
-                return Ok(new ApiOkResponse(apiSavedGasLog));
+                return Ok(savedGasLog);
             }
             catch (Exception)
             {

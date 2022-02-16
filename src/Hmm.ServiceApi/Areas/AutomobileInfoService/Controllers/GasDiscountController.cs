@@ -11,11 +11,13 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
     [ApiController]
-    [Route("api/automobiles/gaslogs/discounts")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/automobiles/gaslogs/discounts")]
     public class GasDiscountController : Controller
     {
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
@@ -32,23 +34,21 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/gaslogs/discounts
         [HttpGet(Name = "GetGasDiscounts")]
+        [GasDiscountsResultFilter]
         public ActionResult<IEnumerable<ApiDiscount>> GetDiscounts()
         {
-            var discounts = _mapper.Map<IEnumerable<ApiDiscount>>(_discountManager.GetEntities()).ToList();
+            var discounts = _discountManager.GetEntities().ToList();
             if (!discounts.Any())
             {
                 return NotFound();
             }
 
-            foreach (var discount in discounts)
-            {
-                discount.Links = CreateLinksForDiscount(discount.Id);
-            }
             return Ok(discounts);
         }
 
         // GET api/automobiles/gaslogs/discounts/1
         [HttpGet("{id:int}", Name = "GetGasDiscountById")]
+        [GasDiscountResultFilter]
         public IActionResult GetDiscountById(int id)
         {
             var discount = _discountManager.GetEntityById(id);
@@ -57,13 +57,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 return NotFound();
             }
 
-            var apiDiscount = _mapper.Map<ApiDiscount>(discount);
-            apiDiscount.Links = CreateLinksForDiscount(apiDiscount.Id);
-            return Ok(apiDiscount);
+            return Ok(discount);
         }
 
         // post api/automobiles/gaslogs/discounts
         [HttpPost(Name = "AddGasDiscount")]
+        [GasDiscountResultFilter]
         public ActionResult<ApiDiscount> CreateGasDiscount(ApiDiscountForCreate apiDiscount)
         {
             var discount = _mapper.Map<GasDiscount>(apiDiscount);
@@ -73,9 +72,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 return BadRequest("Cannot create discount");
             }
 
-            var discountToReturn = _mapper.Map<ApiDiscount>(newDiscount);
-            discountToReturn.Links = CreateLinksForDiscount(discountToReturn.Id);
-            return Ok(discountToReturn);
+            return Ok(newDiscount);
         }
 
         // PUT api/automobiles/gaslogs/discount/5
@@ -146,44 +143,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-        }
-
-        private IEnumerable<Link> CreateLinksForDiscount(int discountId)
-        {
-            var links = new List<Link>
-            {
-                // self
-                new()
-                {
-                    Title = "self",
-                    Rel = "self",
-                    Href = Url.Link("GetGasDiscountById", new { id = discountId }),
-                    Method = "Get"
-                },
-                new()
-                {
-                    Title = "AddGasDiscount",
-                    Rel = "create_gasDiscount",
-                    Href = Url.Link("AddGasDiscount", null),
-                    Method = "POST"
-                },
-                new()
-                {
-                    Title = "UpdateGasDiscount",
-                    Rel = "update_gasDiscount",
-                    Href = Url.Link("UpdateGasDiscount", new { id = discountId }),
-                    Method = "PUT"
-                },
-                new()
-                {
-                    Title = "PatchGasDiscount",
-                    Rel = "patch_gasDiscount",
-                    Href = Url.Link("PatchGasDiscount", new { id = discountId }),
-                    Method = "PATCH"
-                }
-            };
-
-            return links;
         }
     }
 }

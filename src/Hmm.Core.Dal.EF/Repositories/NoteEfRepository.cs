@@ -30,7 +30,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                     .Where(query)
                 : DataContext.Notes
                     .Include(n => n.Author)
-                    .Include(n => n.Catalog).AsQueryable();
+                    .Include(n => n.Catalog);
             return notes;
         }
 
