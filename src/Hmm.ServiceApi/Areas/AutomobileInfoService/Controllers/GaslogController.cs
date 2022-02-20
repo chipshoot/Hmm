@@ -218,43 +218,5 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         {
             return StatusCode(StatusCodes.Status405MethodNotAllowed);
         }
-
-        private IEnumerable<Link> CreateLinksForGasLog(int autoId, int logId)
-        {
-            var links = new List<Link>
-            {
-                // self
-                new()
-                {
-                    Title = "self",
-                    Rel = "self",
-                    Href = Url.Link("GetGasLogById", new { autoId, id = logId }),
-                    Method = "Get"
-                },
-                new()
-                {
-                    Title = "AddGasLog",
-                    Rel = "create_gasLog",
-                    Href = Url.Link("AddGasLog", new { autoId}),
-                    Method = "POST"
-                },
-                new()
-                {
-                    Title = "UpdateGasLog",
-                    Rel = "update_gasLog",
-                    Href = Url.Link("UpdateGasLog", new {autoId, id = logId }),
-                    Method = "PUT"
-                },
-                new()
-                {
-                    Title = "PatchGasLog",
-                    Rel = "patch_gasLog",
-                    Href = Url.Link("PatchGasLog", new {autoId, id = logId }),
-                    Method = "PATCH"
-                }
-            };
-
-            return links;
-        }
     }
 }

@@ -14,7 +14,7 @@ namespace Hmm.Core.DefaultManager
     {
         #region private fields
 
-        private readonly IVersionRepository<HmmNote> _noteNoteRepo;
+        private readonly IVersionRepository<HmmNote> _noteRepo;
         private readonly IHmmValidator<HmmNote> _validator;
         private readonly IDateTimeProvider _dateProvider;
 
@@ -25,7 +25,7 @@ namespace Hmm.Core.DefaultManager
             Guard.Against<ArgumentNullException>(noteRepo == null, nameof(noteRepo));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
             Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));
-            _noteNoteRepo = noteRepo;
+            _noteRepo = noteRepo;
             _validator = validator;
             _dateProvider = dateProvider;
         }
@@ -39,10 +39,10 @@ namespace Hmm.Core.DefaultManager
 
             note.CreateDate = _dateProvider.UtcNow;
             note.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = _noteNoteRepo.Add(note);
+            var ret = _noteRepo.Add(note);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteNoteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
             }
             return ret;
         }
@@ -56,10 +56,10 @@ namespace Hmm.Core.DefaultManager
 
             note.CreateDate = _dateProvider.UtcNow;
             note.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = await _noteNoteRepo.AddAsync(note);
+            var ret = await _noteRepo.AddAsync(note);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteNoteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
             }
             return ret;
         }
@@ -84,10 +84,10 @@ namespace Hmm.Core.DefaultManager
             curNote.IsDeleted = note.IsDeleted;
             curNote.Description = note.Description;
             curNote.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = _noteNoteRepo.Update(curNote);
+            var ret = _noteRepo.Update(curNote);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteNoteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
             }
 
             return ret;
@@ -113,10 +113,10 @@ namespace Hmm.Core.DefaultManager
             curNote.IsDeleted = note.IsDeleted;
             curNote.Description = note.Description;
             curNote.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = await _noteNoteRepo.UpdateAsync(curNote);
+            var ret = await _noteRepo.UpdateAsync(curNote);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteNoteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
             }
 
             return ret;
@@ -139,7 +139,7 @@ namespace Hmm.Core.DefaultManager
                 return true;
             }
 
-            ProcessResult.PropagandaResult(_noteNoteRepo.ProcessMessage);
+            ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
             return false;
         }
 
@@ -160,7 +160,7 @@ namespace Hmm.Core.DefaultManager
                 return true;
             }
 
-            ProcessResult.PropagandaResult(_noteNoteRepo.ProcessMessage);
+            ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
             return false;
         }
 
@@ -172,7 +172,7 @@ namespace Hmm.Core.DefaultManager
 
         public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
         {
-            var note = await _noteNoteRepo.GetEntityAsync(id);
+            var note = await _noteRepo.GetEntityAsync(id);
             if (note is { IsDeleted: true } && !includeDelete)
             {
                 return null;
@@ -183,15 +183,15 @@ namespace Hmm.Core.DefaultManager
 
         public IEnumerable<HmmNote> GetNotes(bool includeDeleted = false)
         {
-            var notes = includeDeleted ? _noteNoteRepo.GetEntities() :
-                _noteNoteRepo.GetEntities().Where(n => !n.IsDeleted);
+            var notes = includeDeleted ? _noteRepo.GetEntities() :
+                _noteRepo.GetEntities().Where(n => !n.IsDeleted);
 
             return notes;
         }
 
         public async Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false)
         {
-            var notes = await _noteNoteRepo.GetEntitiesAsync(query);
+            var notes = await _noteRepo.GetEntitiesAsync(query);
 
             return !includeDeleted ? notes.Where(n => !n.IsDeleted) : notes;
         }
