@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Hmm.Utility.TestHelp
@@ -137,6 +136,7 @@ namespace Hmm.Utility.TestHelp
             {
                 newContext.Reset();
             }
+            GC.SuppressFinalize(this);
         }
 
         private void SetDbEnvironment(string connectString)
