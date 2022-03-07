@@ -45,9 +45,9 @@ namespace Hmm.Utility.TestHelp
 
         protected MockAuthorValidator FakeAuthorValidator => new(AuthorRepository);
 
-        protected MockCatalogValidator FakeCatalogValidator => new();
+        protected static MockCatalogValidator FakeCatalogValidator => new();
 
-        protected MockRenderValidator FakeRenderValidator => new();
+        protected static MockRenderValidator FakeRenderValidator => new();
 
         protected MockSubsystemValidator FakeSubsystemValidator => new(AuthorRepository);
 
@@ -177,6 +177,7 @@ namespace Hmm.Utility.TestHelp
             _renders.Clear();
             _catalogs.Clear();
             _notes.Clear();
+            GC.SuppressFinalize(this);
         }
 
         protected void AddEntity<T>(T entity)
