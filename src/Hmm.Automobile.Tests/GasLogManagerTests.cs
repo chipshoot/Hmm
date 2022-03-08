@@ -6,6 +6,7 @@ using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Currency;
 using Hmm.Utility.MeasureUnit;
+using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace Hmm.Automobile.Tests
 {
     public class GasLogManagerTests : AutoTestFixtureBase
     {
-        private IAutoEntityManager<GasLog> _manager;
+        private IGasLogManager _manager;
         private IAutoEntityManager<AutomobileInfo> _autoManager;
         private IAutoEntityManager<GasDiscount> _discountManager;
         private Author _author;
@@ -27,7 +28,7 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public void CanAddGasLog()
+        public void CanAddGasLogHistory()
         {
             // Arrange
             const string comment = "This is a test gas log";
@@ -56,7 +57,7 @@ namespace Hmm.Automobile.Tests
             CurrentTime = new DateTime(2021, 9, 15);
 
             // Act
-            var newGas = _manager.Create(gasLog);
+            var newGas = _manager.LogHistory(gasLog);
 
             // Assert
             Assert.True(_manager.ProcessResult.Success);
@@ -132,8 +133,150 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public void CannotCreateInvalidGasLog()
+        public void CanCreateValidGasLog()
         {
+            // Arrange
+            const int newDistance = 12000;
+            const string comment = "This is a test gas log";
+            var car = _autoManager.GetEntityById(1);
+            car.MeterReading = 11700;
+            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var logDate = new DateTime(2019, 12, 25);
+            var gasLog = new GasLog
+            {
+                Date = logDate,
+                Car = car,
+                Station = "Costco",
+                Gas = Volume.FromLiter(40),
+                Price = new Money(40.0),
+                Distance = Dimension.FromKilometer(300),
+                CurrentMeterReading = Dimension.FromKilometer(newDistance),
+                Discounts = new List<GasDiscountInfo>
+                        {
+                            new()
+                            {
+                                Amount = new Money(0.8),
+                                Program = discount
+                            }
+                        },
+                Comment = comment
+            };
+            CurrentTime = new DateTime(2021, 9, 15);
+
+            // Act
+            var newGas = _manager.Create(gasLog);
+            var updCar = _autoManager.GetEntityById(1);
+
+            // Assert
+            Assert.True(_manager.ProcessResult.Success);
+            Assert.True(newGas.Id >= 1, "newGas.Id >= 1");
+            Assert.NotNull(newGas.Car);
+            Assert.NotNull(newGas.Discounts);
+            Assert.Equal(_author.Id, newGas.AuthorId);
+            Assert.Equal(comment, newGas.Comment);
+            Assert.Equal(Dimension.FromKilometer(12000), newGas.CurrentMeterReading);
+            Assert.Equal(0.8m.GetCad(), newGas.Discounts.First().Amount);
+            Assert.True(newGas.Discounts.Any());
+            Assert.True(newGas.Discounts.FirstOrDefault()?.Amount.Amount == 0.8m);
+            Assert.Equal(logDate, newGas.Date);
+            Assert.Equal(CurrentTime, newGas.CreateDate);
+            Assert.Equal(updCar.MeterReading, newDistance);
+        }
+
+        [Theory]
+        [InlineData(100, 1000, -1000, false)]
+        [InlineData(100, 1000, 2000, false)]
+        [InlineData(100, 1000, 1000, false)]
+        [InlineData(100, 3000, 1000, true)]
+        public void CannotCreateInvalidGasLog(int curDistance, int logMeterReading, int autoMeterReading, bool expectProcessingSuccess)
+        {
+            // Arrange
+            const string comment = "This is a test gas log";
+            var car = _autoManager.GetEntityById(1);
+            car.MeterReading = autoMeterReading;
+            _autoManager.Update(car);
+            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var logDate = new DateTime(2019, 12, 25);
+            var gasLog = new GasLog
+            {
+                Date = logDate,
+                Car = car,
+                Station = "Costco",
+                Gas = Volume.FromLiter(40),
+                Price = new Money(40.0),
+                Distance = Dimension.FromKilometer(curDistance),
+                CurrentMeterReading = Dimension.FromKilometer(logMeterReading),
+                Discounts = new List<GasDiscountInfo>
+                        {
+                            new()
+                            {
+                                Amount = new Money(0.8),
+                                Program = discount
+                            }
+                        },
+                Comment = comment
+            };
+            CurrentTime = new DateTime(2021, 9, 15);
+
+            // Act
+            var newGas = _manager.Create(gasLog);
+
+            // Assert
+            Assert.Equal(expectProcessingSuccess, _manager.ProcessResult.Success);
+            if (expectProcessingSuccess)
+            {
+                Assert.NotNull(newGas);
+            }
+            else
+            {
+                Assert.Null(newGas);
+                Assert.NotEmpty(_manager.ProcessResult.MessageList);
+                Assert.True(_manager.ProcessResult.HasError);
+                var error = _manager.ProcessResult.MessageList.FirstOrDefault();
+                Assert.NotNull(error);
+                Assert.False(string.IsNullOrEmpty(error.Message));
+                Assert.Equal(MessageType.Error, error.Type);
+            }
+        }
+
+        [Fact]
+        public void CanDeleteGasLog()
+        {
+            // Arrange
+            const string comment = "This is a test gas log";
+            var car = _autoManager.GetEntityById(1);
+            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var logDate = new DateTime(2019, 12, 25);
+            var gasLog = new GasLog
+            {
+                Date = logDate,
+                Car = car,
+                Station = "Costco",
+                Gas = Volume.FromLiter(40),
+                Price = new Money(40.0),
+                Distance = Dimension.FromKilometer(300),
+                CurrentMeterReading = Dimension.FromKilometer(12000),
+                Discounts = new List<GasDiscountInfo>
+                {
+                    new()
+                    {
+                        Amount = new Money(0.8),
+                        Program = discount
+                    }
+                },
+                Comment = comment
+            };
+            CurrentTime = new DateTime(2021, 9, 15);
+            var newGas = _manager.LogHistory(gasLog);
+            newGas.IsDeleted = true;
+
+            // Act
+            var updGas = _manager.Update(newGas);
+            var log = _manager.GetEntityById(newGas.Id);
+
+            // Assert
+            Assert.Null(updGas);
+            Assert.Null(log);
         }
 
         private void SetupDevEnv()
@@ -162,7 +305,7 @@ namespace Hmm.Automobile.Tests
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasLogCatalogName);
             Assert.NotNull(logCat);
             var gasLogNoteSerializer = new GasLogXmlNoteSerializer(Application, new NullLogger<GasLog>(), _autoManager, _discountManager, LookupRepo);
-            _manager = new GasLogManager(gasLogNoteSerializer, new GasLogValidator(LookupRepo, DateProvider), noteManager, LookupRepo, DateProvider);
+            _manager = new GasLogManager(gasLogNoteSerializer, new GasLogValidator(LookupRepo, DateProvider), noteManager, _autoManager, LookupRepo, DateProvider);
 
             // Insert car
             var car = new AutomobileInfo

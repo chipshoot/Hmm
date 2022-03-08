@@ -10,6 +10,17 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=011c6852_002D35c6_002D469f_002D893f_002D00d41523c3cf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CanAddNoteToDataSource" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests.Can_Get_Author&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests.CanCreateValidGasLog&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests.CannotCreateInvalidGasLog&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests.CanDeleteGasLog&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests.Can_Add_New_Appointment&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests.Can_Cancel_Exists_Appointment&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests.Can_Modify_Exists_Appointment&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests.Appointment_StartDate_Earlier_Then_EndDate&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests.Appointment_StartDate_Earlier_Then_Today&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=01b7e61c_002D614b_002D4708_002Dbe71_002D6aa19d452f4d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CanAddNoteToDataSource #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;

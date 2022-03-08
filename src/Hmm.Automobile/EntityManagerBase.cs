@@ -45,7 +45,7 @@ namespace Hmm.Automobile
 
                 default:
 
-                    var notes = NoteManager.GetNotes().ToList().Where(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
+                    var notes = NoteManager.GetNotes().ToList().Where(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted);
                     return notes;
             }
         }
@@ -64,7 +64,7 @@ namespace Hmm.Automobile
 
                 default:
 
-                    var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
+                    var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted);
                     var noteList = notes.ToList();
                     return noteList;
             }

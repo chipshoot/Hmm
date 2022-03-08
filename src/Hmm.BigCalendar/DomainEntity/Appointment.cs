@@ -14,6 +14,8 @@ namespace Hmm.BigCalendar.DomainEntity
 
         public ContactInfo Contact { get; set; }
 
+        public bool Cancelled { get; set; }
+
         public IEnumerable<EventNotification> Notifications { get; set; }
     }
 }

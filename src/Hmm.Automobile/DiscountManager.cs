@@ -18,25 +18,44 @@ namespace Hmm.Automobile
             NoteSerializer = noteSerializer;
         }
 
-        public override Task<GasDiscount> GetEntityByIdAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
-
         public override IEnumerable<GasDiscount> GetEntities()
         {
             var notes = GetNotes(new GasDiscount());
             return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
         }
 
-        public override Task<IEnumerable<GasDiscount>> GetEntitiesAsync()
+        public override async Task<IEnumerable<GasDiscount>> GetEntitiesAsync()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var notes = await GetNotesAsync(new GasDiscount());
+                return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+            }
+            catch (Exception e)
+            {
+                if (NoteSerializer.ProcessResult.Success)
+                {
+                    ProcessResult.WrapException(e);
+                }
+                else
+                {
+                    ProcessResult.PropagandaResult(NoteSerializer.ProcessResult);
+                }
+
+                return null;
+            }
         }
 
         public override GasDiscount GetEntityById(int id)
         {
             return GetEntities().FirstOrDefault(d => d.Id == id);
+        }
+
+        public override async Task<GasDiscount> GetEntityByIdAsync(int id)
+        {
+            var discounts = await GetEntitiesAsync();
+            var discount = discounts.FirstOrDefault(l => l.Id == id);
+            return discount;
         }
 
         public override GasDiscount Create(GasDiscount entity)
@@ -62,9 +81,28 @@ namespace Hmm.Automobile
             }
         }
 
-        public override Task<GasDiscount> CreateAsync(GasDiscount entity)
+        public override async Task<GasDiscount> CreateAsync(GasDiscount entity)
         {
-            throw new NotImplementedException();
+            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            // ReSharper disable once PossibleNullReferenceException
+            entity.AuthorId = DefaultAuthor.Id;
+            if (!Validator.IsValidEntity(entity, ProcessResult))
+            {
+                return null;
+            }
+            var note = entity.GetNote(NoteSerializer, DefaultAuthor);
+            await NoteManager.CreateAsync(note);
+            switch (NoteManager.ProcessResult.Success)
+            {
+                case false:
+                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
+                    return null;
+
+                default:
+                    var newDiscount = await GetEntityByIdAsync(note.Id);
+                    return newDiscount;
+            }
         }
 
         public override GasDiscount Update(GasDiscount entity)
@@ -99,9 +137,37 @@ namespace Hmm.Automobile
             }
         }
 
-        public override Task<GasDiscount> UpdateAsync(GasDiscount entity)
+        public override async Task<GasDiscount> UpdateAsync(GasDiscount entity)
         {
-            throw new NotImplementedException();
+            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            // ReSharper disable once PossibleNullReferenceException
+            var curDiscount = await GetEntityByIdAsync(entity.Id);
+            if (curDiscount == null)
+            {
+                ProcessResult.AddErrorMessage("Cannot find discount in data source");
+                return null;
+            }
+
+            curDiscount.Amount = entity.Amount;
+            curDiscount.Comment = entity.Comment;
+            curDiscount.DiscountType = entity.DiscountType;
+            curDiscount.IsActive = entity.IsActive;
+            curDiscount.Program = entity.Program;
+
+            var curNote = curDiscount.GetNote(NoteSerializer, DefaultAuthor);
+            await NoteManager.UpdateAsync(curNote);
+
+            switch (NoteManager.ProcessResult.Success)
+            {
+                case false:
+                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
+                    return null;
+
+                default:
+                    var updDiscount = await GetEntityByIdAsync(curDiscount.Id);
+                    return updDiscount;
+            }
         }
 
         public override INoteSerializer<GasDiscount> NoteSerializer { get; }

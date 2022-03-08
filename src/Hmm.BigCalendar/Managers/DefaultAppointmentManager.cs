@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Hmm.BigCalendar.Contract;
 using Hmm.BigCalendar.DomainEntity;
 using Hmm.Utility.Dal.Repository;
@@ -18,28 +20,58 @@ namespace Hmm.BigCalendar.Managers
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         }
 
-        public bool Create(Appointment appointment)
+        public Appointment Create(Appointment appointment)
         {
             if (appointment == null)
             {
                 ProcessResult.AddErrorMessage("Null object found for appointment creating");
-                return false;
+                return null;
             }
 
             if (!_validator.IsValidEntity(appointment, ProcessResult))
             {
-                return false;
+                return null;
             }
 
+            appointment.Id = Guid.NewGuid();
             var savedApp = _appointRepo.Add(appointment);
             switch (savedApp)
             {
                 case null:
                     ProcessResult.PropagandaResult(_appointRepo.ProcessMessage);
-                    return false;
+                    return null;
                 default:
-                    return true;
+                    return savedApp;
             }
+        }
+
+        public Appointment Cancel(Appointment appointment)
+        {
+            appointment.Cancelled = true;
+            return appointment;
+        }
+
+        public Appointment Update(Appointment appointment)
+        {
+            return appointment;
+        }
+
+        public Appointment GetAppointmentById(Guid id)
+        {
+            var appointment = _appointRepo.GetEntity(id);
+            return appointment;
+        }
+
+        public IEnumerable<Appointment> GetAppointmentsByDateRange(DateTime startDate, DateTime endDate)
+        {
+            var appointments = _appointRepo.GetEntities(a => a.StartTime >= startDate && a.StartTime <= endDate)
+                .ToList();
+            return appointments;
+        }
+
+        public IEnumerable<Appointment> GetAppointments()
+        {
+            return _appointRepo.GetEntities().ToList();
         }
 
         public ProcessingResult ProcessResult { get; } = new();

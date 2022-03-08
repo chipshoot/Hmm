@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <Folder Include="Managers\" />
+    <Folder Include="Validators\" />
   </ItemGroup>
 
 </Project>

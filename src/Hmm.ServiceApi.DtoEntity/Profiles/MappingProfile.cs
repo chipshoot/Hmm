@@ -86,20 +86,23 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ForMember(d => d.CurrentMeterReading, opt => opt.MapFrom(s => s.CurrentMeterReading.TotalKilometre))
                 .ForMember(d => d.Gas, opt => opt.MapFrom(s => s.Gas.TotalLiter))
                 .ForMember(d => d.Price, opt => opt.MapFrom(s => s.Price.Amount))
-                .ForMember(d => d.DiscountInfos, opt => opt.MapFrom(s => s.Discounts));
+                .ForMember(d => d.DiscountInfos, opt => opt.MapFrom(s => s.Discounts))
+                .ForMember(d => d.GasStation, opt => opt.MapFrom(s => s.Station));
             CreateMap<ApiGasLogForCreation, GasLog>()
                 .ForMember(d => d.Distance, opt => opt.MapFrom(s => Dimension.FromKilometer(s.Distance)))
                 .ForMember(d => d.CurrentMeterReading, opt => opt.MapFrom(s => Dimension.FromKilometer(s.CurrentMeterReading)))
                 .ForMember(d => d.Gas, opt => opt.MapFrom(s => Volume.FromLiter(s.Gas)))
                 .ForMember(d => d.Price, opt => opt.MapFrom(s => new Money(s.Price)))
                 .ForMember(d => d.Discounts, opt => opt.Ignore())
-                .ForMember(d => d.Car, opt => opt.Ignore());
+                .ForMember(d => d.Car, opt => opt.Ignore())
+                .ForMember(d => d.Station, opt => opt.MapFrom(src => src.GasStation));
             CreateMap<ApiGasLog, GasLog>()
-                .ForMember(d => d.Car, opt => opt.MapFrom((src => new AutomobileInfo { Id = src.CarId })))
-                .ForMember(d => d.Distance, opt => opt.MapFrom((src => Dimension.FromKilometer(src.Distance))))
-                .ForMember(d => d.CurrentMeterReading, opt => opt.MapFrom((src => Dimension.FromKilometer(src.CurrentMeterReading))))
+                .ForMember(d => d.Car, opt => opt.MapFrom(src => new AutomobileInfo { Id = src.CarId }))
+                .ForMember(d => d.Distance, opt => opt.MapFrom(src => Dimension.FromKilometer(src.Distance)))
+                .ForMember(d => d.CurrentMeterReading, opt => opt.MapFrom(src => Dimension.FromKilometer(src.CurrentMeterReading)))
                 .ForMember(d => d.Gas, opt => opt.MapFrom((src => Volume.FromLiter(src.Gas))))
-                .ForMember(d => d.Price, opt => opt.MapFrom((src => new Money(src.Price))));
+                .ForMember(d => d.Price, opt => opt.MapFrom(src => new Money(src.Price)))
+                .ForMember(d => d.Station, opt => opt.MapFrom(src => src.GasStation));
         }
     }
 }
