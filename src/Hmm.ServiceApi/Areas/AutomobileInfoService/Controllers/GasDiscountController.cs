@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
-using Hmm.ServiceApi.DtoEntity;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Validation;
@@ -9,15 +9,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
+using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/automobiles/gaslogs/discounts")]
+    [Route("/v{version:apiVersion}/automobiles/gaslogs/discounts")]
     public class GasDiscountController : Controller
     {
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
@@ -35,9 +34,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/gaslogs/discounts
         [HttpGet(Name = "GetGasDiscounts")]
         [GasDiscountsResultFilter]
-        public ActionResult<IEnumerable<ApiDiscount>> GetDiscounts()
+        public async Task<ActionResult> Get()
         {
-            var discounts = _discountManager.GetEntities().ToList();
+            var allDiscounts = await _discountManager.GetEntitiesAsync();
+            var discounts = allDiscounts.ToList();
             if (!discounts.Any())
             {
                 return NotFound();
@@ -49,9 +49,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/gaslogs/discounts/1
         [HttpGet("{id:int}", Name = "GetGasDiscountById")]
         [GasDiscountResultFilter]
-        public IActionResult GetDiscountById(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            var discount = _discountManager.GetEntityById(id);
+            var discount = await _discountManager.GetEntityByIdAsync(id);
             if (discount == null)
             {
                 return NotFound();
@@ -63,10 +63,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // post api/automobiles/gaslogs/discounts
         [HttpPost(Name = "AddGasDiscount")]
         [GasDiscountResultFilter]
-        public ActionResult<ApiDiscount> CreateGasDiscount(ApiDiscountForCreate apiDiscount)
+        public async Task<ActionResult> Post(ApiDiscountForCreate apiDiscount)
         {
             var discount = _mapper.Map<GasDiscount>(apiDiscount);
-            var newDiscount = _discountManager.Create(discount);
+            var newDiscount = await _discountManager.CreateAsync(discount);
             if (newDiscount == null)
             {
                 return BadRequest("Cannot create discount");
@@ -77,15 +77,15 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PUT api/automobiles/gaslogs/discount/5
         [HttpPut("{id:int}", Name = "UpdateGasDiscount")]
-        public IActionResult UpdateDiscount(int id, ApiDiscountForUpdate apiDiscount)
+        public async Task<IActionResult> Put(int id, ApiDiscountForUpdate apiDiscount)
         {
-            var curDiscount = _discountManager.GetEntityById(id);
+            var curDiscount = await _discountManager.GetEntityByIdAsync(id);
             if (curDiscount == null)
             {
                 return BadRequest(new ApiBadRequestResponse("Cannot find gas discount"));
             }
             _mapper.Map(apiDiscount, curDiscount);
-            var newDiscount = _discountManager.Update(curDiscount);
+            var newDiscount = await _discountManager.UpdateAsync(curDiscount);
             if (newDiscount == null)
             {
                 return BadRequest(new ApiBadRequestResponse("Cannot update gas discount"));
@@ -96,9 +96,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PATCH api/automobiles/gaslogs/discounts/1
         [HttpPatch("{id:int}", Name = "PatchGasDiscount")]
-        public ActionResult PartialUpdateDiscount(int id, JsonPatchDocument<ApiDiscountForUpdate> patchDocument)
+        public async Task<ActionResult> Patch(int id, JsonPatchDocument<ApiDiscountForUpdate> patchDocument)
         {
-            var discount = _discountManager.GetEntityById(id);
+            var discount = await _discountManager.GetEntityByIdAsync(id);
             if (discount == null)
             {
                 return NotFound();
@@ -113,25 +113,25 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
 
             _mapper.Map(discountToPatch, discount);
-            _discountManager.Update(discount);
+            await _discountManager.UpdateAsync(discount);
 
             return NoContent();
         }
 
         // DELETE api/automobiles/gaslogs/discounts/1
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var discount = _discountManager.GetEntityById(id);
+                var discount = await _discountManager.GetEntityByIdAsync(id);
                 if (discount == null)
                 {
                     return BadRequest(new ApiBadRequestResponse($"Cannot find discount with id : {id}"));
                 }
 
                 discount.IsActive = false;
-                var updatedDiscount = _discountManager.Update(discount);
+                var updatedDiscount = await _discountManager.UpdateAsync(discount);
                 if (updatedDiscount == null)
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError);

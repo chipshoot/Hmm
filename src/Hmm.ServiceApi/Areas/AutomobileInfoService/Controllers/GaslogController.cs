@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
-using Hmm.ServiceApi.DtoEntity;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
 using Hmm.ServiceApi.Models.Validation;
@@ -14,23 +14,22 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
+using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
+    [Route("/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
     [ValidationModel]
     public class GasLogController : Controller
     {
-        private readonly IAutoEntityManager<GasLog> _gasLogManager;
-
+        private readonly IGasLogManager _gasLogManager;
         private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
         private readonly IMapper _mapper;
 
-        public GasLogController(IAutoEntityManager<GasLog> gasLogManager, IMapper mapper,
+        public GasLogController(IGasLogManager gasLogManager, IMapper mapper,
             IAutoEntityManager<AutomobileInfo> autoManager,
             IAutoEntityManager<GasDiscount> discountManager)
         {
@@ -48,7 +47,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/1/gaslogs
         [HttpGet(Name = "GetGasLogs")]
         [GasLogsResultFilter]
-        public IActionResult Get(int autoId)
+        public async Task<ActionResult> Get(int autoId)
         {
             //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             //if (userId == null)
@@ -61,10 +60,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             //var user = _userManager.GetEntities().FirstOrDefault(u => u.Id == Guid.Parse(userId));
             //if (user == null)
             //{
-            //    return Ok(new List<ApiGasLog>());
+            //    return OK(new List<ApiGasLog>());
             //}
 
-            var gasLogs = _gasLogManager.GetEntities().Where(l=>l.Car.Id == autoId).ToList();
+            var gasLogAll = await _gasLogManager.GetEntitiesAsync();
+            var gasLogs = gasLogAll.Where(l => l.Car.Id == autoId).ToList();
             if (!gasLogs.Any())
             {
                 return NotFound();
@@ -76,9 +76,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/1/gaslogs/5
         [HttpGet("{id:int}", Name = "GetGasLogById")]
         [GasLogResultFilter]
-        public IActionResult Get(int autoId, int id)
+        public async Task<ActionResult> Get(int autoId, int id)
         {
-            var gasLog = _gasLogManager.GetEntityById(id);
+            var gasLog = await _gasLogManager.GetEntityByIdAsync(id);
             if (gasLog == null || gasLog.Car.Id != autoId)
             {
                 return NotFound();
@@ -87,10 +87,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(gasLog);
         }
 
-        // POST api/automobiles/1/gaslogs
-        [HttpPost(Name = "AddGasLog")]
+        // POST api/automobiles/1/gaslogs/historyLog
+        [HttpPost("historylog", Name = "AddHistoryGasLog")]
         [GasLogResultFilter]
-        public IActionResult Post(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
+        public async Task<ActionResult> HistoryLog(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
         {
             if (apiGasLog == null)
             {
@@ -104,7 +104,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 var gasLog = _mapper.Map<GasLog>(apiGasLog);
 
                 // get automobile
-                var car = _autoManager.GetEntityById(autoId);
+                var car = await _autoManager.GetEntityByIdAsync(autoId);
                 if (car == null)
                 {
                     var errMsg = $"Cannot find automobile with id {apiGasLog.AutomobileId} from data source";
@@ -120,7 +120,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 {
                     foreach (var disc in apiGasLog.DiscountInfos)
                     {
-                        var discount = _discountManager.GetEntityById(disc.DiscountId);
+                        var discount = await _discountManager.GetEntityByIdAsync(disc.DiscountId);
                         if (discount == null)
                         {
                             var errMsg =
@@ -138,7 +138,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
                 gasLog.Discounts = discounts;
 
-                var savedGasLog = _gasLogManager.Create(gasLog);
+                var savedGasLog = await _gasLogManager.LogHistoryAsync(gasLog);
                 if (savedGasLog == null)
                 {
                     return BadRequest(new ApiBadRequestResponse("Cannot add gas log"));
@@ -151,23 +151,88 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
         }
 
+        // POST api/automobiles/1/gaslogs
+        [HttpPost(Name = "AddGasLog")]
+        [GasLogResultFilter]
+        public async Task<ActionResult> Post(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
+        {
+            if (apiGasLog == null)
+            {
+                var errMsg = "null gas log found";
+                Log.Logger.Debug(errMsg);
+                return BadRequest(new ApiBadRequestResponse(errMsg));
+            }
+
+            try
+            {
+                var gasLog = _mapper.Map<GasLog>(apiGasLog);
+
+                // get automobile
+                var car = await _autoManager.GetEntityByIdAsync(autoId);
+                if (car == null)
+                {
+                    var errMsg = $"Cannot find automobile with id {apiGasLog.AutomobileId} from data source";
+                    Log.Logger.Debug(errMsg);
+                    return BadRequest(new ApiBadRequestResponse(errMsg));
+                }
+
+                gasLog.Car = car;
+
+                // get discount for gas log
+                var discounts = new List<GasDiscountInfo>();
+                if (apiGasLog.DiscountInfos != null)
+                {
+                    foreach (var disc in apiGasLog.DiscountInfos)
+                    {
+                        var discount = await _discountManager.GetEntityByIdAsync(disc.DiscountId);
+                        if (discount == null)
+                        {
+                            var errMsg =
+                                $"Cannot find discount information for discount with id {disc.DiscountId} from data source";
+                            return BadRequest(new ApiBadRequestResponse(errMsg));
+                        }
+
+                        discounts.Add(new GasDiscountInfo
+                        {
+                            Program = discount,
+                            Amount = new Money(disc.Amount)
+                        });
+                    }
+                }
+
+                gasLog.Discounts = discounts;
+
+                var savedGasLog = await _gasLogManager.CreateAsync(gasLog);
+                if (savedGasLog == null)
+                {
+                    var error = _gasLogManager.ProcessResult.GetWholeMessage();
+                    return BadRequest(new ApiBadRequestResponse(error));
+                }
+                return Ok(savedGasLog);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
         // PUT api/automobiles/1/gaslogs/5
         [HttpPut("{id:int}", Name = "UpdateGasLog")]
-        public IActionResult Put(int id, [FromBody] ApiGasLogForUpdate apiGasLog)
+        public async Task<ActionResult> Put(int id, [FromBody] ApiGasLogForUpdate apiGasLog)
         {
             if (apiGasLog == null)
             {
                 return BadRequest(new ApiBadRequestResponse("null gas log found"));
             }
 
-            var gasLog = _gasLogManager.GetEntityById(id);
+            var gasLog = await _gasLogManager.GetEntityByIdAsync(id);
             if (gasLog == null)
             {
                 return BadRequest(new ApiBadRequestResponse($"Cannot find gas log with id {id}"));
             }
 
             _mapper.Map(apiGasLog, gasLog);
-            var newLog = _gasLogManager.Update(gasLog);
+            var newLog = await _gasLogManager.UpdateAsync(gasLog);
             if (newLog == null)
             {
                 return BadRequest(new ApiBadRequestResponse($"Cannot update gas log with id {id}"));
@@ -179,7 +244,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PATCH api/automobiles/1/gaslogs/4
         [HttpPatch("{id:int}", Name = "PatchGasLog")]
-        public IActionResult Patch(int autoId, int id, [FromBody] JsonPatchDocument<ApiGasLogForUpdate> patchDoc)
+        public async Task<ActionResult> Patch(int autoId, int id, [FromBody] JsonPatchDocument<ApiGasLogForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)
             {
@@ -188,7 +253,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
             try
             {
-                var curGasLog = _gasLogManager.GetEntities().FirstOrDefault(r => r.Id == id && r.Car.Id == autoId);
+                var curGasLogAll = await _gasLogManager.GetEntitiesAsync();
+                var curGasLog = curGasLogAll.FirstOrDefault(r => r.Id == id && r.Car.Id == autoId);
                 if (curGasLog == null)
                 {
                     return NotFound();
@@ -198,7 +264,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 patchDoc.ApplyTo(gasLog2Update);
                 _mapper.Map(gasLog2Update, curGasLog);
 
-                var newGasLog = _gasLogManager.Update(curGasLog);
+                var newGasLog = await _gasLogManager.UpdateAsync(curGasLog);
                 if (newGasLog == null)
                 {
                     return BadRequest(_gasLogManager.ProcessResult.MessageList);
@@ -214,9 +280,18 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // DELETE api/automobiles/1/gaslogs/5
         [HttpDelete("{id:int}", Name = "DeleteGasLog")]
-        public IActionResult Delete(int autoId, int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            return StatusCode(StatusCodes.Status405MethodNotAllowed);
+            var gasLog = await _gasLogManager.GetEntityByIdAsync(id);
+            if (gasLog == null)
+            {
+                return NotFound($"Cannot find gas log with id : {id}");
+
+            }
+
+            gasLog.IsDeleted = true;
+            await _gasLogManager.UpdateAsync(gasLog);
+            return _gasLogManager.ProcessResult.Success ? NoContent() : StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
 }

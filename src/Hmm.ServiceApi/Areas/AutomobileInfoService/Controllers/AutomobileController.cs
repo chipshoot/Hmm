@@ -17,7 +17,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/automobiles")]
+    [Route("/v{version:apiVersion}/automobiles")]
     public class AutomobileController : Controller
     {
         private readonly IAutoEntityManager<AutomobileInfo> _automobileManager;
@@ -93,7 +93,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 return BadRequest(new ApiBadRequestResponse("Cannot find automobile"));
             }
             _mapper.Map(apiCar, curCar);
-            var newCar = _automobileManager.Update(curCar);
+            var newCar = await _automobileManager.UpdateAsync(curCar);
             if (newCar == null)
             {
                 return BadRequest(new ApiBadRequestResponse("Cannot update automobile"));
