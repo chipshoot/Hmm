@@ -12,6 +12,7 @@ namespace Hmm.ServiceApi.Models
         {
             Guard.Against<ArgumentException>(modelState.IsValid, $"ModelState must be invalid : {nameof(modelState)}");
 
+            // ReSharper disable once PossibleNullReferenceException
             Errors = modelState.SelectMany(x => x.Value.Errors)
                 .Select(x => x.ErrorMessage).ToArray();
         }
