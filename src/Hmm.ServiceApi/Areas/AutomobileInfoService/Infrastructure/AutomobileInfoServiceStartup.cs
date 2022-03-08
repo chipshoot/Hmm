@@ -33,7 +33,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     .AddScoped<INoteSerializer<GasLog>, GasLogXmlNoteSerializer>()
                     .AddScoped<IAutoEntityManager<AutomobileInfo>, AutomobileManager>()
                     .AddScoped<IAutoEntityManager<GasDiscount>, DiscountManager>()
-                    .AddScoped<IAutoEntityManager<GasLog>, GasLogManager>()
+                    .AddScoped<IGasLogManager, GasLogManager>()
                     .AddTransient<IStartupFilter, AutomobileAppStartupFilter>();
             }
             catch (Exception e)
