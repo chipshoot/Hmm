@@ -108,11 +108,21 @@ namespace Hmm.Utility.Misc
 
         public string GetWholeMessage()
         {
-            var msg = MessageList.Aggregate("", (cur, next) => $"{cur}|{next}");
-            return msg;
+            switch (MessageList.Count)
+            {
+                case 0:
+                    return string.Empty;
+
+                case 1:
+                    var msg = MessageList.First();
+                    return $"{msg.Type}: {msg.Message}";
+
+                default:
+                    return MessageList.Aggregate(string.Empty, (current, message) => $"{current}|{message.Type}: {message.Message}");
+            }
         }
 
-        public void LogMessage()
+        private void LogMessage()
         {
             if (Logger == null)
             {

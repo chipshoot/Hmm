@@ -4,6 +4,7 @@ using Hmm.Core.Dal.EF.Repositories;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
 using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity;
 using Hmm.Utility.Dal.Query;
@@ -20,14 +21,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
 using System;
-using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
+using System.IO;
 
 namespace Hmm.ServiceApi
 {
     public class Startup
     {
-        private string _connectString;
-        private string _idpBaseAddress;
         private InvalidModelStateConfig _invalidModelStateConfig;
 
         public Startup(IConfiguration configuration)
@@ -40,7 +39,8 @@ namespace Hmm.ServiceApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            GetConfiguration();
+            var configSection = SetupConfiguration(services);
+            var appSetting = configSection.Get<AppSettings>();
             services.AddControllers(setupAction =>
                         {
                             setupAction.ReturnHttpNotAcceptable = true;
@@ -80,13 +80,13 @@ namespace Hmm.ServiceApi
             });
             services.AddHttpClient(HmmServiceApiConstants.HttpClient.Idp, client =>
             {
-                client.BaseAddress = new Uri(_idpBaseAddress);
+                client.BaseAddress = new Uri(appSetting.IdpBaseUrl);
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
             });
             services.AddHttpContextAccessor();
             services
-                .AddDbContext<HmmDataContext>(opt => opt.UseSqlServer(_connectString))
+                .AddDbContext<HmmDataContext>(opt => opt.UseSqlServer(appSetting.ConnectionString))
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
                 .AddScoped<IVersionRepository<HmmNote>, NoteEfRepository>()
                 .AddScoped<IHmmDataContext, HmmDataContext>()
@@ -107,7 +107,6 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
                 .AddAutoMapper(typeof(ApiEntity))
                 .AddSwaggerGen();
-
 
             var automobileStartup = new AutomobileInfoServiceStartup(services);
             automobileStartup.ConfigureServices();
@@ -133,13 +132,24 @@ namespace Hmm.ServiceApi
             });
         }
 
-        private void GetConfiguration()
+        private IConfigurationSection SetupConfiguration(IServiceCollection services)
         {
-            _connectString = Configuration?.GetConnectionString("DefaultConnection");
-            _idpBaseAddress = Configuration?["IdentityService"];
+            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
             _invalidModelStateConfig = new InvalidModelStateConfig();
             Configuration.Bind("InvalidModelState", _invalidModelStateConfig);
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false)
+                .AddJsonFile($"appsettings.{environmentName}.json", true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            var appSettingsSection = configuration.GetSection("AppSettings");
+            services.Configure<AppSettings>(appSettingsSection);
+
+            return appSettingsSection;
         }
     }
 }

@@ -109,17 +109,16 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                     Title = "self",
                     Rel = "self",
                     Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetGasLogById",
-                        new { log.CarId, id = log.Id }),
+                        new { autoId = log.CarId, id = log.Id }),
                     Method = "Get"
                 },
                 new()
                 {
-                    Title = "automobile",
+                    Title = "Automobile",
                     Rel = "get_automobile",
                     Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetAutomobileById", new { id = log.CarId }),
                     Method = "Get"
                 },
-
                 new()
                 {
                     Title = "AddGasLog",
@@ -142,6 +141,13 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                     Href = linkGen.GetUriByRouteValues(context.HttpContext, "PatchGasLog",
                         new { autoId=log.CarId, id = log.Id }),
                     Method = "PATCH"
+                },
+                new()
+                {
+                    Title = "AddHistoryLog",
+                    Rel = "add_history_gasLog",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddHistoryGasLog", new { autoId=log.CarId }),
+                    Method = "POST"
                 }
             };
 

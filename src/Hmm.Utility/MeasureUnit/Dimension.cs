@@ -221,7 +221,7 @@ namespace Hmm.Utility.MeasureUnit
         public static Dimension operator -(Dimension x, Dimension y)
         {
             var newValue = x._value - y._value;
-            return new Dimension(newValue, x.Unit);
+            return new Dimension(newValue, x.Unit, x.Fractional);
         }
 
         public static Dimension operator *(Dimension x, int y)
@@ -393,7 +393,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public override bool Equals(object obj)
         {
-            return obj is Dimension && Equals((Dimension)obj);
+            return obj is Dimension dimension && Equals(dimension);
         }
 
         public override int GetHashCode()
