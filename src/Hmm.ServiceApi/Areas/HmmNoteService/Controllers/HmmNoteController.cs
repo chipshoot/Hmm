@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/notes")]
+    [Route("/v{version:apiVersion}/notes")]
     public class HmmNoteController : Controller
     {
         #region private fields

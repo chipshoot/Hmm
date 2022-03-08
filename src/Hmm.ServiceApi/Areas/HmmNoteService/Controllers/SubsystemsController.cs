@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/subsystems")]
+    [Route("/v{version:apiVersion}/subsystems")]
     [ApiController]
     public class SubsystemsController : Controller
     {
