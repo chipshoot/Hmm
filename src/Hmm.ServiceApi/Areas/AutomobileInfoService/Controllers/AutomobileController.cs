@@ -12,10 +12,12 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
     [ApiController]
+    [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
     [Route("/v{version:apiVersion}/automobiles")]
     public class AutomobileController : Controller

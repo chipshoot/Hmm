@@ -15,10 +15,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
     [ApiController]
+    [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
     [Route("/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
     [ValidationModel]
@@ -141,7 +143,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 var savedGasLog = await _gasLogManager.LogHistoryAsync(gasLog);
                 if (savedGasLog == null)
                 {
-                    return BadRequest(new ApiBadRequestResponse("Cannot add gas log"));
+                    var errMsg = _gasLogManager.ProcessResult.GetWholeMessage();
+                    return BadRequest(new ApiBadRequestResponse(errMsg));
                 }
                 return Ok(savedGasLog);
             }

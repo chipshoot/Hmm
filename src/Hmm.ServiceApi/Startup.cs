@@ -27,6 +27,7 @@ namespace Hmm.ServiceApi
 {
     public class Startup
     {
+        private const string AllowCorsPolicy = "AllowCors";
         private InvalidModelStateConfig _invalidModelStateConfig;
 
         public Startup(IConfiguration configuration)
@@ -85,6 +86,13 @@ namespace Hmm.ServiceApi
                 client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
             });
             services.AddHttpContextAccessor();
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy(AllowCorsPolicy, builder =>
+                {
+                    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+                });
+            });
             services
                 .AddDbContext<HmmDataContext>(opt => opt.UseSqlServer(appSetting.ConnectionString))
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
@@ -125,6 +133,7 @@ namespace Hmm.ServiceApi
 
             app.UseHttpsRedirection();
             app.UseRouting();
+            app.UseCors();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
