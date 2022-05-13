@@ -10,9 +10,9 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 
         public int CarId { get; set; }
 
-        public DateTime CreateDate { get; set; }
+        public DateTime Date { get; set; }
 
-        public DateTime LastModifiedDate { get; set; }
+        public DateTime CreateDate { get; set; }
 
         public float Distance { get; set; }
 
