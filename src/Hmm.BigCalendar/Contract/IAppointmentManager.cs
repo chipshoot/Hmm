@@ -1,7 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Hmm.BigCalendar.DomainEntity;
+﻿using Hmm.BigCalendar.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Hmm.BigCalendar.Contract
 {
@@ -17,7 +19,7 @@ namespace Hmm.BigCalendar.Contract
 
         IEnumerable<Appointment> GetAppointmentsByDateRange(DateTime startDate, DateTime endDate);
 
-        IEnumerable<Appointment> GetAppointments();
+        IEnumerable<Appointment> GetAppointments(Expression<Func<Appointment, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         ProcessingResult ProcessResult { get; }
     }

@@ -1,7 +1,9 @@
-﻿using Hmm.Core.DefaultManager.Validator;
+﻿using Hmm.Core.DefaultManager;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using System.Linq;
 using Xunit;
 
 namespace Hmm.Core.Tests
@@ -9,6 +11,7 @@ namespace Hmm.Core.Tests
     public class AuthorValidatorTests : TestFixtureBase
     {
         private AuthorValidator _validator;
+        private IAuthorManager _manager;
 
         public AuthorValidatorTests()
         {
@@ -16,8 +19,9 @@ namespace Hmm.Core.Tests
         }
 
         [Theory]
-        [InlineData("jfang", "AccountName : Duplicated account name")]
-        public void Cannot_Add_Duplicated_AccountName(string accountName, string errorMessage)
+        [InlineData("jfang", false, "AccountName : Duplicated account name")]
+        [InlineData("luck", true, "")]
+        public void Cannot_Add_Duplicated_AccountName(string accountName, bool expectValid, string errorMessage)
         {
             // Arrange
             var author = new Author
@@ -32,8 +36,33 @@ namespace Hmm.Core.Tests
             var result = _validator.IsValidEntity(author, processResult);
 
             // Assert
-            Assert.False(result);
-            Assert.Equal(processResult.MessageList[0].Message, errorMessage);
+            Assert.Equal(result, expectValid);
+            if (!expectValid)
+            {
+                Assert.Equal(processResult.MessageList[0].Message, errorMessage);
+            }
+        }
+
+        [Theory]
+        [InlineData("awang", "jfang", false, "AccountName : Duplicated account name")]
+        [InlineData("awang", "luck", true, "")]
+        public void Cannot_Update_Current_Author_With_Duplicated_AccountName(string curAccName, string newAccName, bool expectValid, string errorMessage)
+        {
+            // Arrange
+            var curAuthor = _manager.GetEntities(a => a.AccountName == curAccName).FirstOrDefault();
+            Assert.NotNull(curAuthor);
+
+            // Act
+            curAuthor.AccountName = newAccName;
+            var processResult = new ProcessingResult();
+            var result = _validator.IsValidEntity(curAuthor, processResult);
+
+            // Assert
+            Assert.Equal(result, expectValid);
+            if (!expectValid)
+            {
+                Assert.Equal(processResult.MessageList[0].Message, errorMessage);
+            }
         }
 
         [Fact]
@@ -92,6 +121,7 @@ namespace Hmm.Core.Tests
         {
             InsertSeedRecords();
             _validator = new AuthorValidator(AuthorRepository);
+            _manager = new AuthorManager(AuthorRepository, _validator);
         }
     }
 }

@@ -1,10 +1,10 @@
 ﻿using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -78,7 +78,8 @@ namespace Hmm.Core.DefaultManager
             }
 
             // make sure the render exists in system
-            if (GetEntities().All(r => r.Id != render.Id))
+            var savedRender = _dataSource.GetEntity(render.Id);
+            if (savedRender == null)
             {
                 ProcessResult.AddErrorMessage($"Cannot update render: {render.Name}, because system cannot find it in data source");
                 return null;
@@ -100,8 +101,8 @@ namespace Hmm.Core.DefaultManager
             }
 
             // make sure the render exists in system
-            var renders = await GetEntitiesAsync();
-            if (renders.All(r => r.Id != render.Id))
+            var savedRender = await _dataSource.GetEntityAsync(render.Id);
+            if (savedRender == null)
             {
                 ProcessResult.AddErrorMessage($"Cannot update render: {render.Name}, because system cannot find it in data source");
                 return null;
@@ -115,11 +116,11 @@ namespace Hmm.Core.DefaultManager
             return updatedRender;
         }
 
-        public IEnumerable<NoteRender> GetEntities()
+        public IEnumerable<NoteRender> GetEntities(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var renders = _dataSource.GetEntities();
+                var renders = _dataSource.GetEntities(query, resourceCollectionParameters);
                 return renders;
             }
             catch (Exception ex)
@@ -129,11 +130,11 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<IEnumerable<NoteRender>> GetEntitiesAsync(Expression<Func<NoteRender, bool>> query = null)
+        public async Task<IEnumerable<NoteRender>> GetEntitiesAsync(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var renders = await _dataSource.GetEntitiesAsync(query);
+                var renders = await _dataSource.GetEntitiesAsync(query, resourceCollectionParameters);
                 return renders;
             }
             catch (Exception ex)

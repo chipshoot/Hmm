@@ -29,19 +29,23 @@ namespace Hmm.Utility.Dal.Query
         /// Gets the list of entities that match criteria.
         /// </summary>
         /// <param name="query">The query to search the data source.</param>
+        /// <param name="resourceCollectionParameters">Resource collection control information, e.g. pagination, sort and search information.
+        /// if null applied system will use default pagination setting for the searching</param>
         /// <returns>
         /// The list of entity that match the criteria
         /// </returns>
-        IQueryable<T> GetEntities<T>(Expression<Func<T, bool>> query = null);
+        IQueryable<T> GetEntities<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Gets the list of entities that match criteria asynchronously.
         /// </summary>
         /// <param name="query">The query to search the data source.</param>
+        /// <param name="resourceCollectionParameters">Resource collection control information, e.g. pagination, sort and search information.
+        /// if null applied system will use default pagination setting for the searching</param>
         /// <returns>
         /// The list of entity that match the criteria
         /// </returns>
-        Task<IEnumerable<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null);
+        Task<IEnumerable<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Gets the a int id entity by its id asynchronously.

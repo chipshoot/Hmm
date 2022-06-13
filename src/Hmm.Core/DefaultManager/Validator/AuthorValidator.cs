@@ -1,9 +1,9 @@
-﻿using System;
-using System.Linq;
-using FluentValidation;
+﻿using FluentValidation;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Validation;
+using System;
+using System.Linq;
 
 namespace Hmm.Core.DefaultManager.Validator
 {
@@ -22,13 +22,13 @@ namespace Hmm.Core.DefaultManager.Validator
 
         private bool UniqueAccountName(Author user, string accountName)
         {
-            var savedAuthor = _dataSource.GetEntities().FirstOrDefault(e => e.Id == user.Id);
+            var savedAuthor = _dataSource.GetEntity(user.Id);
 
             // create new user, make sure account name is unique
             var acc = accountName.Trim().ToLower();
             if (savedAuthor == null)
             {
-                var sameAccountUser = _dataSource.GetEntities().FirstOrDefault(u => u.AccountName.ToLower() == acc);
+                var sameAccountUser = _dataSource.GetEntities(u => u.AccountName.ToLower() == acc).FirstOrDefault();
                 if (sameAccountUser != null)
                 {
                     return false;
@@ -36,9 +36,7 @@ namespace Hmm.Core.DefaultManager.Validator
             }
             else
             {
-                var userWithAccount = _dataSource.GetEntities()
-                    .FirstOrDefault(u => u.AccountName.ToLower() == acc && u.Id != user.Id);
-
+                var userWithAccount = _dataSource.GetEntities(u => u.AccountName.ToLower() == acc && u.Id != user.Id).FirstOrDefault();
                 return userWithAccount == null;
             }
 

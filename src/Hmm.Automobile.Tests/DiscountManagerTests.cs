@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using Hmm.Automobile.Validator;
+using Hmm.Utility.Dal.Query;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -50,7 +51,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             var discounts = SetupEnvironment();
-            var discount = discounts.OrderBy(d => d.Id).FirstOrDefault();
+            var discount = discounts.MinBy(d => d.Id);
             Assert.NotNull(discount);
 
             // Act
@@ -70,7 +71,7 @@ namespace Hmm.Automobile.Tests
             SetupEnvironment();
 
             // Act
-            var savedDiscounts = _manager.GetEntities().ToList();
+            var savedDiscounts = _manager.GetEntities(new ResourceCollectionParameters()).ToList();
 
             // Assert
             Assert.True(_manager.ProcessResult.Success);

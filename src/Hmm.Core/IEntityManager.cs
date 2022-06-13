@@ -1,4 +1,5 @@
 ﻿using Hmm.Utility.Dal.DataEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
 using System.Collections.Generic;
@@ -46,12 +47,12 @@ namespace Hmm.Core
         /// <summary>
         /// Get <see cref="Entity"/> list from data source
         /// </summary>
-        IEnumerable<T> GetEntities();
+        IEnumerable<T> GetEntities(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Get <see cref="Entity"/> list from data source asynchronously.
         /// </summary>
-        Task<IEnumerable<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null);
+        Task<IEnumerable<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Get <see cref="Entity"/> with id

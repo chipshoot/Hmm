@@ -49,7 +49,7 @@ namespace Hmm.Core.Tests
 
         [Theory]
         [InlineData(-1, true)]
-        [InlineData(0, true)]
+        [InlineData(0, false)]
         [InlineData(15, true)]
         [InlineData(1001, false)]
         public void Note_Must_Has_Valid_Description_Length(int namespaceLen, bool expected)

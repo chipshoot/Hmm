@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Cors;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
@@ -38,9 +39,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles
         [HttpGet(Name = "GetAutomobiles")]
         [AutomobilesResultFilter]
-        public async Task<IActionResult> GetMobiles()
+        public async Task<IActionResult> GetMobiles([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var autos = await _automobileManager.GetEntitiesAsync();
+            var autos = await _automobileManager.GetEntitiesAsync(resourceCollectionParameters);
             if (!autos.Any())
             {
                 return NotFound();

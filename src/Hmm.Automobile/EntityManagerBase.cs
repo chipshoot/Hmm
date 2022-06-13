@@ -31,8 +31,9 @@ namespace Hmm.Automobile
         /// Get notes for specific entity
         /// </summary>
         /// <param name="entity">The entity which used to get type and figure out the catalog</param>
+        /// <param name="resourceCollectionParameters">The page information of the resource collection</param>
         /// <returns>The notes which belongs to entity type</returns>
-        protected IEnumerable<HmmNote> GetNotes(T entity)
+        protected IEnumerable<HmmNote> GetNotes(T entity, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var catId = entity.GetCatalogId(LookupRepo);
 
@@ -45,12 +46,18 @@ namespace Hmm.Automobile
 
                 default:
 
-                    var notes = NoteManager.GetNotes().ToList().Where(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted);
+                    var notes = NoteManager.GetNotes(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted, false, resourceCollectionParameters);
                     return notes;
             }
         }
 
-        protected async Task<IEnumerable<HmmNote>> GetNotesAsync(T entity)
+        /// <summary>
+        /// The asynchronous version of <see cref="GetNotes"/>
+        /// </summary>
+        /// <param name="entity">The entity which used to get type and figure out the catalog</param>
+        /// <param name="resourceCollectionParameters">The page information of the resource collection</param>
+        /// <returns>The notes which belongs to entity type</returns>
+        protected async Task<IEnumerable<HmmNote>> GetNotesAsync(T entity, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var catId = await entity.GetCatalogIdAsync(LookupRepo);
             var author = await LookupRepo.GetEntityAsync<Author>(DefaultAuthor.Id);
@@ -64,9 +71,77 @@ namespace Hmm.Automobile
 
                 default:
 
-                    var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted);
+                    var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted, false, resourceCollectionParameters);
                     var noteList = notes.ToList();
                     return noteList;
+            }
+        }
+
+        /// <summary>
+        /// Get notes for specific entity
+        /// </summary>
+        /// <param name="id">The id of entity to get type and figure out the catalog</param>
+        /// <param name="entity">The entity by id which used to get type and figure out the catalog</param>
+        /// <returns>The notes which belongs to entity type</returns>
+        protected HmmNote GetNote(int id, T entity)
+        {
+            var catId = entity.GetCatalogId(LookupRepo);
+
+            var hasValidAuthor = DefaultAuthor != null && LookupRepo.GetEntity<Author>(DefaultAuthor.Id) != null;
+            switch (hasValidAuthor)
+            {
+                case false:
+                    ProcessResult.AddErrorMessage("Cannot find default author", true);
+                    return null;
+
+                default:
+
+                    var note = NoteManager.GetNoteById(id);
+                    if (note == null)
+                    {
+                        return null;
+                    }
+
+                    if (note.Author.Id == DefaultAuthor.Id && note.Catalog.Id == catId)
+                    {
+                        return note;
+                    }
+
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Get notes for specific entity
+        /// </summary>
+        /// <param name="id">The id of entity to get type and figure out the catalog</param>
+        /// <param name="entity">The entity by id which used to get type and figure out the catalog</param>
+        /// <returns>The notes which belongs to entity type</returns>
+        protected async Task<HmmNote> GetNoteAsync(int id, T entity)
+        {
+            var catId = await entity.GetCatalogIdAsync(LookupRepo);
+
+            var hasValidAuthor = DefaultAuthor != null && LookupRepo.GetEntity<Author>(DefaultAuthor.Id) != null;
+            switch (hasValidAuthor)
+            {
+                case false:
+                    ProcessResult.AddErrorMessage("Cannot find default author", true);
+                    return null;
+
+                default:
+
+                    var note = await NoteManager.GetNoteByIdAsync(id);
+                    if (note == null)
+                    {
+                        return null;
+                    }
+
+                    if (note.Author.Id == DefaultAuthor.Id && note.Catalog.Id == catId)
+                    {
+                        return note;
+                    }
+
+                    return null;
             }
         }
 
@@ -78,9 +153,9 @@ namespace Hmm.Automobile
 
         public abstract Task<T> GetEntityByIdAsync(int id);
 
-        public abstract IEnumerable<T> GetEntities();
+        public abstract IEnumerable<T> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null);
 
-        public abstract Task<IEnumerable<T>> GetEntitiesAsync();
+        public abstract Task<IEnumerable<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
 
         public abstract INoteSerializer<T> NoteSerializer { get; }
 
@@ -98,7 +173,8 @@ namespace Hmm.Automobile
 
         public bool IsEntityOwner(int id)
         {
-            var hasEntity = GetEntities().Any(e => e.Id == id && e.AuthorId == DefaultAuthor.Id);
+            var entity = GetEntityById(id);
+            var hasEntity = entity != null && entity.AuthorId == DefaultAuthor.Id;
             return hasEntity;
         }
 

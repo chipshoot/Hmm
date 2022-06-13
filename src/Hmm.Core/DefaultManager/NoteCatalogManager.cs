@@ -5,7 +5,6 @@ using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -88,7 +87,8 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
             // update catalog record
-            if (GetEntities().All(c => c.Id != catalog.Id))
+            var savedCatalog = _dataSource.GetEntity(catalog.Id);
+            if (savedCatalog == null)
             {
                 ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
                 return null;
@@ -116,8 +116,8 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
             // update catalog record
-            var catalogs = await GetEntitiesAsync(c => c.Id == catalog.Id);
-            if (!catalogs.Any())
+            var savedCatalog = await _dataSource.GetEntityAsync(catalog.Id);
+            if (savedCatalog != null)
             {
                 ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
                 return null;
@@ -131,11 +131,11 @@ namespace Hmm.Core.DefaultManager
             return updatedCatalog;
         }
 
-        public IEnumerable<NoteCatalog> GetEntities()
+        public IEnumerable<NoteCatalog> GetEntities(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var catalogs = _dataSource.GetEntities();
+                var catalogs = _dataSource.GetEntities(query, resourceCollectionParameters);
                 return catalogs;
             }
             catch (Exception ex)
@@ -145,11 +145,11 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<IEnumerable<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query)
+        public async Task<IEnumerable<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var catalogs = await _dataSource.GetEntitiesAsync(query);
+                var catalogs = await _dataSource.GetEntitiesAsync(query, resourceCollectionParameters);
                 return catalogs;
             }
             catch (Exception ex)

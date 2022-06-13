@@ -20,14 +20,14 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
         }
 
-        public IQueryable<NoteCatalog> GetEntities(Expression<Func<NoteCatalog, bool>> query = null)
+        public IQueryable<NoteCatalog> GetEntities(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            return LookupRepo.GetEntities(query);
+            return LookupRepo.GetEntities(query, resourceCollectionParameters);
         }
 
-        public async Task<IEnumerable<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null)
+        public async Task<IEnumerable<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var cats = await LookupRepo.GetEntitiesAsync(query);
+            var cats = await LookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
             return cats;
         }
 

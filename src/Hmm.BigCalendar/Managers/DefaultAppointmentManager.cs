@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Hmm.BigCalendar.Contract;
+﻿using Hmm.BigCalendar.Contract;
 using Hmm.BigCalendar.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace Hmm.BigCalendar.Managers
 {
@@ -40,6 +42,7 @@ namespace Hmm.BigCalendar.Managers
                 case null:
                     ProcessResult.PropagandaResult(_appointRepo.ProcessMessage);
                     return null;
+
                 default:
                     return savedApp;
             }
@@ -69,7 +72,7 @@ namespace Hmm.BigCalendar.Managers
             return appointments;
         }
 
-        public IEnumerable<Appointment> GetAppointments()
+        public IEnumerable<Appointment> GetAppointments(Expression<Func<Appointment, bool>> query, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             return _appointRepo.GetEntities().ToList();
         }

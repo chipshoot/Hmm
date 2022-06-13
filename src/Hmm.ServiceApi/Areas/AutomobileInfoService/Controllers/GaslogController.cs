@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
 using Microsoft.AspNetCore.Cors;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
@@ -49,7 +50,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/1/gaslogs
         [HttpGet(Name = "GetGasLogs")]
         [GasLogsResultFilter]
-        public async Task<ActionResult> Get(int autoId)
+        public async Task<ActionResult> Get([FromQuery] GasLogResourceParameters gasLogResourceParameters)
         {
             //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             //if (userId == null)
@@ -65,8 +66,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             //    return OK(new List<ApiGasLog>());
             //}
 
-            var gasLogAll = await _gasLogManager.GetEntitiesAsync();
-            var gasLogs = gasLogAll.Where(l => l.Car.Id == autoId).ToList();
+            var gasLogs = await _gasLogManager.GetEntitiesAsync(gasLogResourceParameters);
             if (!gasLogs.Any())
             {
                 return NotFound();
@@ -256,9 +256,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
             try
             {
-                var curGasLogAll = await _gasLogManager.GetEntitiesAsync();
-                var curGasLog = curGasLogAll.FirstOrDefault(r => r.Id == id && r.Car.Id == autoId);
-                if (curGasLog == null)
+                var curGasLog = await _gasLogManager.GetEntityByIdAsync(id);
+                if (curGasLog == null || curGasLog.Car.Id != autoId)
                 {
                     return NotFound();
                 }

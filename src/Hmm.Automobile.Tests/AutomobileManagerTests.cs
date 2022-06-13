@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Generic;
 using System.Linq;
 using Hmm.Automobile.Validator;
+using Hmm.Utility.Dal.Query;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -68,7 +69,7 @@ namespace Hmm.Automobile.Tests
             SetupEnvironment();
 
             // Act
-            var savedCars = _manager.GetEntities();
+            var savedCars = _manager.GetEntities(new ResourceCollectionParameters());
 
             // Assert
             Assert.True(_manager.ProcessResult.Success);
@@ -97,7 +98,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(author);
             _manager.Create(car);
 
-            return _manager.GetEntities().ToList();
+            return _manager.GetEntities(new ResourceCollectionParameters()).ToList();
         }
 
         private void SetupDevEnv()

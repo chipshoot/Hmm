@@ -141,8 +141,19 @@ namespace Hmm.Automobile.DomainEntity
             }
 
             var note = serializer.GetNote(log);
+            note.Subject = log.GetGasLogNoteSubject();
             note.Author = author;
             return note;
         }
+
+        /// <summary>
+        /// The method is used to get gas log subject. Hmm is using <see cref="AutomobileConstant"/> to get base subject for
+        /// note content, however we also need a way to quickly find out the gas log of each automobile, so we add automobile
+        /// id to gas log subject. e.g. GasLog,AutomobileId:1, this way Hmm can search database subject by note catalog and
+        /// subject to retrieve all gas log of the automobile
+        /// </summary>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        public static string GetGasLogNoteSubject(this GasLog log) => $"{log.GetSubject()},AutomobileId:{log.Car.Id}";
     }
 }

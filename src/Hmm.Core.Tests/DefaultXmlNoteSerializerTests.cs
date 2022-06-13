@@ -140,7 +140,7 @@ namespace Hmm.Core.Tests
 
         private class TestDefaultXmlNoteSerializer : DefaultXmlNoteSerializer<HmmNote>
         {
-            private NoteCatalog _catalog;
+            private readonly NoteCatalog _catalog;
 
             public TestDefaultXmlNoteSerializer(ILogger<HmmNote> logger, NoteCatalog catalog) : base(logger)
             {

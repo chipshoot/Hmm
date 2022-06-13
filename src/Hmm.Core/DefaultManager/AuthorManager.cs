@@ -1,10 +1,10 @@
 ﻿using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -76,7 +76,7 @@ namespace Hmm.Core.DefaultManager
                 throw new ArgumentOutOfRangeException(nameof(id));
             }
 
-            return GetEntities().Any(u => u.Id == userId);
+            return _authorRepo.GetEntity(userId) != null;
         }
 
         public Author GetAuthorById(Guid id)
@@ -173,11 +173,11 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public IEnumerable<Author> GetEntities()
+        public IEnumerable<Author> GetEntities( Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var authors = _authorRepo.GetEntities();
+                var authors = _authorRepo.GetEntities(query, resourceCollectionParameters);
 
                 return authors;
             }
@@ -188,11 +188,11 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null)
+        public async Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var authors = await _authorRepo.GetEntitiesAsync(query);
+                var authors = await _authorRepo.GetEntitiesAsync(query, resourceCollectionParameters);
                 return authors;
             }
             catch (Exception ex)
@@ -204,13 +204,13 @@ namespace Hmm.Core.DefaultManager
 
         public void DeActivate(Guid id)
         {
-            var user = _authorRepo.GetEntities().FirstOrDefault(u => u.Id == id && u.IsActivated);
+            var user = _authorRepo.GetEntity(id);
             if (user == null)
             {
                 ProcessResult.Success = false;
                 ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
             }
-            else
+            else if (user.IsActivated)
             {
                 try
                 {
@@ -226,14 +226,13 @@ namespace Hmm.Core.DefaultManager
 
         public async Task DeActivateAsync(Guid id)
         {
-            var users = await  _authorRepo.GetEntitiesAsync(u => u.Id == id && u.IsActivated);
-            var user = users.FirstOrDefault();
+            var user = await _authorRepo.GetEntityAsync(id);
             if (user == null)
             {
                 ProcessResult.Success = false;
                 ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
             }
-            else
+            else if (user.IsActivated)
             {
                 try
                 {

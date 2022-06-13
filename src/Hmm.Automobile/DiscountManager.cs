@@ -18,17 +18,17 @@ namespace Hmm.Automobile
             NoteSerializer = noteSerializer;
         }
 
-        public override IEnumerable<GasDiscount> GetEntities()
+        public override IEnumerable<GasDiscount> GetEntities(ResourceCollectionParameters resourceCollectionParameters)
         {
-            var notes = GetNotes(new GasDiscount());
+            var notes = GetNotes(new GasDiscount(), resourceCollectionParameters);
             return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
         }
 
-        public override async Task<IEnumerable<GasDiscount>> GetEntitiesAsync()
+        public override async Task<IEnumerable<GasDiscount>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters)
         {
             try
             {
-                var notes = await GetNotesAsync(new GasDiscount());
+                var notes = await GetNotesAsync(new GasDiscount(), resourceCollectionParameters);
                 return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
             }
             catch (Exception e)
@@ -48,14 +48,14 @@ namespace Hmm.Automobile
 
         public override GasDiscount GetEntityById(int id)
         {
-            return GetEntities().FirstOrDefault(d => d.Id == id);
+            var note = GetNote(id, new GasDiscount());
+            return note == null ? null : NoteSerializer.GetEntity(note);
         }
 
         public override async Task<GasDiscount> GetEntityByIdAsync(int id)
         {
-            var discounts = await GetEntitiesAsync();
-            var discount = discounts.FirstOrDefault(l => l.Id == id);
-            return discount;
+            var note = await GetNoteAsync(id, new GasDiscount());
+            return note == null ? null : NoteSerializer.GetEntity(note);
         }
 
         public override GasDiscount Create(GasDiscount entity)

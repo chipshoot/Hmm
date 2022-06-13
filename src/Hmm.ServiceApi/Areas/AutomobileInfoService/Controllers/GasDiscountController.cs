@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
@@ -34,9 +35,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/gaslogs/discounts
         [HttpGet(Name = "GetGasDiscounts")]
         [GasDiscountsResultFilter]
-        public async Task<ActionResult> Get()
+        public async Task<ActionResult> Get(ResourceCollectionParameters resourceCollectionParameters)
         {
-            var allDiscounts = await _discountManager.GetEntitiesAsync();
+            var allDiscounts = await _discountManager.GetEntitiesAsync(resourceCollectionParameters);
             var discounts = allDiscounts.ToList();
             if (!discounts.Any())
             {

@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
-using FluentValidation;
+﻿using FluentValidation;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Validation;
+using System;
 
 namespace Hmm.Core.DefaultManager.Validator
 {
@@ -18,7 +17,7 @@ namespace Hmm.Core.DefaultManager.Validator
 
             RuleFor(n => n.Subject).NotNull().Length(1, 1000);
             RuleFor(n => n.Author).NotNull().Must(AuthorNotChanged).WithMessage("Cannot update note's author");
-            RuleFor(n => n.Description).Length(0, 1000);
+            RuleFor(n => n.Description).Length(1, 1000);
             RuleFor(n => n.Catalog).NotNull();
         }
 
@@ -29,7 +28,7 @@ namespace Hmm.Core.DefaultManager.Validator
                 return false;
             }
 
-            var savedNote = _dataRepo.GetEntities().FirstOrDefault(n => n.Id == note.Id);
+            var savedNote = _dataRepo.GetEntity(note.Id);
 
             // create new user, make sure account name is unique
             var authorId = author.Id;

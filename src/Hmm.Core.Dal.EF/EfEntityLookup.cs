@@ -64,54 +64,35 @@ namespace Hmm.Core.Dal.EF
             return entity;
         }
 
-        public IQueryable<T> GetEntities<T>(Expression<Func<T, bool>> query = null)
+        public IQueryable<T> GetEntities<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            IQueryable<T> entities;
-            if (typeof(T) == typeof(NoteRender))
-            {
-                entities = _dataContext.Renders.Cast<T>();
-            }
-            else if (typeof(T) == typeof(HmmNote))
-            {
-                entities = _dataContext.Notes
-                    .Include(n => n.Author)
-                    .Include(n => n.Catalog).Cast<T>();
-            }
-            else if (typeof(T) == typeof(NoteCatalog))
-            {
-                entities = _dataContext.Catalogs
-                    .Include(c => c.Subsystem)
-                    .Include(c => c.Render).Cast<T>();
-            }
-            else if (typeof(T) == typeof(Author))
-            {
-                entities = _dataContext.Authors
-                    .Cast<T>();
-            }
-            else if (typeof(T) == typeof(Subsystem))
-            {
-                entities = _dataContext.Subsystems
-                    .Include(s => s.DefaultAuthor)
-                    .Include(s => s.NoteCatalogs)
-                    .ThenInclude(c => c.Render)
-                    .Cast<T>();
-            }
-            else
-            {
-                throw new DataSourceException($"{typeof(T)} is not support");
-            }
+            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
+            var entities = GetQueryableEntities<T>();
 
             if (query != null)
             {
-                entities = entities.Where(query);
+                var count = entities.Where(query).Count();
+                entities = count <= pageSize ? entities.Where(query)
+                    : entities.Where(query).Skip((pageIdx - 1) * pageSize).Take(pageSize).Cast<T>();
             }
 
             return entities;
         }
 
-        public async Task<IEnumerable<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null)
+        public async Task<IEnumerable<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var result = await GetEntities<T>(query).ToListAsync();
+            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
+            var entities = GetQueryableEntities<T>();
+
+            if (query != null)
+            {
+                var count = await entities.Where(query).CountAsync();
+                entities = count <= pageSize ? entities.Where(query)
+                    : entities.Where(query).Skip((pageIdx - 1) * pageSize).Take(pageSize).Cast<T>();
+            }
+
+            var result = await entities.ToListAsync();
+
             return result;
         }
 
@@ -158,5 +139,45 @@ namespace Hmm.Core.Dal.EF
         }
 
         public ProcessingResult ProcessResult { get; } = new();
+
+        private IQueryable<T> GetQueryableEntities<T>()
+        {
+            IQueryable<T> entities;
+            if (typeof(T) == typeof(NoteRender))
+            {
+                entities = _dataContext.Renders.Cast<T>();
+            }
+            else if (typeof(T) == typeof(HmmNote))
+            {
+                entities = _dataContext.Notes
+                    .Include(n => n.Author)
+                    .Include(n => n.Catalog).Cast<T>();
+            }
+            else if (typeof(T) == typeof(NoteCatalog))
+            {
+                entities = _dataContext.Catalogs
+                    .Include(c => c.Subsystem)
+                    .Include(c => c.Render).Cast<T>();
+            }
+            else if (typeof(T) == typeof(Author))
+            {
+                entities = _dataContext.Authors
+                    .Cast<T>();
+            }
+            else if (typeof(T) == typeof(Subsystem))
+            {
+                entities = _dataContext.Subsystems
+                    .Include(s => s.DefaultAuthor)
+                    .Include(s => s.NoteCatalogs)
+                    .ThenInclude(c => c.Render)
+                    .Cast<T>();
+            }
+            else
+            {
+                throw new DataSourceException($"{typeof(T)} is not support");
+            }
+
+            return entities;
+        }
     }
 }

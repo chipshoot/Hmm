@@ -1,4 +1,5 @@
 ﻿using Hmm.Utility.Dal.DataEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
 using System.Collections.Generic;
@@ -20,19 +21,23 @@ namespace Hmm.Utility.Dal.Repository
         /// Gets the list of entities that match criteria.
         /// </summary>
         /// <param name="query">The query to search the data source.</param>
+        /// <param name="resourceCollectionParameters">Resource collection control information, e.g. pagination, sort and search information.
+        /// if null applied system will use default pagination setting for the searching</param>
         /// <returns>
         /// The list of entity that match the criteria
         /// </returns>
-        IQueryable<T> GetEntities(Expression<Func<T, bool>> query = null);
+        IQueryable<T> GetEntities(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Gets the list of entities that match criteria asynchronously.
         /// </summary>
         /// <param name="query">The query to search the data source.</param>
+        /// <param name="resourceCollectionParameters">Resource collection control information, e.g. pagination, sort and search information.
+        /// if null applied system will use default pagination setting for the searching</param>
         /// <returns>
         /// The list of entity that match the criteria
         /// </returns>
-        Task<IEnumerable<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null);
+        Task<IEnumerable<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Get one entity by id

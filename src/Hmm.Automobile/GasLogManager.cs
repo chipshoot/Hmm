@@ -1,6 +1,8 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
+using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.MeasureUnit;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
@@ -8,8 +10,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Hmm.Core.DomainEntity;
-using Hmm.Utility.MeasureUnit;
 
 namespace Hmm.Automobile
 {
@@ -29,17 +29,17 @@ namespace Hmm.Automobile
             _dateProvider = dateProvider;
         }
 
-        public override IEnumerable<GasLog> GetEntities()
+        public override IEnumerable<GasLog> GetEntities(ResourceCollectionParameters resourceCollectionParameters)
         {
-            var notes = GetNotes(new GasLog());
+            var notes = GetNotes(new GasLog(), resourceCollectionParameters);
             return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
         }
 
-        public override async Task<IEnumerable<GasLog>> GetEntitiesAsync()
+        public override async Task<IEnumerable<GasLog>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters)
         {
             try
             {
-                var notes = await GetNotesAsync(new GasLog());
+                var notes = await GetNotesAsync(new GasLog(), resourceCollectionParameters);
                 return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
             }
             catch (Exception e)
@@ -59,14 +59,14 @@ namespace Hmm.Automobile
 
         public override GasLog GetEntityById(int id)
         {
-            return GetEntities().FirstOrDefault(l => l.Id == id);
+            var note = GetNote(id, new GasLog());
+            return note == null ? null : NoteSerializer.GetEntity(note);
         }
 
         public override async Task<GasLog> GetEntityByIdAsync(int id)
         {
-            var logs = await GetEntitiesAsync();
-            var log = logs.FirstOrDefault(l => l.Id == id);
-            return log;
+            var note = await GetNoteAsync(id, new GasLog());
+            return note == null ? null : NoteSerializer.GetEntity(note);
         }
 
         public GasLog LogHistory(GasLog entity)
@@ -297,8 +297,8 @@ namespace Hmm.Automobile
 
         private HmmNote GetUpdateLogNote(GasLog orgLog, GasLog delta)
         {
-            Debug.Assert(orgLog !=null);
-            Debug.Assert(delta !=null);
+            Debug.Assert(orgLog != null);
+            Debug.Assert(delta != null);
 
             orgLog.Date = delta.Date;
             orgLog.Distance = delta.Distance;
@@ -321,11 +321,11 @@ namespace Hmm.Automobile
             if (log == null) throw new ArgumentNullException(nameof(log));
             if (auto == null) throw new ArgumentNullException(nameof(auto));
 
-            if (auto.MeterReading <=0 )
+            if (auto.MeterReading <= 0)
             {
                 return (false, "The automobile's meter reading is invalid");
             }
-            
+
             // automobile's meter reading should less then new meter reading
             if (auto.MeterReading > log.CurrentMeterReading.TotalKilometre)
             {
@@ -338,8 +338,8 @@ namespace Hmm.Automobile
                 return (false, "The logging distance is invalid");
             }
 
-            return log.CurrentMeterReading - Dimension.FromKilometer(auto.MeterReading) != log.Distance 
-                ? (true, "Current log distance plus automobile's current meter reading does not match log's current meter reading") 
+            return log.CurrentMeterReading - Dimension.FromKilometer(auto.MeterReading) != log.Distance
+                ? (true, "Current log distance plus automobile's current meter reading does not match log's current meter reading")
                 : (true, string.Empty);
         }
     }

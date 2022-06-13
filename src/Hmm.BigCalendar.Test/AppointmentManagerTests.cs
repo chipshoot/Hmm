@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Hmm.Utility.Dal.Query;
 using Xunit;
 
 namespace Hmm.BigCalendar.Test
@@ -36,7 +37,7 @@ namespace Hmm.BigCalendar.Test
                 var rec = _appoints.FirstOrDefault(a => a.Id == id);
                 return rec;
             });
-            mockRepo.Setup(a => a.GetEntities(It.IsAny<Expression<Func<Appointment, bool>>>())).Returns(
+            mockRepo.Setup(a => a.GetEntities(It.IsAny<Expression<Func<Appointment, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(
                 (Expression<Func<Appointment, bool>> query) =>
                 {
                     _appoints ??= new List<Appointment>();

@@ -45,8 +45,8 @@ namespace Hmm.Core.Tests
                 Name = "Test Render",
                 Namespace = "Default NameSpace"
             };
-            _manager.Create(render);
-            var savedRender = _manager.GetEntities().FirstOrDefault(c => c.Id == 1);
+            var newRender = _manager.Create(render);
+            var savedRender = _manager.GetEntityById(newRender.Id);
             Assert.NotNull(savedRender);
 
             // Act

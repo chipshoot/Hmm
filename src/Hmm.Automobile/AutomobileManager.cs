@@ -19,11 +19,11 @@ namespace Hmm.Automobile
             NoteSerializer = noteSerializer;
         }
 
-        public override IEnumerable<AutomobileInfo> GetEntities()
+        public override IEnumerable<AutomobileInfo> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var notes = GetNotes(new AutomobileInfo());
+                var notes = GetNotes(new AutomobileInfo(), resourceCollectionParameters);
                 return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
             }
             catch (Exception e)
@@ -41,11 +41,11 @@ namespace Hmm.Automobile
             }
         }
 
-        public override async Task<IEnumerable<AutomobileInfo>> GetEntitiesAsync()
+        public override async Task<IEnumerable<AutomobileInfo>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var notes = await GetNotesAsync(new AutomobileInfo());
+                var notes = await GetNotesAsync(new AutomobileInfo(), resourceCollectionParameters);
                 return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
             }
             catch (Exception e)
@@ -65,15 +65,14 @@ namespace Hmm.Automobile
 
         public override AutomobileInfo GetEntityById(int id)
         {
-            var car = GetEntities()?.FirstOrDefault(c => c.Id == id);
-            return car;
+            var note = GetNote(id, new AutomobileInfo());
+            return note == null ? null : NoteSerializer.GetEntity(note);
         }
 
         public override async Task<AutomobileInfo> GetEntityByIdAsync(int id)
         {
-            var cars = await GetEntitiesAsync();
-            var car = cars.FirstOrDefault(c => c.Id == id);
-            return car;
+            var note = await GetNoteAsync(id, new AutomobileInfo());
+            return note == null ? null : NoteSerializer.GetEntity(note);
         }
 
         public override AutomobileInfo Create(AutomobileInfo entity)

@@ -1,4 +1,5 @@
 ﻿using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
 using System.Collections.Generic;
@@ -13,9 +14,9 @@ namespace Hmm.Core
 
         Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false);
 
-        IEnumerable<HmmNote> GetNotes(bool includeDeleted = false);
+        IEnumerable<HmmNote> GetNotes(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null);
 
-        Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false);
+        Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null);
 
         HmmNote Create(HmmNote note);
 

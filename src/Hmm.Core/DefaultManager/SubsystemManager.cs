@@ -1,4 +1,5 @@
 ﻿using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
@@ -132,11 +133,11 @@ namespace Hmm.Core.DefaultManager
             return updatedSys;
         }
 
-        public IEnumerable<Subsystem> GetEntities()
+        public IEnumerable<Subsystem> GetEntities(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var sys = _dataSource.GetEntities();
+                var sys = _dataSource.GetEntities(query, resourceCollectionParameters);
                 return sys;
             }
             catch (Exception ex)
@@ -146,11 +147,11 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<IEnumerable<Subsystem>> GetEntitiesAsync(Expression<Func<Subsystem, bool>> query = null)
+        public async Task<IEnumerable<Subsystem>> GetEntitiesAsync(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var sys = await _dataSource.GetEntitiesAsync(query);
+                var sys = await _dataSource.GetEntitiesAsync(query, resourceCollectionParameters);
                 return sys;
             }
             catch (Exception ex)
@@ -200,7 +201,7 @@ namespace Hmm.Core.DefaultManager
             {
                 return false;
             }
-            return GetEntities().FirstOrDefault(s => s.Name == subsystem.Name) != null;
+            return GetEntities(s => s.Name == subsystem.Name).FirstOrDefault() != null;
         }
 
         public ProcessingResult ProcessResult { get; } = new();

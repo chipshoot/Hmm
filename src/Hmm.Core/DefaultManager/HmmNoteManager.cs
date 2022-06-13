@@ -1,4 +1,5 @@
 ﻿using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
@@ -166,8 +167,18 @@ namespace Hmm.Core.DefaultManager
 
         public HmmNote GetNoteById(int id, bool includeDeleted = false)
         {
-            var note = GetNotes(includeDeleted).FirstOrDefault(n => n.Id == id);
-            return note;
+            var note = _noteRepo.GetEntity(id);
+            if (includeDeleted)
+            {
+                return note;
+            }
+
+            if (note != null)
+            {
+                return note.IsDeleted ? null : note;
+            }
+
+            return null;
         }
 
         public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
@@ -181,17 +192,17 @@ namespace Hmm.Core.DefaultManager
             return note;
         }
 
-        public IEnumerable<HmmNote> GetNotes(bool includeDeleted = false)
+        public IEnumerable<HmmNote> GetNotes(Expression<Func<HmmNote, bool>> query, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = includeDeleted ? _noteRepo.GetEntities() :
-                _noteRepo.GetEntities().Where(n => !n.IsDeleted);
+            var notes = includeDeleted ? _noteRepo.GetEntities(null, resourceCollectionParameters) :
+                _noteRepo.GetEntities(n => !n.IsDeleted, resourceCollectionParameters);
 
             return notes;
         }
 
-        public async Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false)
+        public async Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = await _noteRepo.GetEntitiesAsync(query);
+            var notes = await _noteRepo.GetEntitiesAsync(query, resourceCollectionParameters);
 
             return !includeDeleted ? notes.Where(n => !n.IsDeleted) : notes;
         }

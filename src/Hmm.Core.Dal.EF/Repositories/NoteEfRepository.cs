@@ -21,22 +21,24 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
         }
 
-        public IQueryable<HmmNote> GetEntities(Expression<Func<HmmNote, bool>> query = null)
+        public IQueryable<HmmNote> GetEntities(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
+            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var notes = query != null
                 ? DataContext.Notes
                     .Include(n => n.Author)
                     .Include(n => n.Catalog)
                     .Where(query)
+                    .Skip((pageIdx - 1) * pageSize).Take(pageSize)
                 : DataContext.Notes
                     .Include(n => n.Author)
                     .Include(n => n.Catalog);
             return notes;
         }
 
-        public async Task<IEnumerable<HmmNote>> GetEntitiesAsync(Expression<Func<HmmNote, bool>> query = null)
+        public async Task<IEnumerable<HmmNote>> GetEntitiesAsync(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = await GetEntities(query).ToListAsync();
+            var notes = await GetEntities(query, resourceCollectionParameters).ToListAsync();
             return notes;
         }
 
@@ -158,13 +160,13 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 entity.CreateDate = DateTimeProvider.UtcNow;
                 entity.LastModifiedDate = DateTimeProvider.UtcNow;
-                var savedAuthor = DataContext.Authors.Find(entity.Author.Id);
+                var savedAuthor = await DataContext.Authors.FindAsync(entity.Author.Id);
                 if (savedAuthor != null)
                 {
                     entity.Author = savedAuthor;
                 }
 
-                var savedCat = DataContext.Catalogs.Find(entity.Catalog.Id);
+                var savedCat = await DataContext.Catalogs.FindAsync(entity.Catalog.Id);
                 if (savedCat != null)
                 {
                     entity.Catalog = savedCat;
@@ -225,7 +227,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public bool HasPropertyChanged(HmmNote note, string propertyName)
         {
-            if (!(DataContext is DbContext dbContext))
+            if (DataContext is not DbContext dbContext)
             {
                 return false;
             }

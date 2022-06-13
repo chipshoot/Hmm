@@ -1,4 +1,5 @@
 ﻿using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
 using System.Collections.Generic;
@@ -9,9 +10,9 @@ namespace Hmm.Core
 {
     public interface IAuthorManager
     {
-        IEnumerable<Author> GetEntities();
+        IEnumerable<Author> GetEntities(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
-        Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null);
+        Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         bool AuthorExists(string id);
 

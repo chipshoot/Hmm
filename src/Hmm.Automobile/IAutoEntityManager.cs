@@ -1,6 +1,7 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
 using Hmm.Core.DomainEntity;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System.Collections.Generic;
@@ -20,9 +21,9 @@ namespace Hmm.Automobile
 
         Task<T> GetEntityByIdAsync(int id);
 
-        IEnumerable<T> GetEntities();
+        IEnumerable<T> GetEntities(ResourceCollectionParameters resourceCollectionParameter = null);
 
-        Task<IEnumerable<T>> GetEntitiesAsync();
+        Task<IEnumerable<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
 
         T Create(T entity);
 

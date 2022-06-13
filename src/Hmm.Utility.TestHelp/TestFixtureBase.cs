@@ -247,21 +247,21 @@ namespace Hmm.Utility.TestHelp
                 var recFound = _authors.FirstOrDefault(c => c.Id == id);
                 return recFound;
             });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<Author, bool>>>())).Returns(() => _authors.AsQueryable());
+            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<Author, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _authors.AsQueryable());
 
             lookupMoc.Setup(lk => lk.GetEntity<NoteRender>(It.IsAny<int>())).Returns((int id) =>
             {
                 var recFound = _renders.FirstOrDefault(c => c.Id == id);
                 return recFound;
             });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteRender, bool>>>())).Returns(() => _renders.AsQueryable());
+            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteRender, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _renders.AsQueryable());
 
             lookupMoc.Setup(lk => lk.GetEntity<NoteCatalog>(It.IsAny<int>())).Returns((int id) =>
             {
                 var recFound = _catalogs.FirstOrDefault(c => c.Id == id);
                 return recFound;
             });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>())).Returns(() => _catalogs.AsQueryable());
+            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _catalogs.AsQueryable());
 
             lookupMoc.Setup(lk => lk.GetEntity<HmmNote>(It.IsAny<int>()))
                 .Returns((int id) =>
@@ -269,7 +269,7 @@ namespace Hmm.Utility.TestHelp
                     var rec = _notes.FirstOrDefault(n => n.Id == id);
                     return rec;
                 });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>())).Returns(() => _notes.AsQueryable());
+            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _notes.AsQueryable());
 
             lookupMoc.Setup(sys => sys.GetEntity<Subsystem>(It.IsAny<int>())).Returns((int id) =>
             {
@@ -302,7 +302,12 @@ namespace Hmm.Utility.TestHelp
                 oldAuthor = author.Clone(oldAuthor);
                 return oldAuthor.Clone();
             });
-            mockAuthors.Setup(a => a.GetEntities(It.IsAny<Expression<Func<Author, bool>>>())).Returns(() => _authors.AsQueryable());
+            mockAuthors
+                .Setup(a => a.GetEntities(It.IsAny<Expression<Func<Author, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).Returns(
+                    (Expression<Func<Author, bool>> query, ResourceCollectionParameters resourceCollectionParameters) =>
+                        query == null ? _authors.AsQueryable() : _authors.AsQueryable().Where(query));
+            mockAuthors.Setup(a => a.GetEntity(It.IsAny<Guid>())).Returns((Guid id) => _authors.FirstOrDefault(a => a.Id == id));
             return mockAuthors.Object;
         }
 
@@ -339,7 +344,20 @@ namespace Hmm.Utility.TestHelp
                 oldCat = cat.Clone(oldCat);
                 return oldCat;
             });
-            mockCatalogs.Setup(c => c.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>())).Returns(() => _catalogs.AsQueryable());
+            mockCatalogs
+                .Setup(a => a.GetEntity(It.IsAny<int>())).Returns((int id) =>
+                {
+                    var savedCat = _catalogs.FirstOrDefault(n => n.Id == id);
+                    var backCat = savedCat?.Clone();
+                    return backCat;
+                });
+            mockCatalogs
+                .Setup(c => c.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).Returns(
+                    (Expression<Func<NoteCatalog, bool>> query,
+                        ResourceCollectionParameters resourceCollectionParameters) => query == null
+                        ? _catalogs.AsQueryable()
+                        : _catalogs.AsQueryable().Where(query));
 
             return mockCatalogs.Object;
         }
@@ -367,7 +385,19 @@ namespace Hmm.Utility.TestHelp
                 render = render.Clone(oldRender);
                 return render;
             });
-            mockRender.Setup(r => r.GetEntities(It.IsAny<Expression<Func<NoteRender, bool>>>())).Returns(() => _renders.AsQueryable());
+            mockRender
+                .Setup(a => a.GetEntity(It.IsAny<int>())).Returns((int id) =>
+                {
+                    var savedRender = _renders.FirstOrDefault(n => n.Id == id);
+                    var backRender = savedRender?.Clone();
+                    return backRender;
+                });
+            mockRender
+                .Setup(r => r.GetEntities(It.IsAny<Expression<Func<NoteRender, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).Returns(
+                    (Expression<Func<NoteRender, bool>> query,
+                            ResourceCollectionParameters resourceCollectionParameters) =>
+                        query == null ? _renders.AsQueryable() : _renders.AsQueryable().Where(query));
 
             return mockRender.Object;
         }
@@ -434,7 +464,7 @@ namespace Hmm.Utility.TestHelp
                 var newSys = oldSys?.Clone();
                 return newSys;
             });
-            mockSystem.Setup(r => r.GetEntities(It.IsAny<Expression<Func<Subsystem, bool>>>())).Returns(() => _systems.AsQueryable());
+            mockSystem.Setup(r => r.GetEntities(It.IsAny<Expression<Func<Subsystem, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _systems.AsQueryable());
 
             return mockSystem.Object;
         }
@@ -463,7 +493,18 @@ namespace Hmm.Utility.TestHelp
                 oldNote.Version = Guid.NewGuid().ToByteArray();
                 return oldNote.Clone();
             });
-            mockNotes.Setup(a => a.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>())).Returns(() => _notes.AsQueryable());
+            mockNotes
+                .Setup(a => a.GetEntity(It.IsAny<int>())).Returns((int id) =>
+                {
+                    var savedNote = _notes.FirstOrDefault(n => n.Id == id);
+                    var backNote = savedNote?.Clone();
+                    return backNote;
+                });
+            mockNotes
+                .Setup(a => a.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).Returns((Expression<Func<HmmNote, bool>> query,
+                        ResourceCollectionParameters resourceCollectionParameters) =>
+                    query == null ? _notes.AsQueryable() : _notes.AsQueryable().Where(query));
             return mockNotes.Object;
         }
 

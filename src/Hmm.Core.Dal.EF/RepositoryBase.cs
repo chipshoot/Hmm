@@ -47,7 +47,7 @@ namespace Hmm.Core.Dal.EF
                 return property;
             }
 
-            var defaultProp = LookupRepo.GetEntities<TP>().FirstOrDefault(p => p.IsDefault);
+            var defaultProp = LookupRepo.GetEntities<TP>(p => p.IsDefault).FirstOrDefault();
             return defaultProp;
         }
 

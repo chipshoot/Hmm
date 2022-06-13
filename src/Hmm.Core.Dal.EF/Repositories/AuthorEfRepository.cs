@@ -25,14 +25,14 @@ namespace Hmm.Core.Dal.EF.Repositories
             _lookupRepo = lookupRepo;
         }
 
-        public IQueryable<Author> GetEntities(Expression<Func<Author, bool>> query = null)
+        public IQueryable<Author> GetEntities(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            return _lookupRepo.GetEntities(query);
+            return _lookupRepo.GetEntities(query, resourceCollectionParameters);
         }
 
-        public async Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null)
+        public async Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var authors = await _lookupRepo.GetEntitiesAsync(query);
+            var authors = await _lookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
             return authors;
         }
 

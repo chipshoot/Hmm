@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hmm.Utility.Dal.Query;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
@@ -33,7 +34,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             const string comment = "This is a test gas log";
             var car = _autoManager.GetEntityById(1);
-            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var discount = _discountManager.GetEntities(new ResourceCollectionParameters()).FirstOrDefault();
             var logDate = new DateTime(2019, 12, 25);
             var gasLog = new GasLog
             {
@@ -140,7 +141,7 @@ namespace Hmm.Automobile.Tests
             const string comment = "This is a test gas log";
             var car = _autoManager.GetEntityById(1);
             car.MeterReading = 11700;
-            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var discount = _discountManager.GetEntities(new ResourceCollectionParameters()).FirstOrDefault();
             var logDate = new DateTime(2019, 12, 25);
             var gasLog = new GasLog
             {
@@ -195,7 +196,7 @@ namespace Hmm.Automobile.Tests
             var car = _autoManager.GetEntityById(1);
             car.MeterReading = autoMeterReading;
             _autoManager.Update(car);
-            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var discount = _discountManager.GetEntities(new ResourceCollectionParameters()).FirstOrDefault();
             var logDate = new DateTime(2019, 12, 25);
             var gasLog = new GasLog
             {
@@ -245,7 +246,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             const string comment = "This is a test gas log";
             var car = _autoManager.GetEntityById(1);
-            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var discount = _discountManager.GetEntities(new ResourceCollectionParameters()).FirstOrDefault();
             var logDate = new DateTime(2019, 12, 25);
             var gasLog = new GasLog
             {
@@ -335,9 +336,9 @@ namespace Hmm.Automobile.Tests
 
         private GasLog InsertSampleGasLog()
         {
-            var car = _autoManager.GetEntities().FirstOrDefault();
+            var car = _autoManager.GetEntities(new ResourceCollectionParameters()).FirstOrDefault();
             Assert.NotNull(car);
-            var discount = _discountManager.GetEntities().FirstOrDefault();
+            var discount = _discountManager.GetEntities(new ResourceCollectionParameters()).FirstOrDefault();
             Assert.NotNull(discount);
 
             var gasLog = new GasLog
