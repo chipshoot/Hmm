@@ -194,17 +194,20 @@ namespace Hmm.Core.DefaultManager
 
         public IEnumerable<HmmNote> GetNotes(Expression<Func<HmmNote, bool>> query, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = includeDeleted ? _noteRepo.GetEntities(null, resourceCollectionParameters) :
-                _noteRepo.GetEntities(n => !n.IsDeleted, resourceCollectionParameters);
-
+            var predicate = PredicateBuilder.True<HmmNote>();
+            predicate = query == null ? predicate : predicate.And(query);
+            predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
+            var notes = _noteRepo.GetEntities(predicate, resourceCollectionParameters);
             return notes;
         }
 
         public async Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = await _noteRepo.GetEntitiesAsync(query, resourceCollectionParameters);
-
-            return !includeDeleted ? notes.Where(n => !n.IsDeleted) : notes;
+            var predicate = PredicateBuilder.True<HmmNote>();
+            predicate = query == null ? predicate : predicate.And(query);
+            predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
+            var notes = await _noteRepo.GetEntitiesAsync(predicate, resourceCollectionParameters);
+            return notes;
         }
 
         public ProcessingResult ProcessResult { get; } = new();

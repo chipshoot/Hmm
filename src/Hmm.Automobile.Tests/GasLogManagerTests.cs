@@ -34,7 +34,7 @@ namespace Hmm.Automobile.Tests
             // Arrange
             const string comment = "This is a test gas log";
             var car = _autoManager.GetEntityById(1);
-            var discount = _discountManager.GetEntities(new ResourceCollectionParameters()).FirstOrDefault();
+            var discount = _discountManager.GetEntities().FirstOrDefault();
             var logDate = new DateTime(2019, 12, 25);
             var gasLog = new GasLog
             {

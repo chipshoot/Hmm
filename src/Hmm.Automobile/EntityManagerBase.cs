@@ -7,6 +7,7 @@ using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Hmm.Automobile
@@ -31,6 +32,7 @@ namespace Hmm.Automobile
         /// Get notes for specific entity
         /// </summary>
         /// <param name="entity">The entity which used to get type and figure out the catalog</param>
+        /// <param name="query">The query passed from caller</param>
         /// <param name="resourceCollectionParameters">The page information of the resource collection</param>
         /// <returns>The notes which belongs to entity type</returns>
         protected IEnumerable<HmmNote> GetNotes(T entity, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -45,8 +47,7 @@ namespace Hmm.Automobile
                     return null;
 
                 default:
-
-                    var notes = NoteManager.GetNotes(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted, false, resourceCollectionParameters);
+                    var notes = NoteManager.GetNotes(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId, false, resourceCollectionParameters);
                     return notes;
             }
         }
@@ -71,7 +72,7 @@ namespace Hmm.Automobile
 
                 default:
 
-                    var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId && !n.IsDeleted, false, resourceCollectionParameters);
+                    var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId, false, resourceCollectionParameters);
                     var noteList = notes.ToList();
                     return noteList;
             }

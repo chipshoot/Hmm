@@ -29,13 +29,13 @@ namespace Hmm.Automobile
             _dateProvider = dateProvider;
         }
 
-        public override IEnumerable<GasLog> GetEntities(ResourceCollectionParameters resourceCollectionParameters)
+        public override IEnumerable<GasLog> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var notes = GetNotes(new GasLog(), resourceCollectionParameters);
             return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
         }
 
-        public override async Task<IEnumerable<GasLog>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters)
+        public override async Task<IEnumerable<GasLog>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {

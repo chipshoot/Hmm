@@ -7,7 +7,7 @@
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Abootstrap_002Fd_003Adist_002Fd_003Ajs_002Ff_003Abootstrap_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Eslim_002Ejs/@EntryIndexedValue">True</s:Boolean>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=011c6852_002D35c6_002D469f_002D893f_002D00d41523c3cf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="CanAddNoteToDataSource" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=011c6852_002D35c6_002D469f_002D893f_002D00d41523c3cf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CanAddNoteToDataSource" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests.Can_Get_Author&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests.CanCreateValidGasLog&lt;/TestId&gt;&#xD;
@@ -21,6 +21,8 @@
     &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests.Appointment_StartDate_Earlier_Then_EndDate&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests.Appointment_StartDate_Earlier_Then_Today&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::B56C30D9-017E-4E0C-BAE2-7A50CA82B484::net6.0::Hmm.Utility.Tests.ProcessingResultTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=01b7e61c_002D614b_002D4708_002Dbe71_002D6aa19d452f4d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CanAddNoteToDataSource #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
@@ -152,11 +154,43 @@
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c00082b0_002D9b08_002D40de_002Da173_002D2dacd80ff92b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CanAddGasLog" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogManagerTests.CanAddGasLog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.AutomobileValidatorTests.AutoMustHaveValid_Maker&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.AutomobileValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.DiscountValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net5.0::Hmm.Automobile.Tests.GasLogValidatorTests.GasLogMustHaveValid_Automobile&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.DefaultXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteValidatorTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.NoteCatalogManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.NoteCatalogValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.NoteRenderManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.DefaultXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.NoteRenderValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.NoteValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.SubsystemManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.SubsystemValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::B56C30D9-017E-4E0C-BAE2-7A50CA82B484::net6.0::Hmm.Utility.Tests.ProcessingResultTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net6.0::Hmm.Core.Dal.EF.Tests.AuthorRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net6.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net6.0::Hmm.Core.Dal.EF.Tests.NoteRenderRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net6.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net6.0::Hmm.Core.Dal.EF.Tests.SubsystemRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.ApplicationRegisterTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.AutomobileManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.AutomobileValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.AutomobileXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.DiscountManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.DiscountValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.DiscountXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>
