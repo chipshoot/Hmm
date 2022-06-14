@@ -34,7 +34,7 @@ namespace Hmm.Utility.Dal.Query
         /// <returns>
         /// The list of entity that match the criteria
         /// </returns>
-        IQueryable<T> GetEntities<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        PageList<T> GetEntities<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Gets the list of entities that match criteria asynchronously.
@@ -45,7 +45,7 @@ namespace Hmm.Utility.Dal.Query
         /// <returns>
         /// The list of entity that match the criteria
         /// </returns>
-        Task<IEnumerable<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<PageList<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Gets the a int id entity by its id asynchronously.

@@ -5,7 +5,6 @@ using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -64,22 +63,16 @@ namespace Hmm.Core.Dal.EF
             return entity;
         }
 
-        public IQueryable<T> GetEntities<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<T> GetEntities<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var entities = GetQueryableEntities<T>();
 
-            if (query != null)
-            {
-                var count = entities.Where(query).Count();
-                entities = count <= pageSize ? entities.Where(query)
-                    : entities.Where(query).Skip((pageIdx - 1) * pageSize).Take(pageSize).Cast<T>();
-            }
-
-            return entities;
+            var result = query == null ? PageList<T>.Create(entities, pageIdx, pageSize) : PageList<T>.Create(entities.Where(query), pageIdx, pageSize);
+            return result;
         }
 
-        public async Task<IEnumerable<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var entities = GetQueryableEntities<T>();

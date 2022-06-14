@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Hmm.Utility.Validation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Utility.Dal.Query
 {
@@ -29,8 +31,20 @@ namespace Hmm.Utility.Dal.Query
 
         public static PageList<T> Create(IQueryable<T> source, int pageIndex, int pageSize)
         {
+            Guard.Against<ArgumentOutOfRangeException>(pageIndex <= 0, nameof(pageIndex));
+            Guard.Against<ArgumentOutOfRangeException>(pageSize < 1, nameof(pageSize));
             var count = source.Count();
             var items = source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+            return new PageList<T>(items, count, pageIndex, pageSize);
+        }
+
+        public static async Task<PageList<T>> CreateAsync(IQueryable<T> source, int pageIndex, int pageSize)
+        {
+            Guard.Against<ArgumentOutOfRangeException>(pageIndex <= 0, nameof(pageIndex));
+            Guard.Against<ArgumentOutOfRangeException>(pageSize < 1, nameof(pageSize));
+
+            var count = await source.CountAsync();
+            var items = await source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             return new PageList<T>(items, count, pageIndex, pageSize);
         }
     }
