@@ -5,7 +5,6 @@ using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -21,25 +20,30 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
         }
 
-        public IQueryable<HmmNote> GetEntities(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<HmmNote> GetEntities(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var notes = query != null
-                ? DataContext.Notes
-                    .Include(n => n.Author)
-                    .Include(n => n.Catalog)
-                    .Where(query)
-                    .Skip((pageIdx - 1) * pageSize).Take(pageSize)
-                : DataContext.Notes
-                    .Include(n => n.Author)
-                    .Include(n => n.Catalog);
-            return notes;
+            var notes = DataContext.Notes
+                .Include(n => n.Author)
+                .Include(n => n.Catalog);
+            var result = query == null
+                ? PageList<HmmNote>.Create(notes, pageIdx, pageSize)
+                : PageList<HmmNote>.Create(notes.Where(query), pageIdx, pageSize);
+
+            return result;
         }
 
-        public async Task<IEnumerable<HmmNote>> GetEntitiesAsync(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<HmmNote>> GetEntitiesAsync(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = await GetEntities(query, resourceCollectionParameters).ToListAsync();
-            return notes;
+            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
+            var notes = DataContext.Notes
+                .Include(n => n.Author)
+                .Include(n => n.Catalog);
+            var result = query == null
+                ? await PageList<HmmNote>.CreateAsync(notes, pageIdx, pageSize)
+                : await PageList<HmmNote>.CreateAsync(notes.Where(query), pageIdx, pageSize);
+
+            return result;
         }
 
         public HmmNote GetEntity(int id)

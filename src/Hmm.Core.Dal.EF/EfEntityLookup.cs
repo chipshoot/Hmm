@@ -77,14 +77,9 @@ namespace Hmm.Core.Dal.EF
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var entities = GetQueryableEntities<T>();
 
-            if (query != null)
-            {
-                var count = await entities.Where(query).CountAsync();
-                entities = count <= pageSize ? entities.Where(query)
-                    : entities.Where(query).Skip((pageIdx - 1) * pageSize).Take(pageSize).Cast<T>();
-            }
-
-            var result = await entities.ToListAsync();
+            var result = query == null
+                ? await PageList<T>.CreateAsync(entities, pageIdx, pageSize)
+                : await PageList<T>.CreateAsync(entities.Where(query), pageIdx, pageSize);
 
             return result;
         }

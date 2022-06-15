@@ -6,7 +6,6 @@ using Hmm.Utility.MeasureUnit;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,18 +28,30 @@ namespace Hmm.Automobile
             _dateProvider = dateProvider;
         }
 
-        public override IEnumerable<GasLog> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
+        public override PageList<GasLog> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var notes = GetNotes(new GasLog(), resourceCollectionParameters);
-            return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+            if (notes == null)
+            {
+                return null;
+            }
+            var carList = notes.Select(note => NoteSerializer.GetEntity(note));
+            var result = new PageList<GasLog>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+            return result;
         }
 
-        public override async Task<IEnumerable<GasLog>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
+        public override async Task<PageList<GasLog>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
                 var notes = await GetNotesAsync(new GasLog(), resourceCollectionParameters);
-                return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+                if (notes == null)
+                {
+                    return null;
+                }
+                var carList = notes.Select(note => NoteSerializer.GetEntity(note));
+                var result = new PageList<GasLog>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+                return result;
             }
             catch (Exception e)
             {

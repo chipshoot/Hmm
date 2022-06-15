@@ -5,9 +5,7 @@ using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Hmm.Automobile
@@ -32,10 +30,9 @@ namespace Hmm.Automobile
         /// Get notes for specific entity
         /// </summary>
         /// <param name="entity">The entity which used to get type and figure out the catalog</param>
-        /// <param name="query">The query passed from caller</param>
         /// <param name="resourceCollectionParameters">The page information of the resource collection</param>
         /// <returns>The notes which belongs to entity type</returns>
-        protected IEnumerable<HmmNote> GetNotes(T entity, ResourceCollectionParameters resourceCollectionParameters = null)
+        protected PageList<HmmNote> GetNotes(T entity, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var catId = entity.GetCatalogId(LookupRepo);
 
@@ -58,7 +55,7 @@ namespace Hmm.Automobile
         /// <param name="entity">The entity which used to get type and figure out the catalog</param>
         /// <param name="resourceCollectionParameters">The page information of the resource collection</param>
         /// <returns>The notes which belongs to entity type</returns>
-        protected async Task<IEnumerable<HmmNote>> GetNotesAsync(T entity, ResourceCollectionParameters resourceCollectionParameters = null)
+        protected async Task<PageList<HmmNote>> GetNotesAsync(T entity, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var catId = await entity.GetCatalogIdAsync(LookupRepo);
             var author = await LookupRepo.GetEntityAsync<Author>(DefaultAuthor.Id);
@@ -73,8 +70,7 @@ namespace Hmm.Automobile
                 default:
 
                     var notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId, false, resourceCollectionParameters);
-                    var noteList = notes.ToList();
-                    return noteList;
+                    return notes;
             }
         }
 
@@ -154,9 +150,9 @@ namespace Hmm.Automobile
 
         public abstract Task<T> GetEntityByIdAsync(int id);
 
-        public abstract IEnumerable<T> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null);
+        public abstract PageList<T> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null);
 
-        public abstract Task<IEnumerable<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
+        public abstract Task<PageList<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
 
         public abstract INoteSerializer<T> NoteSerializer { get; }
 

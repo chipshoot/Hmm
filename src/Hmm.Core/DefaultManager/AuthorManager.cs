@@ -173,7 +173,7 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public IEnumerable<Author> GetEntities( Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<Author> GetEntities( Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
@@ -188,7 +188,7 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {

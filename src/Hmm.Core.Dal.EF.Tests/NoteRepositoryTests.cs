@@ -62,8 +62,8 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Add_Note_With_NonExist_Author(Author author)
         {
             // Arrange - null author for note
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = author,
@@ -72,7 +72,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml
+                Content = xmlDoc.InnerXml
             };
 
             // Act
@@ -90,8 +90,8 @@ namespace Hmm.Core.Dal.EF.Tests
         public void CanAddNoteWithNonExistCatalogDefaultCatalogApplied(NoteCatalog catalog)
         {
             // Arrange - null catalog for note
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
@@ -99,7 +99,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml
+                Content = xmlDoc.InnerXml
             };
 
             // Act
@@ -117,15 +117,15 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Update_Note_Description()
         {
             // Arrange
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
                 Catalog = _catalog,
                 Description = "testing note",
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml,
+                Content = xmlDoc.InnerXml,
             };
             NoteRepository.Add(note);
 
@@ -146,15 +146,15 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Update_Note_Subject()
         {
             // Arrange
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
                 Catalog = _catalog,
                 Description = "testing note",
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml,
+                Content = xmlDoc.InnerXml,
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -176,15 +176,15 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Update_Note_Content()
         {
             // Arrange
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
                 Catalog = _catalog,
                 Description = "testing note",
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml,
+                Content = xmlDoc.InnerXml,
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -200,15 +200,15 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(savedRec.Id >= 1, "savedRec.Id >=1");
             Assert.True(savedRec.Id == note.Id, "savedRec.Id == note.Id");
             Assert.Equal(newXml.InnerXml, savedRec.Content);
-            Assert.NotEqual(xmldoc.InnerXml, savedRec.Content);
+            Assert.NotEqual(xmlDoc.InnerXml, savedRec.Content);
         }
 
         [Fact]
         public void Can_Update_Note_Catalog()
         {
             // Arrange
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
@@ -217,7 +217,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml
+                Content = xmlDoc.InnerXml
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -240,8 +240,8 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Update_Note_Catalog_To_Null_Catalog_Default_Catalog_Applied()
         {
             // Arrange - null catalog for note
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var catalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
             var note = new HmmNote
             {
@@ -251,7 +251,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml
+                Content = xmlDoc.InnerXml
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -283,8 +283,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "Testing catalog"
             };
 
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var initialCatalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
             var note = new HmmNote
             {
@@ -294,7 +294,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml
+                Content = xmlDoc.InnerXml
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -323,8 +323,8 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             var initialCatalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
@@ -333,7 +333,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml
+                Content = xmlDoc.InnerXml
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -354,15 +354,15 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Update_NonExits_Note()
         {
             // Arrange - non exists id
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
                 Catalog = _catalog,
                 Description = "testing note2",
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml,
+                Content = xmlDoc.InnerXml,
             };
             NoteRepository.Add(note);
 
@@ -393,15 +393,15 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Delete_Note()
         {
             // Arrange
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
                 Catalog = _catalog,
                 Description = "testing note",
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml,
+                Content = xmlDoc.InnerXml,
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -419,15 +419,15 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Delete_NonExists_Note()
         {
             // Arrange
-            var xmldoc = new XmlDocument();
-            xmldoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNote
             {
                 Author = _author,
                 Catalog = _catalog,
                 Description = "testing note",
                 Subject = "testing note is here",
-                Content = xmldoc.InnerXml,
+                Content = xmlDoc.InnerXml,
             };
             NoteRepository.Add(note);
             Assert.True(NoteRepository.ProcessMessage.Success);

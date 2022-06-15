@@ -4,7 +4,6 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -133,7 +132,7 @@ namespace Hmm.Core.DefaultManager
             return updatedSys;
         }
 
-        public IEnumerable<Subsystem> GetEntities(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<Subsystem> GetEntities(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
@@ -147,7 +146,7 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<IEnumerable<Subsystem>> GetEntitiesAsync(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<Subsystem>> GetEntitiesAsync(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {

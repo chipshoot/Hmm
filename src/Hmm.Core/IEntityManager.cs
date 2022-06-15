@@ -2,7 +2,6 @@
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -47,12 +46,12 @@ namespace Hmm.Core
         /// <summary>
         /// Get <see cref="Entity"/> list from data source
         /// </summary>
-        IEnumerable<T> GetEntities(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        PageList<T> GetEntities(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Get <see cref="Entity"/> list from data source asynchronously.
         /// </summary>
-        Task<IEnumerable<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<PageList<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Get <see cref="Entity"/> with id

@@ -21,9 +21,9 @@ namespace Hmm.Automobile
 
         Task<T> GetEntityByIdAsync(int id);
 
-        IEnumerable<T> GetEntities(ResourceCollectionParameters resourceCollectionParameter = null);
+        PageList<T> GetEntities(ResourceCollectionParameters resourceCollectionParameter = null);
 
-        Task<IEnumerable<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<PageList<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
 
         T Create(T entity);
 

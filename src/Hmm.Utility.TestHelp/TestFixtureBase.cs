@@ -17,6 +17,8 @@ namespace Hmm.Utility.TestHelp
 {
     public class TestFixtureBase : IDisposable
     {
+        private const int PageIdx = 1;
+        private const int PageSize = 20;
         private List<Author> _authors;
         private List<NoteRender> _renders;
         private List<NoteCatalog> _catalogs;
@@ -247,21 +249,28 @@ namespace Hmm.Utility.TestHelp
                 var recFound = _authors.FirstOrDefault(c => c.Id == id);
                 return recFound;
             });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<Author, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _authors.AsQueryable());
+            lookupMoc.Setup(lk =>
+                    lk.GetEntities(It.IsAny<Expression<Func<Author, bool>>>(),
+                        It.IsAny<ResourceCollectionParameters>()))
+                .Returns(() => PageList<Author>.Create(_authors.AsQueryable(), PageIdx, PageSize));
 
             lookupMoc.Setup(lk => lk.GetEntity<NoteRender>(It.IsAny<int>())).Returns((int id) =>
             {
                 var recFound = _renders.FirstOrDefault(c => c.Id == id);
                 return recFound;
             });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteRender, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _renders.AsQueryable());
+            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteRender, bool>>>(),
+                It.IsAny<ResourceCollectionParameters>())).Returns(() =>
+                PageList<NoteRender>.Create(_renders.AsQueryable(), PageIdx, PageSize));
 
             lookupMoc.Setup(lk => lk.GetEntity<NoteCatalog>(It.IsAny<int>())).Returns((int id) =>
             {
                 var recFound = _catalogs.FirstOrDefault(c => c.Id == id);
                 return recFound;
             });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _catalogs.AsQueryable());
+            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
+                It.IsAny<ResourceCollectionParameters>()))
+                .Returns(() => PageList<NoteCatalog>.Create(_catalogs.AsQueryable(), PageIdx, PageSize));
 
             lookupMoc.Setup(lk => lk.GetEntity<HmmNote>(It.IsAny<int>()))
                 .Returns((int id) =>
@@ -269,7 +278,10 @@ namespace Hmm.Utility.TestHelp
                     var rec = _notes.FirstOrDefault(n => n.Id == id);
                     return rec;
                 });
-            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _notes.AsQueryable());
+            lookupMoc.Setup(lk =>
+                    lk.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>(),
+                        It.IsAny<ResourceCollectionParameters>()))
+                .Returns(() => PageList<HmmNote>.Create(_notes.AsQueryable(), PageIdx, PageSize));
 
             lookupMoc.Setup(sys => sys.GetEntity<Subsystem>(It.IsAny<int>())).Returns((int id) =>
             {
@@ -306,7 +318,9 @@ namespace Hmm.Utility.TestHelp
                 .Setup(a => a.GetEntities(It.IsAny<Expression<Func<Author, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>())).Returns(
                     (Expression<Func<Author, bool>> query, ResourceCollectionParameters resourceCollectionParameters) =>
-                        query == null ? _authors.AsQueryable() : _authors.AsQueryable().Where(query));
+                        query == null
+                            ? PageList<Author>.Create(_authors.AsQueryable(), PageIdx, PageSize)
+                            : PageList<Author>.Create(_authors.AsQueryable().Where(query), PageIdx, PageSize));
             mockAuthors.Setup(a => a.GetEntity(It.IsAny<Guid>())).Returns((Guid id) => _authors.FirstOrDefault(a => a.Id == id));
             return mockAuthors.Object;
         }
@@ -356,8 +370,8 @@ namespace Hmm.Utility.TestHelp
                     It.IsAny<ResourceCollectionParameters>())).Returns(
                     (Expression<Func<NoteCatalog, bool>> query,
                         ResourceCollectionParameters resourceCollectionParameters) => query == null
-                        ? _catalogs.AsQueryable()
-                        : _catalogs.AsQueryable().Where(query));
+                        ? PageList<NoteCatalog>.Create(_catalogs.AsQueryable(), PageIdx, PageSize)
+                        : PageList<NoteCatalog>.Create(_catalogs.AsQueryable().Where(query), PageIdx, PageSize));
 
             return mockCatalogs.Object;
         }
@@ -397,7 +411,9 @@ namespace Hmm.Utility.TestHelp
                     It.IsAny<ResourceCollectionParameters>())).Returns(
                     (Expression<Func<NoteRender, bool>> query,
                             ResourceCollectionParameters resourceCollectionParameters) =>
-                        query == null ? _renders.AsQueryable() : _renders.AsQueryable().Where(query));
+                        query == null
+                            ? PageList<NoteRender>.Create(_renders.AsQueryable(), PageIdx, PageSize)
+                            : PageList<NoteRender>.Create(_renders.AsQueryable().Where(query), PageIdx, PageSize));
 
             return mockRender.Object;
         }
@@ -464,7 +480,9 @@ namespace Hmm.Utility.TestHelp
                 var newSys = oldSys?.Clone();
                 return newSys;
             });
-            mockSystem.Setup(r => r.GetEntities(It.IsAny<Expression<Func<Subsystem, bool>>>(), It.IsAny<ResourceCollectionParameters>())).Returns(() => _systems.AsQueryable());
+            mockSystem.Setup(r => r.GetEntities(It.IsAny<Expression<Func<Subsystem, bool>>>(),
+                It.IsAny<ResourceCollectionParameters>())).Returns(() =>
+                PageList<Subsystem>.Create(_systems.AsQueryable(), PageIdx, PageSize));
 
             return mockSystem.Object;
         }
@@ -504,7 +522,9 @@ namespace Hmm.Utility.TestHelp
                 .Setup(a => a.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>())).Returns((Expression<Func<HmmNote, bool>> query,
                         ResourceCollectionParameters resourceCollectionParameters) =>
-                    query == null ? _notes.AsQueryable() : _notes.AsQueryable().Where(query));
+                    query == null
+                        ? PageList<HmmNote>.Create(_notes.AsQueryable(), PageIdx, PageSize)
+                        : PageList<HmmNote>.Create(_notes.AsQueryable().Where(query), PageIdx, PageSize));
             return mockNotes.Object;
         }
 

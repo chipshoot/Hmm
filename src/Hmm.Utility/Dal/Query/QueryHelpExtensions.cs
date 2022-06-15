@@ -7,14 +7,13 @@
             switch (parameter)
             {
                 case null:
-                {
-                    var defaultParam = new ResourceCollectionParameters();
-                    return (defaultParam.PageNumber, defaultParam.PageSize);
-                }
+                    {
+                        var defaultParam = new ResourceCollectionParameters();
+                        return (defaultParam.PageNumber, defaultParam.PageSize);
+                    }
                 default:
                     return (parameter.PageNumber, parameter.PageSize);
             }
         }
-        
     }
 }

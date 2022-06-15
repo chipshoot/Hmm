@@ -4,7 +4,6 @@ using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,12 +18,19 @@ namespace Hmm.Automobile
             NoteSerializer = noteSerializer;
         }
 
-        public override IEnumerable<AutomobileInfo> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
+        public override PageList<AutomobileInfo> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
                 var notes = GetNotes(new AutomobileInfo(), resourceCollectionParameters);
-                return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+                if (notes == null)
+                {
+                    return null;
+                }
+
+                var carList = notes.Select(note => NoteSerializer.GetEntity(note));
+                var result = new PageList<AutomobileInfo>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+                return result;
             }
             catch (Exception e)
             {
@@ -41,12 +47,14 @@ namespace Hmm.Automobile
             }
         }
 
-        public override async Task<IEnumerable<AutomobileInfo>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
+        public override async Task<PageList<AutomobileInfo>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
                 var notes = await GetNotesAsync(new AutomobileInfo(), resourceCollectionParameters);
-                return notes?.Select(note => NoteSerializer.GetEntity(note)).ToList();
+                var carList = notes.Select(note => NoteSerializer.GetEntity(note));
+                var result = new PageList<AutomobileInfo>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+                return result;
             }
             catch (Exception e)
             {

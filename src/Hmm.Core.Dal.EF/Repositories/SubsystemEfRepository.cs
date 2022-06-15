@@ -17,12 +17,12 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
         }
 
-        public IQueryable<Subsystem> GetEntities(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<Subsystem> GetEntities(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             return LookupRepo.GetEntities(query, resourceCollectionParameters);
         }
 
-        public async Task<IEnumerable<Subsystem>> GetEntitiesAsync(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<Subsystem>> GetEntitiesAsync(Expression<Func<Subsystem, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var systems = await LookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
             return systems;

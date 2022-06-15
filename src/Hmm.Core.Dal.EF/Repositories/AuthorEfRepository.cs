@@ -4,8 +4,6 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -25,12 +23,12 @@ namespace Hmm.Core.Dal.EF.Repositories
             _lookupRepo = lookupRepo;
         }
 
-        public IQueryable<Author> GetEntities(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<Author> GetEntities(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             return _lookupRepo.GetEntities(query, resourceCollectionParameters);
         }
 
-        public async Task<IEnumerable<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var authors = await _lookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
             return authors;

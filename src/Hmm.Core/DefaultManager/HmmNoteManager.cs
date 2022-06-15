@@ -192,7 +192,7 @@ namespace Hmm.Core.DefaultManager
             return note;
         }
 
-        public IEnumerable<HmmNote> GetNotes(Expression<Func<HmmNote, bool>> query, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<HmmNote> GetNotes(Expression<Func<HmmNote, bool>> query, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var predicate = PredicateBuilder.True<HmmNote>();
             predicate = query == null ? predicate : predicate.And(query);
@@ -201,7 +201,7 @@ namespace Hmm.Core.DefaultManager
             return notes;
         }
 
-        public async Task<IEnumerable<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var predicate = PredicateBuilder.True<HmmNote>();
             predicate = query == null ? predicate : predicate.And(query);

@@ -116,7 +116,7 @@ namespace Hmm.Core.DefaultManager
             return updatedRender;
         }
 
-        public IEnumerable<NoteRender> GetEntities(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<NoteRender> GetEntities(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
@@ -130,7 +130,7 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<IEnumerable<NoteRender>> GetEntitiesAsync(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<NoteRender>> GetEntitiesAsync(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {

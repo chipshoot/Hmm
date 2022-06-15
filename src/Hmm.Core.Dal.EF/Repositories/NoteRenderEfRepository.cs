@@ -20,12 +20,12 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
         }
 
-        public IQueryable<NoteRender> GetEntities(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<NoteRender> GetEntities(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             return LookupRepo.GetEntities(query, resourceCollectionParameters);
         }
 
-        public async Task<IEnumerable<NoteRender>> GetEntitiesAsync(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<NoteRender>> GetEntitiesAsync(Expression<Func<NoteRender, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var renders = await LookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
             return renders;
