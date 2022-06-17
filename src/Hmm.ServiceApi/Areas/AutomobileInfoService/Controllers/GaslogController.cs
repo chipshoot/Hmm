@@ -50,6 +50,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/1/gaslogs
         [HttpGet(Name = "GetGasLogs")]
         [GasLogsResultFilter]
+        [PaginationFilter]
         public async Task<ActionResult> Get([FromQuery] GasLogResourceParameters gasLogResourceParameters)
         {
             //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;

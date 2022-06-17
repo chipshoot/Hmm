@@ -23,22 +23,67 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             }
 
             var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-            if (resultFromAction.Value is PageList<ApiAutomobile> autos)
+            switch (resultFromAction.Value)
             {
-                if (autos.Any())
+                case PageList<ApiAutomobile> autos:
                 {
-                    var (prevPageLink, nextPageLink) = autos.CreatePaginationLinks(context, linkGen);
-                    var paginationMetadata = new
+                    if (autos.Any())
                     {
-                        totalCount = autos.TotalCount,
-                        pageSize = autos.PageSize,
-                        currentPage = autos.CurrentPage,
-                        totalPages = autos.TotalPages,
-                        prevPageLink,
-                        nextPageLink
-                    };
+                        var (prevPageLink, nextPageLink) = autos.CreatePaginationLinks(context, linkGen);
+                        var paginationMetadata = new
+                        {
+                            totalCount = autos.TotalCount,
+                            pageSize = autos.PageSize,
+                            currentPage = autos.CurrentPage,
+                            totalPages = autos.TotalPages,
+                            prevPageLink,
+                            nextPageLink
+                        };
 
-                    context.HttpContext.Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+                        context.HttpContext.Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+                    }
+
+                    break;
+                }
+                case PageList<ApiDiscount> discounts:
+                {
+                    if (discounts.Any())
+                    {
+                        var (prevPageLink, nextPageLink) = discounts.CreatePaginationLinks(context, linkGen);
+                        var paginationMetadata = new
+                        {
+                            totalCount = discounts.TotalCount,
+                            pageSize = discounts.PageSize,
+                            currentPage = discounts.CurrentPage,
+                            totalPages = discounts.TotalPages,
+                            prevPageLink,
+                            nextPageLink
+                        };
+
+                        context.HttpContext.Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+                    }
+
+                    break;
+                }
+                case PageList<ApiGasLog> gasLogs:
+                {
+                    if (gasLogs.Any())
+                    {
+                        var (prevPageLink, nextPageLink) = gasLogs.CreatePaginationLinks(context, linkGen);
+                        var paginationMetadata = new
+                        {
+                            totalCount = gasLogs.TotalCount,
+                            pageSize = gasLogs.PageSize,
+                            currentPage = gasLogs.CurrentPage,
+                            totalPages = gasLogs.TotalPages,
+                            prevPageLink,
+                            nextPageLink
+                        };
+
+                        context.HttpContext.Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+                    }
+
+                    break;
                 }
             }
 

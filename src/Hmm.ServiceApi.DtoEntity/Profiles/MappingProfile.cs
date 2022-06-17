@@ -81,6 +81,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ForMember(d => d.Amount, opt => opt.MapFrom(src => new Money(src.Amount, CurrencyCodeType.Cad)));
             CreateMap<GasDiscount, ApiDiscountForUpdate>()
                 .ForMember(d => d.Amount, opt => opt.MapFrom(src => src.Amount.Amount));
+            CreateMap<PageList<GasDiscount>, PageList<ApiDiscount>>()
+                .ConvertUsing(new PageListConverter<GasDiscount, ApiDiscount>());
 
             // Gas Log
             CreateMap<GasLog, ApiGasLog>()
@@ -106,6 +108,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ForMember(d => d.Gas, opt => opt.MapFrom((src => Volume.FromLiter(src.Gas))))
                 .ForMember(d => d.Price, opt => opt.MapFrom(src => new Money(src.Price)))
                 .ForMember(d => d.Station, opt => opt.MapFrom(src => src.GasStation));
+            CreateMap<PageList<GasLog>, PageList<ApiGasLog>>()
+                .ConvertUsing(new PageListConverter<GasLog, ApiGasLog>());
         }
     }
 }

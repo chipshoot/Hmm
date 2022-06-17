@@ -17,7 +17,7 @@ namespace Hmm.Automobile
             NoteSerializer = noteSerializer;
         }
 
-        public override PageList<GasDiscount> GetEntities(ResourceCollectionParameters resourceCollectionParameters)
+        public override PageList<GasDiscount> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var notes = GetNotes(new GasDiscount(), resourceCollectionParameters);
             if (notes == null)
@@ -29,7 +29,7 @@ namespace Hmm.Automobile
             return result;
         }
 
-        public override async Task<PageList<GasDiscount>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters)
+        public override async Task<PageList<GasDiscount>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
@@ -38,8 +38,8 @@ namespace Hmm.Automobile
                 {
                     return null;
                 }
-                var carList = notes.Select(note => NoteSerializer.GetEntity(note));
-                var result = new PageList<GasDiscount>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+                var discountList = notes.Select(note => NoteSerializer.GetEntity(note));
+                var result = new PageList<GasDiscount>(discountList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
                 return result;
             }
             catch (Exception e)

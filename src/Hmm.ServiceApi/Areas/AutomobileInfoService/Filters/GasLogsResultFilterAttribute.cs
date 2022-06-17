@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
 {
@@ -23,14 +24,14 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                 return;
             }
 
-            if (resultFromAction.Value is List<GasLog> logs && logs.Any())
+            if (resultFromAction.Value is PageList<GasLog> logs && logs.Any())
             {
                 var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
                 var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
 
                 if (mapper != null)
                 {
-                    var result = mapper.Map<List<GasLog>, List<ApiGasLog>>(logs).ToList();
+                    var result = mapper.Map<PageList<GasLog>, PageList<ApiGasLog>>(logs);
                     foreach (var log in result)
                     {
                         log.CreateLinks(context, linkGen);

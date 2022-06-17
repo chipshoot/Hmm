@@ -4,6 +4,7 @@ using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
@@ -35,10 +35,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/gaslogs/discounts
         [HttpGet(Name = "GetGasDiscounts")]
         [GasDiscountsResultFilter]
-        public async Task<ActionResult> Get(ResourceCollectionParameters resourceCollectionParameters)
+        [PaginationFilter]
+        public async Task<ActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var allDiscounts = await _discountManager.GetEntitiesAsync(resourceCollectionParameters);
-            var discounts = allDiscounts.ToList();
+            var discounts = await _discountManager.GetEntitiesAsync(resourceCollectionParameters);
             if (!discounts.Any())
             {
                 return NotFound();
