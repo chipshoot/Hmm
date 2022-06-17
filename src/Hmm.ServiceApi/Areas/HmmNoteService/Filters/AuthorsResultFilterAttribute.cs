@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 {
@@ -23,13 +24,13 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 return;
             }
 
-            if (resultFromAction.Value is List<Author> authors && authors.Any())
+            if (resultFromAction.Value is PageList<Author> authors && authors.Any())
             {
                 var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
                 var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
                 if (mapper != null)
                 {
-                    var result = mapper.Map<List<Author>, List<ApiAuthor>>(authors).ToList();
+                    var result = mapper.Map<PageList<Author>, PageList<ApiAuthor>>(authors);
                     foreach (var author in result)
                     {
                         author.CreateLinks(context, linkGen);

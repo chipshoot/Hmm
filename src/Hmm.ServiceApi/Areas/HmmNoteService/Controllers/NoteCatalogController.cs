@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
@@ -42,12 +43,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         #endregion constructor
 
-        [HttpGet]
+        [HttpGet(Name="GetNoteCatalogs")]
         [NoteCatalogsResultFilter]
+        [PaginationFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var catalogs = await _catalogManager.GetEntitiesAsync(null, resourceCollectionParameters);
-            var noteCatalogs = catalogs.ToList();
+            var noteCatalogs = await _catalogManager.GetEntitiesAsync(null, resourceCollectionParameters);
             if (!noteCatalogs.Any())
             {
                 return NotFound();

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
@@ -41,6 +42,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetNotes")]
         [NotesResultFilter]
+        [PaginationFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var noteList = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);

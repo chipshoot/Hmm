@@ -13,6 +13,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
@@ -46,6 +47,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetAuthors")]
         [AuthorsResultFilter]
+        [PaginationFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var authors = await _authorManager.GetEntitiesAsync(null, resourceCollectionParameters);

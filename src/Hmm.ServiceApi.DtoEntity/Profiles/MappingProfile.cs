@@ -23,6 +23,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<ApiAuthorForCreate, Author>();
             CreateMap<ApiAuthorForUpdate, Author>();
             CreateMap<Author, ApiAuthorForUpdate>();
+            CreateMap<PageList<Author>, PageList<ApiAuthor>>()
+                .ConvertUsing(new PageListConverter<Author, ApiAuthor>());
 
             // Render
             CreateMap<ApiNoteRender, NoteRender>();
@@ -30,6 +32,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<ApiNoteRenderForCreate, NoteRender>();
             CreateMap<ApiNoteRenderForUpdate, NoteRender>();
             CreateMap<NoteRender, ApiNoteRenderForUpdate>();
+            CreateMap<PageList<NoteRender>, PageList<ApiNoteRender>>()
+                .ConvertUsing(new PageListConverter<NoteRender, ApiNoteRender>());
 
             // Catalog
             CreateMap<ApiNoteCatalog, NoteCatalog>();
@@ -40,6 +44,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<ApiNoteCatalogForCreate, NoteCatalog>();
             CreateMap<ApiNoteCatalogForUpdate, NoteCatalog>();
             CreateMap<NoteCatalog, ApiNoteCatalogForUpdate>();
+            CreateMap<PageList<NoteCatalog>, PageList<ApiNoteCatalog>>()
+                .ConvertUsing(new PageListConverter<NoteCatalog, ApiNoteCatalog>());
 
             // Subsystem
             CreateMap<Subsystem, ApiSubsystem>()
@@ -48,6 +54,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<ApiSubsystem, Subsystem>();
             CreateMap<ApiSubsystemForUpdate, Subsystem>();
             CreateMap<Subsystem, ApiSubsystemForUpdate>();
+            CreateMap<PageList<Subsystem>, PageList<ApiSubsystem>>()
+                .ConvertUsing(new PageListConverter<Subsystem, ApiSubsystem>());
 
             // Note
             CreateMap<Core.DomainEntity.HmmNote, ApiNote>()
@@ -59,6 +67,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ForMember(n => n.Catalog, opt => opt.MapFrom(s => new NoteCatalog() { Id = s.NoteCatalogId }));
             CreateMap<ApiNoteForUpdate, Core.DomainEntity.HmmNote>();
             CreateMap<Core.DomainEntity.HmmNote, ApiNoteForUpdate>();
+            CreateMap<PageList<Core.DomainEntity.HmmNote>, PageList<ApiNote>>()
+                .ConvertUsing(new PageListConverter<Core.DomainEntity.HmmNote, ApiNote>());
 
             // Automobile
             CreateMap<ApiAutomobile, AutomobileInfo>();

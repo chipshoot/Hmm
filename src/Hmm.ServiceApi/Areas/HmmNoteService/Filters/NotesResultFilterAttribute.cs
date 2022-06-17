@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Hmm.Core.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,13 +23,13 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 return;
             }
 
-            if (resultFromAction.Value is List<HmmNote> notes && notes.Any())
+            if (resultFromAction.Value is PageList<HmmNote> notes && notes.Any())
             {
                 var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
                 var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
                 if (mapper != null)
                 {
-                    var result = mapper.Map<List<HmmNote>, List<ApiNote>>(notes).ToList();
+                    var result = mapper.Map<PageList<HmmNote>, PageList<ApiNote>>(notes);
                     foreach (var note in result)
                     {
                         note.CreateLinks(context, linkGen);
