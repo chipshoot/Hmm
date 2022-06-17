@@ -7,6 +7,7 @@ using Hmm.Utility.Currency;
 using Hmm.Utility.MeasureUnit;
 using System;
 using System.Linq;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.DtoEntity.Profiles
 {
@@ -65,6 +66,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<ApiAutomobileForCreate, AutomobileInfo>();
             CreateMap<ApiAutomobileForUpdate, AutomobileInfo>();
             CreateMap<AutomobileInfo, ApiAutomobileForUpdate>();
+            CreateMap<PageList<AutomobileInfo>, PageList<ApiAutomobile>>()
+                .ConvertUsing(new PageListConverter<AutomobileInfo, ApiAutomobile>());
 
             // Gas Discount: setup map from domain entity to DTO
             CreateMap<GasDiscount, ApiDiscount>()

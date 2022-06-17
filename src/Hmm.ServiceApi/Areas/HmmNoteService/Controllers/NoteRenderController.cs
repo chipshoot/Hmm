@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.DomainEntity;
+using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -10,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
@@ -40,10 +41,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetNoteRenders")]
         [NoteRendersResultFilter]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var renders = await _renderManager.GetEntitiesAsync();
-            var renderLst = renders.ToList();
+            var renderLst = await _renderManager.GetEntitiesAsync(null, resourceCollectionParameters);
             if (!renderLst.Any())
             {
                 return NotFound();

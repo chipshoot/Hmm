@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
@@ -36,10 +37,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetSubsystems")]
         [SubsystemsResultFilter]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var subsystems = await _systemManager.GetEntitiesAsync();
-            var systemList = subsystems.ToList();
+            var systemList = await _systemManager.GetEntitiesAsync(null, resourceCollectionParameters);
             if (!systemList.Any())
             {
                 return NotFound();

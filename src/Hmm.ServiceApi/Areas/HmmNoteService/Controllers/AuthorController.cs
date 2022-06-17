@@ -4,6 +4,7 @@ using Hmm.Core.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
+using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -45,9 +46,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetAuthors")]
         [AuthorsResultFilter]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var authors = await _authorManager.GetEntitiesAsync();
+            var authors = await _authorManager.GetEntitiesAsync(null, resourceCollectionParameters);
             if (!authors.Any())
             {
                 return NotFound();
@@ -191,7 +192,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curUsr =await _authorManager.GetAuthorByIdAsync(id); 
+                var curUsr = await _authorManager.GetAuthorByIdAsync(id);
                 if (curUsr == null)
                 {
                     return NotFound();

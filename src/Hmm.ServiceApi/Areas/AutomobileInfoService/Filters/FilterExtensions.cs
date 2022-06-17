@@ -1,5 +1,6 @@
 ﻿using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.Collections.Generic;
@@ -50,6 +51,27 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             };
 
             auto.Links = links;
+        }
+
+        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiAutomobile> autos, ActionContext context, LinkGenerator linkGen)
+        {
+            if (context == null || linkGen == null)
+            {
+                return (null, null);
+            }
+
+            var prevPageLink = autos.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetAutomobiles", new
+            {
+                pageNumber = autos.CurrentPage - 1,
+                pageSize = autos.PageSize,
+            }) : null;
+            var nextPageLink = autos.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetAutomobiles", new
+            {
+                pageNumber = autos.CurrentPage + 1,
+                pageSize = autos.PageSize,
+            }) : null;
+
+            return (prevPageLink, nextPageLink);
         }
 
         public static void CreateLinks(this ApiDiscount discount, ActionContext context, LinkGenerator linkGen)
@@ -155,7 +177,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             {
                 links.AddRange(log.DiscountInfos.Select(discount => new Link
                 {
-                    Title = "discount", Rel = "get_discount",
+                    Title = "discount",
+                    Rel = "get_discount",
                     Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetGasDiscountById",
                         new { id = discount.DiscountId }),
                     Method = "Get"

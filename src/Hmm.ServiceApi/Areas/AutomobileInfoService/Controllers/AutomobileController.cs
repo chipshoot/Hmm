@@ -39,6 +39,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles
         [HttpGet(Name = "GetAutomobiles")]
         [AutomobilesResultFilter]
+        [PaginationFilter]
         public async Task<IActionResult> GetMobiles([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var autos = await _automobileManager.GetEntitiesAsync(resourceCollectionParameters);
