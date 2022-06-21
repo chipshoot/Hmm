@@ -4,7 +4,6 @@ using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Hmm.Automobile

@@ -19,7 +19,7 @@ namespace Hmm.Automobile
 
         public override PageList<GasDiscount> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = GetNotes(new GasDiscount(), resourceCollectionParameters);
+            var notes = GetNotes(new GasDiscount(), null,resourceCollectionParameters);
             if (notes == null)
             {
                 return null;
@@ -33,7 +33,7 @@ namespace Hmm.Automobile
         {
             try
             {
-                var notes = await GetNotesAsync(new GasDiscount(), resourceCollectionParameters);
+                var notes = await GetNotesAsync(new GasDiscount(), null, resourceCollectionParameters);
                 if (notes == null)
                 {
                     return null;

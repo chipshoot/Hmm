@@ -28,15 +28,33 @@ namespace Hmm.Automobile
             _dateProvider = dateProvider;
         }
 
+        public PageList<GasLog> GetGasLogs(int automobileId, ResourceCollectionParameters resourceCollectionParameters = null)
+        {
+            var subject = GasLog.GetNoteSubject(automobileId);
+            var notes = GetNotes(new GasLog(), n => n.Subject == subject, resourceCollectionParameters);
+            var logList = notes.Select(note => NoteSerializer.GetEntity(note));
+            var result = new PageList<GasLog>(logList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+            return result;
+        }
+
+        public async Task<PageList<GasLog>> GetGasLogsAsync(int automobileId, ResourceCollectionParameters resourceCollectionParameters = null)
+        {
+            var subject = GasLog.GetNoteSubject(automobileId);
+            var notes = await GetNotesAsync(new GasLog(), n => n.Subject == subject, resourceCollectionParameters);
+            var logList = notes.Select(note => NoteSerializer.GetEntity(note));
+            var result = new PageList<GasLog>(logList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+            return result;
+        }
+
         public override PageList<GasLog> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var notes = GetNotes(new GasLog(), resourceCollectionParameters);
+            var notes = GetNotes(new GasLog(), null, resourceCollectionParameters);
             if (notes == null)
             {
                 return null;
             }
-            var carList = notes.Select(note => NoteSerializer.GetEntity(note));
-            var result = new PageList<GasLog>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+            var logList = notes.Select(note => NoteSerializer.GetEntity(note));
+            var result = new PageList<GasLog>(logList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
             return result;
         }
 
@@ -44,13 +62,13 @@ namespace Hmm.Automobile
         {
             try
             {
-                var notes = await GetNotesAsync(new GasLog(), resourceCollectionParameters);
+                var notes = await GetNotesAsync(new GasLog(), null, resourceCollectionParameters);
                 if (notes == null)
                 {
                     return null;
                 }
-                var carList = notes.Select(note => NoteSerializer.GetEntity(note));
-                var result = new PageList<GasLog>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
+                var logList = notes.Select(note => NoteSerializer.GetEntity(note));
+                var result = new PageList<GasLog>(logList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
                 return result;
             }
             catch (Exception e)

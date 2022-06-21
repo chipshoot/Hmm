@@ -22,7 +22,7 @@ namespace Hmm.Automobile
         {
             try
             {
-                var notes = GetNotes(new AutomobileInfo(), resourceCollectionParameters);
+                var notes = GetNotes(new AutomobileInfo(), null, resourceCollectionParameters);
                 if (notes == null)
                 {
                     return null;
@@ -51,7 +51,7 @@ namespace Hmm.Automobile
         {
             try
             {
-                var notes = await GetNotesAsync(new AutomobileInfo(), resourceCollectionParameters);
+                var notes = await GetNotesAsync(new AutomobileInfo(), null, resourceCollectionParameters);
                 var carList = notes.Select(note => NoteSerializer.GetEntity(note));
                 var result = new PageList<AutomobileInfo>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
                 return result;

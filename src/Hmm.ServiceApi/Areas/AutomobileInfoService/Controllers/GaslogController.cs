@@ -51,7 +51,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         [HttpGet(Name = "GetGasLogs")]
         [GasLogsResultFilter]
         [PaginationFilter]
-        public async Task<ActionResult> Get([FromQuery] GasLogResourceParameters gasLogResourceParameters)
+        public async Task<ActionResult> Get(int autoId, [FromQuery] GasLogResourceParameters gasLogResourceParameters)
         {
             //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             //if (userId == null)
@@ -67,7 +67,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             //    return OK(new List<ApiGasLog>());
             //}
 
-            var gasLogs = await _gasLogManager.GetEntitiesAsync(gasLogResourceParameters);
+            var gasLogs = await _gasLogManager.GetGasLogsAsync(autoId, gasLogResourceParameters);
             if (!gasLogs.Any())
             {
                 return NotFound();

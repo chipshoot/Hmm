@@ -4,7 +4,6 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -173,7 +172,7 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public PageList<Author> GetEntities( Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<Author> GetEntities(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
