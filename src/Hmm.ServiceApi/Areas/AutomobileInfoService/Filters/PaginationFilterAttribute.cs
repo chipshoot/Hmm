@@ -38,6 +38,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = autos.PageSize,
                                 currentPage = autos.CurrentPage,
                                 totalPages = autos.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };
@@ -58,6 +59,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = discounts.PageSize,
                                 currentPage = discounts.CurrentPage,
                                 totalPages = discounts.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };
@@ -78,6 +80,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = gasLogs.PageSize,
                                 currentPage = gasLogs.CurrentPage,
                                 totalPages = gasLogs.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };
@@ -98,6 +101,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = authors.PageSize,
                                 currentPage = authors.CurrentPage,
                                 totalPages = authors.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };
@@ -118,6 +122,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = renders.PageSize,
                                 currentPage = renders.CurrentPage,
                                 totalPages = renders.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };
@@ -138,6 +143,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = catalogs.PageSize,
                                 currentPage = catalogs.CurrentPage,
                                 totalPages = catalogs.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };
@@ -158,6 +164,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = systems.PageSize,
                                 currentPage = systems.CurrentPage,
                                 totalPages = systems.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };
@@ -178,6 +185,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                                 pageSize = notes.PageSize,
                                 currentPage = notes.CurrentPage,
                                 totalPages = notes.TotalPages,
+                                maxPageSize = ResourceCollectionParameters.MaxPageSize,
                                 prevPageLink,
                                 nextPageLink
                             };

@@ -2,9 +2,10 @@
 {
     public class ResourceCollectionParameters
     {
-        private const int MaxPageSize = 30;
         private int _pageSize = 10;
         private int _pageNumber = 1;
+
+        public const int MaxPageSize = 100;
 
         public int PageNumber
         {
