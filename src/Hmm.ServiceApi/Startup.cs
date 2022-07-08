@@ -7,6 +7,7 @@ using Hmm.Core.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
 using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity;
+using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -113,6 +114,7 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmValidator<NoteRender>, NoteRenderValidator>()
                 .AddScoped<IHmmValidator<Subsystem>, SubsystemValidator>()
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
+                .AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddAutoMapper(typeof(ApiEntity))
                 .AddSwaggerGen();
 
