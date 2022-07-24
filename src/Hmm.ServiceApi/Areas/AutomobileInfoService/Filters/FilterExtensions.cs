@@ -53,27 +53,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             auto.Links = links;
         }
 
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiAutomobile> autos, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return (null, null);
-            }
-
-            var prevPageLink = autos.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetAutomobiles", new
-            {
-                pageNumber = autos.CurrentPage - 1,
-                pageSize = autos.PageSize,
-            }) : null;
-            var nextPageLink = autos.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetAutomobiles", new
-            {
-                pageNumber = autos.CurrentPage + 1,
-                pageSize = autos.PageSize,
-            }) : null;
-
-            return (prevPageLink, nextPageLink);
-        }
-
         public static void CreateLinks(this ApiDiscount discount, ActionContext context, LinkGenerator linkGen)
         {
             if (context == null || linkGen == null)
@@ -114,27 +93,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             };
 
             discount.Links = links;
-        }
-
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiDiscount> discounts, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return (null, null);
-            }
-
-            var prevPageLink = discounts.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetGasDiscounts", new
-            {
-                pageNumber = discounts.CurrentPage - 1,
-                pageSize = discounts.PageSize,
-            }) : null;
-            var nextPageLink = discounts.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetGasDiscounts", new
-            {
-                pageNumber = discounts.CurrentPage + 1,
-                pageSize = discounts.PageSize,
-            }) : null;
-
-            return (prevPageLink, nextPageLink);
         }
 
         public static void CreateLinks(this ApiGasLog log, ActionContext context, LinkGenerator linkGen)
@@ -208,25 +166,47 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             log.Links = links;
         }
 
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiGasLog> gasLogs, ActionContext context, LinkGenerator linkGen)
+        public static List<Link> CreatePaginationLinks<T>(this PageList<T> records, string routName, ActionContext context, LinkGenerator linkGen, ResourceCollectionParameters resourceCollectionParameters)
         {
+            var links = new List<Link>();
             if (context == null || linkGen == null)
             {
-                return (null, null);
+                return links;
             }
 
-            var prevPageLink = gasLogs.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetGasLogs", new
-            {
-                pageNumber = gasLogs.CurrentPage - 1,
-                pageSize = gasLogs.PageSize,
-            }) : null;
-            var nextPageLink = gasLogs.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetGasLogs", new
-            {
-                pageNumber = gasLogs.CurrentPage + 1,
-                pageSize = gasLogs.PageSize,
-            }) : null;
+            var orderBy = resourceCollectionParameters != null ? resourceCollectionParameters.OrderBy : string.Empty;
 
-            return (prevPageLink, nextPageLink);
+            links.Add(new Link()
+            {
+                Title = routName,
+                Rel = "self",
+                Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage, records.PageSize, orderBy }),
+                Method = "Get"
+            });
+
+            if (records.HasPrevPage)
+            {
+                links.Add(new Link()
+                {
+                    Title = routName,
+                    Rel = "prev_page",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage - 1, pageSize = records.PageSize, orderBy }),
+                    Method = "Get"
+                });
+            }
+
+            if (records.HasNextPage)
+            {
+                links.Add(new Link()
+                {
+                    Title = routName,
+                    Rel = "next_page",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage + 1, pageSize = records.PageSize, orderBy }),
+                    Method = "Get"
+                });
+            }
+
+            return links;
         }
     }
 }

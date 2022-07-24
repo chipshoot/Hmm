@@ -1,6 +1,5 @@
 ﻿using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
-using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System;
@@ -54,27 +53,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             author.Links = links;
         }
 
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiAuthor> authors, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return (null, null);
-            }
-
-            var prevPageLink = authors.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetAuthors", new
-            {
-                pageNumber = authors.CurrentPage - 1,
-                pageSize = authors.PageSize,
-            }) : null;
-            var nextPageLink = authors.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetAuthors", new
-            {
-                pageNumber = authors.CurrentPage + 1,
-                pageSize = authors.PageSize,
-            }) : null;
-
-            return (prevPageLink, nextPageLink);
-        }
-
         public static void CreateLinks(this ApiNoteCatalog catalog, ActionContext context, LinkGenerator linkGen)
         {
             if (context == null || linkGen == null)
@@ -118,27 +96,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             catalog.Links = links;
         }
 
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiNoteCatalog> catalogs, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return (null, null);
-            }
-
-            var prevPageLink = catalogs.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetNoteCatalogs", new
-            {
-                pageNumber = catalogs.CurrentPage - 1,
-                pageSize = catalogs.PageSize,
-            }) : null;
-            var nextPageLink = catalogs.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetNoteCatalogs", new
-            {
-                pageNumber = catalogs.CurrentPage + 1,
-                pageSize = catalogs.PageSize,
-            }) : null;
-
-            return (prevPageLink, nextPageLink);
-        }
-
         public static void CreateLinks(this ApiNoteRender render, ActionContext context, LinkGenerator linkGen)
         {
             if (context == null || linkGen == null)
@@ -180,27 +137,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             };
 
             render.Links = links;
-        }
-
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiNoteRender> renders, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return (null, null);
-            }
-
-            var prevPageLink = renders.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetNoteRenders", new
-            {
-                pageNumber = renders.CurrentPage - 1,
-                pageSize = renders.PageSize,
-            }) : null;
-            var nextPageLink = renders.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetNoteRenders", new
-            {
-                pageNumber = renders.CurrentPage + 1,
-                pageSize = renders.PageSize,
-            }) : null;
-
-            return (prevPageLink, nextPageLink);
         }
 
         public static void CreateLinks(this ApiSubsystem system, ActionContext context, LinkGenerator linkGen)
@@ -272,27 +208,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             system.Links = links;
         }
 
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiSubsystem> systems, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return (null, null);
-            }
-
-            var prevPageLink = systems.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetSubsystems", new
-            {
-                pageNumber = systems.CurrentPage - 1,
-                pageSize = systems.PageSize,
-            }) : null;
-            var nextPageLink = systems.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetSubsystems", new
-            {
-                pageNumber = systems.CurrentPage + 1,
-                pageSize = systems.PageSize,
-            }) : null;
-
-            return (prevPageLink, nextPageLink);
-        }
-
         public static void CreateLinks(this ApiNote note, ActionContext context, LinkGenerator linkGen)
         {
             if (context == null || linkGen == null)
@@ -361,27 +276,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             }
 
             note.Links = links;
-        }
-
-        public static (string prevPageLink, string nextPageLink) CreatePaginationLinks(this PageList<ApiNote> notes, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return (null, null);
-            }
-
-            var prevPageLink = notes.HasPrevPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetNotes", new
-            {
-                pageNumber = notes.CurrentPage - 1,
-                pageSize = notes.PageSize,
-            }) : null;
-            var nextPageLink = notes.HasNextPage ? linkGen.GetUriByRouteValues(context.HttpContext, "GetNotes", new
-            {
-                pageNumber = notes.CurrentPage + 1,
-                pageSize = notes.PageSize,
-            }) : null;
-
-            return (prevPageLink, nextPageLink);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.Utility.Misc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,8 @@ public class PropertyMappingService : IPropertyMappingService
         _propertyMappings.Add(new PropertyMapping<ApiGasLog, GasLog>(_gasLogPropertyMapping));
     }
 
+    public ProcessingResult ProcessingResult { get; set; } = new ProcessingResult();
+
     public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>()
     {
         var matchingMapping = _propertyMappings.OfType<PropertyMapping<TSource, TDestination>>().ToList();
@@ -32,5 +35,31 @@ public class PropertyMappingService : IPropertyMappingService
 
         throw new Exception(
             $"Cannot find exact property mapping instance for <{typeof(TSource)}, {typeof(TDestination)}");
+    }
+
+    public bool ValidMappingExistsFor<TSource, TDestination>(string fields)
+    {
+        if (string.IsNullOrEmpty(fields))
+        {
+            return true;
+        }
+
+        var propertyMapping = GetPropertyMapping<TSource, TDestination>();
+        var fieldArr = fields.Split(',');
+        foreach (var fieldRaw in fieldArr)
+        {
+            var field = fieldRaw.Trim();
+            var idxSpace = field.IndexOf(' ');
+            var propName = idxSpace == -1 ? field : field[..idxSpace];
+            if (propertyMapping.ContainsKey(propName))
+            {
+                continue;
+            }
+
+            ProcessingResult.AddErrorMessage($"Cannot find property name for sort: {propName}");
+            return false;
+        }
+
+        return true;
     }
 }

@@ -2,11 +2,14 @@
 using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.ServiceApi.Models;
 using Hmm.ServiceApi.Models.Validation;
 using Hmm.Utility.Currency;
 using Hmm.Utility.Validation;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
-using Microsoft.AspNetCore.Cors;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
@@ -31,27 +32,31 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
         private readonly IMapper _mapper;
+        private readonly IPropertyMappingService _propertyMappingService;
 
         public GasLogController(IGasLogManager gasLogManager, IMapper mapper,
             IAutoEntityManager<AutomobileInfo> autoManager,
-            IAutoEntityManager<GasDiscount> discountManager)
+            IAutoEntityManager<GasDiscount> discountManager,
+            IPropertyMappingService propertyMappingService)
         {
             Guard.Against<ArgumentNullException>(gasLogManager == null, nameof(gasLogManager));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
             Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
             Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
+            Guard.Against<ArgumentNullException>(propertyMappingService == null, nameof(propertyMappingService));
 
             _gasLogManager = gasLogManager;
             _mapper = mapper;
             _autoManager = autoManager;
             _discountManager = discountManager;
+            _propertyMappingService = propertyMappingService;
         }
 
         // GET api/automobiles/1/gaslogs
         [HttpGet(Name = "GetGasLogs")]
         [GasLogsResultFilter]
         [PaginationFilter]
-        public async Task<ActionResult> Get(int autoId, [FromQuery] GasLogResourceParameters gasLogResourceParameters)
+        public async Task<ActionResult> Get(int autoId, [FromQuery] GasLogResourceParameters resourceParameters)
         {
             //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             //if (userId == null)
@@ -66,8 +71,16 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             //{
             //    return OK(new List<ApiGasLog>());
             //}
-
-            var gasLogs = await _gasLogManager.GetGasLogsAsync(autoId, gasLogResourceParameters);
+            if (!string.IsNullOrEmpty(resourceParameters.OrderBy))
+            {
+                if (!_propertyMappingService.ValidMappingExistsFor<ApiGasLog, GasLog>(resourceParameters.OrderBy))
+                {
+                    return BadRequest();
+                }
+                var mapDictionary = _propertyMappingService.GetPropertyMapping<ApiGasLog, GasLog>();
+                resourceParameters.OrderBy = resourceParameters.OrderBy.GetMappedSortClause(mapDictionary);
+            }
+            var gasLogs = await _gasLogManager.GetGasLogsAsync(autoId, resourceParameters);
             if (!gasLogs.Any())
             {
                 return NotFound();
@@ -289,7 +302,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             if (gasLog == null)
             {
                 return NotFound($"Cannot find gas log with id : {id}");
-
             }
 
             gasLog.IsDeleted = true;

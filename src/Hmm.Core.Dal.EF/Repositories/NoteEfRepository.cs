@@ -23,12 +23,13 @@ namespace Hmm.Core.Dal.EF.Repositories
         public PageList<HmmNote> GetEntities(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var notes = DataContext.Notes
-                .Include(n => n.Author)
-                .Include(n => n.Catalog);
-            var result = query == null
+            var notes = query == null
+                ? DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog)
+                : DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Where(query);
+             
+            var result = resourceCollectionParameters == null
                 ? PageList<HmmNote>.Create(notes, pageIdx, pageSize)
-                : PageList<HmmNote>.Create(notes.Where(query), pageIdx, pageSize);
+                : PageList<HmmNote>.Create(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
 
             return result;
         }
@@ -36,12 +37,12 @@ namespace Hmm.Core.Dal.EF.Repositories
         public async Task<PageList<HmmNote>> GetEntitiesAsync(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var notes = DataContext.Notes
-                .Include(n => n.Author)
-                .Include(n => n.Catalog);
-            var result = query == null
+            var notes = query == null
+                ? DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog)
+                : DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Where(query);
+            var result = resourceCollectionParameters == null
                 ? await PageList<HmmNote>.CreateAsync(notes, pageIdx, pageSize)
-                : await PageList<HmmNote>.CreateAsync(notes.Where(query), pageIdx, pageSize);
+                : await PageList<HmmNote>.CreateAsync(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
 
             return result;
         }

@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />
+    <ProjectReference Include="..\Hmm.ServiceApi.DtoEntity\Hmm.ServiceApi.DtoEntity.csproj" />
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
 
