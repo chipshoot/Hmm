@@ -17,17 +17,13 @@ namespace Hmm.ServiceApi.Models
 
         private static string GetDefaultMessageForStatusCode(int statusCode)
         {
-            switch (statusCode)
+            return statusCode switch
             {
-                case 404:
-                    return "Resource not found";
-
-                case 500:
-                    return "a not handled error occurred";
-
-                default:
-                    return null;
-            }
+                400 => "Bad request date",
+                404 => "Resource not found",
+                500 => "a not handled error occurred",
+                _ => null
+            };
         }
     }
 }

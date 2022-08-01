@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using Hmm.Utility.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Hmm.Utility.Validation;
 
 namespace Hmm.ServiceApi.Models
 {

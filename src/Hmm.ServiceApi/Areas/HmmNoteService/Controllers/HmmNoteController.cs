@@ -42,7 +42,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetNotes")]
         [NotesResultFilter]
-        [PaginationFilter]
+        [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var noteList = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);

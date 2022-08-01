@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Hmm.Utility.Dal.Query;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
 {

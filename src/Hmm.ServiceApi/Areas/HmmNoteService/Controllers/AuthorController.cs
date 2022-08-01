@@ -47,7 +47,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetAuthors")]
         [AuthorsResultFilter]
-        [PaginationFilter]
+        [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var authors = await _authorManager.GetEntitiesAsync(null, resourceCollectionParameters);

@@ -115,6 +115,7 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmValidator<Subsystem>, SubsystemValidator>()
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
                 .AddTransient<IPropertyMappingService, PropertyMappingService>()
+                .AddTransient<IPropertyCheckService, PropertyCheckService>()
                 .AddAutoMapper(typeof(ApiEntity))
                 .AddSwaggerGen();
 

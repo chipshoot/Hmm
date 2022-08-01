@@ -38,7 +38,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet(Name = "GetSubsystems")]
         [SubsystemsResultFilter]
-        [PaginationFilter]
+        [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var systemList = await _systemManager.GetEntitiesAsync(null, resourceCollectionParameters);

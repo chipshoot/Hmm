@@ -35,7 +35,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/gaslogs/discounts
         [HttpGet(Name = "GetGasDiscounts")]
         [GasDiscountsResultFilter]
-        [PaginationFilter]
+        [CollectionResultFilter]
         public async Task<ActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var discounts = await _discountManager.GetEntitiesAsync(resourceCollectionParameters);

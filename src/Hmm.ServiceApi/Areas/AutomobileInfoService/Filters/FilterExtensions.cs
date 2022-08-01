@@ -175,12 +175,13 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             }
 
             var orderBy = resourceCollectionParameters != null ? resourceCollectionParameters.OrderBy : string.Empty;
+            var fields = resourceCollectionParameters != null ? resourceCollectionParameters.Fields : string.Empty;
 
             links.Add(new Link()
             {
                 Title = routName,
                 Rel = "self",
-                Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage, records.PageSize, orderBy }),
+                Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage, records.PageSize, orderBy, fields }),
                 Method = "Get"
             });
 
@@ -190,7 +191,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                 {
                     Title = routName,
                     Rel = "prev_page",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage - 1, pageSize = records.PageSize, orderBy }),
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage - 1, pageSize = records.PageSize, orderBy, fields }),
                     Method = "Get"
                 });
             }
@@ -201,7 +202,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                 {
                     Title = routName,
                     Rel = "next_page",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage + 1, pageSize = records.PageSize, orderBy }),
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage + 1, pageSize = records.PageSize, orderBy, fields }),
                     Method = "Get"
                 });
             }

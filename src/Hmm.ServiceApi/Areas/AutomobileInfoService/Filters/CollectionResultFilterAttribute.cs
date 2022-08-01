@@ -1,4 +1,6 @@
-﻿using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+﻿using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
+using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +14,8 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
 {
-    public class PaginationFilterAttribute : ResultFilterAttribute
+    public class CollectionResultFilterAttribute : ResultFilterAttribute
     {
-        private const string CollectionParameterName = "resourceParameters";
-
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
             var resultFromAction = context.Result as ObjectResult;
@@ -30,42 +30,42 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             {
                 case PageList<ApiAutomobile> autos:
                     {
-                        await GeneratePaginationValue(context, autos, "GetAutomobiles");
+                        await GenerateCollectionResultValue(context, autos, "GetAutomobiles");
                         break;
                     }
                 case PageList<ApiDiscount> discounts:
                     {
-                        await GeneratePaginationValue(context, discounts, "GetGasDiscounts");
+                        await GenerateCollectionResultValue(context, discounts, "GetGasDiscounts");
                         break;
                     }
                 case PageList<ApiGasLog> gasLogs:
                     {
-                        await GeneratePaginationValue(context, gasLogs, "GetGasLogs");
+                        await GenerateCollectionResultValue(context, gasLogs, "GetGasLogs");
                         break;
                     }
                 case PageList<ApiAuthor> authors:
                     {
-                        await GeneratePaginationValue(context, authors, "GetAuthors");
+                        await GenerateCollectionResultValue(context, authors, "GetAuthors");
                         break;
                     }
                 case PageList<ApiNoteRender> renders:
                     {
-                        await GeneratePaginationValue(context, renders, "GetNoteRenders");
+                        await GenerateCollectionResultValue(context, renders, "GetNoteRenders");
                         break;
                     }
                 case PageList<ApiNoteCatalog> catalogs:
                     {
-                        await GeneratePaginationValue(context, catalogs, "GetNoteCatalogs");
+                        await GenerateCollectionResultValue(context, catalogs, "GetNoteCatalogs");
                         break;
                     }
                 case PageList<ApiSubsystem> systems:
                     {
-                        await GeneratePaginationValue(context, systems, "GetSubsystems");
+                        await GenerateCollectionResultValue(context, systems, "GetSubsystems");
                         break;
                     }
                 case PageList<ApiNote> notes:
                     {
-                        await GeneratePaginationValue(context, notes, "GetNotes");
+                        await GenerateCollectionResultValue(context, notes, "GetNotes");
                         break;
                     }
             }
@@ -73,7 +73,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             await next();
         }
 
-        private static async Task GeneratePaginationValue<T>(ResultExecutingContext context, PageList<T> records, string routName)
+        private static async Task GenerateCollectionResultValue<T>(ResultExecutingContext context, PageList<T> records, string routName)
         {
             if (!records.Any() || context.Result is not ObjectResult resultFromAction)
             {
@@ -85,9 +85,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
             var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
 
             // Get resource collection parameter
-            var paraDesc =
-                context.ActionDescriptor.Parameters.FirstOrDefault(
-                    t => t.Name.Equals(CollectionParameterName));
+            var paraDesc = context.ActionDescriptor.Parameters.FirstOrDefault(t => t.Name.IsCollectionParameter());
             object parameter = null;
             if (paraDesc != null && context.Controller is Controller controller)
             {
@@ -98,8 +96,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                 }
             }
 
-            var links = records.CreatePaginationLinks(routName, context, linkGen, (ResourceCollectionParameters)parameter);
-            resultFromAction.Value = new { value = records, links };
+            if (parameter is ResourceCollectionParameters collectionResourcePara)
+            {
+                var links = records.CreatePaginationLinks(routName, context, linkGen, collectionResourcePara);
+                resultFromAction.Value = new { value = records.ShapeData(collectionResourcePara.Fields), links };
+            }
         }
 
         private static void GeneratePaginationHeader(ActionContext context, int totalCount, int pageSize,

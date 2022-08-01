@@ -33,29 +33,33 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
         private readonly IMapper _mapper;
         private readonly IPropertyMappingService _propertyMappingService;
+        private readonly IPropertyCheckService _propertyCheckService;
 
         public GasLogController(IGasLogManager gasLogManager, IMapper mapper,
             IAutoEntityManager<AutomobileInfo> autoManager,
             IAutoEntityManager<GasDiscount> discountManager,
-            IPropertyMappingService propertyMappingService)
+            IPropertyMappingService propertyMappingService,
+            IPropertyCheckService propertyCheckService)
         {
             Guard.Against<ArgumentNullException>(gasLogManager == null, nameof(gasLogManager));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
             Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
             Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
             Guard.Against<ArgumentNullException>(propertyMappingService == null, nameof(propertyMappingService));
+            Guard.Against<ArgumentNullException>(propertyCheckService == null, nameof(propertyCheckService));
 
             _gasLogManager = gasLogManager;
             _mapper = mapper;
             _autoManager = autoManager;
             _discountManager = discountManager;
             _propertyMappingService = propertyMappingService;
+            _propertyCheckService = propertyCheckService;
         }
 
         // GET api/automobiles/1/gaslogs
         [HttpGet(Name = "GetGasLogs")]
         [GasLogsResultFilter]
-        [PaginationFilter]
+        [CollectionResultFilter]
         public async Task<ActionResult> Get(int autoId, [FromQuery] GasLogResourceParameters resourceParameters)
         {
             //var userId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
@@ -71,14 +75,22 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             //{
             //    return OK(new List<ApiGasLog>());
             //}
+            // ToDo: Fix the issue of apply invalid fields to result, need map fields
             if (!string.IsNullOrEmpty(resourceParameters.OrderBy))
             {
                 if (!_propertyMappingService.ValidMappingExistsFor<ApiGasLog, GasLog>(resourceParameters.OrderBy))
                 {
-                    return BadRequest();
+                    return BadRequest(new ApiBadRequestResponse(_propertyMappingService.ProcessingResult.GetWholeMessage()));
                 }
                 var mapDictionary = _propertyMappingService.GetPropertyMapping<ApiGasLog, GasLog>();
                 resourceParameters.OrderBy = resourceParameters.OrderBy.GetMappedSortClause(mapDictionary);
+            }
+            if (!string.IsNullOrEmpty(resourceParameters.Fields))
+            {
+                if (!_propertyCheckService.TypeHasProperties<ApiGasLog>(resourceParameters.Fields))
+                {
+                    return BadRequest(new ApiBadRequestResponse(_propertyMappingService.ProcessingResult.GetWholeMessage()));
+                }
             }
             var gasLogs = await _gasLogManager.GetGasLogsAsync(autoId, resourceParameters);
             if (!gasLogs.Any())
@@ -89,11 +101,17 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(gasLogs);
         }
 
+        // ToDo: ShapeData for single result
         // GET api/automobiles/1/gaslogs/5
         [HttpGet("{id:int}", Name = "GetGasLogById")]
         [GasLogResultFilter]
-        public async Task<ActionResult> Get(int autoId, int id)
+        public async Task<ActionResult> Get(int autoId, int id, string fields)
         {
+            if (!_propertyCheckService.TypeHasProperties<ApiGasLog>(fields))
+            {
+                return BadRequest(new ApiBadRequestResponse(_propertyCheckService.ProcessingResult.GetWholeMessage()));
+            }
+
             var gasLog = await _gasLogManager.GetEntityByIdAsync(id);
             if (gasLog == null || gasLog.Car.Id != autoId)
             {
