@@ -75,7 +75,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             //{
             //    return OK(new List<ApiGasLog>());
             //}
-            // ToDo: Fix the issue of apply invalid fields to result, need map fields
             if (!string.IsNullOrEmpty(resourceParameters.OrderBy))
             {
                 if (!_propertyMappingService.ValidMappingExistsFor<ApiGasLog, GasLog>(resourceParameters.OrderBy))
@@ -101,7 +100,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(gasLogs);
         }
 
-        // ToDo: ShapeData for single result
         // GET api/automobiles/1/gaslogs/5
         [HttpGet("{id:int}", Name = "GetGasLogById")]
         [GasLogResultFilter]

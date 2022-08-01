@@ -1,5 +1,4 @@
 ﻿using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
-using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.Utility.Dal.Query;
