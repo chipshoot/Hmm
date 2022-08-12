@@ -2,6 +2,9 @@
 {
     public static class HmmServiceApiConstants
     {
+        // ToDo: Add fields parameter for all single entities
+        // ToDo: Add fields parameter for all collection entities
+        // ToDo: Add user management via IDP
         public static class Policy
         {
             public const string MustOwnGasLog = "MusOwnGasLog";
