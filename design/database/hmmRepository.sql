@@ -138,6 +138,8 @@ CREATE TABLE [dbo].[Notes](
 )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
+ALTER TABLE [dbo].[Notes] ADD  CONSTRAINT [DF_Notes_IsDeleted]  DEFAULT ((0)) FOR [IsDeleted]
+GO
 
 /****** Object:  Table [dbo].[Emails]    Script Date: 03/05/2018 16:05:01 ******/
 CREATE TABLE [dbo].[Emails](
@@ -184,6 +186,7 @@ CREATE TABLE [dbo].[NoteTagRefs](
 )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
 /****** Object:  ForeignKey [FK_Subsystems_Authors]    Script Date: 03/05/2018 16:05:01 ******/
 ALTER TABLE [dbo].[Subsystems]  WITH CHECK ADD  CONSTRAINT [FK_Subsystems_Authors] FOREIGN KEY([DefaultAuthorID])
 REFERENCES [dbo].[Authors] ([ID])
