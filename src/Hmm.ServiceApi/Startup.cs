@@ -20,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.IO;
@@ -74,6 +75,15 @@ namespace Hmm.ServiceApi
                                     };
                                 };
                             });
+            services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", opt =>
+                {
+                    opt.Authority = appSetting.IdpBaseUrl;
+                    opt.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = false
+                    };
+                });
             services.AddApiVersioning(setup =>
             {
                 setup.DefaultApiVersion = new ApiVersion(1, 0);
@@ -137,6 +147,7 @@ namespace Hmm.ServiceApi
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseCors();
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {

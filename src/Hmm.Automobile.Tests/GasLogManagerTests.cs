@@ -181,7 +181,7 @@ namespace Hmm.Automobile.Tests
             Assert.True(newGas.Discounts.FirstOrDefault()?.Amount.Amount == 0.8m);
             Assert.Equal(logDate, newGas.Date);
             Assert.Equal(CurrentTime, newGas.CreateDate);
-            Assert.Equal(updCar.MeterReading, newDistance);
+            Assert.Equal(newDistance, updCar.MeterReading);
         }
 
         [Theory]
