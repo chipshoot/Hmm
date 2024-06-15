@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Hmm.Automobile.NoteSerializer
+namespace Hmm.Automobile.NoteSerialize
 {
-    public class GasLogXmlNoteSerializer : EntityXmlNoteSerializerBase<GasLog>
+    public class GasLogXmlNoteSerialize : EntityXmlNoteSerializeBase<GasLog>
     {
         private const string TimeStampFormatString = "yyyyMMddHHmmssffff";
         private const string XmlTimeStampFormatString = "yyyy-MM-ddTHH:mm:ssZ";
@@ -20,7 +20,7 @@ namespace Hmm.Automobile.NoteSerializer
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
         private readonly IEntityLookup _lookupRepo;
 
-        public GasLogXmlNoteSerializer(
+        public GasLogXmlNoteSerialize(
             IApplication app,
             ILogger<GasLog> logger,
             IAutoEntityManager<AutomobileInfo> autoManager,

@@ -6,19 +6,19 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Xml.Linq;
 
-namespace Hmm.Automobile.NoteSerializer
+namespace Hmm.Automobile.NoteSerialize
 {
-    public class AutomobileXmlNoteSerializer : EntityXmlNoteSerializerBase<AutomobileInfo>
+    public class AutomobileXmlNoteSerialize : EntityXmlNoteSerializeBase<AutomobileInfo>
     {
-        private readonly IApplication _app;
-        private readonly IEntityLookup _lookupRepo;
+        private readonly IApplication _application;
+        private readonly IEntityLookup _lookup;
 
-        public AutomobileXmlNoteSerializer(IApplication app, ILogger<AutomobileInfo> logger, IEntityLookup lookupRepo) : base(logger)
+        public AutomobileXmlNoteSerialize(IApplication application, ILogger<AutomobileInfo> logger, IEntityLookup lookup) : base(logger)
         {
-            Guard.Against<ArgumentNullException>(app == null, nameof(app));
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
-            _app = app;
-            _lookupRepo = lookupRepo;
+            Guard.Against<ArgumentNullException>(application == null, nameof(application));
+            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+            _application = application;
+            _lookup = lookup;
         }
 
         public override AutomobileInfo GetEntity(HmmNote note)
@@ -67,7 +67,7 @@ namespace Hmm.Automobile.NoteSerializer
 
         protected override NoteCatalog GetCatalog()
         {
-            return _app.GetCatalog(NoteCatalogType.Automobile, _lookupRepo);
+            return _application.GetCatalog(NoteCatalogType.Automobile, _lookup);
         }
     }
 }

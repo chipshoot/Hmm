@@ -1,5 +1,5 @@
 ﻿using Hmm.Automobile.DomainEntity;
-using Hmm.Automobile.NoteSerializer;
+using Hmm.Automobile.NoteSerialize;
 using Hmm.Automobile.Validator;
 using Hmm.Core;
 using Hmm.Core.DefaultManager;
@@ -65,14 +65,14 @@ namespace Hmm.Automobile.Tests
     ///     </Content>
     /// </Note>
     /// </summary>
-    public class GasLogXmlNoteSerializerTests : AutoTestFixtureBase
+    public class GasLogXmlNoteSerializeTests : AutoTestFixtureBase
     {
         private INoteSerializer<GasLog> _noteSerializer;
         private AutomobileInfo _defaultCar;
         private GasDiscount _defaultDiscount;
         private Author _author;
 
-        public GasLogXmlNoteSerializerTests()
+        public GasLogXmlNoteSerializeTests()
         {
             SetupDevEnv();
         }
@@ -253,7 +253,7 @@ namespace Hmm.Automobile.Tests
             var autoCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(autoCat);
-            var autoNoteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
+            var autoNoteSerializer = new AutomobileXmlNoteSerialize(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
             var autoManager = new AutomobileManager(autoNoteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo);
 
             // Insert car
@@ -274,7 +274,7 @@ namespace Hmm.Automobile.Tests
             var discountCat = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(discountCat);
-            var discountNoteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscount>(), LookupRepo);
+            var discountNoteSerializer = new GasDiscountXmlNoteSerialize(Application, new NullLogger<GasDiscount>(), LookupRepo);
             var discountManager = new DiscountManager(discountNoteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo);
 
             // Insert discount
@@ -289,7 +289,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(_defaultDiscount);
 
             // setup gas log xml note serialize
-            _noteSerializer = new GasLogXmlNoteSerializer(Application, new NullLogger<GasLog>(), autoManager, discountManager, LookupRepo);
+            _noteSerializer = new GasLogXmlNoteSerialize(Application, new NullLogger<GasLog>(), autoManager, discountManager, LookupRepo);
             _defaultCar = autoManager.GetEntities().FirstOrDefault();
             Assert.NotNull(_defaultCar);
 

@@ -5,12 +5,8 @@ using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
 {
-    public class HmmDataContext : DbContext, IHmmDataContext
+    public class HmmDataContext(DbContextOptions options) : DbContext(options), IHmmDataContext
     {
-        public HmmDataContext(DbContextOptions options) : base(options)
-        {
-        }
-
         public DbSet<HmmNote> Notes { get; set; }
 
         public DbSet<Author> Authors { get; set; }

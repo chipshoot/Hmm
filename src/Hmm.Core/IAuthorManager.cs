@@ -2,7 +2,6 @@
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -32,7 +31,7 @@ namespace Hmm.Core
 
         /// <summary>
         /// Set the flag to deactivate author to make it invisible for system.
-        /// author may associated with note so we not want to delete everything
+        /// author may be associated with note, so we not want to delete everything
         /// </summary>
         /// <param name="id">The id of author whose activate flag will be set</param>
         void DeActivate(Guid id);

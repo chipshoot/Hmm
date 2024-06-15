@@ -5,11 +5,11 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Xml.Linq;
 
-namespace Hmm.Automobile.NoteSerializer
+namespace Hmm.Automobile.NoteSerialize
 {
-    public class EntityXmlNoteSerializerBase<T> : DefaultXmlNoteSerializer<T> where T : AutomobileBase
+    public class EntityXmlNoteSerializeBase<T> : DefaultXmlNoteSerializer<T> where T : AutomobileBase
     {
-        protected EntityXmlNoteSerializerBase(ILogger<T> logger) : base(logger)
+        protected EntityXmlNoteSerializeBase(ILogger<T> logger) : base(logger)
         {
         }
 

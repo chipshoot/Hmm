@@ -98,6 +98,7 @@ namespace Hmm.Automobile
             return note == null ? null : NoteSerializer.GetEntity(note);
         }
 
+
         public GasLog LogHistory(GasLog entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));

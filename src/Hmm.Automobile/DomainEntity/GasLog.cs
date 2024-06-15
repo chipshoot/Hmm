@@ -28,7 +28,7 @@ namespace Hmm.Automobile.DomainEntity
         public string Comment { get; set; }
 
         /// <summary>
-        /// The method is used to get gas log subject. Hmm is using <see cref="AutomobileConstant"/> to get base subject for
+        /// The method is used to get gas log subject. Hmm, is using <see cref="AutomobileConstant"/> to get base subject for
         /// note content, however we also need a way to quickly find out the gas log of each automobile, so we add automobile
         /// id to gas log subject. e.g. GasLog,AutomobileId:1, this way Hmm can search database subject by note catalog and
         /// subject to retrieve all gas log of the automobile

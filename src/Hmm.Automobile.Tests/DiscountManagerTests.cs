@@ -1,6 +1,6 @@
 ﻿using System;
 using Hmm.Automobile.DomainEntity;
-using Hmm.Automobile.NoteSerializer;
+using Hmm.Automobile.NoteSerialize;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.DomainEntity;
@@ -131,7 +131,7 @@ namespace Hmm.Automobile.Tests
             var catalog = LookupRepo.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
             Assert.NotNull(catalog);
-            var noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscount>(), LookupRepo);
+            var noteSerializer = new GasDiscountXmlNoteSerialize(Application, new NullLogger<GasDiscount>(), LookupRepo);
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
             _manager = new DiscountManager(noteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo);
             _authorId = ApplicationRegister.DefaultAuthor.Id;

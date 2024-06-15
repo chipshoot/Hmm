@@ -4,7 +4,7 @@ using Hmm.Utility.Validation;
 using System;
 using System.Xml.Linq;
 
-namespace Hmm.Automobile.NoteSerializer
+namespace Hmm.Automobile.NoteSerialize
 {
     public static class XmlSerializerExtensions
     {

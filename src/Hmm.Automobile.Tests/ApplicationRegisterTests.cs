@@ -1,5 +1,5 @@
 ﻿using Hmm.Automobile.DomainEntity;
-using Hmm.Automobile.NoteSerializer;
+using Hmm.Automobile.NoteSerialize;
 using Hmm.Automobile.Validator;
 using Hmm.Core;
 using Hmm.Core.DefaultManager;
@@ -89,11 +89,11 @@ namespace Hmm.Automobile.Tests
             _systemManager = new SubsystemManager(SubsystemRepository, new SubsystemValidator(AuthorRepository));
 
             // automobile manager
-            var noteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
+            var noteSerializer = new AutomobileXmlNoteSerialize(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
             _automobileManager = new AutomobileManager(noteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo);
 
             // gas discount manager
-            var discountNoteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscount>(), LookupRepo);
+            var discountNoteSerializer = new GasDiscountXmlNoteSerialize(Application, new NullLogger<GasDiscount>(), LookupRepo);
             _discountManager = new DiscountManager(discountNoteSerializer, new GasDiscountValidator(LookupRepo), noteManager, LookupRepo);
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)

@@ -1,6 +1,6 @@
 ﻿using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
-using Hmm.Automobile.NoteSerializer;
+using Hmm.Automobile.NoteSerialize;
 using Hmm.Automobile.Validator;
 using Hmm.Core;
 using Hmm.Utility.Validation;
@@ -28,9 +28,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     .AddScoped<IHmmValidator<AutomobileInfo>, AutomobileValidator>()
                     .AddScoped<IHmmValidator<GasDiscount>, GasDiscountValidator>()
                     .AddScoped<IHmmValidator<GasLog>, GasLogValidator>()
-                    .AddScoped<INoteSerializer<AutomobileInfo>, AutomobileXmlNoteSerializer>()
-                    .AddScoped<INoteSerializer<GasDiscount>, GasDiscountXmlNoteSerializer>()
-                    .AddScoped<INoteSerializer<GasLog>, GasLogXmlNoteSerializer>()
+                    .AddScoped<INoteSerializer<AutomobileInfo>, AutomobileXmlNoteSerialize>()
+                    .AddScoped<INoteSerializer<GasDiscount>, GasDiscountXmlNoteSerialize>()
+                    .AddScoped<INoteSerializer<GasLog>, GasLogXmlNoteSerialize>()
                     .AddScoped<IAutoEntityManager<AutomobileInfo>, AutomobileManager>()
                     .AddScoped<IAutoEntityManager<GasDiscount>, DiscountManager>()
                     .AddScoped<IGasLogManager, GasLogManager>()

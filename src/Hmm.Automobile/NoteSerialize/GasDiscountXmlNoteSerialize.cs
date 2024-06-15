@@ -6,19 +6,19 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Xml.Linq;
 
-namespace Hmm.Automobile.NoteSerializer
+namespace Hmm.Automobile.NoteSerialize
 {
-    public class GasDiscountXmlNoteSerializer : EntityXmlNoteSerializerBase<GasDiscount>
+    public class GasDiscountXmlNoteSerialize : EntityXmlNoteSerializeBase<GasDiscount>
     {
-        private readonly IApplication _app;
-        private readonly IEntityLookup _lookupRepo;
+        private readonly IApplication _application;
+        private readonly IEntityLookup _lookup;
 
-        public GasDiscountXmlNoteSerializer(IApplication app, ILogger<GasDiscount> logger, IEntityLookup lookupRepo) : base(logger)
+        public GasDiscountXmlNoteSerialize(IApplication application, ILogger<GasDiscount> logger, IEntityLookup lookup) : base(logger)
         {
-            Guard.Against<ArgumentNullException>(app == null, nameof(app));
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
-            _app = app;
-            _lookupRepo = lookupRepo;
+            Guard.Against<ArgumentNullException>(application == null, nameof(application));
+            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+            _application = application;
+            _lookup = lookup;
         }
 
         public override GasDiscount GetEntity(HmmNote note)
@@ -64,7 +64,7 @@ namespace Hmm.Automobile.NoteSerializer
 
         protected override NoteCatalog GetCatalog()
         {
-            return _app.GetCatalog(NoteCatalogType.GasDiscount, _lookupRepo);
+            return _application.GetCatalog(NoteCatalogType.GasDiscount, _lookup);
         }
     }
 }

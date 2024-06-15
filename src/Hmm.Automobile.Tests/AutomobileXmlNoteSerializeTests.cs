@@ -1,5 +1,5 @@
 using Hmm.Automobile.DomainEntity;
-using Hmm.Automobile.NoteSerializer;
+using Hmm.Automobile.NoteSerialize;
 using Hmm.Core;
 using Hmm.Core.DomainEntity;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -9,12 +9,12 @@ using Xunit;
 
 namespace Hmm.Automobile.Tests
 {
-    public class AutomobileXmlNoteSerializerTests : AutoTestFixtureBase
+    public class AutomobileXmlNoteSerializeTests : AutoTestFixtureBase
     {
         private INoteSerializer<AutomobileInfo> _noteSerializer;
         private Author _author;
 
-        public AutomobileXmlNoteSerializerTests()
+        public AutomobileXmlNoteSerializeTests()
         {
             SetupDevEnv();
         }
@@ -195,7 +195,7 @@ namespace Hmm.Automobile.Tests
         private void SetupDevEnv()
         {
             InsertSeedRecords();
-            _noteSerializer = new AutomobileXmlNoteSerializer(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
+            _noteSerializer = new AutomobileXmlNoteSerialize(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
             _author = ApplicationRegister.DefaultAuthor;
         }
     }

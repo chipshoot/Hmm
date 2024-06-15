@@ -1,5 +1,5 @@
 ﻿using Hmm.Automobile.DomainEntity;
-using Hmm.Automobile.NoteSerializer;
+using Hmm.Automobile.NoteSerialize;
 using Hmm.Core;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.MeasureUnit;
@@ -186,7 +186,7 @@ namespace Hmm.Automobile.Tests
         private void SetupDevEnv()
         {
             InsertSeedRecords();
-            _noteSerializer = new GasDiscountXmlNoteSerializer(Application, new NullLogger<GasDiscount>(), LookupRepo);
+            _noteSerializer = new GasDiscountXmlNoteSerialize(Application, new NullLogger<GasDiscount>(), LookupRepo);
             _author = ApplicationRegister.DefaultAuthor;
         }
     }
