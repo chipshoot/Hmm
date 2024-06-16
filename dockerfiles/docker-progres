@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Define environment variables
+POSTGRES_PASSWORD="Shcdlhgm1!"
+PGADMIN_DEFAULT_EMAIL="fchy@outlook.com" 
+PGADMIN_DEFAULT_PASSWORD="Shcldhgm1!"
+NETWORK_NAME="hmm-network"
+POSTGRES_CONTAINER_NAME="hmm-postgres"
+PGADMIN_CONTAINER_NAME="hmm-pgadmin"
+
+# Create a Docker network (if it doesn't already exist)
+docker network ls | grep -q $NETWORK_NAME || docker network create $NETWORK_NAME
+
+# Pull the latest PostgreSQL and pgAdmin images
+docker pull postgres
+docker pull dpage/pgadmin4
+
+# Run the PostgreSQL container
+docker run --name $POSTGRES_CONTAINER_NAME -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+  --network $NETWORK_NAME -v /Users/fchy/Projects/hmm/data/progres:/var/lib/postgresql/data  -d postgres
+
+# Run the pgAdmin container
+docker run --name $PGADMIN_CONTAINER_NAME -p 8080:80 \
+  -e "PGADMIN_DEFAULT_EMAIL=$PGADMIN_DEFAULT_EMAIL" \
+  -e "PGADMIN_DEFAULT_PASSWORD=$PGADMIN_DEFAULT_PASSWORD" \
+  --network $NETWORK_NAME -d dpage/pgadmin4
+
+echo "PostgreSQL and pgAdmin setup completed."
+echo "Access pgAdmin at http://localhost:8080"
