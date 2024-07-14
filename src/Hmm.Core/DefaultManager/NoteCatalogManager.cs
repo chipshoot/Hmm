@@ -79,12 +79,6 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
 
-            // check if note render exists in data source
-            if (_lookupRepo.GetEntity<NoteRender>(catalog.Render.Id) == null)
-            {
-                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because note render does not exists in data source");
-                return null;
-            }
             // update catalog record
             var savedCatalog = _dataSource.GetEntity(catalog.Id);
             if (savedCatalog == null)
@@ -108,12 +102,6 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
 
-            // check if note render exists in data source
-            if (_lookupRepo.GetEntity<NoteRender>(catalog.Render.Id) == null)
-            {
-                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because note render does not exists in data source");
-                return null;
-            }
             // update catalog record
             var savedCatalog = await _dataSource.GetEntityAsync(catalog.Id);
             if (savedCatalog != null)

@@ -1,4 +1,5 @@
-﻿using Hmm.Core.DomainEntity;
+﻿// Ignore Spelling: Repo Ef
+
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -6,10 +7,11 @@ using Hmm.Utility.Validation;
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using AuthorDao = Hmm.Core.Dal.EF.DbEntity.AuthorDao;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
-    public class AuthorEfRepository : IGuidRepository<Author>
+    public class AuthorEfRepository : IRepository<AuthorDao>
     {
         private readonly IHmmDataContext _dataContext;
         private readonly IEntityLookup _lookupRepo;
@@ -23,21 +25,22 @@ namespace Hmm.Core.Dal.EF.Repositories
             _lookupRepo = lookupRepo;
         }
 
-        public PageList<Author> GetEntities(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<AuthorDao> GetEntities(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             return _lookupRepo.GetEntities(query, resourceCollectionParameters);
         }
 
-        public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<AuthorDao>> GetEntitiesAsync(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var authors = await _lookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
             return authors;
         }
 
-        public Author GetEntity(Guid id)
+        public AuthorDao GetEntity(int id)
         {
             try
             {
+                ProcessMessage.Rest();
                 return _dataContext.Authors.Find(id);
             }
             catch (Exception e)
@@ -47,10 +50,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<Author> GetEntityAsync(Guid id)
+        public async Task<AuthorDao> GetEntityAsync(int id)
         {
             try
             {
+                ProcessMessage.Rest();
                 var author = await _dataContext.Authors.FindAsync(id);
                 return author;
             }
@@ -61,10 +65,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public Author Add(Author entity)
+        public AuthorDao Add(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            ProcessMessage.Rest();
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
@@ -79,14 +84,15 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public Author Update(Author entity)
+        public AuthorDao Update(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            ProcessMessage.Rest();
             try
             {
                 // ReSharper disable once PossibleNullReferenceException
-                if (entity.Id == Guid.Empty)
+                if (entity.Id <= 0)
                 {
                     ProcessMessage.Success = false;
                     ProcessMessage.AddErrorMessage($"Can not update author with id {entity.Id}");
@@ -95,7 +101,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 _dataContext.Authors.Update(entity);
                 Flush();
-                var updateAuthor = _lookupRepo.GetEntity<Author>(entity.Id);
+                var updateAuthor = _lookupRepo.GetEntity<AuthorDao>(entity.Id);
                 return updateAuthor;
             }
             catch (DataSourceException ex)
@@ -105,10 +111,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public bool Delete(Author entity)
+        public bool Delete(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            ProcessMessage.Rest();
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
@@ -123,10 +130,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<Author> AddAsync(Author entity)
+        public async Task<AuthorDao> AddAsync(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            ProcessMessage.Rest();
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
@@ -141,14 +149,15 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<Author> UpdateAsync(Author entity)
+        public async Task<AuthorDao> UpdateAsync(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            ProcessMessage.Rest();
             try
             {
                 // ReSharper disable once PossibleNullReferenceException
-                if (entity.Id == Guid.Empty)
+                if (entity.Id <= 0)
                 {
                     ProcessMessage.Success = false;
                     ProcessMessage.AddErrorMessage($"Can not update author with id {entity.Id}");
@@ -157,7 +166,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 _dataContext.Authors.Update(entity);
                 await _dataContext.SaveAsync();
-                var updateAuthor = await _lookupRepo.GetEntityAsync<Author>(entity.Id);
+                var updateAuthor = await _lookupRepo.GetEntityAsync<AuthorDao>(entity.Id);
                 return updateAuthor;
             }
             catch (DataSourceException ex)
@@ -167,10 +176,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<bool> DeleteAsync(Author entity)
+        public async Task<bool> DeleteAsync(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            ProcessMessage.Rest();
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute

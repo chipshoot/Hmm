@@ -5,11 +5,29 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="GasLogNotes\ApiAutomobile.cs" />
+    <Compile Remove="GasLogNotes\ApiAutomobileForCreate.cs" />
+    <Compile Remove="GasLogNotes\ApiAutomobileForUpdate.cs" />
+    <Compile Remove="GasLogNotes\ApiDiscount.cs" />
+    <Compile Remove="GasLogNotes\ApiDiscountForCreate.cs" />
+    <Compile Remove="GasLogNotes\ApiDiscountForUpdate.cs" />
+    <Compile Remove="GasLogNotes\ApiDiscountInfo.cs" />
+    <Compile Remove="GasLogNotes\ApiGasLog.cs" />
+    <Compile Remove="GasLogNotes\ApiGasLogForCreation.cs" />
+    <Compile Remove="GasLogNotes\ApiGasLogForUpdate.cs" />
+    <Compile Remove="Profiles\GasDiscountProfile.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hmm.Automobile\Hmm.Automobile.csproj" />
+    <Folder Include="GasLogNotes\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
 
 </Project>

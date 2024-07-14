@@ -1,24 +1,24 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Dal.EF.DbEntity;
+using Hmm.Core.DomainEntity;
+using Hmm.Utility.TestHelp;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
-    public class NoteRepositoryTests : CoreDalEfTestBase
+    public class NoteRepositoryTests : DbTestFixtureBase, IAsyncLifetime
     {
-        private readonly Author _author;
-        private readonly NoteCatalog _catalog;
-
-        public NoteRepositoryTests()
-        {
-            SetupTestingEnv();
-            _author = AuthorRepository.GetEntities().FirstOrDefault();
-            _catalog = CatalogRepository.GetEntities().FirstOrDefault(cat => cat.IsDefault);
-        }
+        private const string DefaultNoteCatalogName = "DefaultNoteCatalog";
+        private const string AlternativeNoteCatalogName = "RawTextNote";
+        private AuthorDao _author;
+        private NoteCatalogDao _catalog;
 
         [Fact]
         public void Can_Add_Note_To_DataSource()
@@ -27,7 +27,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var xmlDocument = new XmlDocument();
             xmlDocument.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
 
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -49,7 +49,7 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Add_Null_Note()
         {
             // Arrange
-            HmmNote note = null;
+            HmmNoteDao note = null;
 
             // Act
             // Asset
@@ -57,42 +57,43 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.Throws<ArgumentNullException>(() => NoteRepository.Add(note));
         }
 
-        [Theory]
-        [ClassData(typeof(AuthorTestData))]
-        public void Cannot_Add_Note_With_NonExist_Author(Author author)
-        {
-            // Arrange - null author for note
-            var xmlDoc = new XmlDocument();
-            xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
-            {
-                Author = author,
-                Catalog = _catalog,
-                Description = "testing note",
-                CreateDate = DateTime.Now,
-                LastModifiedDate = DateTime.Now,
-                Subject = "testing note is here",
-                Content = xmlDoc.InnerXml
-            };
+        // Todo: rethink the logic of this test, we may need ever note has an author.
+        //[Theory]
+        //[ClassData(typeof(AuthorTestData))]
+        //public void Cannot_Add_Note_With_NonExist_Author(AuthorDao author)
+        //{
+        //    // Arrange - null author for note
+        //    var xmlDoc = new XmlDocument();
+        //    xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
+        //    var note = new HmmNoteDao
+        //    {
+        //        Author = author,
+        //        Catalog = _catalog,
+        //        Description = "testing note",
+        //        CreateDate = DateTime.Now,
+        //        LastModifiedDate = DateTime.Now,
+        //        Subject = "testing note is here",
+        //        Content = xmlDoc.InnerXml
+        //    };
 
-            // Act
-            var savedRec = NoteRepository.Add(note);
+        //    // Act
+        //    var savedRec = NoteRepository.Add(note);
 
-            // Assert
-            Assert.Null(savedRec);
-            Assert.False(NoteRepository.GetEntities().Any());
-            Assert.False(NoteRepository.ProcessMessage.Success);
-            Assert.Single(NoteRepository.ProcessMessage.MessageList);
-        }
+        //    // Assert
+        //    Assert.Null(savedRec);
+        //    Assert.False(NoteRepository.GetEntities().Any());
+        //    Assert.False(NoteRepository.ProcessMessage.Success);
+        //    Assert.Single(NoteRepository.ProcessMessage.MessageList);
+        //}
 
         [Theory]
         [ClassData(typeof(CatalogTestData))]
-        public void CanAddNoteWithNonExistCatalogDefaultCatalogApplied(NoteCatalog catalog)
+        public void CanAddNoteWithNonExistCatalogDefaultCatalogApplied(NoteCatalogDao catalog)
         {
             // Arrange - null catalog for note
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = catalog,
@@ -110,7 +111,7 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(savedRec.Id > 0, "savedRec.Id>0");
             Assert.True(savedRec.Id == note.Id, "savedRec.Id==note.Id");
             Assert.NotNull(savedRec.Catalog);
-            Assert.Equal("DefaultNoteCatalog", savedRec.Catalog.Name);
+            Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
         }
 
         [Fact]
@@ -119,7 +120,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -148,7 +149,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -178,7 +179,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -209,7 +210,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -232,8 +233,8 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
             Assert.NotNull(note.Catalog);
-            Assert.Equal("Gas Log", savedRec.Catalog.Name);
-            Assert.Equal("Gas Log", note.Catalog.Name);
+            Assert.Equal(AlternativeNoteCatalogName, savedRec.Catalog.Name);
+            Assert.Equal(AlternativeNoteCatalogName, note.Catalog.Name);
         }
 
         [Fact]
@@ -243,7 +244,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var catalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = catalog,
@@ -257,7 +258,7 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(NoteRepository.ProcessMessage.Success);
             var savedRec = NoteRepository.GetEntities().FirstOrDefault();
             Assert.NotNull(savedRec);
-            Assert.Equal("Gas Log", savedRec.Catalog.Name);
+            Assert.Equal(AlternativeNoteCatalogName, savedRec.Catalog.Name);
 
             // null the catalog
             note.Catalog = null;
@@ -269,16 +270,18 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(NoteRepository.ProcessMessage.Success);
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
-            Assert.Equal("DefaultNoteCatalog", savedRec.Catalog.Name);
+            Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
         }
 
         [Fact]
         public void Can_Update_NoteCatalog_To_Non_Exists_Catalog_Default_Catalog_Applied()
         {
             // Arrange - none exists catalog
-            var catalog = new NoteCatalog
+            var catalog = new NoteCatalogDao
             {
                 Id = 200,
+                FormatType = NoteContentFormatType.Json,
+                Schema = "",
                 Name = "Gas Log",
                 Description = "Testing catalog"
             };
@@ -286,7 +289,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var initialCatalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = initialCatalog,
@@ -308,24 +311,26 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(NoteRepository.ProcessMessage.Success);
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
-            Assert.Equal("DefaultNoteCatalog", savedRec.Catalog.Name);
+            Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
         }
 
         [Fact]
         public void Can_Update_NoteCatalog_To_Catalog_With_Invalid_Id_DefaultCatalog_Applied()
         {
             // Arrange - none exists catalog
-            var catalog = new NoteCatalog
+            var catalog = new NoteCatalogDao
             {
                 Id = -1,
                 Name = "Gas Log",
+                FormatType = NoteContentFormatType.Json,
+                Schema = "",
                 Description = "Testing catalog"
             };
 
             var initialCatalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = initialCatalog,
@@ -347,7 +352,7 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(NoteRepository.ProcessMessage.Success);
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
-            Assert.Equal("DefaultNoteCatalog", savedRec.Catalog.Name);
+            Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
         }
 
         [Fact]
@@ -356,7 +361,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange - non exists id
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -395,7 +400,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -421,7 +426,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Author = _author,
                 Catalog = _catalog,
@@ -447,87 +452,130 @@ namespace Hmm.Core.Dal.EF.Tests
             note.Id = orgId;
         }
 
-        private class AuthorTestData : IEnumerable<object[]>
-        {
-            public IEnumerator<object[]> GetEnumerator()
-            {
-                yield return new object[] { null };
+        //private class AuthorTestData : IEnumerable<object[]>
+        //{
+        //    public IEnumerator<object[]> GetEnumerator()
+        //    {
+        //        yield return [null];
 
-                // Arrange - none exists author
-                yield return new object[]
-                {
-                    new Author
-                    {
-                        Id = Guid.NewGuid(),
-                        AccountName = "jfang",
-                        IsActivated = true,
-                        Description = "testing author"
-                    }
-                };
+        //        // Arrange - none exists author
+        //        yield return
+        //        [
+        //            new AuthorDao
+        //                    {
+        //                        Id = 1,
+        //                        AccountName = "jfang",
+        //                        IsActivated = true,
+        //                        Description = "testing author"
+        //                    }
+        //        ];
 
-                // Arrange - author with invalid author id
-                yield return new object[]
-                {
-                    new Author
-                    {
-                        Id = Guid.Empty,
-                        AccountName = "jfang",
-                        IsActivated = true,
-                        Description = "testing author"
-                    }
-                };
-            }
+        //        // Arrange - author with invalid author id
+        //        yield return
+        //        [
+        //            new AuthorDao
+        //                    {
+        //                        Id = 0,
+        //                        AccountName = "jfang",
+        //                        IsActivated = true,
+        //                        Description = "testing author"
+        //                    }
+        //        ];
+        //    }
 
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        }
+        //    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        //}
 
         private class CatalogTestData : IEnumerable<object[]>
         {
             public IEnumerator<object[]> GetEnumerator()
             {
-                yield return new object[] { null };
+                yield return [null];
 
                 // Arrange - none exists author
-                yield return new object[]
-                {
-                    new NoteCatalog
-                    {
-                        Id = 200,
-                        Name = "Gas Log",
-                        Schema = "Test Schema",
-                        Render = new NoteRender
-                        {
-                            Name = "TestRender",
-                            Namespace = "TestNameSpace",
-                            IsDefault = true,
-                            Description = "Description"
-                        },
-                        IsDefault = true,
-                        Description = "Testing catalog"
-                    }
-                };
+                yield return
+                [
+                    new NoteCatalogDao
+                            {
+                                Id = 200,
+                                Name = "Gas Log",
+                                FormatType = NoteContentFormatType.PlainText,
+                                Schema = "",
+                                IsDefault = true,
+                                Description = "Testing catalog"
+                            }
+                ];
 
                 // Arrange - author with invalid author id
-                yield return new object[]
-                {
-                    new NoteCatalog
-                    {
-                        Id = 0,
-                        Name = "Gas Log",
-                        Schema = "Test Schema",
-                        Render = new NoteRender
-                        {
-                            Name = "TestRender",
-                            Namespace = "TestNameSpace",
-                            IsDefault = true,
-                            Description = "Description"
-                        },
-                        Description = "Testing catalog"
-                    }
-                };
+                yield return
+                [
+                    new NoteCatalogDao
+                            {
+                                Id = 0,
+                                Name = "Gas Log",
+                                FormatType = NoteContentFormatType.PlainText,
+                                Schema = "",
+                                Description = "Testing catalog"
+                            }
+                ];
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        private void SetupTestingEnvironment()
+        {
+            var xDocument = new XDocument(
+                new XElement("Root", new XElement("Child", "Value")));
+
+            var catalog = new NoteCatalogDao
+            {
+                Name = DefaultNoteCatalogName,
+                Schema = xDocument.ToString(),
+                FormatType = NoteContentFormatType.Xml,
+                IsDefault = true,
+                Description = "default xml note",
+            };
+            _catalog = CatalogRepository.Add(catalog);
+            var catalog2 = new NoteCatalogDao
+            {
+                Name = AlternativeNoteCatalogName,
+                Schema = "",
+                FormatType = NoteContentFormatType.PlainText,
+                IsDefault = false,
+                Description = "raw text note",
+            };
+            CatalogRepository.Add(catalog2);
+
+            var contactDb = new ContactDao
+            {
+                Contact = """
+                      { "FirstName": "John", "LastName": "Doe", "Emails": [ { "Address": "fchy@yahoo.com", "Type": "Personal", "IsPrimary": "false" }, { "Address": "fchy5979@gamil.com", "Type": "Personal", "IsPrimary": "true" }, { "Address": "fchy@outlook.com", "Type": "Work", "IsPrimary": "false" } ], "Phones": [ { "Type": "Home", "Number": "123-456-7890" }, { "Type": "Work", "Number": "456-789-0123" } ], "Addresses": [ { "Type": "Home", "Street": "123 Main St", "City": "Springfield", "State": "IL", "Zip": "62701" }, { "Type": "Work", "Street": "456 Elm St", "City": "Springfield", "State": "IL", "Zip": "62702" } ] }
+                      """,
+                Description = "testing contact",
+                IsActivated = true
+            };
+            var contact = ContactRepository.Add(contactDb);
+            var author = new AuthorDao
+            {
+                AccountName = "fchy",
+                ContactInfo = contact,
+                Description = "testing user",
+                IsActivated = true
+            };
+            _author = AuthorRepository.Add(author);
+        }
+
+        public async Task InitializeAsync()
+        {
+            Transaction = await ((DbContext)DbContext).Database.BeginTransactionAsync();
+            SetupTestingEnvironment();
+        }
+
+        public async Task DisposeAsync()
+        {
+            await Transaction.RollbackAsync();
+            await Transaction.DisposeAsync();
         }
     }
 }

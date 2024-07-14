@@ -1,13 +1,16 @@
-﻿using Hmm.Core.DomainEntity;
+﻿// Ignore Spelling: Ef
+
+using Hmm.Core.Dal.EF.DbEntity;
 using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using AuthorDao = Hmm.Core.Dal.EF.DbEntity.AuthorDao;
+using ContactDao = Hmm.Core.Dal.EF.DbEntity.ContactDao;
 
 namespace Hmm.Core.Dal.EF
 {
@@ -21,39 +24,24 @@ namespace Hmm.Core.Dal.EF
             _dataContext = dataContext;
         }
 
-        public T GetEntity<T>(Guid id) where T : GuidEntity
-        {
-            T entity;
-            if (typeof(T) == typeof(Author))
-            {
-                entity = _dataContext.Authors.Find(id) as T;
-            }
-            else
-            {
-                throw new DataSourceException($"{typeof(T)} is not support");
-            }
-
-            return entity;
-        }
-
         public T GetEntity<T>(int id) where T : Entity
         {
             T entity;
-            if (typeof(T) == typeof(NoteRender))
+            if (typeof(T) == typeof(AuthorDao))
             {
-                entity = _dataContext.Renders.Find(id) as T;
+                entity = _dataContext.Authors.Find(id) as T;
             }
-            else if (typeof(T) == typeof(HmmNote))
+            else if (typeof(T) == typeof(ContactDao))
+            {
+                entity = _dataContext.Contacts.Find(id) as T;
+            }
+            else if (typeof(T) == typeof(HmmNoteDao))
             {
                 entity = _dataContext.Notes.Find(id) as T;
             }
-            else if (typeof(T) == typeof(NoteCatalog))
+            else if (typeof(T) == typeof(NoteCatalogDao))
             {
                 entity = _dataContext.Catalogs.Find(id) as T;
-            }
-            else if (typeof(T) == typeof(Subsystem))
-            {
-                entity = _dataContext.Subsystems.Find(id) as T;
             }
             else
             {
@@ -87,36 +75,21 @@ namespace Hmm.Core.Dal.EF
         public async Task<T> GetEntityAsync<T>(int id) where T : Entity
         {
             T entity;
-            if (typeof(T) == typeof(NoteRender))
-            {
-                entity = await _dataContext.Renders.FindAsync(id) as T;
-            }
-            else if (typeof(T) == typeof(HmmNote))
-            {
-                entity = await _dataContext.Notes.FindAsync(id) as T;
-            }
-            else if (typeof(T) == typeof(NoteCatalog))
-            {
-                entity = await _dataContext.Catalogs.FindAsync(id) as T;
-            }
-            else if (typeof(T) == typeof(Subsystem))
-            {
-                entity = await _dataContext.Subsystems.FindAsync(id) as T;
-            }
-            else
-            {
-                throw new DataSourceException($"{typeof(T)} is not support");
-            }
-
-            return entity;
-        }
-
-        public async Task<T> GetEntityAsync<T>(Guid id) where T : GuidEntity
-        {
-            T entity;
-            if (typeof(T) == typeof(Author))
+            if (typeof(T) == typeof(AuthorDao))
             {
                 entity = await _dataContext.Authors.FindAsync(id) as T;
+            }
+            else if (typeof(T) == typeof(ContactDao))
+            {
+                entity = await _dataContext.Contacts.FindAsync(id) as T;
+            }
+            //else if (typeof(T) == typeof(HmmNote))
+            //{
+            //    entity = await _dataContext.Notes.FindAsync(id) as T;
+            //}
+            else if (typeof(T) == typeof(NoteCatalogDao))
+            {
+                entity = await _dataContext.Catalogs.FindAsync(id) as T;
             }
             else
             {
@@ -131,33 +104,24 @@ namespace Hmm.Core.Dal.EF
         private IQueryable<T> GetQueryableEntities<T>()
         {
             IQueryable<T> entities;
-            if (typeof(T) == typeof(NoteRender))
+            //if (typeof(T) == typeof(HmmNote))
+            //{
+            //    entities = _dataContext.Notes
+            //        .Include(n => n.Author)
+            //        .Include(n => n.Catalog).Cast<T>();
+            //}
+            if (typeof(T) == typeof(NoteCatalogDao))
             {
-                entities = _dataContext.Renders.Cast<T>();
+                entities = _dataContext.Catalogs.Cast<T>();
             }
-            else if (typeof(T) == typeof(HmmNote))
-            {
-                entities = _dataContext.Notes
-                    .Include(n => n.Author)
-                    .Include(n => n.Catalog).Cast<T>();
-            }
-            else if (typeof(T) == typeof(NoteCatalog))
-            {
-                entities = _dataContext.Catalogs
-                    .Include(c => c.Subsystem)
-                    .Include(c => c.Render).Cast<T>();
-            }
-            else if (typeof(T) == typeof(Author))
+            else if (typeof(T) == typeof(AuthorDao))
             {
                 entities = _dataContext.Authors
                     .Cast<T>();
             }
-            else if (typeof(T) == typeof(Subsystem))
+            else if (typeof(T) == typeof(ContactDao))
             {
-                entities = _dataContext.Subsystems
-                    .Include(s => s.DefaultAuthor)
-                    .Include(s => s.NoteCatalogs)
-                    .ThenInclude(c => c.Render)
+                entities = _dataContext.Contacts
                     .Cast<T>();
             }
             else

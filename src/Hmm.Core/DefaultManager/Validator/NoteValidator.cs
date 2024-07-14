@@ -8,12 +8,12 @@ namespace Hmm.Core.DefaultManager.Validator
 {
     public class NoteValidator : ValidatorBase<HmmNote>
     {
-        private readonly IVersionRepository<HmmNote> _dataRepo;
+        private readonly IVersionRepository<HmmNote> _dataRepository;
 
-        public NoteValidator(IVersionRepository<HmmNote> noteRepo)
+        public NoteValidator(IVersionRepository<HmmNote> noteRepository)
         {
-            Guard.Against<ArgumentNullException>(noteRepo == null, nameof(noteRepo));
-            _dataRepo = noteRepo;
+            Guard.Against<ArgumentNullException>(noteRepository == null, nameof(noteRepository));
+            _dataRepository = noteRepository;
 
             RuleFor(n => n.Subject).NotNull().Length(1, 1000);
             RuleFor(n => n.Author).NotNull().Must(AuthorNotChanged).WithMessage("Cannot update note's author");
@@ -28,7 +28,7 @@ namespace Hmm.Core.DefaultManager.Validator
                 return false;
             }
 
-            var savedNote = _dataRepo.GetEntity(note.Id);
+            var savedNote = _dataRepository.GetEntity(note.Id);
 
             // create new user, make sure account name is unique
             var authorId = author.Id;

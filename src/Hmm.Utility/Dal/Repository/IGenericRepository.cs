@@ -2,8 +2,6 @@
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -13,7 +11,7 @@ namespace Hmm.Utility.Dal.Repository
     /// The <see cref="IGenericRepository{T, TIdentity}"/> interface defines a standard contract that repository
     /// components should implement for CRUD.
     /// </summary>
-    /// <typeparam name="T">The entity type we want to managed in the repository</typeparam>
+    /// <typeparam name="T">The entity type we want to manage in the repository</typeparam>
     /// <typeparam name="TIdentity">the type of entity identity</typeparam>
     public interface IGenericRepository<T, in TIdentity> where T : AbstractEntity<TIdentity>
     {

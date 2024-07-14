@@ -9,9 +9,9 @@ namespace Hmm.Core.DefaultManager.Validator
 {
     public class AuthorValidator : ValidatorBase<Author>
     {
-        private readonly IGuidRepository<Author> _dataSource;
+        private readonly IRepository<Author> _dataSource;
 
-        public AuthorValidator(IGuidRepository<Author> authorSource)
+        public AuthorValidator(IRepository<Author> authorSource)
         {
             Guard.Against<ArgumentNullException>(authorSource == null, nameof(authorSource));
             _dataSource = authorSource;

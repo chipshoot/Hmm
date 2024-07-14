@@ -1,6 +1,5 @@
 ﻿using Hmm.Core.DomainEntity;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Hmm.Utility.TestHelp
@@ -90,8 +89,6 @@ namespace Hmm.Utility.TestHelp
                 {
                     Id = source.Id,
                     Name = source.Name,
-                    Subsystem = source.Subsystem,
-                    Render = source.Render.Clone(),
                     Schema = source.Schema
                 };
                 return target;
@@ -99,72 +96,9 @@ namespace Hmm.Utility.TestHelp
 
             targetCatalog.Id = source.Id;
             targetCatalog.Name = source.Name;
-            targetCatalog.Subsystem = source.Subsystem;
-            targetCatalog.Render = source.Render.Clone();
             targetCatalog.Schema = source.Schema;
 
             return targetCatalog;
-        }
-
-        public static NoteRender Clone(this NoteRender source, NoteRender targetRender = null)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            if (targetRender == null)
-            {
-                var target = new NoteRender
-                {
-                    Id = source.Id,
-                    Name = source.Name,
-                    Namespace = source.Namespace,
-                    IsDefault = source.IsDefault,
-                    Description = source.Description
-                };
-                return target;
-            }
-
-            targetRender.Id = source.Id;
-            targetRender.Name = source.Name;
-            targetRender.IsDefault = source.IsDefault;
-            targetRender.Namespace = source.Namespace;
-
-            return targetRender;
-        }
-
-        public static Subsystem Clone(this Subsystem source, Subsystem targetSys = null)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            if (targetSys == null)
-            {
-                var target = new Subsystem
-                {
-                    Id = source.Id,
-                    Name = source.Name,
-                    Description = source.Description,
-                    DefaultAuthor = source.DefaultAuthor.Clone(),
-                };
-
-                var targetCatalogs = new List<NoteCatalog>();
-                if (source.NoteCatalogs != null && source.NoteCatalogs.Any())
-                {
-                    targetCatalogs.AddRange(source.NoteCatalogs.Select(catalog => catalog.Clone()));
-                    target.NoteCatalogs = targetCatalogs;
-                }
-                return target;
-            }
-
-            targetSys.Id = source.Id;
-            targetSys.Name = source.Name;
-            targetSys.Description = source.Description;
-
-            return targetSys;
         }
 
         public static void Reset(this DbContext context)
@@ -197,9 +131,7 @@ namespace Hmm.Utility.TestHelp
         {
             var entries = context.ChangeTracker
                 .Entries()
-                .Where(e => e.State == EntityState.Added ||
-                            e.State == EntityState.Modified ||
-                            e.State == EntityState.Deleted)
+                .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
                 .ToArray();
 
             foreach (var entry in entries)

@@ -24,6 +24,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.IO;
+using Hmm.Core.Dal.EF.DbEntity;
 
 namespace Hmm.ServiceApi
 {
@@ -107,30 +108,24 @@ namespace Hmm.ServiceApi
             services
                 .AddDbContext<HmmDataContext>(opt => opt.UseSqlServer(appSetting.ConnectionString))
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
-                .AddScoped<IVersionRepository<HmmNote>, NoteEfRepository>()
+                //.AddScoped<IVersionRepository<HmmNote>, NoteEfRepository>()
                 .AddScoped<IHmmDataContext, HmmDataContext>()
                 .AddScoped<IEntityLookup, EfEntityLookup>()
-                .AddScoped<IGuidRepository<Author>, AuthorEfRepository>()
-                .AddScoped<IRepository<NoteRender>, NoteRenderEfRepository>()
-                .AddScoped<IRepository<NoteCatalog>, NoteCatalogEfRepository>()
-                .AddScoped<IRepository<Subsystem>, SubsystemEfRepository>()
-                .AddScoped<IAuthorManager, AuthorManager>()
+                //.AddScoped<IRepository<Author>, AuthorEfRepository>()
+                .AddScoped<IRepository<NoteCatalogDao>, NoteCatalogEfRepository>()
+               // .AddScoped<IAuthorManager, AuthorManager>()
                 .AddScoped<IHmmNoteManager, HmmNoteManager>()
-                .AddScoped<INoteRenderManager, NoteRenderManager>()
                 .AddScoped<INoteCatalogManager, NoteCatalogManager>()
-                .AddScoped<ISubsystemManager, SubsystemManager>()
                 .AddScoped<IHmmValidator<Author>, AuthorValidator>()
                 .AddScoped<IHmmValidator<NoteCatalog>, NoteCatalogValidator>()
-                .AddScoped<IHmmValidator<NoteRender>, NoteRenderValidator>()
-                .AddScoped<IHmmValidator<Subsystem>, SubsystemValidator>()
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
-                .AddTransient<IPropertyMappingService, PropertyMappingService>()
+                //.AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
                 .AddAutoMapper(typeof(ApiEntity))
                 .AddSwaggerGen();
 
-            var automobileStartup = new AutomobileInfoServiceStartup(services);
-            automobileStartup.ConfigureServices();
+            //var automobileStartup = new AutomobileInfoServiceStartup(services);
+            //automobileStartup.ConfigureServices();
             //services.AddControllers();
         }
 

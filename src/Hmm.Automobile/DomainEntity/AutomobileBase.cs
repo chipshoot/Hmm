@@ -6,7 +6,7 @@ namespace Hmm.Automobile.DomainEntity
     {
         public int Id { get; init; }
 
-        public Guid AuthorId { get; internal set; }
+        public int AuthorId { get; internal set; }
 
         public bool IsDeleted { get; set; }
     }

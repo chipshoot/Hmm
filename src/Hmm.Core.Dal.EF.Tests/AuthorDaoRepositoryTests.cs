@@ -1,19 +1,32 @@
-using Hmm.Core.DomainEntity;
-using Hmm.Utility.TestHelp;
+// Ignore Spelling: Dao
+
 using System;
+using Hmm.Core.Dal.EF.DbEntity;
+using Hmm.Utility.TestHelp;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using Hmm.Core.DomainEntity;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
-    public class AuthorRepositoryTests : DbTestFixtureBase
+    public class AuthorDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
     {
+        private readonly ContactDao _defaultContact;
+
+        public AuthorDaoRepositoryTests()
+        {
+            _defaultContact = GetSeedContactDao();
+        }
+
         [Fact]
         public void Can_Add_Author_To_DataSource()
         {
             // Arrange
-            var author = new Author
+            var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "fchy",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
@@ -23,7 +36,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Assert
             Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id != Guid.Empty, "savedRec.Id is not empty GUID 0");
+            Assert.True(savedRec.Id != 0, "savedRec.Id is not empty id 0");
             Assert.Equal(author.Id, savedRec.Id);
         }
 
@@ -31,17 +44,18 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Add_Already_Existed_AccountName_To_DataSource()
         {
             // Arrange
-            var authorExists = new Author
+            var authorExists = new AuthorDao
             {
-                Id = Guid.NewGuid(),
+                Id = 1,
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing author",
                 IsActivated = true
             };
-
-            var author = new Author
+            var author = new AuthorDao
             {
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing author",
                 IsActivated = true
             };
@@ -60,9 +74,10 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Delete_Author_From_DataSource()
         {
             // Arrange
-            var author = new Author
+            var author = new AuthorDao
             {
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
@@ -80,19 +95,22 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Delete_NonExists_Author_From_DataSource()
         {
             // Arrange
-            var author = new Author
+
+            var author = new AuthorDao
             {
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
 
             AuthorRepository.Add(author);
 
-            var author2 = new Author
+            var author2 = new AuthorDao
             {
-                Id = Guid.NewGuid(),
+                Id = 1,
                 AccountName = "glog2",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
@@ -110,26 +128,17 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Delete_Author_With_Note_Associated()
         {
             // Arrange
-            var render = new NoteRender
-            {
-                Name = "DefaultRender",
-                Namespace = "NameSpace",
-                IsDefault = true,
-                Description = "Description"
-            };
-            var savedRender = RenderRepository.Add(render);
-
-            var catalog = new NoteCatalog
+            var catalog = new NoteCatalogDao
             {
                 Name = "DefaultCatalog",
-                Render = savedRender,
-                Schema = "testScheme",
+                FormatType = NoteContentFormatType.PlainText,
+                Schema = "",
                 IsDefault = false,
                 Description = "Description"
             };
             var savedCatalog = CatalogRepository.Add(catalog);
 
-            var author = new Author
+            var author = new AuthorDao
             {
                 AccountName = "glog",
                 Description = "testing user",
@@ -137,7 +146,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
             var savedUser = AuthorRepository.Add(author);
 
-            var note = new HmmNote
+            var note = new HmmNoteDao
             {
                 Subject = string.Empty,
                 Content = string.Empty,
@@ -161,9 +170,10 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Can_Update_Author()
         {
             // Arrange - update first name
-            var author = new Author
+            var author = new AuthorDao
             {
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
@@ -195,18 +205,20 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Update_For_Non_Exists_Author()
         {
             // Arrange
-            var author = new Author
+            var author = new AuthorDao
             {
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
 
             AuthorRepository.Add(author);
 
-            var author2 = new Author
+            var author2 = new AuthorDao
             {
                 AccountName = "glog2",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
@@ -224,17 +236,19 @@ namespace Hmm.Core.Dal.EF.Tests
         public void Cannot_Update_Author_With_Duplicated_AccountName()
         {
             // Arrange
-            var author = new Author
+            var author = new AuthorDao
             {
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
             AuthorRepository.Add(author);
 
-            var user2 = new Author
+            var user2 = new AuthorDao
             {
                 AccountName = "glog2",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
@@ -249,6 +263,32 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.Null(result);
             Assert.False(AuthorRepository.ProcessMessage.Success);
             Assert.Single(AuthorRepository.ProcessMessage.MessageList);
+        }
+
+        private ContactDao GetSeedContactDao()
+        {
+            var contact = new ContactDao
+            {
+                Contact = """
+                      { "FirstName": "John", "LastName": "Doe", "Emails": [ { "Address": "fchy@yahoo.com", "Type": "Personal", "IsPrimary": "false" }, { "Address": "fchy5979@gamil.com", "Type": "Personal", "IsPrimary": "true" }, { "Address": "fchy@outlook.com", "Type": "Work", "IsPrimary": "false" } ], "Phones": [ { "Type": "Home", "Number": "123-456-7890" }, { "Type": "Work", "Number": "456-789-0123" } ], "Addresses": [ { "Type": "Home", "Street": "123 Main St", "City": "Springfield", "State": "IL", "Zip": "62701" }, { "Type": "Work", "Street": "456 Elm St", "City": "Springfield", "State": "IL", "Zip": "62702" } ] }
+                      """,
+                Description = "testing contact",
+                IsActivated = true
+            };
+            ContactRepository.Add(contact);
+
+            return contact;
+        }
+
+        public async Task InitializeAsync()
+        {
+            Transaction = await ((DbContext)DbContext).Database.BeginTransactionAsync();
+        }
+
+        public async Task DisposeAsync()
+        {
+            await Transaction.RollbackAsync();
+            await Transaction.DisposeAsync();
         }
     }
 }

@@ -17,14 +17,14 @@ namespace Hmm.Automobile.Validator
             _lookupRepo = lookupRepo;
         }
 
-        protected bool HasValidAuthor(Guid authorId)
+        protected bool HasValidAuthor(int authorId)
         {
-            if (authorId == Guid.Empty)
+            if (authorId <= 0)
             {
                 return false;
             }
 
-            var savedAuthor = _lookupRepo.GetEntity<Author>(authorId);
+            var savedAuthor = _lookupRepo.GetEntity<AuthorDb>(authorId);
             return savedAuthor != null;
         }
 

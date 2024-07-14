@@ -106,12 +106,12 @@ namespace Hmm.Automobile.Tests
             InsertSeedRecords();
 
             // add testing note catalog
-            var catalog = LookupRepo.GetEntities<NoteCatalog>()
+            var catalog = LookupRepository.GetEntities<NoteCatalog>()
                 .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
             Assert.NotNull(catalog);
-            var noteSerializer = new AutomobileXmlNoteSerialize(Application, new NullLogger<AutomobileInfo>(), LookupRepo);
+            var noteSerializer = new AutomobileXmlNoteSerialize(Application, new NullLogger<AutomobileInfo>(), LookupRepository);
             var noteManager = new HmmNoteManager(NoteRepository, new NoteValidator(NoteRepository), DateProvider);
-            _manager = new AutomobileManager(noteSerializer, new AutomobileValidator(LookupRepo), noteManager, LookupRepo);
+            _manager = new AutomobileManager(noteSerializer, new AutomobileValidator(LookupRepository), noteManager, LookupRepository);
         }
     }
 }

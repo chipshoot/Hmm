@@ -10,7 +10,7 @@ namespace Hmm.Automobile.Tests
     public class AutomobileValidatorTests : AutoTestFixtureBase
     {
         private IHmmValidator<AutomobileInfo> _validator;
-        private Guid _authorId;
+        private int _authorId;
 
         public AutomobileValidatorTests()
         {
@@ -227,8 +227,8 @@ namespace Hmm.Automobile.Tests
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _validator = new AutomobileValidator(LookupRepo);
-            _authorId = ApplicationRegister.DefaultAuthor.Id;
+            _validator = new AutomobileValidator(LookupRepository);
+            _authorId = 1;
         }
     }
 }

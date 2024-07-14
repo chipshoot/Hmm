@@ -1,4 +1,6 @@
-﻿using Hmm.Core.DomainEntity;
+﻿// Ignore Spelling: Ef
+
+using Hmm.Core.Dal.EF.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -11,43 +13,40 @@ using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
-    public class NoteEfRepository : RepositoryBase, IVersionRepository<HmmNote>
+    public class NoteEfRepository(
+        IHmmDataContext dataContext,
+        IEntityLookup lookupRepository,
+        IDateTimeProvider dateTimeProvider)
+        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IVersionRepository<HmmNoteDao>
     {
-        public NoteEfRepository(
-             IHmmDataContext dataContext,
-             IEntityLookup lookupRepo,
-             IDateTimeProvider dateTimeProvider) : base(dataContext, lookupRepo, dateTimeProvider)
-        {
-        }
-
-        public PageList<HmmNote> GetEntities(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<HmmNoteDao> GetEntities(Expression<Func<HmmNoteDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var notes = query == null
                 ? DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog)
                 : DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Where(query);
-             
+
             var result = resourceCollectionParameters == null
-                ? PageList<HmmNote>.Create(notes, pageIdx, pageSize)
-                : PageList<HmmNote>.Create(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
+                ? PageList<HmmNoteDao>.Create(notes, pageIdx, pageSize)
+                : PageList<HmmNoteDao>.Create(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
 
             return result;
         }
 
-        public async Task<PageList<HmmNote>> GetEntitiesAsync(Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<HmmNoteDao>> GetEntitiesAsync(Expression<Func<HmmNoteDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var notes = query == null
                 ? DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog)
                 : DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Where(query);
             var result = resourceCollectionParameters == null
-                ? await PageList<HmmNote>.CreateAsync(notes, pageIdx, pageSize)
-                : await PageList<HmmNote>.CreateAsync(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
+                ? await PageList<HmmNoteDao>.CreateAsync(notes, pageIdx, pageSize)
+                : await PageList<HmmNoteDao>.CreateAsync(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
 
             return result;
         }
 
-        public HmmNote GetEntity(int id)
+        public HmmNoteDao GetEntity(int id)
         {
             try
             {
@@ -60,7 +59,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<HmmNote> GetEntityAsync(int id)
+        public async Task<HmmNoteDao> GetEntityAsync(int id)
         {
             try
             {
@@ -74,13 +73,13 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public HmmNote Add(HmmNote entity)
+        public HmmNoteDao Add(HmmNoteDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
             try
             {
-                // check if need apply default catalog
+                // Check if the note's catalog is specified. If not, attempt to apply a default catalog.
                 // ReSharper disable once PossibleNullReferenceException
                 var catalog = PropertyChecking(entity.Catalog);
                 entity.Catalog = catalog ?? throw new Exception("Cannot find default note catalog.");
@@ -109,13 +108,13 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public HmmNote Update(HmmNote entity)
+        public HmmNoteDao Update(HmmNoteDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
             try
             {
-                // check if need apply default catalog
+                // Check if the note's catalog is specified. If not, attempt to apply a default catalog.
                 // ReSharper disable once PossibleNullReferenceException
                 var catalog = PropertyChecking(entity.Catalog);
                 entity.Catalog = catalog ?? throw new Exception("Cannot find default note catalog.");
@@ -123,7 +122,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 entity.LastModifiedDate = DateTimeProvider.UtcNow;
                 DataContext.Notes.Update(entity);
                 DataContext.Save();
-                var savedRec = LookupRepo.GetEntity<HmmNote>(entity.Id);
+                var savedRec = LookupRepository.GetEntity<HmmNoteDao>(entity.Id);
 
                 return savedRec;
             }
@@ -134,7 +133,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public bool Delete(HmmNote entity)
+        public bool Delete(HmmNoteDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -152,7 +151,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<HmmNote> AddAsync(HmmNote entity)
+        public async Task<HmmNoteDao> AddAsync(HmmNoteDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -187,7 +186,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<HmmNote> UpdateAsync(HmmNote entity)
+        public async Task<HmmNoteDao> UpdateAsync(HmmNoteDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -201,7 +200,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 entity.LastModifiedDate = DateTimeProvider.UtcNow;
                 DataContext.Notes.Update(entity);
                 await DataContext.SaveAsync();
-                var savedRec = LookupRepo.GetEntity<HmmNote>(entity.Id);
+                var savedRec = LookupRepository.GetEntity<HmmNoteDao>(entity.Id);
 
                 return savedRec;
             }
@@ -212,7 +211,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<bool> DeleteAsync(HmmNote entity)
+        public async Task<bool> DeleteAsync(HmmNoteDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -230,7 +229,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public bool HasPropertyChanged(HmmNote note, string propertyName)
+        public bool HasPropertyChanged(HmmNoteDao note, string propertyName)
         {
             if (DataContext is not DbContext dbContext)
             {

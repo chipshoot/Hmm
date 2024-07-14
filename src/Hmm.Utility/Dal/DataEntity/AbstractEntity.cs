@@ -1,4 +1,6 @@
-﻿namespace Hmm.Utility.Dal.DataEntity
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Hmm.Utility.Dal.DataEntity
 {
     /// <summary>
     /// The base class of domain entity
@@ -20,6 +22,7 @@
         /// <value>
         /// The id of the domain entity.
         /// </value>
+        [Column("id")]
         public virtual TIdentity Id { get; set; }
 
         #endregion implementation of IGenericEntity{TIdentity}

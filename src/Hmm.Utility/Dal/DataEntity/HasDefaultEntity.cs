@@ -1,11 +1,11 @@
 ﻿namespace Hmm.Utility.Dal.DataEntity
 {
     /// <summary>
-    /// The entity has default record, this makes the system get default record when no record id provided
-    /// Note: the table can only contains one default record.
+    /// The entity has is activated flag record, this makes the system get default record when no record id provided
+    /// Note: the table can only contain one default record.
     /// </summary>
-    public class HasDefaultEntity : Entity
+    public class HasActivateFlagEntity : Entity
     {
-        public bool IsDefault { get; set; }
+        public bool IsActivated { get; set; }
     }
 }

@@ -8,12 +8,9 @@ namespace Hmm.Automobile
 {
     public interface IApplication
     {
-        bool Register(ISubsystemManager subsystemMan,
-            IAutoEntityManager<AutomobileInfo> automobileMan,
+        bool Register(IAutoEntityManager<AutomobileInfo> automobileMan,
             IAutoEntityManager<GasDiscount> discountMan,
             IEntityLookup lookupRepo);
-
-        Subsystem GetApplication(IEntityLookup lookupRepo);
 
         NoteCatalog GetCatalog(NoteCatalogType entityType, IEntityLookup lookupRepo);
 

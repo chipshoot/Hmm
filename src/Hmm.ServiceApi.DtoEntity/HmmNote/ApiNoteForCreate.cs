@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Ignore Spelling: Dto
+
+using System;
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
@@ -8,7 +10,7 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 
         public string Content { get; set; }
 
-        public Guid AuthorId { get; set; }
+        public int AuthorId { get; set; }
 
         public int NoteCatalogId { get; set; }
 

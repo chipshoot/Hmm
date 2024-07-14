@@ -1,4 +1,6 @@
-﻿using Hmm.Core.DomainEntity;
+﻿// Ignore Spelling: Ef
+
+using Hmm.Core.Dal.EF.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -9,30 +11,28 @@ using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
-    public class NoteCatalogEfRepository : RepositoryBase, IRepository<NoteCatalog>
+    public class NoteCatalogEfRepository(
+        IHmmDataContext dataContext,
+        IEntityLookup lookupRepository,
+        IDateTimeProvider dateTimeProvider)
+        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IRepository<NoteCatalogDao>
     {
-        public NoteCatalogEfRepository(
-            IHmmDataContext dataContext,
-            IEntityLookup lookupRepo,
-            IDateTimeProvider dateTimeProvider) : base(dataContext, lookupRepo, dateTimeProvider)
+        public PageList<NoteCatalogDao> GetEntities(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
+            return LookupRepository.GetEntities(query, resourceCollectionParameters);
         }
 
-        public PageList<NoteCatalog> GetEntities(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<NoteCatalogDao>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            return LookupRepo.GetEntities(query, resourceCollectionParameters);
-        }
-
-        public async Task<PageList<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            var cats = await LookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
+            var cats = await LookupRepository.GetEntitiesAsync(query, resourceCollectionParameters);
             return cats;
         }
 
-        public NoteCatalog GetEntity(int id)
+        public NoteCatalogDao GetEntity(int id)
         {
             try
             {
+                ProcessMessage.Rest();
                 return DataContext.Catalogs.Find(id);
             }
             catch (Exception e)
@@ -42,10 +42,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<NoteCatalog> GetEntityAsync(int id)
+        public async Task<NoteCatalogDao> GetEntityAsync(int id)
         {
             try
             {
+                ProcessMessage.Rest();
                 var catalog = await DataContext.Catalogs.FindAsync(id);
                 return catalog;
             }
@@ -56,12 +57,14 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public NoteCatalog Add(NoteCatalog entity)
+        public NoteCatalogDao Add(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
             try
             {
+                ProcessMessage.Rest();
+
                 // ReSharper disable once AssignNullToNotNullAttribute
                 DataContext.Catalogs.Add(entity);
                 DataContext.Save();
@@ -74,9 +77,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public NoteCatalog Update(NoteCatalog entity)
+        public NoteCatalogDao Update(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            ProcessMessage.Rest();
 
             // ReSharper disable once PossibleNullReferenceException
             if (entity.Id <= 0)
@@ -89,15 +94,13 @@ namespace Hmm.Core.Dal.EF.Repositories
             try
             {
                 // check if need apply default render
-                var render = PropertyChecking(entity.Render);
                 const string message = "Cannot find default note render.";
                 ProcessMessage.Success = false;
                 ProcessMessage.AddErrorMessage(message, true);
-                entity.Render = render ?? throw new DataSourceException(message);
 
                 DataContext.Catalogs.Update(entity);
                 DataContext.Save();
-                return LookupRepo.GetEntity<NoteCatalog>(entity.Id);
+                return LookupRepository.GetEntity<NoteCatalogDao>(entity.Id);
             }
             catch (Exception ex)
             {
@@ -106,9 +109,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public bool Delete(NoteCatalog entity)
+        public bool Delete(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            ProcessMessage.Rest();
 
             try
             {
@@ -124,9 +129,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<NoteCatalog> AddAsync(NoteCatalog entity)
+        public async Task<NoteCatalogDao> AddAsync(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            ProcessMessage.Rest();
 
             try
             {
@@ -142,9 +149,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<NoteCatalog> UpdateAsync(NoteCatalog entity)
+        public async Task<NoteCatalogDao> UpdateAsync(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            ProcessMessage.Rest();
 
             // ReSharper disable once PossibleNullReferenceException
             if (entity.Id <= 0)
@@ -157,15 +166,13 @@ namespace Hmm.Core.Dal.EF.Repositories
             try
             {
                 // check if need apply default render
-                var render = PropertyChecking(entity.Render);
                 const string message = "Cannot find default note render.";
                 ProcessMessage.Success = false;
                 ProcessMessage.AddErrorMessage(message, true);
-                entity.Render = render ?? throw new DataSourceException(message);
 
                 DataContext.Catalogs.Update(entity);
                 await DataContext.SaveAsync();
-                var newCatalog = await LookupRepo.GetEntityAsync<NoteCatalog>(entity.Id);
+                var newCatalog = await LookupRepository.GetEntityAsync<NoteCatalogDao>(entity.Id);
                 return newCatalog;
             }
             catch (Exception ex)
@@ -175,10 +182,11 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<bool> DeleteAsync(NoteCatalog entity)
+        public async Task<bool> DeleteAsync(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+            ProcessMessage.Rest();
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute

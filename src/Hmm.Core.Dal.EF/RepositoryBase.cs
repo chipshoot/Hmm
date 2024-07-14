@@ -9,18 +9,18 @@ namespace Hmm.Core.Dal.EF
 {
     public abstract class RepositoryBase
     {
-        protected RepositoryBase(IHmmDataContext dataContext, IEntityLookup lookupRepo, IDateTimeProvider dateTimeProvider)
+        protected RepositoryBase(IHmmDataContext dataContext, IEntityLookup lookupRepository, IDateTimeProvider dateTimeProvider)
         {
             Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
             Guard.Against<ArgumentNullException>(dateTimeProvider == null, nameof(dateTimeProvider));
 
             DataContext = dataContext;
-            LookupRepo = lookupRepo;
+            LookupRepository = lookupRepository;
             DateTimeProvider = dateTimeProvider;
         }
 
-        protected IEntityLookup LookupRepo { get; }
+        protected IEntityLookup LookupRepository { get; }
 
         protected IDateTimeProvider DateTimeProvider { get; }
 
@@ -37,7 +37,7 @@ namespace Hmm.Core.Dal.EF
             {
                 defaultNeeded = true;
             }
-            else if (LookupRepo.GetEntity<TP>(property.Id) == null)
+            else if (LookupRepository.GetEntity<TP>(property.Id) == null)
             {
                 defaultNeeded = true;
             }
@@ -47,7 +47,7 @@ namespace Hmm.Core.Dal.EF
                 return property;
             }
 
-            var defaultProp = LookupRepo.GetEntities<TP>(p => p.IsDefault).FirstOrDefault();
+            var defaultProp = LookupRepository.GetEntities<TP>(p => p.IsDefault).FirstOrDefault();
             return defaultProp;
         }
 
