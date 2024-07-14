@@ -13,11 +13,12 @@ docker network ls | grep -q $NETWORK_NAME || docker network create $NETWORK_NAME
 
 # Pull the latest PostgreSQL and pgAdmin images
 docker pull postgres
-docker pull dpage/pgadmin4
+docker pull dpage/pgadmin4:latest
 
 # Run the PostgreSQL container
 docker run --name $POSTGRES_CONTAINER_NAME -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-  --network $NETWORK_NAME -v /Users/fchy/Projects/hmm/data/progres:/var/lib/postgresql/data  -d postgres
+  -p 5432:5432 --network $NETWORK_NAME \
+  -v /Users/fchy/Projects/hmm/data/progres:/var/lib/postgresql/data  -d postgres
 
 # Run the pgAdmin container
 docker run --name $PGADMIN_CONTAINER_NAME -p 8080:80 \
