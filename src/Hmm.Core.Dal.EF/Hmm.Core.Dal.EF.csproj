@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DbEntity\**" />
+    <EmbeddedResource Remove="DbEntity\**" />
+    <None Remove="DbEntity\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -16,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Hmm.Core.Map\Hmm.Core.Map.csproj" />
     <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />
     <ProjectReference Include="..\Hmm.ServiceApi.DtoEntity\Hmm.ServiceApi.DtoEntity.csproj" />
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />

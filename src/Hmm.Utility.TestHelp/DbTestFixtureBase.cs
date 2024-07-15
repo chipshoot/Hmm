@@ -1,19 +1,16 @@
 ﻿// Ignore Spelling: Dbs
 
 using Hmm.Core.Dal.EF;
-using Hmm.Core.Dal.EF.DbEntity;
 using Hmm.Core.Dal.EF.Repositories;
-using Hmm.Core.DomainEntity;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 using Npgsql;
+using System;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -25,6 +22,9 @@ namespace Hmm.Utility.TestHelp
     {
         protected IHmmDataContext DbContext;
         protected IDbContextTransaction Transaction;
+        private static bool _initialized;
+        private static readonly object Lock = new();
+        private static DbContextOptions _dbContextOptions;
 
         protected DbTestFixtureBase()
         {
@@ -43,7 +43,7 @@ namespace Hmm.Utility.TestHelp
 
         protected IRepository<NoteCatalogDao> CatalogRepository { get; private set; }
 
-        protected IEntityLookup LookupRepository { get; private set; }
+        private IEntityLookup LookupRepository { get; set; }
 
         protected IDateTimeProvider DateProvider { get; private set; }
 
@@ -55,88 +55,41 @@ namespace Hmm.Utility.TestHelp
             }
         }
 
-        protected void SetupRecords(
-           IEnumerable<AuthorDao> authors,
-           IEnumerable<ContactDao> contactDbs,
-           IEnumerable<NoteCatalogDao> catalogs)
-        {
-            Guard.Against<ArgumentNullException>(authors == null, nameof(authors));
-            Guard.Against<ArgumentNullException>(contactDbs == null, nameof(contactDbs));
-            Guard.Against<ArgumentNullException>(catalogs == null, nameof(catalogs));
-
-            // ReSharper disable PossibleNullReferenceException
-            try
-            {
-                foreach (var contact in contactDbs)
-                {
-                    ContactRepository.Add(contact);
-                }
-
-                foreach (var user in authors)
-                {
-                    AuthorRepository.Add(user);
-                }
-
-                foreach (var catalog in catalogs)
-                {
-                    CatalogRepository.Add(catalog);
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-
-            // ReSharper restore PossibleNullReferenceException
-        }
-
         public void Dispose()
         {
-            if (DbContext is DbContext context)
-            {
-                context.Reset();
-            }
-
-            ////var notes = LookupRepository.GetEntities<HmmNote>().ToList();
-            ////foreach (var note in notes)
-            ////{
-            ////    NoteRepository.Delete(note);
-            ////}
-
-            //var catalogs = LookupRepository.GetEntities<NoteCatalog>().ToList();
-            //foreach (var catalog in catalogs)
-            //{
-            //    CatalogRepository.Delete(catalog);
-            //}
-
-            //var authors = LookupRepository.GetEntities<AuthorDao>().ToList();
-            //foreach (var author in authors)
-            //{
-            //    AuthorRepository.Delete(author);
-            //}
-
-            //var contactDbs = LookupRepository.GetEntities<ContactDao>().ToList();
-            //foreach (var contact in contactDbs)
-            //{
-            //    ContactRepository.Delete(contact);
-            //}
-
-            //if (_dbContext is DbContext newContext)
-            //{
-            //    newContext.Reset();
-            //}
             GC.SuppressFinalize(this);
+        }
+
+        protected ContactDao GetTestingContact()
+        {
+            var contact = new ContactDao
+            {
+                Contact = """
+                      { "FirstName": "John", "LastName": "Doe", "Emails": [ { "Address": "fchy@yahoo.com", "Type": "Personal", "IsPrimary": "false" }, { "Address": "fchy5979@gamil.com", "Type": "Personal", "IsPrimary": "true" }, { "Address": "fchy@outlook.com", "Type": "Work", "IsPrimary": "false" } ], "Phones": [ { "Type": "Home", "Number": "123-456-7890" }, { "Type": "Work", "Number": "456-789-0123" } ], "Addresses": [ { "Type": "Home", "Street": "123 Main St", "City": "Springfield", "State": "IL", "Zip": "62701" }, { "Type": "Work", "Street": "456 Elm St", "City": "Springfield", "State": "IL", "Zip": "62702" } ] }
+                      """,
+                Description = "testing contact",
+                IsActivated = true
+            };
+            return contact;
         }
 
         private void SetDbEnvironment(string connectString)
         {
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectString);
-            dataSourceBuilder.MapEnum<NoteContentFormatType>();
-            var dataSource = dataSourceBuilder.Build();
-            var optBuilder = new DbContextOptionsBuilder()
-                .UseNpgsql(dataSource);
-            DbContext = new HmmDataContext(optBuilder.Options);
+            if (!_initialized)
+            {
+                lock (Lock)
+                {
+                    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectString);
+                    dataSourceBuilder.MapEnum<NoteContentFormatType>();
+                    var dataSource = dataSourceBuilder.Build();
+                    var optBuilder = new DbContextOptionsBuilder()
+                        .UseNpgsql(dataSource);
+                    _dbContextOptions = optBuilder.Options;
+                    _initialized = true;
+                }
+            }
+
+            DbContext = new HmmDataContext(_dbContextOptions);
 
             LookupRepository = new EfEntityLookup(DbContext);
             var dateProvider = new DateTimeAdapter();

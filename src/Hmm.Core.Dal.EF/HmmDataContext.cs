@@ -1,10 +1,7 @@
-﻿using Hmm.Core.Dal.EF.DbEntity;
-using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DbEntity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
-using AuthorDao = Hmm.Core.Dal.EF.DbEntity.AuthorDao;
-using ContactDao = Hmm.Core.Dal.EF.DbEntity.ContactDao;
 
 namespace Hmm.Core.Dal.EF
 {
@@ -17,7 +14,6 @@ namespace Hmm.Core.Dal.EF
         public DbSet<ContactDao> Contacts { get; set; }
 
         public DbSet<NoteCatalogDao> Catalogs { get; set; }
-
 
         public void Save()
         {
@@ -44,6 +40,12 @@ namespace Hmm.Core.Dal.EF
                 .HasColumnName("ts")
                 .IsConcurrencyToken()
                 .ValueGeneratedOnAddOrUpdate();
+            modelBuilder.Entity<HmmNoteDao>()
+            .HasOne(n=>n.Author)
+            .WithMany()
+            .HasForeignKey("authorid")
+            .OnDelete(DeleteBehavior.NoAction);
+
             //modelBuilder.Entity<HmmNote>()
             //    .HasKey(n => n.Id);
             modelBuilder.HasPostgresEnum<NoteContentFormatType>();

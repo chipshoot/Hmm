@@ -1,6 +1,6 @@
 ﻿// Ignore Spelling: Ef
 
-using Hmm.Core.Dal.EF.DbEntity;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
@@ -9,8 +9,6 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using AuthorDao = Hmm.Core.Dal.EF.DbEntity.AuthorDao;
-using ContactDao = Hmm.Core.Dal.EF.DbEntity.ContactDao;
 
 namespace Hmm.Core.Dal.EF
 {

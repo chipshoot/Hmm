@@ -1,5 +1,6 @@
 ﻿// Ignore Spelling: Repo Ef
 
+using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -7,7 +8,6 @@ using Hmm.Utility.Validation;
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using AuthorDao = Hmm.Core.Dal.EF.DbEntity.AuthorDao;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
@@ -123,7 +123,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 Flush();
                 return true;
             }
-            catch (DataSourceException ex)
+            catch (Exception ex)
             {
                 ProcessMessage.WrapException(ex);
                 return false;

@@ -1,11 +1,10 @@
 // Ignore Spelling: Dao
 
-using System;
-using Hmm.Core.Dal.EF.DbEntity;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading.Tasks;
-using Hmm.Core.DomainEntity;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
@@ -141,6 +140,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var author = new AuthorDao
             {
                 AccountName = "glog",
+                ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
             };
@@ -267,14 +267,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
         private ContactDao GetSeedContactDao()
         {
-            var contact = new ContactDao
-            {
-                Contact = """
-                      { "FirstName": "John", "LastName": "Doe", "Emails": [ { "Address": "fchy@yahoo.com", "Type": "Personal", "IsPrimary": "false" }, { "Address": "fchy5979@gamil.com", "Type": "Personal", "IsPrimary": "true" }, { "Address": "fchy@outlook.com", "Type": "Work", "IsPrimary": "false" } ], "Phones": [ { "Type": "Home", "Number": "123-456-7890" }, { "Type": "Work", "Number": "456-789-0123" } ], "Addresses": [ { "Type": "Home", "Street": "123 Main St", "City": "Springfield", "State": "IL", "Zip": "62701" }, { "Type": "Work", "Street": "456 Elm St", "City": "Springfield", "State": "IL", "Zip": "62702" } ] }
-                      """,
-                Description = "testing contact",
-                IsActivated = true
-            };
+            var contact = GetTestingContact();
             ContactRepository.Add(contact);
 
             return contact;

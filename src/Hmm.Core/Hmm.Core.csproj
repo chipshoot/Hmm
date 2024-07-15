@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Hmm.Core.Map\Hmm.Core.Map.csproj" />
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
 

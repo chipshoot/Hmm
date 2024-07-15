@@ -1,6 +1,6 @@
 ﻿// Ignore Spelling: Ef
 
-using Hmm.Core.Dal.EF.DbEntity;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;

@@ -1,9 +1,8 @@
-﻿using Hmm.Core.Dal.EF.DbEntity;
-using Hmm.Utility.TestHelp;
+﻿using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Hmm.Core.DomainEntity;
+using Hmm.Core.Map.DbEntity;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
@@ -17,7 +16,6 @@ namespace Hmm.Core.Dal.EF.Tests
             var xDocument = new XDocument(
                 new XElement("Root", new XElement("Child", "Value")));
             _sampleSchema = xDocument.ToString();
-
         }
 
         [Fact]
@@ -263,7 +261,6 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.False(CatalogRepository.ProcessMessage.Success);
             Assert.Single(CatalogRepository.ProcessMessage.MessageList);
         }
-
 
         public async Task InitializeAsync()
         {

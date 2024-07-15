@@ -1,5 +1,6 @@
 ﻿using Hmm.Utility.Dal.DataEntity;
 using System.ComponentModel.DataAnnotations;
+using Hmm.Core.Map.DbEntity;
 
 namespace Hmm.Core.DomainEntity
 {
@@ -11,13 +12,5 @@ namespace Hmm.Core.DomainEntity
         public NoteContentFormatType Type { get; set; }
 
         public string Schema { get; set; }
-    }
-
-    public enum NoteContentFormatType
-    {
-        PlainText,
-        Xml,
-        Json,
-        Markdown
     }
 }

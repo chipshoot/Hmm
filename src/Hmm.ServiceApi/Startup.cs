@@ -24,7 +24,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.IO;
-using Hmm.Core.Dal.EF.DbEntity;
+using Hmm.Core.Map.DbEntity;
 
 namespace Hmm.ServiceApi
 {

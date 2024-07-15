@@ -1,5 +1,4 @@
-﻿using Hmm.Core.Dal.EF.DbEntity;
-using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
 using System;

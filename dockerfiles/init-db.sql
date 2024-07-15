@@ -14,7 +14,7 @@ CREATE TABLE Authors(
     ContactInfo INT NULL,
 	IsActivated BOOLEAN NOT NULL,
 	Description VARCHAR(1000) NULL,
-    FOREIGN KEY(ContactInfo) REFERENCES Contacts(Id)
+    FOREIGN KEY(ContactInfo) REFERENCES Contacts(Id) ON DELETE NO ACTION
 );
 /****** Object:  Index IDX_UniqueAccountName    Script Date: 2024/06/24 3:15:56 PM ******/
 CREATE UNIQUE INDEX idx_authors_accountname ON Authors (AccountName ASC);
@@ -54,8 +54,8 @@ CREATE TABLE Notes(
 	LastModifiedDate TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 	Description VARCHAR(1000) NULL,
 	Ts bytea,
-    FOREIGN KEY(CatalogId) REFERENCES NoteCatalogs(Id),
-    FOREIGN KEY(AuthorId) REFERENCES Authors(Id)
+    FOREIGN KEY(CatalogId) REFERENCES NoteCatalogs(Id) ON DELETE NO ACTION,
+    FOREIGN KEY(AuthorId) REFERENCES Authors(Id) ON DELETE NO ACTION
 );
 
 /****** Object:  Table NoteTagRefs    Script Date: 2024/06/24 16:05:01 ******/

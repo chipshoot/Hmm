@@ -71,6 +71,9 @@
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Delete_Note&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Cannot_Delete_NonExists_Note&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Cannot_Add_Note_With_NonExist_Author&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>
