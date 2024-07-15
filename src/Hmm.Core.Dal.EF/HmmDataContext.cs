@@ -46,6 +46,12 @@ namespace Hmm.Core.Dal.EF
             .HasForeignKey("authorid")
             .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<HmmNoteDao>()
+            .HasOne(n=>n.Catalog)
+            .WithMany()
+            .HasForeignKey("catalogid")
+            .OnDelete(DeleteBehavior.NoAction);
+
             //modelBuilder.Entity<HmmNote>()
             //    .HasKey(n => n.Id);
             modelBuilder.HasPostgresEnum<NoteContentFormatType>();

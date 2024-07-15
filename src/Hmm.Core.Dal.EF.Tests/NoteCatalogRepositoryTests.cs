@@ -1,4 +1,5 @@
-﻿using Hmm.Utility.TestHelp;
+﻿using System;
+using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -126,38 +127,49 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.Single(CatalogRepository.ProcessMessage.MessageList);
         }
 
-        //[Fact]
-        //public void Cannot_Delete_Catalog_With_Note_Associated()
-        //{
-        //    // Arrange
-        //    var catalog = new NoteCatalogDao
-        //    {
-        //        Name = "GasLog",
-        //        Schema = "TestSchema",
-        //        IsDefault = true,
-        //        Description = "testing note"
-        //    };
-        //    var savedCatalog = CatalogRepository.Add(catalog);
+        [Fact]
+        public void Cannot_Delete_Catalog_With_Note_Associated()
+        {
+            // Arrange
+            var catalog = new NoteCatalogDao
+            {
+                Name = "GasLog",
+                FormatType = NoteContentFormatType.Json,
+                Schema = "",
+                IsDefault = true,
+                Description = "testing note"
+            };
+            var savedCatalog = CatalogRepository.Add(catalog);
 
-        //    var note = new HmmNote
-        //    {
-        //        Subject = "Testing subject",
-        //        Content = "Testing content",
-        //        CreateDate = DateTime.Now,
-        //        LastModifiedDate = DateTime.Now,
-        //        Author = _author,
-        //        Catalog = savedCatalog
-        //    };
-        //    NoteRepository.Add(note);
+            var contact = GetTestingContact();
+            var author = new AuthorDao
+            {
+                AccountName = "glog",
+                ContactInfo = contact,
+                Description = "testing user",
+                IsActivated = true
+            };
+            AuthorRepository.Add(author);
+            
+            var note = new HmmNoteDao
+            {
+                Subject = "Testing subject",
+                Content = "Testing content",
+                CreateDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now,
+                Author = author,
+                Catalog = savedCatalog
+            };
+            NoteRepository.Add(note);
 
-        //    // Act
-        //    var result = CatalogRepository.Delete(catalog);
+            // Act
+            var result = CatalogRepository.Delete(catalog);
 
-        //    // Assert
-        //    Assert.False(result, "Error: deleted catalog with note attached to it");
-        //    Assert.False(CatalogRepository.ProcessMessage.Success);
-        //    Assert.Single(CatalogRepository.ProcessMessage.MessageList);
-        //}
+            // Assert
+            Assert.False(result, "Error: deleted catalog with note attached to it");
+            Assert.False(CatalogRepository.ProcessMessage.Success);
+            Assert.Single(CatalogRepository.ProcessMessage.MessageList);
+        }
 
         [Fact]
         public void Can_Update_Catalog()
