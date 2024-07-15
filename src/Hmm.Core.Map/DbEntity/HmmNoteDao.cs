@@ -1,5 +1,6 @@
 ﻿// Ignore Spelling: Dao
 
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Hmm.Utility.Dal.DataEntity;
 
@@ -8,6 +9,7 @@ namespace Hmm.Core.Map.DbEntity
     public class HmmNoteDao : VersionedEntity
     {
         [Column("subject")]
+        [MaxLength(1000)]
         public string Subject { get; set; }
 
         [Column("content")]

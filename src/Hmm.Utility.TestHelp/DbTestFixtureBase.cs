@@ -60,7 +60,7 @@ namespace Hmm.Utility.TestHelp
             GC.SuppressFinalize(this);
         }
 
-        protected ContactDao GetTestingContact()
+        protected static ContactDao GetTestingContact()
         {
             var contact = new ContactDao
             {
