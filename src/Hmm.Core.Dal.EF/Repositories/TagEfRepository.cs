@@ -11,29 +11,29 @@ using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
-    public class NoteCatalogEfRepository(
+    public class TagEfRepository(
         IHmmDataContext dataContext,
         IEntityLookup lookupRepository,
         IDateTimeProvider dateTimeProvider)
-        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IRepository<NoteCatalogDao>
+        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IRepository<TagDao>
     {
-        public PageList<NoteCatalogDao> GetEntities(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public PageList<TagDao> GetEntities(Expression<Func<TagDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             return LookupRepository.GetEntities(query, resourceCollectionParameters);
         }
 
-        public async Task<PageList<NoteCatalogDao>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<PageList<TagDao>> GetEntitiesAsync(Expression<Func<TagDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var cats = await LookupRepository.GetEntitiesAsync(query, resourceCollectionParameters);
             return cats;
         }
 
-        public NoteCatalogDao GetEntity(int id)
+        public TagDao GetEntity(int id)
         {
             try
             {
                 ProcessMessage.Rest();
-                return DataContext.Catalogs.Find(id);
+                return DataContext.Tags.Find(id);
             }
             catch (Exception e)
             {
@@ -42,13 +42,13 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<NoteCatalogDao> GetEntityAsync(int id)
+        public async Task<TagDao> GetEntityAsync(int id)
         {
             try
             {
                 ProcessMessage.Rest();
-                var catalog = await DataContext.Catalogs.FindAsync(id);
-                return catalog;
+                var tag = await DataContext.Tags.FindAsync(id);
+                return tag;
             }
             catch (Exception e)
             {
@@ -57,7 +57,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public NoteCatalogDao Add(NoteCatalogDao entity)
+        public TagDao Add(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -66,7 +66,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 ProcessMessage.Rest();
 
                 // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Catalogs.Add(entity);
+                DataContext.Tags.Add(entity);
                 DataContext.Save();
                 return entity;
             }
@@ -77,7 +77,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public NoteCatalogDao Update(NoteCatalogDao entity)
+        public TagDao Update(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -87,15 +87,15 @@ namespace Hmm.Core.Dal.EF.Repositories
             if (entity.Id <= 0)
             {
                 ProcessMessage.Success = false;
-                ProcessMessage.AddErrorMessage($"Can not update NoteCatalog with id {entity.Id}", true);
+                ProcessMessage.AddErrorMessage($"Can not update Tag with id {entity.Id}", true);
                 return null;
             }
 
             try
             {
-                DataContext.Catalogs.Update(entity);
+                DataContext.Tags.Update(entity);
                 DataContext.Save();
-                return LookupRepository.GetEntity<NoteCatalogDao>(entity.Id);
+                return LookupRepository.GetEntity<TagDao>(entity.Id);
             }
             catch (Exception ex)
             {
@@ -104,7 +104,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public bool Delete(NoteCatalogDao entity)
+        public bool Delete(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -113,7 +113,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Catalogs.Remove(entity);
+                DataContext.Tags.Remove(entity);
                 DataContext.Save();
                 return true;
             }
@@ -124,7 +124,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<NoteCatalogDao> AddAsync(NoteCatalogDao entity)
+        public async Task<TagDao> AddAsync(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -133,7 +133,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Catalogs.Add(entity);
+                DataContext.Tags.Add(entity);
                 await DataContext.SaveAsync();
                 return entity;
             }
@@ -144,7 +144,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<NoteCatalogDao> UpdateAsync(NoteCatalogDao entity)
+        public async Task<TagDao> UpdateAsync(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -154,16 +154,16 @@ namespace Hmm.Core.Dal.EF.Repositories
             if (entity.Id <= 0)
             {
                 ProcessMessage.Success = false;
-                ProcessMessage.AddErrorMessage($"Can not update NoteCatalog with id {entity.Id}", true);
+                ProcessMessage.AddErrorMessage($"Can not update Tag with id {entity.Id}", true);
                 return null;
             }
 
             try
             {
-                DataContext.Catalogs.Update(entity);
+                DataContext.Tags.Update(entity);
                 await DataContext.SaveAsync();
-                var newCatalog = await LookupRepository.GetEntityAsync<NoteCatalogDao>(entity.Id);
-                return newCatalog;
+                var newTag = await LookupRepository.GetEntityAsync<TagDao>(entity.Id);
+                return newTag;
             }
             catch (Exception ex)
             {
@@ -172,7 +172,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public async Task<bool> DeleteAsync(NoteCatalogDao entity)
+        public async Task<bool> DeleteAsync(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
@@ -180,7 +180,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             try
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Catalogs.Remove(entity);
+                DataContext.Tags.Remove(entity);
                 await DataContext.SaveAsync();
                 return true;
             }

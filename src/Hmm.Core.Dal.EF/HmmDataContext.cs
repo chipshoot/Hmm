@@ -15,6 +15,8 @@ namespace Hmm.Core.Dal.EF
 
         public DbSet<NoteCatalogDao> Catalogs { get; set; }
 
+        public DbSet<TagDao> Tags { get; set; }
+
         public void Save()
         {
             try
@@ -52,14 +54,26 @@ namespace Hmm.Core.Dal.EF
             .HasForeignKey("catalogid")
             .OnDelete(DeleteBehavior.NoAction);
 
-            //modelBuilder.Entity<HmmNote>()
-            //    .HasKey(n => n.Id);
+            modelBuilder.Entity<HmmNoteDao>()
+                .HasKey(n => n.Id);
             modelBuilder.HasPostgresEnum<NoteContentFormatType>();
             modelBuilder.Entity<AuthorDao>().ToTable("authors");
             modelBuilder.Entity<ContactDao>().ToTable("contacts");
             modelBuilder.Entity<NoteCatalogDao>().ToTable("notecatalogs")
                 .Property(e => e.Schema)
                 .HasColumnType("xml");
+            modelBuilder.Entity<TagDao>().ToTable("tags");
+
+            modelBuilder.Entity<NoteTagRefDao>().ToTable("notetagrefs")
+                .HasKey(nt=> new {nt.NoteId, nt.TagId});
+            modelBuilder.Entity<NoteTagRefDao>()
+                .HasOne(nt => nt.Note)
+                .WithMany(n => n.Tags)
+                .HasForeignKey(nt => nt.NoteId);
+            modelBuilder.Entity<NoteTagRefDao>()
+                .HasOne(nt => nt.Tag)
+                .WithMany(t => t.Notes)
+                .HasForeignKey(nt => nt.TagId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

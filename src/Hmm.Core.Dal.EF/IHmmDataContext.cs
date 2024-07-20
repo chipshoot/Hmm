@@ -13,6 +13,8 @@ namespace Hmm.Core.Dal.EF
 
         DbSet<NoteCatalogDao> Catalogs { get; set; }
 
+        DbSet<TagDao> Tags { get; set; }
+
         void Save();
 
         Task SaveAsync();

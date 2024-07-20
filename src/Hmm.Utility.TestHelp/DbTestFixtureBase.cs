@@ -43,6 +43,8 @@ namespace Hmm.Utility.TestHelp
 
         protected IRepository<NoteCatalogDao> CatalogRepository { get; private set; }
 
+        protected IRepository<TagDao> TagRepository { get; private set; }
+
         private IEntityLookup LookupRepository { get; set; }
 
         protected IDateTimeProvider DateProvider { get; private set; }
@@ -97,6 +99,7 @@ namespace Hmm.Utility.TestHelp
             ContactRepository = new ContactEfRepository(DbContext, LookupRepository);
             NoteRepository = new NoteEfRepository(DbContext, LookupRepository, dateProvider);
             CatalogRepository = new NoteCatalogEfRepository(DbContext, LookupRepository, dateProvider);
+            TagRepository = new TagEfRepository(DbContext, LookupRepository, dateProvider);
             DateProvider = new DateTimeAdapter();
 
             var contact = DbContext as DbContext;

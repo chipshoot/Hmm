@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Hmm.Core.Dal.EF
 {
@@ -40,6 +41,10 @@ namespace Hmm.Core.Dal.EF
             else if (typeof(T) == typeof(NoteCatalogDao))
             {
                 entity = _dataContext.Catalogs.Find(id) as T;
+            }
+            else if (typeof(T) == typeof(TagDao))
+            {
+                entity = _dataContext.Tags.Find(id) as T;
             }
             else
             {
@@ -102,25 +107,27 @@ namespace Hmm.Core.Dal.EF
         private IQueryable<T> GetQueryableEntities<T>()
         {
             IQueryable<T> entities;
-            //if (typeof(T) == typeof(HmmNote))
-            //{
-            //    entities = _dataContext.Notes
-            //        .Include(n => n.Author)
-            //        .Include(n => n.Catalog).Cast<T>();
-            //}
+            if (typeof(T) == typeof(HmmNoteDao))
+            {
+                entities = _dataContext.Notes
+                    .Include(n => n.Author)
+                    .Include(n => n.Catalog).Cast<T>();
+            }
             if (typeof(T) == typeof(NoteCatalogDao))
             {
                 entities = _dataContext.Catalogs.Cast<T>();
             }
             else if (typeof(T) == typeof(AuthorDao))
             {
-                entities = _dataContext.Authors
-                    .Cast<T>();
+                entities = _dataContext.Authors.Cast<T>();
             }
             else if (typeof(T) == typeof(ContactDao))
             {
-                entities = _dataContext.Contacts
-                    .Cast<T>();
+                entities = _dataContext.Contacts.Cast<T>();
+            }
+            else if (typeof(T) == typeof(TagDao))
+            {
+                entities = _dataContext.Tags.Cast<T>();
             }
             else
             {
