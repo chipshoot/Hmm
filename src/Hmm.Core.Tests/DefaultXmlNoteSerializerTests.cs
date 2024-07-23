@@ -12,7 +12,7 @@
 //{
 //    public class DefaultXmlNoteSerializerTests : TestFixtureBase
 //    {
-//        private INoteSerializer<HmmNote> _noteSerializer;
+//        private INoteSerialize<HmmNote> _noteSerializer;
 //        private AuthorDb _user;
 
 //        public DefaultXmlNoteSerializerTests()

@@ -1,4 +1,4 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DomainEntity;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -156,7 +156,6 @@ namespace Hmm.Core.NoteSerializer
         protected virtual NoteCatalog GetCatalog()
         {
             return new NoteCatalog();
-
         }
 
         protected void ValidateContent(XDocument xml)

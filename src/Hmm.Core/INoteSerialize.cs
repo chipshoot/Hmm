@@ -1,9 +1,9 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 
 namespace Hmm.Core
 {
-    public interface INoteSerializer<T>
+    public interface INoteSerialize<T>
     {
         T GetEntity(HmmNote note);
 

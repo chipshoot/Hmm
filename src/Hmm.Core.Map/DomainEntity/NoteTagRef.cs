@@ -1,10 +1,9 @@
-﻿// Ignore Spelling: Dao
-
+﻿using Hmm.Core.Map.DbEntity;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Hmm.Core.Map.DbEntity;
+namespace Hmm.Core.Map.DomainEntity;
 
-public class NoteTagRefDao
+public class NoteTagRef
 {
     [Column("id")]
     public int Id { get; set; }
@@ -17,5 +16,5 @@ public class NoteTagRefDao
     [Column("tagid")]
     public int TagId { get; set; }
 
-    public TagDao Tag { get; set; }
+    public Tag Tag { get; set; }
 }

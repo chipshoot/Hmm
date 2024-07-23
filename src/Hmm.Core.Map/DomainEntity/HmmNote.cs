@@ -1,7 +1,6 @@
 ﻿using Hmm.Utility.Dal.DataEntity;
-using System;
 
-namespace Hmm.Core.DomainEntity
+namespace Hmm.Core.Map.DomainEntity
 {
     public class HmmNote : VersionedEntity
     {

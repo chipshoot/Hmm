@@ -25,6 +25,31 @@
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=03508473_002D5450_002D4f10_002D858e_002D44d02c1ec8af/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5e43131f_002D5653_002D458c_002Da55d_002Dcb7f4f2213fb/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #6" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=90e4afe1_002D4943_002D4e83_002D8d2e_002D5ea1d3d084e9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #4" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a5b0a2f2_002D35c4_002D4f46_002D800b_002D512895a14c9d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #5" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b1290c50_002Da339_002D43b0_002Da6a5_002Da5849caa2bb8/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
 	
 	
 	
@@ -36,6 +61,11 @@
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.DefaultXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteValidatorTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d81a44d3_002Dbafb_002D441e_002D9db5_002D25fc45f69bfb/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
@@ -82,6 +112,14 @@
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Cannot_Update_Tag_For_NonExists_Tag&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Cannot_Update_Tag_With_Duplicated_Name&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Get_Contact&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_Contact_To_ContactDao&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.AuthorMappingTests.Can_Map_AuthorDao_To_Author&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.AuthorMappingTests.Can_Map_Author_To_AuthorDao&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests.Can_Map_NoteCatalogDao_To_NoteCatalog&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests.Can_Map_TagDao_To_Tag&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests.Can_Map_Tag_To_TagDao&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>

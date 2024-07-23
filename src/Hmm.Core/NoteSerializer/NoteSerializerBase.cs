@@ -1,4 +1,4 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
@@ -6,7 +6,7 @@ using System;
 
 namespace Hmm.Core.NoteSerializer
 {
-    public abstract class NoteSerializerBase<T> : INoteSerializer<T>
+    public abstract class NoteSerializerBase<T> : INoteSerialize<T>
     {
         protected NoteSerializerBase(ILogger<T> logger)
         {

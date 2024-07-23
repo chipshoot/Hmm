@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using Hmm.Utility.Dal.DataEntity;
+﻿namespace Hmm.Core.Map.DomainEntity;
 
-namespace Hmm.Core.DomainEntity;
-
-public class Contact : Entity
+public class Contact : EntityBase
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }

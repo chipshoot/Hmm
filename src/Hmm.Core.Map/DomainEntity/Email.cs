@@ -1,4 +1,4 @@
-namespace Hmm.Core.DomainEntity
+namespace Hmm.Core.Map.DomainEntity
 {
 
     public class Email

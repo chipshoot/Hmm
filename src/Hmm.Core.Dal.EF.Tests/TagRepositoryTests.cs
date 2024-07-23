@@ -223,7 +223,7 @@ namespace Hmm.Core.Dal.EF.Tests
             foreach (var tag in tagList)
             {
                 // Act
-                note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
+                note.Tags.ToList().Add(new NoteTagRefDao { Note = note, Tag = tag });
                 NoteRepository.Update(note);
             }
             var savedNote = NoteRepository.GetEntity(note.Id);
@@ -253,7 +253,7 @@ namespace Hmm.Core.Dal.EF.Tests
             foreach (var note in noteList)
             {
                 // Act
-                note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
+                note.Tags.ToList().Add(new NoteTagRefDao { Note = note, Tag = tag });
                 NoteRepository.Update(note);
             }
             var savedTag = TagRepository.GetEntity(tag.Id);
@@ -274,7 +274,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var note = NoteRepository.GetEntities().FirstOrDefault();
             Assert.NotNull(note);
 
-            note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
+            note.Tags.ToList().Add(new NoteTagRefDao { Note = note, Tag = tag });
             var savedNote = NoteRepository.Update(note);
             Assert.NotNull(savedNote);
             Assert.Single(savedNote.Tags);

@@ -1,4 +1,4 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -13,18 +13,18 @@ namespace Hmm.Core.DefaultManager
     {
         #region private fields
 
-        private readonly IVersionRepository<HmmNote> _noteRepo;
+        private readonly IVersionRepository<HmmNote> _noteRepository;
         private readonly IHmmValidator<HmmNote> _validator;
         private readonly IDateTimeProvider _dateProvider;
 
         #endregion private fields
 
-        public HmmNoteManager(IVersionRepository<HmmNote> noteRepo, IHmmValidator<HmmNote> validator, IDateTimeProvider dateProvider)
+        public HmmNoteManager(IVersionRepository<HmmNote> noteRepository, IHmmValidator<HmmNote> validator, IDateTimeProvider dateProvider)
         {
-            Guard.Against<ArgumentNullException>(noteRepo == null, nameof(noteRepo));
+            Guard.Against<ArgumentNullException>(noteRepository == null, nameof(noteRepository));
             Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
             Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));
-            _noteRepo = noteRepo;
+            _noteRepository = noteRepository;
             _validator = validator;
             _dateProvider = dateProvider;
         }
@@ -38,10 +38,10 @@ namespace Hmm.Core.DefaultManager
 
             note.CreateDate = _dateProvider.UtcNow;
             note.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = _noteRepo.Add(note);
+            var ret = _noteRepository.Add(note);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             }
             return ret;
         }
@@ -55,10 +55,10 @@ namespace Hmm.Core.DefaultManager
 
             note.CreateDate = _dateProvider.UtcNow;
             note.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = await _noteRepo.AddAsync(note);
+            var ret = await _noteRepository.AddAsync(note);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             }
             return ret;
         }
@@ -83,10 +83,10 @@ namespace Hmm.Core.DefaultManager
             curNote.IsDeleted = note.IsDeleted;
             curNote.Description = note.Description;
             curNote.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = _noteRepo.Update(curNote);
+            var ret = _noteRepository.Update(curNote);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             }
 
             return ret;
@@ -112,10 +112,10 @@ namespace Hmm.Core.DefaultManager
             curNote.IsDeleted = note.IsDeleted;
             curNote.Description = note.Description;
             curNote.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = await _noteRepo.UpdateAsync(curNote);
+            var ret = await _noteRepository.UpdateAsync(curNote);
             if (ret == null)
             {
-                ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
+                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             }
 
             return ret;
@@ -138,7 +138,7 @@ namespace Hmm.Core.DefaultManager
                 return true;
             }
 
-            ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
+            ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             return false;
         }
 
@@ -159,13 +159,13 @@ namespace Hmm.Core.DefaultManager
                 return true;
             }
 
-            ProcessResult.PropagandaResult(_noteRepo.ProcessMessage);
+            ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             return false;
         }
 
         public HmmNote GetNoteById(int id, bool includeDeleted = false)
         {
-            var note = _noteRepo.GetEntity(id);
+            var note = _noteRepository.GetEntity(id);
             if (includeDeleted)
             {
                 return note;
@@ -181,7 +181,7 @@ namespace Hmm.Core.DefaultManager
 
         public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
         {
-            var note = await _noteRepo.GetEntityAsync(id);
+            var note = await _noteRepository.GetEntityAsync(id);
             if (note is { IsDeleted: true } && !includeDelete)
             {
                 return null;
@@ -195,7 +195,7 @@ namespace Hmm.Core.DefaultManager
             var predicate = PredicateBuilder.True<HmmNote>();
             predicate = query == null ? predicate : predicate.And(query);
             predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
-            var notes = _noteRepo.GetEntities(predicate, resourceCollectionParameters);
+            var notes = _noteRepository.GetEntities(predicate, resourceCollectionParameters);
             return notes;
         }
 
@@ -204,7 +204,7 @@ namespace Hmm.Core.DefaultManager
             var predicate = PredicateBuilder.True<HmmNote>();
             predicate = query == null ? predicate : predicate.And(query);
             predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
-            var notes = await _noteRepo.GetEntitiesAsync(predicate, resourceCollectionParameters);
+            var notes = await _noteRepository.GetEntitiesAsync(predicate, resourceCollectionParameters);
             return notes;
         }
 

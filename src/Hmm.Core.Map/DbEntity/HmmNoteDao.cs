@@ -10,7 +10,7 @@ namespace Hmm.Core.Map.DbEntity
     {
         public HmmNoteDao()
         {
-            Tags = new List<NoteTagRefDao>();
+            Tags = new List<NoteTagRefDao>().AsQueryable();
         }
 
         [Column("subject")]
@@ -35,6 +35,6 @@ namespace Hmm.Core.Map.DbEntity
         [Column("lastmodifieddate")]
         public DateTime LastModifiedDate { get; set; }
 
-        public List<NoteTagRefDao> Tags { get; init; }
+        public IQueryable<NoteTagRefDao> Tags { get; init; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
@@ -20,8 +20,8 @@ namespace Hmm.Core
         Contact GetContactById(int id);
 
         Task<Contact> GetContactByIdAsync(int id);
-        Contact Create(Contact contactInfo);
 
+        Contact Create(Contact contactInfo);
 
         Contact Update(Contact contactInfo);
 

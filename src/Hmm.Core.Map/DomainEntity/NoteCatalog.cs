@@ -1,8 +1,7 @@
-﻿using Hmm.Utility.Dal.DataEntity;
-using System.ComponentModel.DataAnnotations;
-using Hmm.Core.Map.DbEntity;
+﻿using System.ComponentModel.DataAnnotations;
+using Hmm.Utility.Dal.DataEntity;
 
-namespace Hmm.Core.DomainEntity
+namespace Hmm.Core.Map.DomainEntity
 {
     public class NoteCatalog : HasDefaultEntity
     {

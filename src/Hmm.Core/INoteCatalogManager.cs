@@ -1,4 +1,4 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.Core
 {

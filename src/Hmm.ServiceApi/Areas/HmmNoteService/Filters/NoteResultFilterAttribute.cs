@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using Hmm.Core.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
+using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 {

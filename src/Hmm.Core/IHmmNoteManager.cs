@@ -1,4 +1,4 @@
-﻿using Hmm.Core.DomainEntity;
+﻿using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;

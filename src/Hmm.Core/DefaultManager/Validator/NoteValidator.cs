@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
-using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Validation;
 using System;
+using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.Core.DefaultManager.Validator
 {

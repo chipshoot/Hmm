@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Hmm.Core.DomainEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;

@@ -3,8 +3,8 @@ using Hmm.Core.Dal.EF;
 using Hmm.Core.Dal.EF.Repositories;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
-using Hmm.Core.DomainEntity;
-using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
+using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.Services;
@@ -24,7 +24,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.IO;
-using Hmm.Core.Map.DbEntity;
 
 namespace Hmm.ServiceApi
 {
@@ -113,7 +112,7 @@ namespace Hmm.ServiceApi
                 .AddScoped<IEntityLookup, EfEntityLookup>()
                 //.AddScoped<IRepository<Author>, AuthorEfRepository>()
                 .AddScoped<IRepository<NoteCatalogDao>, NoteCatalogEfRepository>()
-               // .AddScoped<IAuthorManager, AuthorManager>()
+                // .AddScoped<IAuthorManager, AuthorManager>()
                 .AddScoped<IHmmNoteManager, HmmNoteManager>()
                 .AddScoped<INoteCatalogManager, NoteCatalogManager>()
                 .AddScoped<IHmmValidator<Author>, AuthorValidator>()

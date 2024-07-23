@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Hmm.Utility.Dal.DataEntity;
 
-namespace Hmm.Core.DomainEntity
+namespace Hmm.Core.Map.DomainEntity
 {
     public class Author : Entity
     {
