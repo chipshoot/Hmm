@@ -3,6 +3,7 @@
 using AutoMapper;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.TestHelp;
 
 namespace Hmm.Core.Map.Tests;
 
@@ -23,12 +24,7 @@ public class TagMappingTests
     public void Can_Map_TagDao_To_Tag()
     {
         // Arrange
-        var tagDao = new TagDao
-        {
-            Id = 100,
-            Name = "ComputerPeripheral",
-            IsActivated = true
-        };
+        var tagDao = SampleDataGenerator.GetTagDao();
 
         // Act
         var tag = _mapper.Map<Tag>(tagDao);
@@ -43,12 +39,7 @@ public class TagMappingTests
     public void Can_Map_Tag_To_TagDao()
     {
         // Arrange
-        var tag = new Tag
-        {
-            Id = 100,
-            Name = "SystemConfiguration",
-            IsActivated = true,
-        };
+        var tag = SampleDataGenerator.GetTag();
 
         // Act
         var tagDao = _mapper.Map<TagDao>(tag);

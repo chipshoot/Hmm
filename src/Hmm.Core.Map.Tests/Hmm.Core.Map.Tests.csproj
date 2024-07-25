@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hmm.Core.Map\Hmm.Core.Map.csproj" />
+    <ProjectReference Include="..\Hmm.Utility.TestHelp\Hmm.Utility.TestHelp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

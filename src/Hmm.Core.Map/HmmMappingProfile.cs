@@ -5,17 +5,38 @@ using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.Core.Map;
 
-public class HmmMappingProfile: Profile
+public class HmmMappingProfile : Profile
 {
     public HmmMappingProfile()
     {
         CreateMap<ContactDao, Contact>()
-            .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => ContactDaoConvert(src.Contact).FirstName))
-            .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => ContactDaoConvert(src.Contact).LastName))
-            .ForMember(dest => dest.Emails, opt => opt.MapFrom(src => ContactDaoConvert(src.Contact).Emails))
-            .ForMember(dest => dest.Phones, opt => opt.MapFrom(src => ContactDaoConvert(src.Contact).Phones))
-            .ForMember(dest => dest.Addresses, opt => opt.MapFrom(src => ContactDaoConvert(src.Contact).Addresses));
+            .ConvertUsing((src, dest) =>
+            {
+                var contactInfo = ContactDaoConvert(src.Contact);
+                dest = contactInfo == null
+                    ? new Contact
+                    {
+                        Id = src.Id,
+                        FirstName = string.Empty,
+                        LastName = string.Empty,
+                        Emails = new List<Email>(),
+                        Phones = new List<Phone>(),
+                        Addresses = new List<AddressInfo>(),
+                        Description = src.Description
+                    }
+                    : new Contact
+                    {
+                        Id = src.Id,
+                        FirstName = contactInfo.FirstName,
+                        LastName = contactInfo.LastName,
+                        Emails = contactInfo.Emails,
+                        Phones = contactInfo.Phones,
+                        Addresses = contactInfo.Addresses,
+                        Description = src.Description
+                    };
 
+                return dest;
+            });
         CreateMap<Contact, ContactDao>()
             .ForMember(dest => dest.Contact, opt => opt.MapFrom(src => ContactConvert(src)));
 
@@ -28,12 +49,15 @@ public class HmmMappingProfile: Profile
             .ForMember(dest => dest.FormatType, opt => opt.MapFrom(src => src.Type));
 
         CreateMap<TagDao, Tag>()
-            .ForMember(dest=>dest.Notes, opt=>opt.Ignore());
+            .ForMember(dest => dest.Notes, opt => opt.Ignore());
         CreateMap<Tag, TagDao>()
             .ForMember(dest => dest.Notes, opt => opt.Ignore());
 
+        CreateMap<HmmNoteDao, HmmNote>();
+        CreateMap<HmmNote, HmmNoteDao>()
+            .ForMember(dest => dest.Tags, opt => opt.Ignore());
     }
-    
+
     private static ContactInfo? ContactDaoConvert(string contactString)
     {
         try

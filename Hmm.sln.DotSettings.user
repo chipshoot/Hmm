@@ -120,6 +120,15 @@
     &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests.Can_Map_NoteCatalogDao_To_NoteCatalog&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests.Can_Map_TagDao_To_Tag&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests.Can_Map_Tag_To_TagDao&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteMappingTests.Can_Map_NoteDao_To_Note&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteMappingTests.Can_Map_Note_To_NoteDao&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.AuthorMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_Invalid_ContactInfo_To_Empty_Contact&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_Invalid_ContactInfo_To_Contact_With_Empty_ContactInfo&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>

@@ -3,6 +3,7 @@
 using AutoMapper;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.TestHelp;
 
 namespace Hmm.Core.Map.Tests;
 
@@ -23,15 +24,7 @@ public class NoteCatalogMappingTests
     public void Can_Map_NoteCatalogDao_To_NoteCatalog()
     {
         // Arrange
-        var catalogDao = new NoteCatalogDao
-        {
-            Id = 100,
-            Name = "Diary",
-            FormatType =DbEntity.NoteContentFormatType.Markdown,
-            Description = "Testing note catalog",
-            Schema = "",
-            IsDefault = false
-        };
+        var catalogDao = SampleDataGenerator.GetCatalogDao();
 
         // Act
         var catalog = _mapper.Map<NoteCatalog>(catalogDao);
@@ -49,14 +42,7 @@ public class NoteCatalogMappingTests
     public void Can_Map_NoteCatalog_To_NoteCatalogDao()
     {
         // Arrange
-        var catalog = new NoteCatalog
-        {
-            Name = "DiaryNote",
-            Schema = "",
-            Type = DomainEntity.NoteContentFormatType.PlainText,
-            IsDefault = true,
-            Description = "This is a testing catalog"
-        };
+        var catalog = SampleDataGenerator.GetCatalog();
 
         // Act
         var catalogDao = _mapper.Map<NoteCatalogDao>(catalog);
