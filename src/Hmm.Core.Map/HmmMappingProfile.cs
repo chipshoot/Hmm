@@ -22,7 +22,8 @@ public class HmmMappingProfile : Profile
                         Emails = new List<Email>(),
                         Phones = new List<Phone>(),
                         Addresses = new List<AddressInfo>(),
-                        Description = src.Description
+                        Description = src.Description,
+                        IsActivated = src.IsActivated
                     }
                     : new Contact
                     {
@@ -32,7 +33,8 @@ public class HmmMappingProfile : Profile
                         Emails = contactInfo.Emails,
                         Phones = contactInfo.Phones,
                         Addresses = contactInfo.Addresses,
-                        Description = src.Description
+                        Description = src.Description,
+                        IsActivated = src.IsActivated
                     };
 
                 return dest;

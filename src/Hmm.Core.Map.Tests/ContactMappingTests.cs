@@ -31,6 +31,7 @@ namespace Hmm.Core.Map.Tests
 
             // Assert
             Assert.NotNull(contact);
+            Assert.True(contact.IsActivated);
         }
 
         [Fact]
