@@ -4,6 +4,7 @@ using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
 {
@@ -26,7 +27,7 @@ namespace Hmm.Core.Dal.EF
 
         protected IHmmDataContext DataContext { get; }
 
-        protected TP PropertyChecking<TP>(TP property) where TP : HasDefaultEntity
+        protected async Task<TP> PropertyCheckingAsync<TP>(TP property) where TP : HasDefaultEntity
         {
             var defaultNeeded = false;
             if (property == null)
@@ -37,7 +38,7 @@ namespace Hmm.Core.Dal.EF
             {
                 defaultNeeded = true;
             }
-            else if (LookupRepository.GetEntity<TP>(property.Id) == null)
+            else if (await LookupRepository.GetEntityAsync<TP>(property.Id) == null)
             {
                 defaultNeeded = true;
             }
@@ -47,7 +48,8 @@ namespace Hmm.Core.Dal.EF
                 return property;
             }
 
-            var defaultProp = LookupRepository.GetEntities<TP>(p => p.IsDefault).FirstOrDefault();
+            var defaultProps = await LookupRepository.GetEntitiesAsync<TP>(p => p.IsDefault);
+            var defaultProp = defaultProps.FirstOrDefault();
             return defaultProp;
         }
 

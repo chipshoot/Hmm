@@ -23,46 +23,6 @@ namespace Hmm.Core.Dal.EF
             _dataContext = dataContext;
         }
 
-        public T GetEntity<T>(int id) where T : Entity
-        {
-            T entity;
-            if (typeof(T) == typeof(AuthorDao))
-            {
-                entity = _dataContext.Authors.Find(id) as T;
-            }
-            else if (typeof(T) == typeof(ContactDao))
-            {
-                entity = _dataContext.Contacts.Find(id) as T;
-            }
-            else if (typeof(T) == typeof(HmmNoteDao))
-            {
-                entity = _dataContext.Notes.Find(id) as T;
-            }
-            else if (typeof(T) == typeof(NoteCatalogDao))
-            {
-                entity = _dataContext.Catalogs.Find(id) as T;
-            }
-            else if (typeof(T) == typeof(TagDao))
-            {
-                entity = _dataContext.Tags.Find(id) as T;
-            }
-            else
-            {
-                throw new DataSourceException($"{typeof(T)} is not support");
-            }
-
-            return entity;
-        }
-
-        public PageList<T> GetEntities<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var entities = GetQueryableEntities<T>();
-
-            var result = query == null ? PageList<T>.Create(entities, pageIdx, pageSize) : PageList<T>.Create(entities.Where(query), pageIdx, pageSize);
-            return result;
-        }
-
         public async Task<PageList<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
@@ -86,13 +46,17 @@ namespace Hmm.Core.Dal.EF
             {
                 entity = await _dataContext.Contacts.FindAsync(id) as T;
             }
-            //else if (typeof(T) == typeof(HmmNote))
-            //{
-            //    entity = await _dataContext.Notes.FindAsync(id) as T;
-            //}
+            else if (typeof(T) == typeof(HmmNoteDao))
+            {
+                entity = await _dataContext.Notes.FindAsync(id) as T;
+            }
             else if (typeof(T) == typeof(NoteCatalogDao))
             {
                 entity = await _dataContext.Catalogs.FindAsync(id) as T;
+            }
+            else if (typeof(T) == typeof(TagDao))
+            {
+                entity = await _dataContext.Tags.FindAsync(id) as T;
             }
             else
             {

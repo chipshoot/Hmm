@@ -20,7 +20,7 @@ namespace Hmm.Core.Dal.EF.Tests
         private NoteCatalogDao _catalog;
 
         [Fact]
-        public void Can_Add_Note_To_DataSource()
+        public async Task Can_Add_Note_To_DataSource()
         {
             // Arrange
             var xmlDocument = new XmlDocument();
@@ -36,7 +36,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = NoteRepository.Add(note);
+            var savedRec = await NoteRepository.AddAsync(note);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -45,7 +45,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Add_Null_Note()
+        public async Task Cannot_Add_Null_Note()
         {
             // Arrange
             HmmNoteDao note = null;
@@ -53,13 +53,13 @@ namespace Hmm.Core.Dal.EF.Tests
             // Act
             // Asset
             // ReSharper disable once ExpressionIsAlwaysNull
-            Assert.Throws<ArgumentNullException>(() => NoteRepository.Add(note));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await NoteRepository.AddAsync(note));
         }
 
         // Todo: rethink the logic of this test, we may need ever note has an author.
         //[Theory]
         //[ClassData(typeof(AuthorTestData))]
-        //public void Cannot_Add_Note_With_NonExist_Author(AuthorDao author)
+        //public async Task Cannot_Add_Note_With_NonExist_Author(AuthorDao author)
         //{
         //    // Arrange - null author for note
         //    var xmlDoc = new XmlDocument();
@@ -76,7 +76,7 @@ namespace Hmm.Core.Dal.EF.Tests
         //    };
 
         //    // Act
-        //    var savedRec = NoteRepository.Add(note);
+        //    var savedRec = NoteRepository.AddAsync(note);
 
         //    // Assert
         //    Assert.Null(savedRec);
@@ -87,7 +87,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
         [Theory]
         [ClassData(typeof(CatalogTestData))]
-        public void CanAddNoteWithNonExistCatalogDefaultCatalogApplied(NoteCatalogDao catalog)
+        public async Task Can_Add_Note_With_NonExist_Catalog_Default_Catalog_Applied(NoteCatalogDao catalog)
         {
             // Arrange - null catalog for note
             var xmlDoc = new XmlDocument();
@@ -103,7 +103,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = NoteRepository.Add(note);
+            var savedRec = await NoteRepository.AddAsync(note);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -114,7 +114,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_Note_Description()
+        public async Task Can_Update_Note_Description()
         {
             // Arrange
             var xmlDoc = new XmlDocument();
@@ -127,11 +127,11 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml,
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
 
             // Act
             note.Description = "testing note2";
-            var savedRec = NoteRepository.Update(note);
+            var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -143,7 +143,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_Note_Subject()
+        public async Task Can_Update_Note_Subject()
         {
             // Arrange
             var xmlDoc = new XmlDocument();
@@ -156,12 +156,12 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml,
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             // Act
             note.Subject = "This is new subject";
-            var savedRec = NoteRepository.Update(note);
+            var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -173,7 +173,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_Note_Content()
+        public async Task Can_Update_Note_Content()
         {
             // Arrange
             var xmlDoc = new XmlDocument();
@@ -186,14 +186,14 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml,
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             // Act
             var newXml = new XmlDocument();
             newXml.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><GasLog></GasLog>");
             note.Content = newXml.InnerXml;
-            var savedRec = NoteRepository.Update(note);
+            var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -204,7 +204,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_Note_Catalog()
+        public async Task Can_Update_Note_Catalog()
         {
             // Arrange
             var xmlDoc = new XmlDocument();
@@ -219,14 +219,15 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             // changed the note catalog
-            note.Catalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
+            var catalogList = await CatalogRepository.GetEntitiesAsync(cat => !cat.IsDefault);
+            note.Catalog = catalogList.FirstOrDefault();
 
             // Act
-            var savedRec = NoteRepository.Update(note);
+            var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -237,12 +238,13 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_Note_Catalog_To_Null_Catalog_Default_Catalog_Applied()
+        public async Task Can_Update_Note_Catalog_To_Null_Catalog_Default_Catalog_Applied()
         {
             // Arrange - null catalog for note
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var catalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
+            var catalogList = await CatalogRepository.GetEntitiesAsync();
+            var catalog = catalogList.FirstOrDefault(cat => !cat.IsDefault);
             var note = new HmmNoteDao
             {
                 Author = _author,
@@ -253,9 +255,10 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
-            var savedRec = NoteRepository.GetEntities().FirstOrDefault();
+            var savedRecList = await NoteRepository.GetEntitiesAsync();
+            var savedRec = savedRecList.FirstOrDefault();
             Assert.NotNull(savedRec);
             Assert.Equal(AlternativeNoteCatalogName, savedRec.Catalog.Name);
 
@@ -263,7 +266,7 @@ namespace Hmm.Core.Dal.EF.Tests
             note.Catalog = null;
 
             // Act
-            savedRec = NoteRepository.Update(note);
+            savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -273,7 +276,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_NoteCatalog_To_Non_Exists_Catalog_Default_Catalog_Applied()
+        public async Task Can_Update_NoteCatalog_To_Non_Exists_Catalog_Default_Catalog_Applied()
         {
             // Arrange - none exists catalog
             var catalog = new NoteCatalogDao
@@ -287,7 +290,8 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var initialCatalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
+            var initialCatalogList = await CatalogRepository.GetEntitiesAsync();
+            var initialCatalog = initialCatalogList.FirstOrDefault(cat => !cat.IsDefault);
             var note = new HmmNoteDao
             {
                 Author = _author,
@@ -298,13 +302,13 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             note.Catalog = catalog;
 
             // Act
-            var savedRec = NoteRepository.Update(note);
+            var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -314,7 +318,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_NoteCatalog_To_Catalog_With_Invalid_Id_DefaultCatalog_Applied()
+        public async Task Can_Update_NoteCatalog_To_Catalog_With_Invalid_Id_DefaultCatalog_Applied()
         {
             // Arrange - none exists catalog
             var catalog = new NoteCatalogDao
@@ -326,7 +330,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "Testing catalog"
             };
 
-            var initialCatalog = CatalogRepository.GetEntities().FirstOrDefault(cat => !cat.IsDefault);
+            var initialCatalogList = await CatalogRepository.GetEntitiesAsync();
+            var initialCatalog = initialCatalogList.FirstOrDefault(cat => !cat.IsDefault);
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNoteDao
@@ -339,13 +344,13 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             note.Catalog = catalog;
 
             // Act
-            var savedRec = NoteRepository.Update(note);
+            var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.True(NoteRepository.ProcessMessage.Success);
@@ -355,7 +360,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Update_NonExits_Note()
+        public async Task Cannot_Update_NonExits_Note()
         {
             // Arrange - non exists id
             var xmlDoc = new XmlDocument();
@@ -368,12 +373,12 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml,
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
 
             // Act
             var orgId = note.Id;
             note.Id = 2;
-            var savedRec = NoteRepository.Update(note);
+            var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.False(NoteRepository.ProcessMessage.Success);
@@ -383,7 +388,7 @@ namespace Hmm.Core.Dal.EF.Tests
             note.Id = 0;
 
             // Act
-            savedRec = NoteRepository.Update(note);
+            savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
             Assert.False(NoteRepository.ProcessMessage.Success);
@@ -394,7 +399,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Delete_Note()
+        public async Task Can_Delete_Note()
         {
             // Arrange
             var xmlDoc = new XmlDocument();
@@ -407,20 +412,21 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml,
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             // Act
-            var result = NoteRepository.Delete(note);
+            var result = await NoteRepository.DeleteAsync(note);
+            var notes = await NoteRepository.GetEntitiesAsync();
 
             // Assert
             Assert.True(NoteRepository.ProcessMessage.Success);
             Assert.True(result);
-            Assert.False(NoteRepository.GetEntities().Any());
+            Assert.Empty(notes);
         }
 
         [Fact]
-        public void Cannot_Delete_NonExists_Note()
+        public async Task Cannot_Delete_NonExists_Note()
         {
             // Arrange
             var xmlDoc = new XmlDocument();
@@ -433,7 +439,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Subject = "testing note is here",
                 Content = xmlDoc.InnerXml,
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             // change the note id to create a new note
@@ -441,7 +447,7 @@ namespace Hmm.Core.Dal.EF.Tests
             note.Id = 2;
 
             // Act
-            var result = NoteRepository.Delete(note);
+            var result = await NoteRepository.DeleteAsync(note);
 
             // Assert
             Assert.False(NoteRepository.ProcessMessage.Success);
@@ -450,40 +456,6 @@ namespace Hmm.Core.Dal.EF.Tests
             // do this just to make clear up code pass
             note.Id = orgId;
         }
-
-        //private class AuthorTestData : IEnumerable<object[]>
-        //{
-        //    public IEnumerator<object[]> GetEnumerator()
-        //    {
-        //        yield return [null];
-
-        //        // Arrange - none exists author
-        //        yield return
-        //        [
-        //            new AuthorDao
-        //                    {
-        //                        Id = 1,
-        //                        AccountName = "jfang",
-        //                        IsActivated = true,
-        //                        Description = "testing author"
-        //                    }
-        //        ];
-
-        //        // Arrange - author with invalid author id
-        //        yield return
-        //        [
-        //            new AuthorDao
-        //                    {
-        //                        Id = 0,
-        //                        AccountName = "jfang",
-        //                        IsActivated = true,
-        //                        Description = "testing author"
-        //                    }
-        //        ];
-        //    }
-
-        //    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        //}
 
         private class CatalogTestData : IEnumerable<object[]>
         {
@@ -522,7 +494,19 @@ namespace Hmm.Core.Dal.EF.Tests
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
-        private void SetupTestingEnvironment()
+        public async Task InitializeAsync()
+        {
+            Transaction = await ((DbContext)DbContext).Database.BeginTransactionAsync();
+            await SetupTestingEnvironment();
+        }
+
+        public async Task DisposeAsync()
+        {
+            await Transaction.RollbackAsync();
+            await Transaction.DisposeAsync();
+        }
+
+        private async Task SetupTestingEnvironment()
         {
             var xDocument = new XDocument(
                 new XElement("Root", new XElement("Child", "Value")));
@@ -535,7 +519,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsDefault = true,
                 Description = "default xml note",
             };
-            _catalog = CatalogRepository.Add(catalog);
+            _catalog = await CatalogRepository.AddAsync(catalog);
             var catalog2 = new NoteCatalogDao
             {
                 Name = AlternativeNoteCatalogName,
@@ -544,7 +528,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsDefault = false,
                 Description = "raw text note",
             };
-            CatalogRepository.Add(catalog2);
+            await CatalogRepository.AddAsync(catalog2);
 
             var contactDb = new ContactDao
             {
@@ -554,7 +538,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing contact",
                 IsActivated = true
             };
-            var contact = ContactRepository.Add(contactDb);
+            var contact = await ContactRepository.AddAsync(contactDb);
             var author = new AuthorDao
             {
                 AccountName = "fchy",
@@ -562,19 +546,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing user",
                 IsActivated = true
             };
-            _author = AuthorRepository.Add(author);
-        }
-
-        public async Task InitializeAsync()
-        {
-            Transaction = await ((DbContext)DbContext).Database.BeginTransactionAsync();
-            SetupTestingEnvironment();
-        }
-
-        public async Task DisposeAsync()
-        {
-            await Transaction.RollbackAsync();
-            await Transaction.DisposeAsync();
+            _author = await AuthorRepository.AddAsync(author);
         }
     }
 }

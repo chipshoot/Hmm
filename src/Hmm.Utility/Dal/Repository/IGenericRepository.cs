@@ -16,17 +16,6 @@ namespace Hmm.Utility.Dal.Repository
     public interface IGenericRepository<T, in TIdentity> where T : AbstractEntity<TIdentity>
     {
         /// <summary>
-        /// Gets the list of entities that match criteria.
-        /// </summary>
-        /// <param name="query">The query to search the data source.</param>
-        /// <param name="resourceCollectionParameters">Resource collection control information, e.g. pagination, sort and search information.
-        /// if null applied system will use default pagination setting for the searching</param>
-        /// <returns>
-        /// The list of entity that match the criteria
-        /// </returns>
-        PageList<T> GetEntities(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
-
-        /// <summary>
         /// Gets the list of entities that match criteria asynchronously.
         /// </summary>
         /// <param name="query">The query to search the data source.</param>
@@ -38,39 +27,11 @@ namespace Hmm.Utility.Dal.Repository
         Task<PageList<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
-        /// Get one entity by id
-        /// </summary>
-        /// <param name="id">The id of the entity</param>
-        /// <returns>The entity with id if entity found in data source, otherwise null</returns>
-        T GetEntity(TIdentity id);
-
-        /// <summary>
         /// Get one entity by id asynchronously
         /// </summary>
         /// <param name="id">The id of the entity</param>
         /// <returns>The entity with id if entity found in data source, otherwise null</returns>
         Task<T> GetEntityAsync(TIdentity id);
-
-        /// <summary>
-        /// Adds the entity to data source.
-        /// </summary>
-        /// <param name="entity">the entity which will be added</param>
-        /// <returns>The new added entity with id</returns>
-        T Add(T entity);
-
-        /// <summary>
-        /// Updates the specified entity of data source.
-        /// </summary>
-        /// <param name="entity">The entity which will be updated.</param>
-        /// <returns>The new added entity with id</returns>
-        T Update(T entity);
-
-        /// <summary>
-        /// Deletes the specified entity from data source.
-        /// </summary>
-        /// <param name="entity">The entity which will be removed.</param>
-        /// <returns>True if delete successfully, otherwise false</returns>
-        bool Delete(T entity);
 
         /// <summary>
         /// Adds the entity to data source asynchronously.

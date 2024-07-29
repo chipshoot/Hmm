@@ -17,29 +17,10 @@ namespace Hmm.Core.Dal.EF.Repositories
         IDateTimeProvider dateTimeProvider)
         : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IRepository<NoteCatalogDao>
     {
-        public PageList<NoteCatalogDao> GetEntities(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            return LookupRepository.GetEntities(query, resourceCollectionParameters);
-        }
-
         public async Task<PageList<NoteCatalogDao>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var cats = await LookupRepository.GetEntitiesAsync(query, resourceCollectionParameters);
             return cats;
-        }
-
-        public NoteCatalogDao GetEntity(int id)
-        {
-            try
-            {
-                ProcessMessage.Rest();
-                return DataContext.Catalogs.Find(id);
-            }
-            catch (Exception e)
-            {
-                ProcessMessage.WrapException(e);
-                return null;
-            }
         }
 
         public async Task<NoteCatalogDao> GetEntityAsync(int id)
@@ -57,73 +38,6 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public NoteCatalogDao Add(NoteCatalogDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            try
-            {
-                ProcessMessage.Rest();
-
-                // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Catalogs.Add(entity);
-                DataContext.Save();
-                return entity;
-            }
-            catch (Exception ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return null;
-            }
-        }
-
-        public NoteCatalogDao Update(NoteCatalogDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            ProcessMessage.Rest();
-
-            // ReSharper disable once PossibleNullReferenceException
-            if (entity.Id <= 0)
-            {
-                ProcessMessage.Success = false;
-                ProcessMessage.AddErrorMessage($"Can not update NoteCatalog with id {entity.Id}", true);
-                return null;
-            }
-
-            try
-            {
-                DataContext.Catalogs.Update(entity);
-                DataContext.Save();
-                return LookupRepository.GetEntity<NoteCatalogDao>(entity.Id);
-            }
-            catch (Exception ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return null;
-            }
-        }
-
-        public bool Delete(NoteCatalogDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            ProcessMessage.Rest();
-
-            try
-            {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Catalogs.Remove(entity);
-                DataContext.Save();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return false;
-            }
-        }
-
         public async Task<NoteCatalogDao> AddAsync(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
@@ -132,7 +46,9 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
+                // ReSharper disable once PossibleNullReferenceException
+                // reset the id to 0 to make sure it is a new entity
+                entity.Id = 0;
                 DataContext.Catalogs.Add(entity);
                 await DataContext.SaveAsync();
                 return entity;

@@ -19,20 +19,6 @@ namespace Hmm.Core.Dal.EF.Repositories
         IDateTimeProvider dateTimeProvider)
         : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IVersionRepository<HmmNoteDao>
     {
-        public PageList<HmmNoteDao> GetEntities(Expression<Func<HmmNoteDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var notes = query == null
-                ? DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog)
-                : DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Where(query);
-
-            var result = resourceCollectionParameters == null
-                ? PageList<HmmNoteDao>.Create(notes, pageIdx, pageSize)
-                : PageList<HmmNoteDao>.Create(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
-
-            return result;
-        }
-
         public async Task<PageList<HmmNoteDao>> GetEntitiesAsync(Expression<Func<HmmNoteDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
@@ -46,24 +32,13 @@ namespace Hmm.Core.Dal.EF.Repositories
             return result;
         }
 
-        public HmmNoteDao GetEntity(int id)
-        {
-            try
-            {
-                return DataContext.Notes.Find(id);
-            }
-            catch (Exception e)
-            {
-                ProcessMessage.WrapException(e);
-                return null;
-            }
-        }
-
         public async Task<HmmNoteDao> GetEntityAsync(int id)
         {
             try
             {
-                var note = await DataContext.Notes.FindAsync(id);
+                var note = await DataContext.Notes
+                    .Include(n=>n.Tags)
+                    .FirstOrDefaultAsync(n=>n.Id == id);
                 return note;
             }
             catch (Exception e)
@@ -73,93 +48,15 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public HmmNoteDao Add(HmmNoteDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            try
-            {
-                // Check if the note's catalog is specified. If not, attempt to apply a default catalog.
-                // ReSharper disable once PossibleNullReferenceException
-                var catalog = PropertyChecking(entity.Catalog);
-                entity.Catalog = catalog ?? throw new Exception("Cannot find default note catalog.");
-
-                entity.CreateDate = DateTimeProvider.UtcNow;
-                entity.LastModifiedDate = DateTimeProvider.UtcNow;
-                var savedAuthor = DataContext.Authors.Find(entity.Author.Id);
-                if (savedAuthor != null)
-                {
-                    entity.Author = savedAuthor;
-                }
-
-                var savedCat = DataContext.Catalogs.Find(entity.Catalog.Id);
-                if (savedCat != null)
-                {
-                    entity.Catalog = savedCat;
-                }
-                DataContext.Notes.Add(entity);
-                DataContext.Save();
-                return entity;
-            }
-            catch (Exception ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return null;
-            }
-        }
-
-        public HmmNoteDao Update(HmmNoteDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            try
-            {
-                // Check if the note's catalog is specified. If not, attempt to apply a default catalog.
-                // ReSharper disable once PossibleNullReferenceException
-                var catalog = PropertyChecking(entity.Catalog);
-                entity.Catalog = catalog ?? throw new Exception("Cannot find default note catalog.");
-
-                entity.LastModifiedDate = DateTimeProvider.UtcNow;
-                DataContext.Notes.Update(entity);
-                DataContext.Save();
-                var savedRec = LookupRepository.GetEntity<HmmNoteDao>(entity.Id);
-
-                return savedRec;
-            }
-            catch (Exception ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return null;
-            }
-        }
-
-        public bool Delete(HmmNoteDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            try
-            {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Notes.Remove(entity);
-                DataContext.Save();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return false;
-            }
-        }
-
         public async Task<HmmNoteDao> AddAsync(HmmNoteDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
             try
             {
-                // check if need apply default catalog
+                // check if we need apply default catalog
                 // ReSharper disable once PossibleNullReferenceException
-                var catalog = PropertyChecking(entity.Catalog);
+                var catalog = await PropertyCheckingAsync(entity.Catalog);
                 entity.Catalog = catalog ?? throw new Exception("Cannot find default note catalog.");
 
                 entity.CreateDate = DateTimeProvider.UtcNow;
@@ -175,6 +72,9 @@ namespace Hmm.Core.Dal.EF.Repositories
                 {
                     entity.Catalog = savedCat;
                 }
+
+                // reset the id to 0 to avoid EF core update the record
+                entity.Id = 0;
                 DataContext.Notes.Add(entity);
                 await DataContext.SaveAsync();
                 return entity;
@@ -192,15 +92,15 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
-                // check if need apply default catalog
+                // check if we need apply default catalog
                 // ReSharper disable once PossibleNullReferenceException
-                var catalog = PropertyChecking(entity.Catalog);
+                var catalog = await PropertyCheckingAsync(entity.Catalog);
                 entity.Catalog = catalog ?? throw new Exception("Cannot find default note catalog.");
 
                 entity.LastModifiedDate = DateTimeProvider.UtcNow;
                 DataContext.Notes.Update(entity);
                 await DataContext.SaveAsync();
-                var savedRec = LookupRepository.GetEntity<HmmNoteDao>(entity.Id);
+                var savedRec = await LookupRepository.GetEntityAsync<HmmNoteDao>(entity.Id);
 
                 return savedRec;
             }

@@ -25,29 +25,10 @@ namespace Hmm.Core.Dal.EF.Repositories
             _lookupRepo = lookupRepo;
         }
 
-        public PageList<AuthorDao> GetEntities(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            return _lookupRepo.GetEntities(query, resourceCollectionParameters);
-        }
-
         public async Task<PageList<AuthorDao>> GetEntitiesAsync(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var authors = await _lookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
             return authors;
-        }
-
-        public AuthorDao GetEntity(int id)
-        {
-            try
-            {
-                ProcessMessage.Rest();
-                return _dataContext.Authors.Find(id);
-            }
-            catch (Exception e)
-            {
-                ProcessMessage.WrapException(e);
-                return null;
-            }
         }
 
         public async Task<AuthorDao> GetEntityAsync(int id)
@@ -65,71 +46,6 @@ namespace Hmm.Core.Dal.EF.Repositories
             }
         }
 
-        public AuthorDao Add(AuthorDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            ProcessMessage.Rest();
-            try
-            {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                _dataContext.Authors.Add(entity);
-                Flush();
-                return entity;
-            }
-            catch (DataSourceException ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return null;
-            }
-        }
-
-        public AuthorDao Update(AuthorDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            ProcessMessage.Rest();
-            try
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                if (entity.Id <= 0)
-                {
-                    ProcessMessage.Success = false;
-                    ProcessMessage.AddErrorMessage($"Can not update author with id {entity.Id}");
-                    return null;
-                }
-
-                _dataContext.Authors.Update(entity);
-                Flush();
-                var updateAuthor = _lookupRepo.GetEntity<AuthorDao>(entity.Id);
-                return updateAuthor;
-            }
-            catch (DataSourceException ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return null;
-            }
-        }
-
-        public bool Delete(AuthorDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-            ProcessMessage.Rest();
-            try
-            {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                _dataContext.Authors.Remove(entity);
-                Flush();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                ProcessMessage.WrapException(ex);
-                return false;
-            }
-        }
-
         public async Task<AuthorDao> AddAsync(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
@@ -137,12 +53,14 @@ namespace Hmm.Core.Dal.EF.Repositories
             ProcessMessage.Rest();
             try
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
+                // ReSharper disable once PossibleNullReferenceException
+                // reset id to 0 to make sure it is a new entity
+                entity.Id = 0;
                 _dataContext.Authors.Add(entity);
                 await _dataContext.SaveAsync();
                 return entity;
             }
-            catch (DataSourceException ex)
+            catch (Exception ex)
             {
                 ProcessMessage.WrapException(ex);
                 return null;
@@ -169,7 +87,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 var updateAuthor = await _lookupRepo.GetEntityAsync<AuthorDao>(entity.Id);
                 return updateAuthor;
             }
-            catch (DataSourceException ex)
+            catch (Exception ex)
             {
                 ProcessMessage.WrapException(ex);
                 return null;
@@ -188,7 +106,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 await _dataContext.SaveAsync();
                 return true;
             }
-            catch (DataSourceException ex)
+            catch (Exception ex)
             {
                 ProcessMessage.WrapException(ex);
                 return false;

@@ -15,5 +15,5 @@ public class TagDao : Entity
     [Column("isactivated")]
     public bool IsActivated { get; set; }
 
-    public IQueryable<NoteTagRefDao> Notes { get; set; }
+    public ICollection<NoteTagRefDao> Notes { get; set; } = new List<NoteTagRefDao>();
 }

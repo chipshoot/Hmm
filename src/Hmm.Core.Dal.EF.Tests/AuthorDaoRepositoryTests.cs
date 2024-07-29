@@ -11,15 +11,11 @@ namespace Hmm.Core.Dal.EF.Tests
 {
     public class AuthorDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
     {
-        private readonly ContactDao _defaultContact;
-
-        public AuthorDaoRepositoryTests()
-        {
-            _defaultContact = GetSeedContactDao();
-        }
+        private ContactDao _defaultContact;
 
         [Fact]
-        public void Can_Add_Author_To_DataSource()
+        public async Task Can_Add_Author_To_DataSource()
+
         {
             // Arrange
             var author = new AuthorDao
@@ -31,7 +27,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = AuthorRepository.Add(author);
+            var savedRec = await AuthorRepository.AddAsync(author);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -40,7 +36,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Add_Already_Existed_AccountName_To_DataSource()
+        public async Task Cannot_Add_Already_Existed_AccountName_To_DataSource()
         {
             // Arrange
             var authorExists = new AuthorDao
@@ -60,8 +56,8 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            AuthorRepository.Add(authorExists);
-            var savedAuthor = AuthorRepository.Add(author);
+            await AuthorRepository.AddAsync(authorExists);
+            var savedAuthor = await AuthorRepository.AddAsync(author);
 
             // Assert
             Assert.Null(savedAuthor);
@@ -70,7 +66,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Delete_Author_From_DataSource()
+        public async Task Can_Delete_Author_From_DataSource()
         {
             // Arrange
             var author = new AuthorDao
@@ -81,17 +77,17 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
 
-            var savedAuthor = AuthorRepository.Add(author);
+            var savedAuthor = await AuthorRepository.AddAsync(author);
 
             // Act
-            var result = AuthorRepository.Delete(savedAuthor);
+            var result = await AuthorRepository.DeleteAsync(savedAuthor);
 
             // Assert
             Assert.True(result);
         }
 
         [Fact]
-        public void Cannot_Delete_NonExists_Author_From_DataSource()
+        public async Task Cannot_Delete_NonExists_Author_From_DataSource()
         {
             // Arrange
 
@@ -103,7 +99,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
 
-            AuthorRepository.Add(author);
+            await AuthorRepository.AddAsync(author);
 
             var author2 = new AuthorDao
             {
@@ -115,7 +111,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var result = AuthorRepository.Delete(author2);
+            var result = await AuthorRepository.DeleteAsync(author2);
 
             // Assert
             Assert.False(result);
@@ -124,7 +120,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Delete_Author_With_Note_Associated()
+        public async Task Cannot_Delete_Author_With_Note_Associated()
         {
             // Arrange
             var catalog = new NoteCatalogDao
@@ -135,7 +131,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsDefault = false,
                 Description = "Description"
             };
-            var savedCatalog = CatalogRepository.Add(catalog);
+            var savedCatalog = await CatalogRepository.AddAsync(catalog);
 
             var author = new AuthorDao
             {
@@ -144,7 +140,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing user",
                 IsActivated = true
             };
-            var savedUser = AuthorRepository.Add(author);
+            var savedUser = await AuthorRepository.AddAsync(author);
 
             var note = new HmmNoteDao
             {
@@ -155,10 +151,10 @@ namespace Hmm.Core.Dal.EF.Tests
                 Author = savedUser,
                 Catalog = savedCatalog
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
 
             // Act
-            var result = AuthorRepository.Delete(author);
+            var result = await AuthorRepository.DeleteAsync(author);
 
             // Assert
             Assert.False(result, "Error: deleted user with note");
@@ -167,7 +163,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_Author()
+        public async Task Can_Update_Author()
         {
             // Arrange - update first name
             var author = new AuthorDao
@@ -178,13 +174,13 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
 
-            AuthorRepository.Add(author);
+            await AuthorRepository.AddAsync(author);
 
             // Arrange - activate status
             author.IsActivated = false;
 
             // Act
-            var result = AuthorRepository.Update(author);
+            var result = await AuthorRepository.UpdateAsync(author);
 
             // Arrange
             Assert.NotNull(result);
@@ -194,7 +190,7 @@ namespace Hmm.Core.Dal.EF.Tests
             author.Description = "new testing user";
 
             // Act
-            result = AuthorRepository.Update(author);
+            result = await AuthorRepository.UpdateAsync(author);
 
             // Assert
             Assert.NotNull(result);
@@ -202,7 +198,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Update_For_Non_Exists_Author()
+        public async Task Cannot_Update_For_Non_Exists_Author()
         {
             // Arrange
             var author = new AuthorDao
@@ -213,7 +209,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
 
-            AuthorRepository.Add(author);
+            await AuthorRepository.AddAsync(author);
 
             var author2 = new AuthorDao
             {
@@ -224,7 +220,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var result = AuthorRepository.Update(author2);
+            var result = await AuthorRepository.UpdateAsync(author2);
 
             // Assert
             Assert.Null(result);
@@ -233,7 +229,7 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Update_Author_With_Duplicated_AccountName()
+        public async Task Cannot_Update_Author_With_Duplicated_AccountName()
         {
             // Arrange
             var author = new AuthorDao
@@ -243,7 +239,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing user",
                 IsActivated = true
             };
-            AuthorRepository.Add(author);
+            await AuthorRepository.AddAsync(author);
 
             var user2 = new AuthorDao
             {
@@ -252,12 +248,12 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing user",
                 IsActivated = true
             };
-            AuthorRepository.Add(user2);
+            await AuthorRepository.AddAsync(user2);
 
             author.AccountName = user2.AccountName;
 
             // Act
-            var result = AuthorRepository.Update(author);
+            var result = await AuthorRepository.UpdateAsync(author);
 
             // Assert
             Assert.Null(result);
@@ -265,17 +261,12 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.Single(AuthorRepository.ProcessMessage.MessageList);
         }
 
-        private ContactDao GetSeedContactDao()
-        {
-            var contact = GetTestingContact();
-            ContactRepository.Add(contact);
-
-            return contact;
-        }
-
         public async Task InitializeAsync()
         {
             Transaction = await ((DbContext)DbContext).Database.BeginTransactionAsync();
+            var contact = SampleDataGenerator.GetContactDao();
+            await ContactRepository.AddAsync(contact);
+            _defaultContact = contact;
         }
 
         public async Task DisposeAsync()

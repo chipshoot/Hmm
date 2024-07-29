@@ -7,67 +7,18 @@
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Abootstrap_002Fd_003Adist_002Fd_003Ajs_002Ff_003Abootstrap_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Eslim_002Ejs/@EntryIndexedValue">True</s:Boolean>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=011c6852_002D35c6_002D469f_002D893f_002D00d41523c3cf/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CanAddNoteToDataSource" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests.Can_Get_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests.CanCreateValidGasLog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests.CannotCreateInvalidGasLog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests.CanDeleteGasLog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::16FC8FF7-F5EE-48A1-997F-3400F4128803::net6.0::Hmm.Automobile.Tests.GasLogManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests.Can_Add_New_Appointment&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests.Can_Cancel_Exists_Appointment&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests.Can_Modify_Exists_Appointment&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests.Appointment_StartDate_Earlier_Then_EndDate&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests.Appointment_StartDate_Earlier_Then_Today&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::36B7D196-1776-470F-871D-117E5EAB2B57::net6.0::Hmm.BigCalendar.Test.AppointmentValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::B56C30D9-017E-4E0C-BAE2-7A50CA82B484::net6.0::Hmm.Utility.Tests.ProcessingResultTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=03508473_002D5450_002D4f10_002D858e_002D44d02c1ec8af/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5e43131f_002D5653_002D458c_002Da55d_002Dcb7f4f2213fb/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #6" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=90e4afe1_002D4943_002D4e83_002D8d2e_002D5ea1d3d084e9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #4" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a5b0a2f2_002D35c4_002D4f46_002D800b_002D512895a14c9d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #5" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b1290c50_002Da339_002D43b0_002Da6a5_002Da5849caa2bb8/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #3" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
 	
 	
 	
 	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c00082b0_002D9b08_002D40de_002Da173_002D2dacd80ff92b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CanAddGasLog" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.AuthorValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.DefaultXmlNoteSerializerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net6.0::Hmm.Core.Tests.HmmNoteValidatorTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d81a44d3_002Dbafb_002D441e_002D9db5_002D25fc45f69bfb/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Map_ContactDao_To_Contact #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
+	
+	
+	
+	
+	
+	
+	
+	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Can_Add_Contact_To_DataSource&lt;/TestId&gt;&#xD;
@@ -129,6 +80,11 @@
     &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Add_Valid_Contact&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Update_Valid_Contact&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Cannot_Update_Not_Exists_Contact&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Deactivate_Contact&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Check_Contact_Exists&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>

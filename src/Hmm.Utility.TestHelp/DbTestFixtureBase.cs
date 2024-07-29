@@ -43,7 +43,7 @@ namespace Hmm.Utility.TestHelp
 
         protected IRepository<NoteCatalogDao> CatalogRepository { get; private set; }
 
-        protected IRepository<TagDao> TagRepository { get; private set; }
+        protected ICompositeEntityRepository<TagDao, HmmNoteDao> TagRepository { get; private set; }
 
         private IEntityLookup LookupRepository { get; set; }
 
@@ -60,19 +60,6 @@ namespace Hmm.Utility.TestHelp
         public void Dispose()
         {
             GC.SuppressFinalize(this);
-        }
-
-        protected static ContactDao GetTestingContact()
-        {
-            var contact = new ContactDao
-            {
-                Contact = """
-                      { "FirstName": "John", "LastName": "Doe", "Emails": [ { "Address": "fchy@yahoo.com", "Type": "Personal", "IsPrimary": "false" }, { "Address": "fchy5979@gamil.com", "Type": "Personal", "IsPrimary": "true" }, { "Address": "fchy@outlook.com", "Type": "Work", "IsPrimary": "false" } ], "Phones": [ { "Type": "Home", "Number": "123-456-7890" }, { "Type": "Work", "Number": "456-789-0123" } ], "Addresses": [ { "Type": "Home", "Street": "123 Main St", "City": "Springfield", "State": "IL", "Zip": "62701" }, { "Type": "Work", "Street": "456 Elm St", "City": "Springfield", "State": "IL", "Zip": "62702" } ] }
-                      """,
-                Description = "testing contact",
-                IsActivated = true
-            };
-            return contact;
         }
 
         private void SetDbEnvironment(string connectString)

@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Hmm.Core.Map.DbEntity;
 using Xunit;
 
 namespace Hmm.Core.Dal.EF.Tests
@@ -20,20 +20,13 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Add_NoteCatalog_To_DataSource()
+        public async Task Can_Add_NoteCatalog_To_DataSource()
         {
             // Arrange
-            var catalog = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                Schema = _sampleSchema,
-                FormatType = NoteContentFormatType.Xml,
-                IsDefault = true,
-                Description = "testing note",
-            };
+            var catalog = SampleDataGenerator.GetCatalogDao();
 
             // Act
-            var savedRec = CatalogRepository.Add(catalog);
+            var savedRec = await CatalogRepository.AddAsync(catalog);
 
             // Assert
             Assert.NotNull(savedRec);
@@ -43,29 +36,15 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void CanNot_Add_Already_Existed_NoteCatalog_To_DataSource()
+        public async Task CanNot_Add_Already_Existed_NoteCatalog_To_DataSource()
         {
             // Arrange
-            CatalogRepository.Add(new NoteCatalogDao
-            {
-                Name = "GasLog",
-                Schema = _sampleSchema,
-                FormatType = NoteContentFormatType.Xml,
-                IsDefault = true,
-                Description = "testing note",
-            });
+            await CatalogRepository.AddAsync(SampleDataGenerator.GetCatalogDao());
 
-            var cat = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                Schema = "TestSchema",
-                FormatType = NoteContentFormatType.Xml,
-                IsDefault = false,
-                Description = "testing note",
-            };
+            var cat = SampleDataGenerator.GetCatalogDao();
 
             // Act
-            var savedRec = CatalogRepository.Add(cat);
+            var savedRec = await CatalogRepository.AddAsync(cat);
 
             // Assert
             Assert.Null(savedRec);
@@ -75,21 +54,14 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Delete_Note_Catalog_From_DataSource()
+        public async Task Can_Delete_Note_Catalog_From_DataSource()
         {
             // Arrange
-            var catalog = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                Schema = _sampleSchema,
-                IsDefault = true,
-                Description = "testing note"
-            };
-
-            CatalogRepository.Add(catalog);
+            var catalog = SampleDataGenerator.GetCatalogDao();
+            await CatalogRepository.AddAsync(catalog);
 
             // Act
-            var result = CatalogRepository.Delete(catalog);
+            var result = await CatalogRepository.DeleteAsync(catalog);
 
             // Assert
             Assert.True(result);
@@ -97,18 +69,12 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Delete_NonExists_Catalog_From_DataSource()
+        public async Task Cannot_Delete_NonExists_Catalog_From_DataSource()
         {
             // Arrange
-            var catalog = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                Schema = _sampleSchema,
-                IsDefault = true,
-                Description = "testing note"
-            };
+            var catalog = SampleDataGenerator.GetCatalogDao();
 
-            CatalogRepository.Add(catalog);
+            await CatalogRepository.AddAsync(catalog);
 
             var catalog2 = new NoteCatalogDao
             {
@@ -119,7 +85,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var result = CatalogRepository.Delete(catalog2);
+            var result = await CatalogRepository.DeleteAsync(catalog2);
 
             // Assert
             Assert.False(result);
@@ -128,29 +94,21 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Delete_Catalog_With_Note_Associated()
+        public async Task Cannot_Delete_Catalog_With_Note_Associated()
         {
             // Arrange
-            var catalog = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                FormatType = NoteContentFormatType.Json,
-                Schema = "",
-                IsDefault = true,
-                Description = "testing note"
-            };
-            var savedCatalog = CatalogRepository.Add(catalog);
+            var catalog = SampleDataGenerator.GetCatalogDao();
+            var savedCatalog = await CatalogRepository.AddAsync(catalog);
 
-            var contact = GetTestingContact();
             var author = new AuthorDao
             {
                 AccountName = "glog",
-                ContactInfo = contact,
+                ContactInfo = SampleDataGenerator.GetContactDao(),
                 Description = "testing user",
                 IsActivated = true
             };
-            AuthorRepository.Add(author);
-            
+            await AuthorRepository.AddAsync(author);
+
             var note = new HmmNoteDao
             {
                 Subject = "Testing subject",
@@ -160,10 +118,10 @@ namespace Hmm.Core.Dal.EF.Tests
                 Author = author,
                 Catalog = savedCatalog
             };
-            NoteRepository.Add(note);
+            await NoteRepository.AddAsync(note);
 
             // Act
-            var result = CatalogRepository.Delete(catalog);
+            var result =await CatalogRepository.DeleteAsync(catalog);
 
             // Assert
             Assert.False(result, "Error: deleted catalog with note attached to it");
@@ -172,24 +130,15 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Can_Update_Catalog()
+        public async Task Can_Update_Catalog()
         {
             // Arrange - update name
-            var catalog = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                FormatType = NoteContentFormatType.PlainText,
-                Schema = "",
-                IsDefault = true,
-                Description = "testing note"
-            };
-
-            CatalogRepository.Add(catalog);
-
+            var catalog = SampleDataGenerator.GetCatalogDao();
+            await CatalogRepository.AddAsync(catalog);
             catalog.Name = "GasLog2";
 
             // Act
-            var result = CatalogRepository.Update(catalog);
+            var result = await CatalogRepository.UpdateAsync(catalog);
 
             // Assert
             Assert.NotNull(result);
@@ -199,7 +148,7 @@ namespace Hmm.Core.Dal.EF.Tests
             catalog.Description = "new testing note";
 
             // Act
-            result = CatalogRepository.Update(catalog);
+            result = await CatalogRepository.UpdateAsync(catalog);
 
             // Assert
             Assert.NotNull(result);
@@ -207,19 +156,11 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Update_Catalog_For_NonExists_Catalog()
+        public async Task Cannot_Update_Catalog_For_NonExists_Catalog()
         {
             // Arrange
-            var catalog = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                FormatType = NoteContentFormatType.Markdown,
-                Schema = "",
-                IsDefault = true,
-                Description = "testing note"
-            };
-
-            CatalogRepository.Add(catalog);
+            var catalog = SampleDataGenerator.GetCatalogDao();
+            await CatalogRepository.AddAsync(catalog);
 
             var catalog2 = new NoteCatalogDao
             {
@@ -231,7 +172,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var result = CatalogRepository.Update(catalog2);
+            var result = await CatalogRepository.UpdateAsync(catalog2);
 
             // Assert
             Assert.Null(result);
@@ -240,18 +181,11 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
-        public void Cannot_Update_Catalog_With_Duplicated_Name()
+        public async Task Cannot_Update_Catalog_With_Duplicated_Name()
         {
             // Arrange
-            var catalog = new NoteCatalogDao
-            {
-                Name = "GasLog",
-                FormatType = NoteContentFormatType.Xml,
-                Schema = _sampleSchema,
-                IsDefault = true,
-                Description = "testing note"
-            };
-            CatalogRepository.Add(catalog);
+            var catalog = SampleDataGenerator.GetCatalogDao();
+            await CatalogRepository.AddAsync(catalog);
 
             var catalog2 = new NoteCatalogDao
             {
@@ -261,12 +195,12 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsDefault = false,
                 Description = "testing note2"
             };
-            CatalogRepository.Add(catalog2);
+            await CatalogRepository.AddAsync(catalog2);
 
             catalog.Name = catalog2.Name;
 
             // Act
-            var result = CatalogRepository.Update(catalog);
+            var result = await CatalogRepository.UpdateAsync(catalog);
 
             // Assert
             Assert.Null(result);

@@ -1,6 +1,5 @@
 ﻿// Ignore Spelling: Dao
 
-using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
@@ -11,13 +10,13 @@ namespace Hmm.Core.Dal.EF.Tests;
 public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
 {
     [Fact]
-    public void Can_Add_Contact_To_DataSource()
+    public async Task Can_Add_Contact_To_DataSource()
     {
         // Arrange
-        var contact = GetTestingContact();
+        var contact = SampleDataGenerator.GetContactDao();
 
         // Act
-        var savedRec = ContactRepository.Add(contact);
+        var savedRec = await ContactRepository.AddAsync(contact);
 
         // Assert
         Assert.NotNull(savedRec);
@@ -26,38 +25,32 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
     }
 
     [Fact]
-    public void Can_Delete_Contact_From_DataSource()
+    public async Task Can_Delete_Contact_From_DataSource()
     {
         // Arrange
-        var contact = GetTestingContact();
-        var savedContact = ContactRepository.Add(contact);
+        var contact = SampleDataGenerator.GetContactDao();
+        var savedContact = await ContactRepository.AddAsync(contact);
 
         // Act
-        var result = ContactRepository.Delete(savedContact);
+        var result = await ContactRepository.DeleteAsync(savedContact);
 
         // Assert
         Assert.True(result);
     }
 
     [Fact]
-    public void Cannot_Delete_NonExists_Contact_From_DataSource()
+    public async Task Cannot_Delete_NonExists_Contact_From_DataSource()
     {
         // Arrange
-        var contact1 = GetTestingContact();
-        ContactRepository.Add(contact1);
+        var contact1 = SampleDataGenerator.GetContactDao();
+        await ContactRepository.AddAsync(contact1);
 
-        var contact2 = new ContactDao
-        {
-            Id = 100,
-            Contact = """
-                      { "FirstName": "John", "LastName": "Doe", "Emails": [ { "Address": "fchy@yahoo.com", "Type": "Personal", "IsPrimary": "false" }, { "Address": "fchy5979@gamil.com", "Type": "Personal", "IsPrimary": "true" }, { "Address": "fchy@outlook.com", "Type": "Work", "IsPrimary": "false" } ], "Phones": [ { "Type": "Home", "Number": "123-456-7890" }, { "Type": "Work", "Number": "456-789-0123" } ], "Addresses": [ { "Type": "Home", "Street": "123 Main St", "City": "Springfield", "State": "IL", "Zip": "62701" }, { "Type": "Work", "Street": "456 Elm St", "City": "Springfield", "State": "IL", "Zip": "62702" } ] }
-                      """,
-            Description = "testing contact 2",
-            IsActivated = true
-        };
+        var contact2 = SampleDataGenerator.GetContactDao();
+        contact2.Id = 200;
+        contact2.Description = "testing contact 2";
 
         // Act
-        var result = ContactRepository.Delete(contact2);
+        var result = await ContactRepository.DeleteAsync(contact2);
 
         // Assert
         Assert.False(result);
@@ -66,17 +59,17 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
     }
 
     [Fact]
-    public void Can_Update_Contact()
+    public async Task Can_Update_Contact()
     {
         // Arrange - update first name
-        var contact = GetTestingContact();
-        ContactRepository.Add(contact);
+        var contact = SampleDataGenerator.GetContactDao();
+        await ContactRepository.AddAsync(contact);
 
         // Arrange - activate status
         contact.IsActivated = false;
 
         // Act
-        var result = ContactRepository.Update(contact);
+        var result = await ContactRepository.UpdateAsync(contact);
 
         // Arrange
         Assert.NotNull(result);
@@ -86,7 +79,7 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         contact.Description = "new testing contact";
 
         // Act
-        result = ContactRepository.Update(contact);
+        result = await ContactRepository.UpdateAsync(contact);
 
         // Assert
         Assert.NotNull(result);

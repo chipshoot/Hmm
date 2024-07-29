@@ -25,29 +25,10 @@ public class ContactEfRepository : IRepository<ContactDao>
         _lookupRepository = lookupRepository;
     }
 
-    public PageList<ContactDao> GetEntities(Expression<Func<ContactDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-    {
-        return _lookupRepository.GetEntities(query, resourceCollectionParameters);
-    }
-
     public async Task<PageList<ContactDao>> GetEntitiesAsync(Expression<Func<ContactDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
     {
         var contacts = await _lookupRepository.GetEntitiesAsync(query, resourceCollectionParameters);
         return contacts;
-    }
-
-    public ContactDao GetEntity(int id)
-    {
-        ProcessMessage.Rest();
-        try
-        {
-            return _dataContext.Contacts.Find(id);
-        }
-        catch (Exception e)
-        {
-            ProcessMessage.WrapException(e);
-            return null;
-        }
     }
 
     public async Task<ContactDao> GetEntityAsync(int id)
@@ -65,71 +46,6 @@ public class ContactEfRepository : IRepository<ContactDao>
         }
     }
 
-    public ContactDao Add(ContactDao entity)
-    {
-        Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-        ProcessMessage.Rest();
-        try
-        {
-            // ReSharper disable once AssignNullToNotNullAttribute
-            _dataContext.Contacts.Add(entity);
-            Flush();
-            return entity;
-        }
-        catch (DataSourceException ex)
-        {
-            ProcessMessage.WrapException(ex);
-            return null;
-        }
-    }
-
-    public ContactDao Update(ContactDao entity)
-    {
-        Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-        ProcessMessage.Rest();
-        try
-        {
-            // ReSharper disable once PossibleNullReferenceException
-            if (entity.Id <= 0)
-            {
-                ProcessMessage.Success = false;
-                ProcessMessage.AddErrorMessage($"Can not update contact with id {entity.Id}");
-                return null;
-            }
-
-            _dataContext.Contacts.Update(entity);
-            Flush();
-            var updateContactDb = _lookupRepository.GetEntity<ContactDao>(entity.Id);
-            return updateContactDb;
-        }
-        catch (DataSourceException ex)
-        {
-            ProcessMessage.WrapException(ex);
-            return null;
-        }
-    }
-
-    public bool Delete(ContactDao entity)
-    {
-        Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-
-        ProcessMessage.Rest();
-        try
-        {
-            // ReSharper disable once AssignNullToNotNullAttribute
-            _dataContext.Contacts.Remove(entity);
-            Flush();
-            return true;
-        }
-        catch (DataSourceException ex)
-        {
-            ProcessMessage.WrapException(ex);
-            return false;
-        }
-    }
-
     public async Task<ContactDao> AddAsync(ContactDao entity)
     {
         Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
@@ -137,12 +53,14 @@ public class ContactEfRepository : IRepository<ContactDao>
         ProcessMessage.Rest();
         try
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
+            // ReSharper disable once PossibleNullReferenceException
+            // reset id to 0 to make sure it is a new entity
+            entity.Id = 0;
             _dataContext.Contacts.Add(entity);
             await _dataContext.SaveAsync();
             return entity;
         }
-        catch (DataSourceException ex)
+        catch (Exception ex)
         {
             ProcessMessage.WrapException(ex);
             return null;
@@ -169,7 +87,7 @@ public class ContactEfRepository : IRepository<ContactDao>
             var updateContactDb = await _lookupRepository.GetEntityAsync<ContactDao>(entity.Id);
             return updateContactDb;
         }
-        catch (DataSourceException ex)
+        catch (Exception ex)
         {
             ProcessMessage.WrapException(ex);
             return null;
@@ -188,7 +106,7 @@ public class ContactEfRepository : IRepository<ContactDao>
             await _dataContext.SaveAsync();
             return true;
         }
-        catch (DataSourceException ex)
+        catch (Exception ex)
         {
             ProcessMessage.WrapException(ex);
             return false;

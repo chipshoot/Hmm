@@ -8,11 +8,6 @@ namespace Hmm.Core.Map.DbEntity
 {
     public class HmmNoteDao : VersionedEntity
     {
-        public HmmNoteDao()
-        {
-            Tags = new List<NoteTagRefDao>().AsQueryable();
-        }
-
         [Column("subject")]
         [MaxLength(1000)]
         public string Subject { get; set; }
@@ -35,6 +30,6 @@ namespace Hmm.Core.Map.DbEntity
         [Column("lastmodifieddate")]
         public DateTime LastModifiedDate { get; set; }
 
-        public IQueryable<NoteTagRefDao> Tags { get; init; }
+        public IList<NoteTagRefDao> Tags { get; set; } = new List<NoteTagRefDao>();
     }
 }
