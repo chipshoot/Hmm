@@ -27,10 +27,10 @@ namespace Hmm.Core.DefaultManager.Validator
             var savedAuthor = await _authorManager.GetAuthorByIdAsync(user.Id);
 
             // create new user, make sure account name is unique
-            var acc = accountName.Trim().ToLower();
+            var acc = accountName.Trim();
             if (savedAuthor == null)
             {
-                var sameAccountUsers = await _authorManager.GetEntitiesAsync(u => u.AccountName.ToLower() == acc);
+                var sameAccountUsers = await _authorManager.GetEntitiesAsync(u => string.Equals(u.AccountName, acc, StringComparison.CurrentCultureIgnoreCase));
                 if (sameAccountUsers.Any())
                 {
                     return false;
@@ -38,7 +38,7 @@ namespace Hmm.Core.DefaultManager.Validator
             }
             else
             {
-                var userWithAccounts = await _authorManager.GetEntitiesAsync(u => u.AccountName.ToLower() == acc && u.Id != user.Id);
+                var userWithAccounts = await _authorManager.GetEntitiesAsync(u => string.Equals(u.AccountName, acc, StringComparison.InvariantCultureIgnoreCase) && u.Id != user.Id);
                 return !userWithAccounts.Any();
             }
 

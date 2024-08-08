@@ -114,7 +114,7 @@ namespace Hmm.Core.DefaultManager
                 var updatedNote = _mapper.Map<HmmNote>(updatedNoteDao);
                 if (updatedNote == null)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot map NoteDao to note");
+                    ProcessResult.AddErrorMessage("Cannot map NoteDao to note");
                     return null;
                 }
 
@@ -167,7 +167,7 @@ namespace Hmm.Core.DefaultManager
                 note.Tags = updatedHmmNote.Tags;
 
                 // Return the list of tags associated with the HmmNote entity
-                return updatedHmmNote?.Tags;
+                return updatedHmmNote.Tags;
             }
             catch (Exception ex)
             {
@@ -206,7 +206,7 @@ namespace Hmm.Core.DefaultManager
                 note.Tags = updatedHmmNote.Tags;
 
                 // Return the list of tags associated with the HmmNote entity
-                return updatedHmmNote?.Tags;
+                return updatedHmmNote.Tags;
             }
             catch (Exception ex)
             {
@@ -249,7 +249,7 @@ namespace Hmm.Core.DefaultManager
             var note = _mapper.Map<HmmNote>(noteDao);
             if (note == null)
             {
-                ProcessResult.AddErrorMessage($"Cannot map NoteDao to Note");
+                ProcessResult.AddErrorMessage("Cannot map NoteDao to Note");
                 return null;
             }
 
