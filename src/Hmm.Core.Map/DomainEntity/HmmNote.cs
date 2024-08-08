@@ -14,6 +14,8 @@ namespace Hmm.Core.Map.DomainEntity
 
         public bool IsDeleted { get; set; } = false;
 
+        public List<Tag> Tags { get; set; }=new List<Tag>();
+
         public DateTime CreateDate { get; set; }
 
         public DateTime LastModifiedDate { get; set; }

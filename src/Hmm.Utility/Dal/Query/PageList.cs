@@ -9,6 +9,13 @@ namespace Hmm.Utility.Dal.Query
 {
     public class PageList<T> : List<T>
     {
+        public PageList()
+        {
+            TotalCount = Count;
+            PageSize = 1;
+            CurrentPage = 0;
+            TotalPages = 1;
+        }
         public PageList(IEnumerable<T> items, int count, int pageIndex, int pageSize)
         {
             TotalCount = count;

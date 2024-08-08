@@ -1,9 +1,10 @@
-﻿using Hmm.Utility.Misc;
+﻿using System.Threading.Tasks;
+using Hmm.Utility.Misc;
 
 namespace Hmm.Utility.Validation
 {
     public interface IHmmValidator<in T>
     {
-        bool IsValidEntity(T entity, ProcessingResult processResult);
+        Task<bool> IsValidEntityAsync(T entity, ProcessingResult processResult);
     }
 }

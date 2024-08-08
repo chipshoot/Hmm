@@ -6,64 +6,56 @@ using Hmm.Utility.Validation;
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using AutoMapper;
+using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.Map;
+using Hmm.Core.Map.DbEntity;
 
 namespace Hmm.Core.DefaultManager
 {
     public class NoteCatalogManager : INoteCatalogManager
     {
-        private readonly IRepository<NoteCatalog> _dataSource;
-        private readonly IHmmValidator<NoteCatalog> _validator;
-        private readonly IEntityLookup _lookupRepo;
+        private readonly IRepository<NoteCatalogDao> _catalogRepository;
+        private readonly IMapper _mapper;
+        private readonly ValidatorBase<NoteCatalog> _validator;
 
-        public NoteCatalogManager(IRepository<NoteCatalog> dataSource, IHmmValidator<NoteCatalog> validator, IEntityLookup lookupRepo)
+        public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper)
         {
             Guard.Against<ArgumentNullException>(dataSource == null, nameof(dataSource));
-            Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
 
-            _dataSource = dataSource;
-            _validator = validator;
-            _lookupRepo = lookupRepo;
-        }
-
-        public NoteCatalog Create(NoteCatalog catalog)
-        {
-            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
-            {
-                return null;
-            }
-
-            try
-            {
-                var addedCatalog = _dataSource.Add(catalog);
-                if (addedCatalog == null)
-                {
-                    ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
-                }
-                return addedCatalog;
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return null;
-            }
+            _mapper = mapper;
+            _catalogRepository = dataSource;
+            _validator = new NoteCatalogValidator();
         }
 
         public async Task<NoteCatalog> CreateAsync(NoteCatalog catalog)
         {
-            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
-            {
-                return null;
-            }
-
             try
             {
-                var addedCatalog = await _dataSource.AddAsync(catalog);
-                if (addedCatalog == null)
+                ProcessResult.Rest();
+                var isValid = await _validator.IsValidEntityAsync(catalog, ProcessResult);
+                if (!isValid)
                 {
-                    ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
+                    return null;
                 }
-                return addedCatalog;
+
+                var catalogDao = _mapper.Map<NoteCatalogDao>(catalog);
+                if (catalogDao == null)
+                {
+                    ProcessResult.AddErrorMessage("Cannot convert NoteCatalog to NoteCatalogDao");
+                    return null;
+                }
+
+                var addedCatalogDao = await _catalogRepository.AddAsync(catalogDao);
+                if (addedCatalogDao == null)
+                {
+                    ProcessResult.PropagandaResult(_catalogRepository.ProcessMessage);
+                    return null;
+                }
+
+                catalog.Id = addedCatalogDao.Id;
+                return catalog;
             }
             catch (Exception ex)
             {
@@ -72,58 +64,42 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public NoteCatalog Update(NoteCatalog catalog)
-        {
-            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
-            {
-                return null;
-            }
-
-            // update catalog record
-            var savedCatalog = _dataSource.GetEntity(catalog.Id);
-            if (savedCatalog == null)
-            {
-                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
-                return null;
-            }
-            var updatedCatalog = _dataSource.Update(catalog);
-            if (updatedCatalog == null)
-            {
-                ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
-            }
-
-            return updatedCatalog;
-        }
-
         public async Task<NoteCatalog> UpdateAsync(NoteCatalog catalog)
-        {
-            if (catalog == null || !_validator.IsValidEntity(catalog, ProcessResult))
-            {
-                return null;
-            }
-
-            // update catalog record
-            var savedCatalog = await _dataSource.GetEntityAsync(catalog.Id);
-            if (savedCatalog != null)
-            {
-                ProcessResult.AddErrorMessage($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
-                return null;
-            }
-            var updatedCatalog = await _dataSource.UpdateAsync(catalog);
-            if (updatedCatalog == null)
-            {
-                ProcessResult.PropagandaResult(_dataSource.ProcessMessage);
-            }
-
-            return updatedCatalog;
-        }
-
-        public PageList<NoteCatalog> GetEntities(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var catalogs = _dataSource.GetEntities(query, resourceCollectionParameters);
-                return catalogs;
+                if (catalog == null)
+                {
+                    return null;
+                }
+
+                ProcessResult.Rest();
+                var isValid = await _validator.IsValidEntityAsync(catalog, ProcessResult);
+                if (!isValid)
+                {
+                    return null;
+                }
+
+                // update catalog record
+                var catalogDao = _mapper.Map<NoteCatalogDao>(catalog);
+                if (catalogDao == null)
+                {
+                    ProcessResult.AddErrorMessage("Cannot map NoteCatalog to NoteCatalogDao");
+                    return null;
+                }
+                var savedCatalogDao = await _catalogRepository.GetEntityAsync(catalog.Id);
+                if (savedCatalogDao == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot found catalog: {catalog.Name} for updating.");
+                    return null;
+                }
+                var updatedCatalog = await _catalogRepository.UpdateAsync(catalogDao);
+                if (updatedCatalog == null)
+                {
+                    ProcessResult.PropagandaResult(_catalogRepository.ProcessMessage);
+                }
+
+                return catalog;
             }
             catch (Exception ex)
             {
@@ -136,22 +112,15 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                var catalogs = await _dataSource.GetEntitiesAsync(query, resourceCollectionParameters);
-                return catalogs;
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return null;
-            }
-        }
+                Expression<Func<NoteCatalogDao, bool>> daoQuery = null;
+                if (query != null)
+                {
+                    daoQuery = ExpressionMapper<NoteCatalog, NoteCatalogDao>.MapExpression(query);
+                }
 
-        public NoteCatalog GetEntityById(int id)
-        {
-            try
-            {
-                var catalog = _dataSource.GetEntity(id);
-                return catalog;
+                var catalogDaos = await _catalogRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                var catalogs = _mapper.Map<PageList<NoteCatalog>>(catalogDaos);
+                return catalogs;
             }
             catch (Exception ex)
             {
@@ -164,7 +133,13 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                var catalog = await _dataSource.GetEntityAsync(id);
+                var catalogDao = await _catalogRepository.GetEntityAsync(id);
+                var catalog = _mapper.Map<NoteCatalog>(catalogDao);
+                if (catalog == null)
+                {
+                    ProcessResult.AddErrorMessage("Cannot map CatalogDao to Catalog");
+                    return null;
+                }
                 return catalog;
             }
             catch (Exception ex)

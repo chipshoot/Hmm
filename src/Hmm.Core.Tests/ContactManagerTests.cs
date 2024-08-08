@@ -1,206 +1,173 @@
-﻿//using System.Linq;
-//using Hmm.Core.DefaultManager;
-//using Hmm.Utility.TestHelp;
-//using Xunit;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
+using Hmm.Core.DefaultManager;
+using Hmm.Core.Map;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.TestHelp;
+using Xunit;
 
-//namespace Hmm.Core.Tests
-//{
-//    public class ContactManagerTests : CoreTestFixtureBase
-//    {
-//        private IContactManager _contactManager;
+namespace Hmm.Core.Tests
+{
+    public class ContactManagerTests : CoreTestFixtureBase
+    {
+        private readonly ContactManager _contactManager;
 
-//        public ContactManagerTests()
-//        {
-//            SetupTestEnv();
-//        }
+        public ContactManagerTests()
+        {
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<HmmMappingProfile>();
+            });
+            var mapper = config.CreateMapper();
+            _contactManager = new ContactManager(ContactRepository, mapper);
+        }
 
-//        [Fact]
-//        public void Can_Get_Contact()
-//        {
-//            // Act
-//            var contacts = _contactManager.GetContacts().ToList();
+        [Fact]
+        public async Task Can_Get_Contact()
+        {
+            // Act
+            var contacts = await _contactManager.GetContactsAsync();
 
-//            // Assert
-//            Assert.True(_contactManager.ProcessResult.Success);
-//            Assert.True(contacts.Count > 1, "authors.Count > 1");
-//        }
+            // Assert
+            Assert.True(_contactManager.ProcessResult.Success);
+            Assert.NotNull(contacts);
+            Assert.Single(contacts);
+        }
 
-//        //        //        [Fact]
-//        //        //        public void Can_Add_Valid_Contact()
-//        //        //        {
-//        //        //            // Arrange
-//        //        //            var contact = new Contact
-//        //        //            {
-//        //        //                AccountName = "jfang2",
-//        //        //                IsActivated = true
-//        //        //            };
+        [Fact]
+        public async Task Can_Add_Valid_Contact()
+        {
+            // Arrange
+            var contact = SampleDataGenerator.GetContact();
+            contact.FirstName = "Test First Name";
+            contact.LastName = "Test Last Name";
 
-//        //        //            // Act
-//        //        //            var newContact = _contactManager.Create(contact);
+            // Act
+            var newContact = await _contactManager.CreateAsync(contact);
 
-//        //        //            // Assert
-//        //        //            Assert.True(_contactManager.ProcessResult.Success);
-//        //        //            Assert.NotNull(newContact);
-//        //        //            Assert.True(newContact.Id >= 0, "newContact.Id is greater to 0");
-//        //        //        }
+            // Assert
+            Assert.True(_contactManager.ProcessResult.Success);
+            Assert.NotNull(newContact);
+            Assert.True(newContact.Id >= 0, "newContact.Id is greater to 0");
+        }
 
-//        //        //        [Fact]
-//        //        //        public void Cannot_Add_Invalid_Contact()
-//        //        //        {
-//        //        //            // Arrange
-//        //        //            var contact = new Contact
-//        //        //            {
-//        //        //                AccountName = "Test Account Name",
-//        //        //                IsActivated = true,
-//        //        //            };
+        [Fact]
+        public async Task Cannot_Add_InValid_Contact()
+        {
+            // Arrange
+            var contact = SampleDataGenerator.GetContact();
+            contact.FirstName = GetRandomString(255);
+            contact.LastName = "Test Last Name";
 
-//        //        //            // Act
-//        //        //            var newContact = _contactManager.Create(contact);
+            // Act
+            var newContact = await _contactManager.CreateAsync(contact);
 
-//        //        //            // Assert
-//        //        //            Assert.False(_contactManager.ProcessResult.Success);
-//        //        //            Assert.True(_contactManager.ProcessResult.MessageList.FirstOrDefault()?.Message.Contains("Contact is invalid"));
-//        //        //            Assert.Null(newContact);
-//        //        //        }
+            // Assert
+            Assert.Null(newContact);
+            Assert.False(_contactManager.ProcessResult.Success);
+            Assert.Equal("FirstName : 'First Name' must be between 1 and 200 characters. You entered 255 characters.",
+                _contactManager.ProcessResult.MessageList.First().Message);
+        }
 
-//        //        //        [Fact]
-//        //        //        public void Can_Update_Valid_Contact()
-//        //        //        {
-//        //        //            // Arrange
-//        //        //            var contact = new Contact
-//        //        //            {
-//        //        //                AccountName = "jfang2",
-//        //        //                Role = AuthorRoleType.Author,
-//        //        //                IsActivated = true,
-//        //        //            };
-//        //        //            var result = _contactManager.Create(contact);
-//        //        //            Assert.True(contact.Id > 0, "contact.Id is greater then 0");
+        [Fact]
+        public async Task Can_Update_Valid_Contact()
+        {
+            // Arrange
+            var contacts = await _contactManager.GetContactsAsync();
+            var contact = contacts.FirstOrDefault();
+            Assert.NotNull(contact);
+            Assert.True(contact.Id > 0, "contact.Id is greater then 0");
+            Assert.True(contact.IsActivated);
 
-//        //        //            //   Act
-//        //        //            var savedContact = _contactManager.GetEntities().FirstOrDefault(c => c.Id == result.Id);
-//        //        //            Assert.NotNull(savedContact);
-//        //        //            savedContact.Role = AuthorRoleType.Guest;
-//        //        //            var updatedContact = _contactManager.Update(savedContact);
+            //   Act
+            contact.IsActivated = false;
+            var updatedContact = await _contactManager.UpdateAsync(contact);
 
-//        //        //            //  Assert
-//        //        //            Assert.NotNull(updatedContact);
-//        //        //            Assert.Equal(AuthorRoleType.Guest, updatedContact.Role);
-//        //        //            Assert.True(_contactManager.ProcessResult.Success);
-//        //        //            Assert.False(_contactManager.ProcessResult.MessageList.Any());
-//        //        //        }
+            //  Assert
+            Assert.NotNull(updatedContact);
+            Assert.False(updatedContact.IsActivated);
+            Assert.True(_contactManager.ProcessResult.Success);
+            Assert.Empty(_contactManager.ProcessResult.MessageList);
+        }
 
-//        //        //        [Fact]
-//        //        //        public void Cannot_Update_InValid_Contact()
-//        //        //        {
-//        //        //            //    Arrange
-//        //        //            var contact = new Contact
-//        //        //            {
-//        //        //                AccountName = "jfang2",
-//        //        //                IsActivated = true,
-//        //        //            };
-//        //        //            _contactManager.Create(contact);
-//        //        //            Assert.True(contact.Id > 0, "new contact.Id is greater then 0");
+        [Fact]
+        public async Task Cannot_Update_InValid_Contact()
+        {
+            //    Arrange
+            var contact = SampleDataGenerator.GetContact();
+            await _contactManager.CreateAsync(contact);
+            Assert.True(contact.Id > 0, "new contact.Id is greater then 0");
 
-//        //        //            //   Act
-//        //        //            contact.AccountName = "jfang3";
-//        //        //            var newContact = _contactManager.Update(contact);
+            //   Act
+            contact.LastName = GetRandomString(255);
+            var newContact = await _contactManager.UpdateAsync(contact);
 
-//        //        //            //  Assert
-//        //        //            Assert.False(_contactManager.ProcessResult.Success);
-//        //        //            Assert.True(_contactManager.ProcessResult.MessageList.FirstOrDefault()?.Message.Contains("contact is invalid"));
-//        //        //            Assert.Null(newContact);
-//        //        //        }
+            //  Assert
+            Assert.False(_contactManager.ProcessResult.Success);
+            Assert.True(_contactManager.ProcessResult.MessageList.FirstOrDefault()?.Message.Contains("LastName : 'Last Name' must be between 1 and 200 characters. You entered 255 characters"));
+            Assert.Null(newContact);
+        }
 
-//        //        //        [Fact]
-//        //        //        public void Cannot_Update_Not_Exists_Contact()
-//        //        //        {
-//        //        //            // Arrange - no id
-//        //        //            var contact = new Contact
-//        //        //            {
-//        //        //                AccountName = "jfang2",
-//        //        //                IsActivated = true,
-//        //        //            };
+        [Fact]
+        public async Task Cannot_Update_Not_Exists_Contact()
+        {
+            // Arrange - no id
+            var contact = SampleDataGenerator.GetContact();
+            contact.Id = 0;
 
-//        //        //            //   Act
-//        //        //            var newContact = _contactManager.Update(contact);
+            //   Act
+            var newContact = await _contactManager.UpdateAsync(contact);
 
-//        //        //            //  Assert
-//        //        //            Assert.False(_contactManager.ProcessResult.Success);
-//        //        //            Assert.Null(newContact);
+            //  Assert
+            Assert.False(_contactManager.ProcessResult.Success);
+            Assert.Null(newContact);
 
-//        //        //            // Arrange - id not exist
-//        //        //            _contactManager.ProcessResult.Rest();
-//        //        //            contact = new Contact
-//        //        //            {
-//        //        //                Id = 2,
-//        //        //                AccountName = "jfang2",
-//        //        //                IsActivated = true,
-//        //        //            };
+            // Arrange - id not exist
+            contact = new Contact
+            {
+                Id = 200,
+                IsActivated = true,
+            };
 
-//        //        //            // Act
-//        //        //            newContact = _contactManager.Update(contact);
+            // Act
+            newContact = await _contactManager.UpdateAsync(contact);
 
-//        //        //            //  Assert
-//        //        //            Assert.False(_contactManager.ProcessResult.Success);
-//        //        //            Assert.Null(newContact);
-//        //        //        }
+            //  Assert
+            Assert.False(_contactManager.ProcessResult.Success);
+            Assert.Null(newContact);
+        }
 
-//        //        //        [Fact]
-//        //        //        public void Can_Deactivate_Contact()
-//        //        //        {
-//        //        //            // Arrange
-//        //        //            var contact = _contactManager.GetEntities().FirstOrDefault();
-//        //        //            Assert.NotNull(contact);
-//        //        //            Assert.True(contact.IsActivated);
+        [Fact]
+        public async Task Can_Deactivate_Contact()
+        {
+            // Arrange
+            var contacts = await _contactManager.GetContactsAsync();
+            var contact = contacts.FirstOrDefault();
+            Assert.NotNull(contact);
+            Assert.True(contact.IsActivated);
 
-//        //        //            // Act
-//        //        //            _contactManager.DeActivate(contact.Id);
+            // Act
+            await _contactManager.DeActivateAsync(contact.Id);
+            var updatedContact = await _contactManager.GetContactByIdAsync(contact.Id);
 
-//        //        //            // Assert
-//        //        //            Assert.True(_contactManager.ProcessResult.Success);
-//        //        //            Assert.False(_contactManager.ProcessResult.MessageList.Any());
-//        //        //            Assert.False(contact.IsActivated);
-//        //        //        }
+            // Assert
+            Assert.True(_contactManager.ProcessResult.Success);
+            Assert.Empty(_contactManager.ProcessResult.MessageList);
+            Assert.False(updatedContact.IsActivated);
+        }
 
-//        //        //        [Theory]
-//        //        //        [InlineData(0, false)]
-//        //        //        [InlineData(1, true)]
-//        //        //        public void Can_Check_Contact_Exists(int contactId, bool expected)
-//        //        //        {
-//        //        //            // Arrange
-//        //        //            var id = contactId;
-//        //        //            if (contactId == 1)
-//        //        //            {
-//        //        //                id = LookupRepository.GetEntities<Contact>().FirstOrDefault()?.Id;
-//        //        //            }
+        [Theory]
+        [InlineData(0, false)]
+        [InlineData(100, true)]
+        public async Task Can_Check_Contact_Exists(int contactId, bool expected)
+        {
+            // Arrange
+            // Act
+            var result = await _contactManager.IsContactExistsAsync(contactId);
 
-//        //        //            // Act
-//        //        //            var result = _contactManager.ContactExists(id);
-
-//        //        //            // Assert
-//        //        //            Assert.Equal(result, expected);
-//        //        //        }
-
-//        //        //        [Fact]
-//        //        //        public void Cannot_Check_Contact_Exists_With_Invalid_Id()
-//        //        //        {
-//        //        //            // Arrange
-//        //        //            var id = 0;
-
-//        //        //            // Act & Assert
-//        //        //            Assert.Throws<ArgumentNullException>(() => _contactManager.ContactExists(id));
-
-//        //        //            // Arrange
-//        //        //            id = -1;
-
-//        //        //            // Act & Assert
-//        //        //            Assert.Throws<ArgumentNullException>(() => _contactManager.ContactExists(id));
-//        //        //        }
-
-//        private void SetupTestEnv()
-//        {
-//            InsertSeedRecords();
-//            _contactManager = new ContactManager();
-//        }
-//    }
-//}
+            // Assert
+            Assert.Equal(result, expected);
+        }
+    }
+}

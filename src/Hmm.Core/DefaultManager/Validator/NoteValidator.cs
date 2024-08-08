@@ -1,34 +1,36 @@
 ﻿using FluentValidation;
-using Hmm.Utility.Dal.Repository;
+using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Validation;
 using System;
-using Hmm.Core.Map.DomainEntity;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hmm.Core.DefaultManager.Validator
 {
     public class NoteValidator : ValidatorBase<HmmNote>
     {
-        private readonly IVersionRepository<HmmNote> _dataRepository;
+        private readonly IHmmNoteManager _noteManager;
 
-        public NoteValidator(IVersionRepository<HmmNote> noteRepository)
+        public NoteValidator(IHmmNoteManager noteManager)
         {
-            Guard.Against<ArgumentNullException>(noteRepository == null, nameof(noteRepository));
-            _dataRepository = noteRepository;
+            Guard.Against<ArgumentNullException>(noteManager == null, nameof(noteManager));
+            _noteManager = noteManager;
 
             RuleFor(n => n.Subject).NotNull().Length(1, 1000);
-            RuleFor(n => n.Author).NotNull().Must(AuthorNotChanged).WithMessage("Cannot update note's author");
+            RuleFor(n => n.Author).NotNull().MustAsync(AuthorNotChanged).WithMessage("Cannot update note's author");
             RuleFor(n => n.Description).Length(1, 1000);
             RuleFor(n => n.Catalog).NotNull();
         }
 
-        private bool AuthorNotChanged(HmmNote note, Author author)
+        private async Task<bool> AuthorNotChanged(HmmNote note, Author author, CancellationToken cancellationToken)
         {
             if (author == null)
             {
                 return false;
             }
 
-            var savedNote = _dataRepository.GetEntity(note.Id);
+            var savedNote = await _noteManager.GetNoteByIdAsync(note.Id);
 
             // create new user, make sure account name is unique
             var authorId = author.Id;

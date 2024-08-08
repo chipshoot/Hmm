@@ -7,17 +7,19 @@ using System.Threading.Tasks;
 
 namespace Hmm.Core
 {
-    public interface IAuthorManager
+    public interface ITagManager
     {
-        Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<PageList<Tag>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
-        Task<bool> AuthorExistsAsync(int id);
+        Task<bool> TagExistsAsync(int id);
 
-        Task<Author> GetAuthorByIdAsync(int id);
+        Task<Tag> GetTagByIdAsync(int id);
 
-        Task<Author> CreateAsync(Author authorInfo);
+        Task<Tag> GetTagByNameAsync(string name);
 
-        Task<Author> UpdateAsync(Author authorInfo);
+        Task<Tag> CreateAsync(Tag tag);
+
+        Task<Tag> UpdateAsync(Tag tag);
 
         /// <summary>
         /// Set the flag to deactivate author to make it invisible for system.

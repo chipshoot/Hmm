@@ -55,9 +55,12 @@ public class HmmMappingProfile : Profile
         CreateMap<Tag, TagDao>()
             .ForMember(dest => dest.Notes, opt => opt.Ignore());
 
-        CreateMap<HmmNoteDao, HmmNote>();
+        CreateMap<HmmNoteDao, HmmNote>()
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(ntr => ntr.Tag)));
         CreateMap<HmmNote, HmmNoteDao>()
-            .ForMember(dest => dest.Tags, opt => opt.Ignore());
+            .ForMember(dest => dest.Tags,
+                opt => opt.MapFrom(src =>
+                    src.Tags.Select(tag => new NoteTagRefDao { TagId = tag.Id, NoteId = src.Id })));
     }
 
     private static ContactInfo? ContactDaoConvert(string contactString)

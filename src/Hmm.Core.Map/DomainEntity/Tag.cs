@@ -1,16 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Hmm.Utility.Dal.DataEntity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.Core.Map.DomainEntity;
 
-public class Tag : EntityBase
+public class Tag : Entity
 {
-    [Column("name")]
     [MaxLength(200)]
     public string Name { get; set; }
 
-    [Column("isactivated")]
     public bool IsActivated { get; set; }
 
-    public IEnumerable<NoteTagRef> Notes { get; set; }
+    public IEnumerable<HmmNote> Notes { get; set; } = new List<HmmNote>();
 }

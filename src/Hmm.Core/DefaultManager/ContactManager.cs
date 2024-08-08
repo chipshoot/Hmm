@@ -1,79 +1,192 @@
-﻿//using System;
-//using System.Linq.Expressions;
-//using System.Threading.Tasks;
-//using Hmm.Core.DomainEntity;
-//using Hmm.Core.Map.DbEntity;
-//using Hmm.Utility.Dal.Query;
-//using Hmm.Utility.Dal.Repository;
-//using Hmm.Utility.Misc;
-//using Hmm.Utility.Validation;
-//using Microsoft.EntityFrameworkCore.Metadata;
+﻿using AutoMapper;
+using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.Map;
+using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Dal.Repository;
+using Hmm.Utility.Misc;
+using Hmm.Utility.Validation;
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
-//namespace Hmm.Core.DefaultManager;
+namespace Hmm.Core.DefaultManager;
 
-//public class ContactManager: IContactManager
-//{
-//    private readonly IRepository<ContactDao> _contactDaoRepository;
-//    public ContactManager(IRepository<ContactDao> contactRepository, IMapper  mapper)
-//    {
-//        Guard.Against<ArgumentNullException>(contactRepository==null, nameof(contactRepository));
-//        _contactDaoRepository= contactRepository;
-//    }
-//    public PageList<Contact> GetContacts(Expression<Func<Contact, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-//    {
-        
-//        throw new NotImplementedException();
-//    }
+public class ContactManager : IContactManager
+{
+    private readonly IRepository<ContactDao> _contactDaoRepository;
+    private readonly IMapper _mapper;
+    private readonly ValidatorBase<Contact> _validator;
 
-//    public Task<PageList<Contact>> GetContactsAsync(Expression<Func<Contact, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-//    {
-//        throw new NotImplementedException();
-//    }
+    public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper)
+    {
+        Guard.Against<ArgumentNullException>(contactRepository == null, nameof(contactRepository));
+        Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+        _contactDaoRepository = contactRepository;
+        _mapper = mapper;
+        _validator = new ContactValidator();
+    }
 
-//    public bool IsContactExists(int id)
-//    {
-//        throw new NotImplementedException();
-//    }
+    public async Task<PageList<Contact>> GetContactsAsync(Expression<Func<Contact, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+    {
+        try
+        {
+            ProcessResult.Rest();
+            Expression<Func<ContactDao, bool>> daoQuery = null;
+            if (query != null)
+            {
+                daoQuery = ExpressionMapper<Contact, ContactDao>.MapExpression(query);
+            }
+            var contactDaos = await _contactDaoRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
 
-//    public Task<bool> IsContactExistsAsync(int id)
-//    {
-//        throw new NotImplementedException();
-//    }
+            var contacts = _mapper.Map<List<Contact>>(contactDaos);
 
-//    public Contact GetContactById(int id)
-//    {
-//        throw new NotImplementedException();
-//    }
+            var contactPage = resourceCollectionParameters == null
+                ? new PageList<Contact>(contacts, 1, 0, contacts.Count)
+                : new PageList<Contact>(contacts, 1, resourceCollectionParameters.PageNumber,
+                    resourceCollectionParameters.PageSize);
+            return contactPage;
+        }
+        catch (Exception ex)
+        {
+            ProcessResult.WrapException(ex);
+            return null;
+        }
+    }
 
-//    public Task<Contact> GetContactByIdAsync(int id)
-//    {
-//        throw new NotImplementedException();
-//    }
+    public async Task<bool> IsContactExistsAsync(int id)
+    {
+        try
+        {
+            var contactDao = await _contactDaoRepository.GetEntityAsync(id);
+            return contactDao != null;
+        }
+        catch (Exception ex)
+        {
+            ProcessResult.WrapException(ex);
+            return false;
+        }
+    }
 
-//    public Contact Create(Contact contactInfo)
-//    {
-//        throw new NotImplementedException();
-//    }
+    public async Task<Contact> GetContactByIdAsync(int id)
+    {
+        try
+        {
+            ProcessResult.Rest();
+            var contactDao = await _contactDaoRepository.GetEntityAsync(id);
 
-//    public Contact Update(Contact contactInfo)
-//    {
-//        throw new NotImplementedException();
-//    }
+            if (contactDao == null)
+            {
+                return null;
+            }
 
-//    public Task<Contact> UpdateAsync(Contact contactInfo)
-//    {
-//        throw new NotImplementedException();
-//    }
+            var contact = _mapper.Map<Contact>(contactDao);
+            return contact;
+        }
+        catch (Exception ex)
+        {
+            ProcessResult.WrapException(ex);
+            return null;
+        }
+    }
 
-//    public void DeActivate(int id)
-//    {
-//        throw new NotImplementedException();
-//    }
+    public async Task<Contact> CreateAsync(Contact contactInfo)
+    {
+        try
+        {
+            ProcessResult.Rest();
+            var isValid = await _validator.IsValidEntityAsync(contactInfo, ProcessResult);
+            if (!isValid)
+            {
+                return null;
+            }
 
-//    public Task DeActivateAsync(int id)
-//    {
-//        throw new NotImplementedException();
-//    }
+            var contactDao = _mapper.Map<ContactDao>(contactInfo);
+            if (contactDao == null)
+            {
+                ProcessResult.AddErrorMessage("Cannot convert Contact to ContactDao");
+                return null;
+            }
 
-//    public ProcessingResult ProcessResult { get; }
-//}
+            var addedContact = await _contactDaoRepository.AddAsync(contactDao);
+            if (addedContact == null)
+            {
+                ProcessResult.PropagandaResult(_contactDaoRepository.ProcessMessage);
+                return null;
+            }
+
+            contactInfo.Id = addedContact.Id;
+            return contactInfo;
+        }
+        catch (Exception ex)
+        {
+            ProcessResult.WrapException(ex);
+            return null;
+        }
+    }
+
+    public async Task<Contact> UpdateAsync(Contact contactInfo)
+    {
+        if (contactInfo == null)
+        {
+            return null;
+        }
+
+        ProcessResult.Rest();
+        if (!await _validator.IsValidEntityAsync(contactInfo, ProcessResult))
+        {
+            return null;
+        }
+
+        var savedContact = await _contactDaoRepository.GetEntityAsync(contactInfo.Id);
+        if (savedContact == null)
+        {
+            ProcessResult.AddErrorMessage($"Cannot find contact: {contactInfo.Id} for updating");
+            return null;
+        }
+
+        // update Contact record
+        var contactDao = _mapper.Map<ContactDao>(contactInfo);
+        if (contactDao == null)
+        {
+            ProcessResult.AddErrorMessage("Cannot convert Contact to ContactDao");
+            return null;
+        }
+
+        var updatedContactDao = await _contactDaoRepository.UpdateAsync(contactDao);
+        if (updatedContactDao == null)
+        {
+            ProcessResult.PropagandaResult(_contactDaoRepository.ProcessMessage);
+        }
+
+        var updatedContact = _mapper.Map<Contact>(updatedContactDao);
+        return updatedContact;
+    }
+
+    public async Task DeActivateAsync(int id)
+    {
+        ProcessResult.Rest();
+        var contact = await _contactDaoRepository.GetEntityAsync(id);
+        if (contact == null)
+        {
+            ProcessResult.Success = false;
+            ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
+        }
+        else if (contact.IsActivated)
+        {
+            try
+            {
+                contact.IsActivated = false;
+                await _contactDaoRepository.UpdateAsync(contact);
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+            }
+        }
+    }
+
+    public ProcessingResult ProcessResult { get; } = new();
+}

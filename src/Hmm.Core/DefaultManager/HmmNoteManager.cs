@@ -1,9 +1,15 @@
-﻿using Hmm.Core.Map.DomainEntity;
+﻿using AutoMapper;
+using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.Map;
+using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -13,198 +19,260 @@ namespace Hmm.Core.DefaultManager
     {
         #region private fields
 
-        private readonly IVersionRepository<HmmNote> _noteRepository;
+        private readonly IVersionRepository<HmmNoteDao> _noteRepository;
+        private readonly IMapper _mapper;
         private readonly IHmmValidator<HmmNote> _validator;
         private readonly IDateTimeProvider _dateProvider;
+        private readonly ITagManager _tagManager;
 
         #endregion private fields
 
-        public HmmNoteManager(IVersionRepository<HmmNote> noteRepository, IHmmValidator<HmmNote> validator, IDateTimeProvider dateProvider)
+        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, ITagManager tagManager, IDateTimeProvider dateProvider)
         {
             Guard.Against<ArgumentNullException>(noteRepository == null, nameof(noteRepository));
-            Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
+            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            Guard.Against<ArgumentNullException>(tagManager == null, nameof(tagManager));
             Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));
+
             _noteRepository = noteRepository;
-            _validator = validator;
+            _mapper = mapper;
             _dateProvider = dateProvider;
-        }
-
-        public HmmNote Create(HmmNote note)
-        {
-            if (!_validator.IsValidEntity(note, ProcessResult))
-            {
-                return null;
-            }
-
-            note.CreateDate = _dateProvider.UtcNow;
-            note.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = _noteRepository.Add(note);
-            if (ret == null)
-            {
-                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-            }
-            return ret;
+            _tagManager = tagManager;
+            _validator = new NoteValidator(this);
         }
 
         public async Task<HmmNote> CreateAsync(HmmNote note)
         {
-            if (!_validator.IsValidEntity(note, ProcessResult))
+            try
             {
+                ProcessResult.Rest();
+                if (!await _validator.IsValidEntityAsync(note, ProcessResult))
+                {
+                    return null;
+                }
+
+                note.CreateDate = _dateProvider.UtcNow;
+                note.LastModifiedDate = _dateProvider.UtcNow;
+                var noteDao = _mapper.Map<HmmNoteDao>(note);
+                if (noteDao == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot map note {note.Subject} to NoteDao");
+                    return null;
+                }
+                var ret = await _noteRepository.AddAsync(noteDao);
+                if (ret == null)
+                {
+                    ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
+                    return null;
+                }
+
+                note.Id = ret.Id;
+                note.Version = ret.Version;
+                return note;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
                 return null;
             }
-
-            note.CreateDate = _dateProvider.UtcNow;
-            note.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = await _noteRepository.AddAsync(note);
-            if (ret == null)
-            {
-                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-            }
-            return ret;
-        }
-
-        public HmmNote Update(HmmNote note)
-        {
-            if (!_validator.IsValidEntity(note, ProcessResult))
-            {
-                return null;
-            }
-
-            // make sure not update note which get cached in current session
-            var curNote = GetNoteById(note.Id);
-            if (curNote == null)
-            {
-                ProcessResult.AddErrorMessage($"Cannot find note {note.Id} ");
-                return null;
-            }
-
-            curNote.Subject = note.Subject;
-            curNote.Content = note.Content;
-            curNote.IsDeleted = note.IsDeleted;
-            curNote.Description = note.Description;
-            curNote.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = _noteRepository.Update(curNote);
-            if (ret == null)
-            {
-                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-            }
-
-            return ret;
         }
 
         public async Task<HmmNote> UpdateAsync(HmmNote note)
         {
-            if (!_validator.IsValidEntity(note, ProcessResult))
+            try
             {
+                ProcessResult.Rest();
+                var isValid = await _validator.IsValidEntityAsync(note, ProcessResult);
+                if (!isValid)
+                {
+                    return null;
+                }
+
+                // make sure not update note which get cached in current session
+                var curNoteDao = await GetNoteByIdAsync(note.Id);
+                if (curNoteDao == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot find note {note.Id} ");
+                    return null;
+                }
+
+                var noteDao = _mapper.Map<HmmNoteDao>(note);
+                if (noteDao == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot map note {note.Subject} to NoteDao");
+                    return null;
+                }
+
+                noteDao.LastModifiedDate = _dateProvider.UtcNow;
+                var updatedNoteDao = await _noteRepository.UpdateAsync(noteDao);
+                if (updatedNoteDao == null)
+                {
+                    ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
+                    return null;
+                }
+
+                var updatedNote = _mapper.Map<HmmNote>(updatedNoteDao);
+                if (updatedNote == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot map NoteDao to note");
+                    return null;
+                }
+
+                return updatedNote;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
                 return null;
             }
-
-            // make sure not update note which get cached in current session
-            var curNote = await GetNoteByIdAsync(note.Id);
-            if (curNote == null)
-            {
-                ProcessResult.AddErrorMessage($"Cannot find note {note.Id} ");
-                return null;
-            }
-
-            curNote.Subject = note.Subject;
-            curNote.Content = note.Content;
-            curNote.IsDeleted = note.IsDeleted;
-            curNote.Description = note.Description;
-            curNote.LastModifiedDate = _dateProvider.UtcNow;
-            var ret = await _noteRepository.UpdateAsync(curNote);
-            if (ret == null)
-            {
-                ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-            }
-
-            return ret;
         }
 
-        public bool Delete(int noteId)
+        public async Task<List<Tag>> ApplyTag(HmmNote note, Tag tag)
         {
-            var note = GetNoteById(noteId);
-
-            if (note == null)
+            try
             {
-                ProcessResult.AddErrorMessage($"Cannot find note with id {noteId}", true);
+                ProcessResult.Rest();
+
+                // Retrieve the HmmNote entity based on the HmmNoteDao
+                var hmmNote = await GetNoteByIdAsync(note.Id);
+                if (hmmNote == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot find note {note.Id}");
+                    return null;
+                }
+
+                // Check if the tag exits in system
+                var retrievedTag = (tag.Id > 0
+                    ? await _tagManager.GetTagByIdAsync(tag.Id)
+                    : await _tagManager.GetTagByNameAsync(tag.Name)) ?? await _tagManager.CreateAsync(tag);
+
+                if (retrievedTag == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot create tag {tag.Name}");
+                    return null;
+                }
+
+                // Check if the tag is already associated with the HmmNote entity
+                if (hmmNote.Tags.Any(t => t.Id == retrievedTag.Id))
+                {
+                    ProcessResult.AddInfoMessage($"Tag {tag.Name} is already associated with note {note.Id}");
+                    return hmmNote.Tags;
+                }
+
+                // Apply the tag to the HmmNote entity
+                hmmNote.Tags.Add(retrievedTag);
+
+                // Update the HmmNote entity in the repository
+                var updatedHmmNote = await UpdateAsync(hmmNote);
+                note.Tags = updatedHmmNote.Tags;
+
+                // Return the list of tags associated with the HmmNote entity
+                return updatedHmmNote?.Tags;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<List<Tag>> RemoveTag(HmmNote note, int tagId)
+        {
+            try
+            {
+                ProcessResult.Rest();
+
+                // Retrieve the HmmNote entity based on the HmmNoteDao
+                var hmmNote = await GetNoteByIdAsync(note.Id);
+                if (hmmNote == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot find note {note.Id}");
+                    return null;
+                }
+
+                // Check if the tag is already associated with the HmmNote entity
+                var tag = hmmNote.Tags.FirstOrDefault(t => t.Id == tagId);
+                if (tag == null)
+                {
+                    ProcessResult.AddInfoMessage($"Tag {tagId} is does not associated with note {note.Id}");
+                    return hmmNote.Tags;
+                }
+
+                // Apply the tag to the HmmNote entity
+                hmmNote.Tags.Remove(tag);
+
+                // Update the HmmNote entity in the repository
+                var updatedHmmNote = await UpdateAsync(hmmNote);
+                note.Tags = updatedHmmNote.Tags;
+
+                // Return the list of tags associated with the HmmNote entity
+                return updatedHmmNote?.Tags;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var noteDao = await GetNoteByIdAsync(id);
+
+            if (noteDao == null)
+            {
+                ProcessResult.AddErrorMessage($"Cannot find note with id {id}", true);
                 return false;
             }
 
-            note.IsDeleted = true;
-            var deletedNote = Update(note);
-            if (deletedNote != null)
+            noteDao.IsDeleted = true;
+            var deletedNoteDao = await UpdateAsync(noteDao);
+            if (deletedNoteDao != null)
             {
                 return true;
             }
 
             ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             return false;
-        }
-
-        public async Task<bool> DeleteAsync(int noteId)
-        {
-            var note = await GetNoteByIdAsync(noteId);
-
-            if (note == null)
-            {
-                ProcessResult.AddErrorMessage($"Cannot find note with id {noteId}", true);
-                return false;
-            }
-
-            note.IsDeleted = true;
-            var deletedNote = await UpdateAsync(note);
-            if (deletedNote != null)
-            {
-                return true;
-            }
-
-            ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-            return false;
-        }
-
-        public HmmNote GetNoteById(int id, bool includeDeleted = false)
-        {
-            var note = _noteRepository.GetEntity(id);
-            if (includeDeleted)
-            {
-                return note;
-            }
-
-            if (note != null)
-            {
-                return note.IsDeleted ? null : note;
-            }
-
-            return null;
         }
 
         public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
         {
-            var note = await _noteRepository.GetEntityAsync(id);
-            if (note is { IsDeleted: true } && !includeDelete)
+            var noteDao = await _noteRepository.GetEntityAsync(id);
+            switch (noteDao)
             {
+                case null:
+                case { IsDeleted: true } when !includeDelete:
+                    return null;
+            }
+
+            var note = _mapper.Map<HmmNote>(noteDao);
+            if (note == null)
+            {
+                ProcessResult.AddErrorMessage($"Cannot map NoteDao to Note");
                 return null;
             }
 
             return note;
         }
 
-        public PageList<HmmNote> GetNotes(Expression<Func<HmmNote, bool>> query, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            var predicate = PredicateBuilder.True<HmmNote>();
-            predicate = query == null ? predicate : predicate.And(query);
-            predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
-            var notes = _noteRepository.GetEntities(predicate, resourceCollectionParameters);
-            return notes;
-        }
-
         public async Task<PageList<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var predicate = PredicateBuilder.True<HmmNote>();
-            predicate = query == null ? predicate : predicate.And(query);
-            predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
-            var notes = await _noteRepository.GetEntitiesAsync(predicate, resourceCollectionParameters);
+            PageList<HmmNoteDao> noteDaos;
+            if (query != null)
+            {
+                var daoQuery = ExpressionMapper<HmmNote, HmmNoteDao>.MapExpression(query);
+                var predicate = PredicateBuilder.True<HmmNoteDao>();
+                predicate = predicate.And(daoQuery);
+                predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
+                noteDaos = await _noteRepository.GetEntitiesAsync(predicate, resourceCollectionParameters);
+            }
+            else
+            {
+                noteDaos = await _noteRepository.GetEntitiesAsync(null, resourceCollectionParameters);
+            }
+
+            var notes = _mapper.Map<PageList<HmmNote>>(noteDaos);
             return notes;
         }
 

@@ -1,9 +1,11 @@
-﻿// Ignore Spelling: Dao
+﻿// Ignore Spelling: Dao Daos
 
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace Hmm.Utility.TestHelp;
 
@@ -79,6 +81,34 @@ public static class SampleDataGenerator
         };
 
         return authorDao;
+    }
+
+    public static List<AuthorDao> GetAuthorDaos()
+    {
+        var authors = new List<AuthorDao>
+        {
+            new AuthorDao
+            {
+                Id = 100,
+                AccountName = "fchy",
+                ContactInfo = GetContactDao(),
+                Role = Core.Map.DbEntity.AuthorRoleType.Author,
+                Description = "Testing Author",
+                IsActivated = true
+            },
+
+            new AuthorDao
+            {
+                Id = 101,
+                AccountName = "jfang",
+                ContactInfo = GetContactDao(),
+                Role = Core.Map.DbEntity.AuthorRoleType.Author,
+                Description = "Testing Author2",
+                IsActivated = true
+            },
+        };
+
+        return authors;
     }
 
     public static NoteCatalog GetCatalog()
@@ -173,10 +203,48 @@ public static class SampleDataGenerator
         {
             Id = 100,
             Name = "ComputerPeripheral",
-            IsActivated = true
+            IsActivated = true,
+            Description = "This is tag for testing"
         };
 
         return tagDao;
+    }
+
+    public static List<TagDao> GetTagDaos()
+    {
+        var tags = new List<TagDao>
+        {
+            new TagDao
+            {
+                Id = 100,
+                Name = "ComputerPeripheral",
+                IsActivated = true,
+                Description = "This is tag for testing"
+            },
+            new TagDao
+            {
+                Id = 101,
+                Name = "SystemConfiguration",
+                IsActivated = true,
+                Description = "This is tag for testing"
+            },
+            new TagDao
+            {
+                Id = 102,
+                Name = "GasLog",
+                IsActivated = true,
+                Description = "This is tag for testing"
+            },
+            new TagDao
+            {
+                Id = 103,
+                Name = "Diary",
+                IsActivated = true,
+                Description = "This is tag for testing"
+            }
+        };
+
+        return tags;
     }
 
     // Extension methods
@@ -190,6 +258,8 @@ public static class SampleDataGenerator
 
         if (targetNote == null)
         {
+            var tags = source.Tags.Select(tag => tag.Clone()).ToList();
+
             var target = new HmmNoteDao
             {
                 Id = source.Id,
@@ -201,6 +271,7 @@ public static class SampleDataGenerator
                 CreateDate = source.CreateDate,
                 IsDeleted = source.IsDeleted,
                 LastModifiedDate = source.LastModifiedDate,
+                Tags = tags,
                 Version = source.Version
             };
             return target;
@@ -216,6 +287,7 @@ public static class SampleDataGenerator
             targetNote.CreateDate = source.CreateDate;
             targetNote.IsDeleted = source.IsDeleted;
             targetNote.LastModifiedDate = source.LastModifiedDate;
+            targetNote.Tags = source.Tags.Select(tag => tag.Clone()).ToList();
             targetNote.Version = source.Version;
 
             return targetNote;
@@ -307,5 +379,59 @@ public static class SampleDataGenerator
         targetCatalog.Schema = source.Schema;
 
         return targetCatalog;
+    }
+
+    public static TagDao Clone(this TagDao source, TagDao targetTag = null)
+    {
+        if (source == null)
+        {
+            return null;
+        }
+
+        if (targetTag == null)
+        {
+            var target = new TagDao
+            {
+                Id = source.Id,
+                Name = source.Name,
+                Description = source.Description,
+                IsActivated = source.IsActivated,
+                Notes = source.Notes
+            };
+            return target;
+        }
+
+        targetTag.Id = source.Id;
+        targetTag.Name = source.Name;
+        targetTag.Description = source.Description;
+        targetTag.IsActivated = source.IsActivated;
+        targetTag.Notes = source.Notes;
+
+        return targetTag;
+    }
+
+    private static NoteTagRefDao Clone(this NoteTagRefDao source, NoteTagRefDao targetNoteTag = null)
+    {
+        if (source == null)
+        {
+            return null;
+        }
+
+        if (targetNoteTag == null)
+        {
+            var target = new NoteTagRefDao
+            {
+                NoteId = source.NoteId,
+                TagId = source.TagId,
+                Note = source.Note,
+                Tag = source.Tag
+            };
+            return target;
+        }
+
+        targetNoteTag.Note = source.Note;
+        targetNoteTag.Tag = source.Tag;
+
+        return targetNoteTag;
     }
 }

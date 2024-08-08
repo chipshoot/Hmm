@@ -1,249 +1,192 @@
-﻿//// Ignore Spelling: Repo
+﻿using AutoMapper;
+using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.Map;
+using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Dal.Repository;
+using Hmm.Utility.Misc;
+using Hmm.Utility.Validation;
+using System;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
-//using Hmm.Utility.Dal.Query;
-//using Hmm.Utility.Dal.Repository;
-//using Hmm.Utility.Misc;
-//using Hmm.Utility.Validation;
-//using System;
-//using System.Linq.Expressions;
-//using System.Threading.Tasks;
+namespace Hmm.Core.DefaultManager
+{
+    public class AuthorManager : IAuthorManager
+    {
+        private readonly IRepository<AuthorDao> _authorRepository;
+        private readonly ValidatorBase<Author> _validator;
+        private readonly IMapper _mapper;
 
-//namespace Hmm.Core.DefaultManager
-//{
-//    public class AuthorManager : IAuthorManager
-//    {
-//        private readonly IRepository<AuthorDao> _authorRepo;
-//        private readonly IHmmValidator<AuthorDao> _validator;
+        public AuthorManager(IRepository<AuthorDao> authorRepository, IMapper mapper)
+        {
+            Guard.Against<ArgumentNullException>(authorRepository == null, nameof(authorRepository));
+            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            _authorRepository = authorRepository;
+            _mapper = mapper;
+            _validator = new AuthorValidator(this);
+        }
 
-//        public AuthorManager(IRepository<AuthorDao> authorRepo, IHmmValidator<AuthorDao> validator)
-//        {
-//            Guard.Against<ArgumentNullException>(authorRepo == null, nameof(authorRepo));
-//            Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
-//            _authorRepo = authorRepo;
-//            _validator = validator;
-//        }
+        public async Task<Author> CreateAsync(Author authorInfo)
+        {
+            try
+            {
+                ProcessResult.Rest();
+                if (!await _validator.IsValidEntityAsync(authorInfo, ProcessResult))
+                {
+                    return null;
+                }
 
-//        public AuthorDao Create(AuthorDao authorInfo)
-//        {
-//            // reset user id to apply unique account name validation
-//            authorInfo.Id = 0;
-//            if (!_validator.IsValidEntity(authorInfo, ProcessResult))
-//            {
-//                return null;
-//            }
+                var userDao = _mapper.Map<AuthorDao>(authorInfo);
+                if (userDao == null)
+                {
+                    ProcessResult.AddErrorMessage("Cannot convert Author to AuthorDao");
+                    return null;
+                }
 
-//            try
-//            {
-//                var addedUsr = _authorRepo.Add(authorInfo);
-//                return addedUsr;
-//            }
-//            catch (Exception ex)
-//            {
-//                ProcessResult.WrapException(ex);
-//                return null;
-//            }
-//        }
+                var addedUsrDao = await _authorRepository.AddAsync(userDao);
+                if (addedUsrDao == null)
+                {
+                    ProcessResult.PropagandaResult(_authorRepository.ProcessMessage);
+                    return null;
+                }
 
-//        public async Task<AuthorDao> CreateAsync(AuthorDao authorInfo)
-//        {
-//            // reset user id to apply unique account name validation
-//            authorInfo.Id = 0;
-//            if (!_validator.IsValidEntity(authorInfo, ProcessResult))
-//            {
-//                return null;
-//            }
+                authorInfo.Id = addedUsrDao.Id;
+                return authorInfo;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
 
-//            try
-//            {
-//                var addedUsr = await _authorRepo.AddAsync(authorInfo);
-//                return addedUsr;
-//            }
-//            catch (Exception ex)
-//            {
-//                ProcessResult.WrapException(ex);
-//                return null;
-//            }
-//        }
+        public async Task<bool> AuthorExistsAsync(int id)
+        {
+            try
+            {
+                ProcessResult.Rest();
+                var authorDao = await _authorRepository.GetEntityAsync(id);
+                return authorDao != null;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return false;
+            }
+        }
 
-//        public bool AuthorExists(string id)
-//        {
-//            Guard.Against<ArgumentNullException>(string.IsNullOrEmpty(id), nameof(id));
+        public async Task<Author> GetAuthorByIdAsync(int id)
+        {
+            ProcessResult.Rest();
+            var authorDao = await _authorRepository.GetEntityAsync(id);
+            if (authorDao == null)
+            {
+                return null;
+            }
 
-//            if (!int.TryParse(id, out var userId))
-//            {
-//                throw new ArgumentOutOfRangeException(nameof(id));
-//            }
+            var author = _mapper.Map<Author>(authorDao);
+            if (author == null)
+            {
+                ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
+                return null;
+            }
 
-//            return _authorRepo.GetEntity(userId) != null;
-//        }
+            return author;
+        }
 
-//        public AuthorDao GetAuthorById(int id)
-//        {
-//            var author = _authorRepo.GetEntity(id);
-//            if (author == null)
-//            {
-//                ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
-//            }
+        public async Task<Author> UpdateAsync(Author authorInfo)
+        {
+            try
+            {
+                ProcessResult.Rest();
+                if (!await _validator.IsValidEntityAsync(authorInfo, ProcessResult))
+                {
+                    return null;
+                }
 
-//            return author;
-//        }
+                var authorDao = _mapper.Map<AuthorDao>(authorInfo);
+                if (authorDao == null)
+                {
+                    ProcessResult.AddErrorMessage("Cannot convert Author to AuthorDao");
+                    return null;
+                }
 
-//        public async Task<AuthorDao> GetAuthorByIdAsync(int id)
-//        {
-//            var author = await _authorRepo.GetEntityAsync(id);
-//            if (author == null)
-//            {
-//                ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
-//            }
+                var savedAuthorDao = await _authorRepository.GetEntityAsync(authorInfo.Id);
+                if (savedAuthorDao == null)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
+                    return null;
+                }
 
-//            return author;
-//        }
+                var updatedUserDao = await _authorRepository.UpdateAsync(authorDao);
+                if (updatedUserDao == null)
+                {
+                    ProcessResult.PropagandaResult(_authorRepository.ProcessMessage);
+                    return null;
+                }
 
-//        public async Task<bool> AuthorExistsAsync(string id)
-//        {
-//            Guard.Against<ArgumentNullException>(string.IsNullOrEmpty(id), nameof(id));
+                var updatedUser = _mapper.Map<Author>(updatedUserDao);
+                if (updatedUser == null)
+                {
+                    ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
+                    return null;
+                }
 
-//            if (!int.TryParse(id, out var userId))
-//            {
-//                throw new ArgumentOutOfRangeException(nameof(id));
-//            }
+                return updatedUser;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
 
-//            var author = await _authorRepo.GetEntityAsync(userId);
-//            return author != null;
-//        }
+        public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        {
+            try
+            {
+                ProcessResult.Rest();
+                Expression<Func<AuthorDao, bool>> daoQuery = null;
+                if (query != null)
+                {
+                    daoQuery = ExpressionMapper<Author, AuthorDao>.MapExpression(query);
+                }
 
-//        public AuthorDao Update(AuthorDao authorInfo)
-//        {
-//            try
-//            {
-//                if (!_validator.IsValidEntity(authorInfo, ProcessResult))
-//                {
-//                    return null;
-//                }
+                var authorDaos = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                var authors = _mapper.Map<PageList<Author>>(authorDaos);
+                return authors;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
 
-//                if (!AuthorExists(authorInfo.Id.ToString()))
-//                {
-//                    ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
-//                    return null;
-//                }
-//                var updatedUser = _authorRepo.Update(authorInfo);
-//                if (updatedUser == null)
-//                {
-//                    ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
-//                }
+        public async Task DeActivateAsync(int id)
+        {
+            ProcessResult.Rest();
+            var user = await _authorRepository.GetEntityAsync(id);
+            if (user == null)
+            {
+                ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
+            }
+            else if (user.IsActivated)
+            {
+                try
+                {
+                    user.IsActivated = false;
+                    await _authorRepository.UpdateAsync(user);
+                }
+                catch (Exception ex)
+                {
+                    ProcessResult.WrapException(ex);
+                }
+            }
+        }
 
-//                return updatedUser;
-//            }
-//            catch (Exception ex)
-//            {
-//                ProcessResult.WrapException(ex);
-//                return null;
-//            }
-//        }
-
-//        public async Task<AuthorDao> UpdateAsync(AuthorDao authorInfo)
-//        {
-//            try
-//            {
-//                if (!_validator.IsValidEntity(authorInfo, ProcessResult))
-//                {
-//                    return null;
-//                }
-
-//                var authorExists = await AuthorExistsAsync(authorInfo.Id.ToString());
-//                if (!authorExists)
-//                {
-//                    ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
-//                    return null;
-//                }
-//                var updatedUser = await _authorRepo.UpdateAsync(authorInfo);
-//                if (updatedUser == null)
-//                {
-//                    ProcessResult.PropagandaResult(_authorRepo.ProcessMessage);
-//                }
-
-//                return updatedUser;
-//            }
-//            catch (Exception ex)
-//            {
-//                ProcessResult.WrapException(ex);
-//                return null;
-//            }
-//        }
-
-//        public PageList<AuthorDao> GetEntities(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-//        {
-//            try
-//            {
-//                var authors = _authorRepo.GetEntities(query, resourceCollectionParameters);
-
-//                return authors;
-//            }
-//            catch (Exception ex)
-//            {
-//                ProcessResult.WrapException(ex);
-//                return null;
-//            }
-//        }
-
-//        public async Task<PageList<AuthorDao>> GetEntitiesAsync(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-//        {
-//            try
-//            {
-//                var authors = await _authorRepo.GetEntitiesAsync(query, resourceCollectionParameters);
-//                return authors;
-//            }
-//            catch (Exception ex)
-//            {
-//                ProcessResult.WrapException(ex);
-//                return null;
-//            }
-//        }
-
-//        public void DeActivate(int id)
-//        {
-//            var user = _authorRepo.GetEntity(id);
-//            if (user == null)
-//            {
-//                ProcessResult.Success = false;
-//                ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
-//            }
-//            else if (user.IsActivated)
-//            {
-//                try
-//                {
-//                    user.IsActivated = false;
-//                    _authorRepo.Update(user);
-//                }
-//                catch (Exception ex)
-//                {
-//                    ProcessResult.WrapException(ex);
-//                }
-//            }
-//        }
-
-//        public async Task DeActivateAsync(int id)
-//        {
-//            var user = await _authorRepo.GetEntityAsync(id);
-//            if (user == null)
-//            {
-//                ProcessResult.Success = false;
-//                ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
-//            }
-//            else if (user.IsActivated)
-//            {
-//                try
-//                {
-//                    user.IsActivated = false;
-//                    await _authorRepo.UpdateAsync(user);
-//                }
-//                catch (Exception ex)
-//                {
-//                    ProcessResult.WrapException(ex);
-//                }
-//            }
-//        }
-
-//        public ProcessingResult ProcessResult { get; } = new();
-//    }
-//}
+        public ProcessingResult ProcessResult { get; } = new();
+    }
+}

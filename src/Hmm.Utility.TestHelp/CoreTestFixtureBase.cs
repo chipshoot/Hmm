@@ -1,382 +1,460 @@
-﻿using System;
+﻿using Hmm.Core.Map.DbEntity;
+using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Dal.Repository;
+using Hmm.Utility.Misc;
+using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using AutoMapper;
+using Hmm.Core.Map;
+using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.Utility.TestHelp
 {
     public class CoreTestFixtureBase : IDisposable
     {
-        //        private const int PageIdx = 1;
-        //        private const int PageSize = 20;
-        //        private List<AuthorDao> _authors;
-        //        private List<ContactDao> _contacts;
-        //        private List<NoteCatalogDao> _catalogs;
-        //        private List<HmmNoteDao> _notes;
+        private const int PageIdx = 1;
+        private const int PageSize = 20;
 
-                protected CoreTestFixtureBase()
+        private List<AuthorDao> _authorDaos;
+        private List<ContactDao> _contactDaos;
+        private List<NoteCatalogDao> _catalogDaos;
+        private List<HmmNoteDao> _noteDaos;
+        private List<TagDao> _tagDaos;
+
+        protected CoreTestFixtureBase()
+        {
+            SetMockEnvironment();
+        }
+
+        protected DateTime CurrentTime { get; set; } = DateTime.UtcNow;
+
+        protected IRepository<AuthorDao> AuthorRepository { get; private set; }
+        protected IRepository<ContactDao> ContactRepository { get; private set; }
+
+        protected IVersionRepository<HmmNoteDao> NoteRepository { get; private set; }
+
+        protected IRepository<NoteCatalogDao> CatalogRepository { get; private set; }
+
+        protected ICompositeEntityRepository<TagDao, HmmNoteDao> TagRepository { get; private set; }
+
+        protected IEntityLookup LookupRepository { get; private set; }
+
+        protected IDateTimeProvider DateProvider { get; private set; }
+
+        protected IMapper Mapper { get; private set; }
+
+        protected async Task<Author> GetTestAuthor(string accountName = null)
+        {
+            AuthorDao authorDao;
+            if (string.IsNullOrEmpty(accountName))
+            {
+                var authorDaos = await AuthorRepository.GetEntitiesAsync();
+                authorDao = authorDaos.FirstOrDefault();
+                if (authorDao == null)
                 {
+                    return null;
                 }
-
-        //        protected DateTime CurrentTime { get; set; } = DateTime.UtcNow;
-
-        //        protected IRepository<AuthorDao> AuthorRepository { get; private set; }
-        //        protected IRepository<ContactDao> ContactRepository { get; private set; }
-
-        //        protected IVersionRepository<HmmNoteDao> NoteRepository { get; private set; }
-
-        //        protected IRepository<NoteCatalogDao> CatalogRepository { get; private set; }
-
-        //        protected IEntityLookup LookupRepository { get; private set; }
-
-        //        protected IDateTimeProvider DateProvider { get; private set; }
-
-        //        //protected MockAuthorValidator FakeAuthorValidator => new(AuthorRepository);
-
-        //        //protected static MockCatalogValidator FakeCatalogValidator => new();
-
-        //        //protected MockNoteValidator FakeNoteValidator => new(NoteRepository);
-
-                protected virtual void InsertSeedRecords()
+            }
+            else
+            {
+                var authorDaos = await AuthorRepository.GetEntitiesAsync(a => a.AccountName == accountName);
+                authorDao = authorDaos.FirstOrDefault();
+                if (authorDao == null)
                 {
-        //            //            authors ??= [];
-        //            //            contacts ??= [];
-        //            //            catalogs ??= [];
-
-        //            //            // Add authors records
-        //            //            authors.Add(
-        //            //                new AuthorDb
-        //            //                {
-        //            //                    AccountName = "jfang",
-        //            //                    IsActivated = true,
-        //            //                    Description = "testing user"
-        //            //                });
-        //            //            contacts.Add(
-        //            //                new ContactDb
-        //            //                {
-        //            //                    Contact = "{}",
-        //            //                    IsActivated = true,
-        //            //                    Description = "testing user"
-        //            //                });
-
-        //            //            // Add default note catalogs
-        //            //            catalogs.Add(
-        //            //                new NoteCatalog
-        //            //                {
-        //            //                    Name = "DefaultNoteCatalog",
-        //            //                    Schema = "DefaultSchema",
-        //            //                    IsDefault = true,
-        //            //                    Description = "Testing catalog"
-        //            //                });
-
-        //            //            // Add default contact
-        //            //            //contacts.Add(
-        //            //            //    new ContactDb
-        //            //            //    {
-        //            //            //        Id = 1,
-        //            //            //        FirstName = "Chaoyang",
-        //            //            //        LastName = "Fang",
-        //            //            //        Addresses =
-        //            //            //        [
-        //            //            //            new AddressInfo
-        //            //            //            {
-        //            //            //                Address = "401-1750 Bloor St.", City = "Mississauga", Country = "Canada",
-        //            //            //                PostalCode = "L4X 1S9", State = "Ontario", IsPrimary = true, Type = AddressType.Home
-        //            //            //            }
-        //            //            //        ],
-        //            //            //        Emails =
-        //            //            //        [
-        //            //            //            new Email { Address = "fchy@yahoo.com", IsPrimary = false, Type = EmailType.Personal },
-        //            //            //            new Email { Address = "fchy5979@gmail.com", IsPrimary = true, Type = EmailType.Personal }
-        //            //            //        ],
-        //            //            //        Phones =
-        //            //            //        [
-        //            //            //            new Phone { Number = "647-291-5959", IsPrimary = true, Type = TelephoneType.Mobile },
-        //            //            //            new Phone { Number = "905-232-5979", IsPrimary = false, Type = TelephoneType.Home }
-        //            //            //        ],
-        //            //            //        Description = "Testing contact 1",
-        //            //            //        IsActivated = true
-        //            //            //    });
+                    return null;
                 }
+            }
 
-        //        //        private void SetupRecords(
-        //        //            IEnumerable<AuthorDb> users,
-        //        //            IEnumerable<NoteCatalog> catalogs,
-        //        //            IEnumerable<Contact> contacts)
-        //        //        {
-        //        //            Guard.Against<ArgumentNullException>(users == null, nameof(users));
-        //        //            Guard.Against<ArgumentNullException>(catalogs == null, nameof(catalogs));
-        //        //            Guard.Against<ArgumentNullException>(contacts == null, nameof(contacts));
+            var author = Mapper.Map<Author>(authorDao);
+            return author;
+        }
 
-        //        //            SetMockEnvironment();
+        protected async Task<NoteCatalog> GetTestCatalog()
+        {
+            var catalogDaos = await CatalogRepository.GetEntitiesAsync();
+            var catalogDao = catalogDaos.FirstOrDefault();
+            if (catalogDao == null)
+            {
+                return null;
+            }
 
-        //        //            // ReSharper disable PossibleNullReferenceException
-        //        //            foreach (var user in users)
-        //        //            {
-        //        //                AuthorRepository.Add(user);
-        //        //            }
+            var catalog = Mapper.Map<NoteCatalog>(catalogDao);
+            return catalog;
+        }
 
-        //        //            foreach (var catalog in catalogs)
-        //        //            {
-        //        //                CatalogRepository.Add(catalog);
-        //        //            }
+        protected async Task<Tag> GetTestTag(string tagName = null)
+        {
+            TagDao tagDao;
+            if (string.IsNullOrEmpty(tagName))
+            {
+                var tagDaos = await TagRepository.GetEntitiesAsync();
+                tagDao = tagDaos.FirstOrDefault();
+                if (tagDao == null)
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                var tagDaos = await TagRepository.GetEntitiesAsync(t => t.Name == tagName);
+                tagDao = tagDaos.FirstOrDefault();
+                if (tagDao == null)
+                {
+                    return null;
+                }
+            }
 
-        //        //            foreach (var contact in contacts)
-        //        //            {
-        //        //            }
+            var tag = Mapper.Map<Tag>(tagDao);
+            return tag;
+        }
 
-        //        //            // ReSharper restore PossibleNullReferenceException
-        //        //        }
+        protected static string GetRandomString(int length)
+        {
+            if (length <= 0)
+            {
+                return string.Empty;
+            }
+
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private void SetMockEnvironment()
+        {
+            InsertSeedRecords();
+
+            // set up for entity look up
+            LookupRepository = GetLookupRepository();
+
+            // Setup contact repository
+            ContactRepository = GetContactRepository();
+
+            // Setup author repository
+            AuthorRepository = GetAuthorRepository();
+
+            // Setup note repository
+            NoteRepository = GetNoteRepository();
+
+            // Setup note catalog
+            CatalogRepository = GetNoteCatalogRepository();
+
+            // Setup tag repository
+            TagRepository = GetTagRepository();
+
+            var mockDateProvider = new Mock<IDateTimeProvider>();
+            mockDateProvider.Setup(t => t.UtcNow).Returns(() => CurrentTime);
+            DateProvider = mockDateProvider.Object;
+
+            // Config mapper
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<HmmMappingProfile>();
+            });
+            Mapper = config.CreateMapper();
+        }
+
+        protected virtual void InsertSeedRecords()
+        {
+            _contactDaos ??= [];
+            _authorDaos ??= [];
+            _catalogDaos ??= [];
+            _noteDaos ??= [];
+            _tagDaos ??= [];
+
+            // Add default contacts
+            _contactDaos.Add(SampleDataGenerator.GetContactDao());
+            // Add authors records
+            _authorDaos.AddRange(SampleDataGenerator.GetAuthorDaos());
+
+            // Add default note catalogs
+            _catalogDaos.Add(SampleDataGenerator.GetCatalogDao());
+
+            // Add default notes
+            _noteDaos.Add(SampleDataGenerator.GetNoteDao());
+
+            // Add default tags
+            _tagDaos.AddRange(SampleDataGenerator.GetTagDaos());
+        }
 
         public void Dispose()
         {
-            //_authors.Clear();
-            //_catalogs.Clear();
-            //_notes.Clear();
+            _contactDaos.Clear();
+            _authorDaos.Clear();
+            _catalogDaos.Clear();
+            _noteDaos.Clear();
             GC.SuppressFinalize(this);
         }
 
-        //        //        protected void AddEntity<T>(T entity)
-        //        //        {
-        //        //            switch (entity)
-        //        //            {
-        //        //                case HmmNote note:
-        //        //                    _notes.Add(note);
-        //        //                    break;
+        private IEntityLookup GetLookupRepository()
+        {
+            try
+            {
+                var lookupMoc = new Mock<IEntityLookup>();
+                lookupMoc.Setup(lk => lk.GetEntityAsync<ContactDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
+                {
+                    var recFound = _contactDaos.FirstOrDefault(c => c.Id == id);
+                    return recFound;
+                });
+                lookupMoc.Setup(lk => lk.GetEntityAsync<AuthorDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
+                {
+                    var recFound = _authorDaos.FirstOrDefault(c => c.Id == id);
+                    return recFound;
+                });
+                lookupMoc.Setup(lk =>
+                        lk.GetEntitiesAsync(It.IsAny<Expression<Func<AuthorDao, bool>>>(),
+                            It.IsAny<ResourceCollectionParameters>()))
+                    .ReturnsAsync(() => PageList<AuthorDao>.Create(_authorDaos.AsQueryable(), PageIdx, PageSize));
 
-        //        //                case NoteCatalog cat:
-        //        //                    _catalogs.Add(cat);
-        //        //                    break;
-        //        //            }
-        //        //        }
+                lookupMoc.Setup(lk => lk.GetEntityAsync<NoteCatalogDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
+                {
+                    var recFound = _catalogDaos.FirstOrDefault(c => c.Id == id);
+                    return recFound;
+                });
+                lookupMoc.Setup(lk => lk.GetEntitiesAsync(It.IsAny<Expression<Func<NoteCatalogDao, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>()))
+                    .ReturnsAsync(() => PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable(), PageIdx, PageSize));
 
-        //        //        protected static string GetRandomString(int length)
-        //        //        {
-        //        //            if (length < 0)
-        //        //            {
-        //        //                return null;
-        //        //            }
+                lookupMoc.Setup(lk => lk.GetEntityAsync<HmmNoteDao>(It.IsAny<int>()))
+                    .ReturnsAsync((int id) =>
+                    {
+                        var rec = _noteDaos.FirstOrDefault(n => n.Id == id);
+                        return rec;
+                    });
+                lookupMoc.Setup(lk =>
+                        lk.GetEntitiesAsync(It.IsAny<Expression<Func<HmmNoteDao, bool>>>(),
+                            It.IsAny<ResourceCollectionParameters>()))
+                    .ReturnsAsync(() => PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize));
 
-        //        //            var random = new Random();
+                return lookupMoc.Object;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
 
-        //        //            const string chars = "ABCEDFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        //        //            return new string(Enumerable.Repeat(chars, length)
-        //        //                .Select(s => s[random.Next(s.Length)]).ToArray());
-        //        //        }
+        private IRepository<ContactDao> GetContactRepository()
+        {
+            var mockContacts = new Mock<IRepository<ContactDao>>();
+            var nextId = _contactDaos.Count + 1;
+            mockContacts.Setup(a => a.AddAsync(It.IsAny<ContactDao>())).ReturnsAsync((ContactDao contact) =>
+            {
+                var savedContact = contact.Clone();
+                savedContact.Id = nextId++;
+                _contactDaos.Add(contact);
+                contact = savedContact.Clone(contact);
+                return contact;
+            });
+            mockContacts.Setup(a => a.UpdateAsync(It.IsAny<ContactDao>())).ReturnsAsync((ContactDao contact) =>
+            {
+                var oldContact = _contactDaos.FirstOrDefault(a => a.Id == contact.Id);
+                if (oldContact == null)
+                {
+                    return null;
+                }
 
-        //        //        private void SetMockEnvironment()
-        //        //        {
-        //        //            _authors = [];
-        //        //            _catalogs = [];
-        //        //            _notes = [];
+                oldContact = contact.Clone(oldContact);
+                return oldContact.Clone();
+            });
+            mockContacts
+                .Setup(a => a.GetEntitiesAsync(It.IsAny<Expression<Func<ContactDao, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
+                    (Expression<Func<ContactDao, bool>> query, ResourceCollectionParameters resourceCollectionParameters) =>
+                        query == null
+                            ? PageList<ContactDao>.Create(_contactDaos.AsQueryable(), PageIdx, PageSize)
+                            : PageList<ContactDao>.Create(_contactDaos.AsQueryable().Where(query), PageIdx, PageSize));
+            mockContacts.Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) => _contactDaos.FirstOrDefault(a => a.Id == id));
+            return mockContacts.Object;
+        }
 
-        //        //            // set up for entity look up
-        //        //            LookupRepository = GetLookupRepo();
+        private IRepository<AuthorDao> GetAuthorRepository()
+        {
+            var mockAuthors = new Mock<IRepository<AuthorDao>>();
+            var nextId = 1;
+            var processingResult = new ProcessingResult();
 
-        //        //            // Setup author repository
-        //        //            AuthorRepository = GetAuthorRepo();
+            mockAuthors.Setup(a => a.ProcessMessage).Returns(processingResult);
+            mockAuthors.Setup(a => a.AddAsync(It.IsAny<AuthorDao>())).ReturnsAsync((AuthorDao author) =>
+            {
+                var userNames = _authorDaos.Select(a => a.AccountName).ToList();
+                if (userNames.Contains(author.AccountName))
+                {
+                    processingResult.AddErrorMessage("Author is invalid");
+                    return null;
+                }
+                var savedAuthor = author.Clone();
+                savedAuthor.Id = nextId++;
+                _authorDaos.Add(author);
+                author = savedAuthor.Clone(author);
+                return author;
+            });
+            mockAuthors.Setup(a => a.UpdateAsync(It.IsAny<AuthorDao>())).ReturnsAsync((AuthorDao author) =>
+            {
+                var oldAuthor = _authorDaos.FirstOrDefault(a => a.Id == author.Id);
+                if (oldAuthor == null)
+                {
+                    return null;
+                }
 
-        //        //            // Setup note repository
-        //        //            NoteRepository = GetNoteRepo();
+                oldAuthor = author.Clone(oldAuthor);
+                return oldAuthor.Clone();
+            });
+            mockAuthors
+                .Setup(a => a.GetEntitiesAsync(It.IsAny<Expression<Func<AuthorDao, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
+                    (Expression<Func<AuthorDao, bool>> query, ResourceCollectionParameters resourceCollectionParameters) =>
+                        query == null
+                            ? PageList<AuthorDao>.Create(_authorDaos.AsQueryable(), PageIdx, PageSize)
+                            : PageList<AuthorDao>.Create(_authorDaos.AsQueryable().Where(query), PageIdx, PageSize));
+            mockAuthors.Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) => _authorDaos.FirstOrDefault(a => a.Id == id));
+            return mockAuthors.Object;
+        }
 
-        //        //            // Setup note catalog
-        //        //            CatalogRepository = GetNoteCatalog();
+        private IRepository<NoteCatalogDao> GetNoteCatalogRepository()
+        {
+            var mockCatalogs = new Mock<IRepository<NoteCatalogDao>>();
+            mockCatalogs.Setup(c => c.AddAsync(It.IsAny<NoteCatalogDao>())).ReturnsAsync((NoteCatalogDao catalog) =>
+            {
+                var savedCat = catalog.Clone();
+                savedCat.Id += _catalogDaos.Count + 1;
+                _catalogDaos.Add(savedCat);
+                catalog = savedCat.Clone();
+                return catalog;
+            });
+            mockCatalogs.Setup(c => c.UpdateAsync(It.IsAny<NoteCatalogDao>())).ReturnsAsync((NoteCatalogDao cat) =>
+            {
+                var oldCat = _catalogDaos.FirstOrDefault(c => c.Id == cat.Id);
+                if (oldCat == null)
+                {
+                    return null;
+                }
 
-        //        //            var mockDateProvider = new Mock<IDateTimeProvider>();
-        //        //            mockDateProvider.Setup(t => t.UtcNow).Returns(() => CurrentTime);
-        //        //            DateProvider = mockDateProvider.Object;
-        //        //        }
+                oldCat = cat.Clone(oldCat);
+                return oldCat;
+            });
+            mockCatalogs
+                .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
+                {
+                    var savedCat = _catalogDaos.FirstOrDefault(n => n.Id == id);
+                    var backCat = savedCat?.Clone();
+                    return backCat;
+                });
+            mockCatalogs
+                .Setup(c => c.GetEntitiesAsync(It.IsAny<Expression<Func<NoteCatalogDao, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
+                    (Expression<Func<NoteCatalogDao, bool>> query,
+                        ResourceCollectionParameters resourceCollectionParameters) => query == null
+                        ? PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable(), PageIdx, PageSize)
+                        : PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable().Where(query), PageIdx, PageSize));
 
-        //        //        private IEntityLookup GetLookupRepo()
-        //        //        {
-        //        //            var lookupMoc = new Mock<IEntityLookup>();
-        //        //            lookupMoc.Setup(lk => lk.GetEntity<AuthorDb>(It.IsAny<int>())).Returns((int id) =>
-        //        //            {
-        //        //                var recFound = _authors.FirstOrDefault(c => c.Id == id);
-        //        //                return recFound;
-        //        //            });
-        //        //            lookupMoc.Setup(lk =>
-        //        //                    lk.GetEntities(It.IsAny<Expression<Func<AuthorDb, bool>>>(),
-        //        //                        It.IsAny<ResourceCollectionParameters>()))
-        //        //                .Returns(() => PageList<AuthorDb>.Create(_authors.AsQueryable(), PageIdx, PageSize));
+            return mockCatalogs.Object;
+        }
 
-        //        //            lookupMoc.Setup(lk => lk.GetEntity<NoteCatalog>(It.IsAny<int>())).Returns((int id) =>
-        //        //            {
-        //        //                var recFound = _catalogs.FirstOrDefault(c => c.Id == id);
-        //        //                return recFound;
-        //        //            });
-        //        //            lookupMoc.Setup(lk => lk.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
-        //        //                It.IsAny<ResourceCollectionParameters>()))
-        //        //                .Returns(() => PageList<NoteCatalog>.Create(_catalogs.AsQueryable(), PageIdx, PageSize));
+        private ICompositeEntityRepository<TagDao, HmmNoteDao> GetTagRepository()
+        {
+            var mockTags = new Mock<ICompositeEntityRepository<TagDao, HmmNoteDao>>();
+            mockTags.Setup(c => c.AddAsync(It.IsAny<TagDao>())).ReturnsAsync((TagDao tag) =>
+            {
+                var savedTag = tag.Clone();
+                savedTag.Id += _tagDaos.Count + 1;
+                _tagDaos.Add(savedTag);
+                tag = savedTag.Clone();
+                return tag;
+            });
+            mockTags.Setup(c => c.UpdateAsync(It.IsAny<TagDao>())).ReturnsAsync((TagDao tag) =>
+            {
+                var oldTag = _tagDaos.FirstOrDefault(c => c.Id == tag.Id);
+                if (oldTag == null)
+                {
+                    return null;
+                }
 
-        //        //            lookupMoc.Setup(lk => lk.GetEntity<HmmNote>(It.IsAny<int>()))
-        //        //                .Returns((int id) =>
-        //        //                {
-        //        //                    var rec = _notes.FirstOrDefault(n => n.Id == id);
-        //        //                    return rec;
-        //        //                });
-        //        //            lookupMoc.Setup(lk =>
-        //        //                    lk.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>(),
-        //        //                        It.IsAny<ResourceCollectionParameters>()))
-        //        //                .Returns(() => PageList<HmmNote>.Create(_notes.AsQueryable(), PageIdx, PageSize));
+                oldTag = tag.Clone(oldTag);
+                return oldTag;
+            });
+            mockTags
+                .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
+                {
+                    var savedTag = _tagDaos.FirstOrDefault(n => n.Id == id);
+                    var backTag = savedTag?.Clone();
+                    return backTag;
+                });
+            mockTags
+                .Setup(c => c.GetEntitiesAsync(It.IsAny<Expression<Func<TagDao, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
+                    (Expression<Func<TagDao, bool>> query,
+                        ResourceCollectionParameters resourceCollectionParameters) => query == null
+                        ? PageList<TagDao>.Create(_tagDaos.AsQueryable(), PageIdx, PageSize)
+                        : PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query), PageIdx, PageSize));
 
-        //        //            return lookupMoc.Object;
-        //        //        }
+            return mockTags.Object;
+        }
 
-        //        //        private IRepository<AuthorDb> GetAuthorRepo()
-        //        //        {
-        //        //            var mockAuthors = new Mock<IRepository<AuthorDb>>();
-        //        //            var nextId = 1;
-        //        //            mockAuthors.Setup(a => a.Add(It.IsAny<AuthorDb>())).Returns((AuthorDb author) =>
-        //        //            {
-        //        //                var savedAuthor = author.Clone();
-        //        //                savedAuthor.Id = nextId++;
-        //        //                _authors.Add(author);
-        //        //                author = savedAuthor.Clone(author);
-        //        //                return author;
-        //        //            });
-        //        //            mockAuthors.Setup(a => a.Update(It.IsAny<AuthorDb>())).Returns((AuthorDb author) =>
-        //        //            {
-        //        //                var oldAuthor = _authors.FirstOrDefault(a => a.Id == author.Id);
-        //        //                if (oldAuthor == null)
-        //        //                {
-        //        //                    return null;
-        //        //                }
+        private IVersionRepository<HmmNoteDao> GetNoteRepository()
+        {
+            var mockNotes = new Mock<IVersionRepository<HmmNoteDao>>();
+            mockNotes.Setup(a => a.AddAsync(It.IsAny<HmmNoteDao>())).ReturnsAsync((HmmNoteDao note) =>
+            {
+                var savedNote = note.Clone();
+                savedNote.Id = _noteDaos.Count + 1;
+                savedNote.Version = Guid.NewGuid().ToByteArray();
+                _noteDaos.Add(savedNote);
+                note = savedNote.Clone(note);
+                return note;
+            });
+            mockNotes.Setup(a => a.UpdateAsync(It.IsAny<HmmNoteDao>())).ReturnsAsync((HmmNoteDao note) =>
+            {
+                var oldNote = _noteDaos.FirstOrDefault(n => n.Id == note.Id);
+                if (oldNote == null)
+                {
+                    return null;
+                }
 
-        //        //                oldAuthor = author.Clone(oldAuthor);
-        //        //                return oldAuthor.Clone();
-        //        //            });
-        //        //            mockAuthors
-        //        //                .Setup(a => a.GetEntities(It.IsAny<Expression<Func<AuthorDb, bool>>>(),
-        //        //                    It.IsAny<ResourceCollectionParameters>())).Returns(
-        //        //                    (Expression<Func<AuthorDb, bool>> query, ResourceCollectionParameters resourceCollectionParameters) =>
-        //        //                        query == null
-        //        //                            ? PageList<AuthorDb>.Create(_authors.AsQueryable(), PageIdx, PageSize)
-        //        //                            : PageList<AuthorDb>.Create(_authors.AsQueryable().Where(query), PageIdx, PageSize));
-        //        //            mockAuthors.Setup(a => a.GetEntity(It.IsAny<int>())).Returns((int id) => _authors.FirstOrDefault(a => a.Id == id));
-        //        //            return mockAuthors.Object;
-        //        //        }
+                oldNote = note.Clone(oldNote);
+                oldNote.Version = Guid.NewGuid().ToByteArray();
+                var ret = oldNote.Clone();
+                foreach (var tag in ret.Tags)
+                {
+                    tag.Note ??= _noteDaos.Where(n => n.Id == tag.NoteId).Select(n => n).FirstOrDefault();
+                    tag.Tag ??= _tagDaos.Where(t => t.Id == tag.TagId).Select(t => t).FirstOrDefault();
+                }
+                return ret;
+            });
+            mockNotes
+                .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
+                {
+                    var savedNote = _noteDaos.FirstOrDefault(n => n.Id == id);
+                    var backNote = savedNote?.Clone();
+                    switch (backNote)
+                    {
+                        case { Tags: not null }:
+                        {
+                            foreach (var tag in backNote.Tags)
+                            {
+                                tag.Tag ??= _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
+                                tag.Note ??= _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
+                            }
 
-        //        //        private IRepository<NoteCatalog> GetNoteCatalog()
-        //        //        {
-        //        //            var mockCatalogs = new Mock<IRepository<NoteCatalog>>();
-        //        //            mockCatalogs.Setup(c => c.Add(It.IsAny<NoteCatalog>())).Returns((NoteCatalog catalog) =>
-        //        //            {
-        //        //                var savedCat = catalog.Clone();
-        //        //                savedCat.Id += _catalogs.Count + 1;
-        //        //                _catalogs.Add(savedCat);
-        //        //                catalog = savedCat.Clone();
-        //        //                return catalog;
-        //        //            });
-        //        //            mockCatalogs.Setup(c => c.Update(It.IsAny<NoteCatalog>())).Returns((NoteCatalog cat) =>
-        //        //            {
-        //        //                var oldCat = _catalogs.FirstOrDefault(c => c.Id == cat.Id);
-        //        //                if (oldCat == null)
-        //        //                {
-        //        //                    return null;
-        //        //                }
-
-        //        //                oldCat = cat.Clone(oldCat);
-        //        //                return oldCat;
-        //        //            });
-        //        //            mockCatalogs
-        //        //                .Setup(a => a.GetEntity(It.IsAny<int>())).Returns((int id) =>
-        //        //                {
-        //        //                    var savedCat = _catalogs.FirstOrDefault(n => n.Id == id);
-        //        //                    var backCat = savedCat?.Clone();
-        //        //                    return backCat;
-        //        //                });
-        //        //            mockCatalogs
-        //        //                .Setup(c => c.GetEntities(It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
-        //        //                    It.IsAny<ResourceCollectionParameters>())).Returns(
-        //        //                    (Expression<Func<NoteCatalog, bool>> query,
-        //        //                        ResourceCollectionParameters resourceCollectionParameters) => query == null
-        //        //                        ? PageList<NoteCatalog>.Create(_catalogs.AsQueryable(), PageIdx, PageSize)
-        //        //                        : PageList<NoteCatalog>.Create(_catalogs.AsQueryable().Where(query), PageIdx, PageSize));
-
-        //        //            return mockCatalogs.Object;
-        //        //        }
-
-        //        //        private IVersionRepository<HmmNote> GetNoteRepo()
-        //        //        {
-        //        //            var mockNotes = new Mock<IVersionRepository<HmmNote>>();
-        //        //            mockNotes.Setup(a => a.Add(It.IsAny<HmmNote>())).Returns((HmmNote note) =>
-        //        //            {
-        //        //                var savedNote = note.Clone();
-        //        //                savedNote.Id = _notes.Count + 1;
-        //        //                savedNote.Version = Guid.NewGuid().ToByteArray();
-        //        //                _notes.Add(savedNote);
-        //        //                note = savedNote.Clone(note);
-        //        //                return note;
-        //        //            });
-        //        //            mockNotes.Setup(a => a.Update(It.IsAny<HmmNote>())).Returns((HmmNote note) =>
-        //        //            {
-        //        //                var oldNote = _notes.FirstOrDefault(n => n.Id == note.Id);
-        //        //                if (oldNote == null)
-        //        //                {
-        //        //                    return null;
-        //        //                }
-
-        //        //                oldNote = note.Clone(oldNote);
-        //        //                oldNote.Version = Guid.NewGuid().ToByteArray();
-        //        //                return oldNote.Clone();
-        //        //            });
-        //        //            mockNotes
-        //        //                .Setup(a => a.GetEntity(It.IsAny<int>())).Returns((int id) =>
-        //        //                {
-        //        //                    var savedNote = _notes.FirstOrDefault(n => n.Id == id);
-        //        //                    var backNote = savedNote?.Clone();
-        //        //                    return backNote;
-        //        //                });
-        //        //            mockNotes
-        //        //                .Setup(a => a.GetEntities(It.IsAny<Expression<Func<HmmNote, bool>>>(),
-        //        //                    It.IsAny<ResourceCollectionParameters>())).Returns((Expression<Func<HmmNote, bool>> query,
-        //        //                        ResourceCollectionParameters resourceCollectionParameters) =>
-        //        //                    query == null
-        //        //                        ? PageList<HmmNote>.Create(_notes.AsQueryable(), PageIdx, PageSize)
-        //        //                        : PageList<HmmNote>.Create(_notes.AsQueryable().Where(query), PageIdx, PageSize));
-        //        //            return mockNotes.Object;
-        //        //        }
-
-        //        //        protected class MockAuthorValidator : AuthorValidator
-        //        //        {
-        //        //            public MockAuthorValidator(IRepository<AuthorDb> authorRepository) : base(authorRepository)
-        //        //            {
-        //        //            }
-
-        //        //            public bool GetInvalidResult { get; set; }
-
-        //        //            public override ValidationResult Validate(ValidationContext<AuthorDb> context)
-        //        //            {
-        //        //                return GetInvalidResult
-        //        //                    ? new ValidationResult(new List<ValidationFailure> { new("Author", "Author is invalid") })
-        //        //                    : new ValidationResult();
-        //        //            }
-        //        //        }
-
-        //        //        protected class MockCatalogValidator : NoteCatalogValidator
-        //        //        {
-        //        //            public bool GetInvalidResult { get; set; }
-
-        //        //            public override ValidationResult Validate(ValidationContext<NoteCatalog> context)
-        //        //            {
-        //        //                return GetInvalidResult
-        //        //                    ? new ValidationResult(new List<ValidationFailure> { new("NoteCatalog", "note catalog is invalid") })
-        //        //                    : new ValidationResult();
-        //        //            }
-        //        //        }
-
-        //        //        protected class MockNoteValidator : NoteValidator
-        //        //        {
-        //        //            public MockNoteValidator(IVersionRepository<HmmNote> noteRepository) : base(noteRepository)
-        //        //            {
-        //        //            }
-
-        //        //            public bool GetInvalidResult { get; set; }
-
-        //        //            public override ValidationResult Validate(ValidationContext<HmmNote> context)
-        //        //            {
-        //        //                return GetInvalidResult
-        //        //                    ? new ValidationResult(new List<ValidationFailure> { new("Note", "note is invalid") })
-        //        //                    : new ValidationResult();
-        //        //            }
-        //        //        }
+                            break;
+                        }
+                    }
+                    return backNote;
+                });
+            mockNotes
+                .Setup(a => a.GetEntitiesAsync(It.IsAny<Expression<Func<HmmNoteDao, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>())).ReturnsAsync((Expression<Func<HmmNoteDao, bool>> query,
+                        ResourceCollectionParameters resourceCollectionParameters) =>
+                    query == null
+                        ? PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize)
+                        : PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable().Where(query), PageIdx, PageSize));
+            return mockNotes.Object;
+        }
     }
 }
