@@ -10,10 +10,10 @@ public class TagDao : Entity
 {
     [Column("name")]
     [MaxLength(200)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [Column("isactivated")]
     public bool IsActivated { get; set; }
 
-    public ICollection<NoteTagRefDao> Notes { get; set; } = new List<NoteTagRefDao>();
+    public ICollection<NoteTagRefDao> Notes { get; set; } = [];
 }

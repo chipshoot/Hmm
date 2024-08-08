@@ -6,9 +6,9 @@ namespace Hmm.Core.Map.DomainEntity;
 public class Tag : Entity
 {
     [MaxLength(200)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     public bool IsActivated { get; set; }
 
-    public IEnumerable<HmmNote> Notes { get; set; } = new List<HmmNote>();
+    public IEnumerable<HmmNote> Notes { get; set; } = [];
 }

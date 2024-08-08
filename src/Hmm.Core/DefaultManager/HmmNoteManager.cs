@@ -21,7 +21,7 @@ namespace Hmm.Core.DefaultManager
 
         private readonly IVersionRepository<HmmNoteDao> _noteRepository;
         private readonly IMapper _mapper;
-        private readonly IHmmValidator<HmmNote> _validator;
+        private readonly NoteValidator _validator;
         private readonly IDateTimeProvider _dateProvider;
         private readonly ITagManager _tagManager;
 
