@@ -4,6 +4,8 @@
     {
         public string AccountName { get; set; }
 
+        public ApiContact Contact { get; set; }
+
         public string Role { get; set; }
 
         public bool IsActivated { get; set; }

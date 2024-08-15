@@ -6,10 +6,6 @@
 
         public string Name { get; set; }
 
-        public int SubsystemId { get; set; }
-
-        public int RenderId { get; set; }
-
         public string Schema { get; set; }
 
         public bool IsDefault { get; set; }

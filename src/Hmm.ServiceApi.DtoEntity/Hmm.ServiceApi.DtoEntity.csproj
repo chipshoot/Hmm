@@ -5,16 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="GasLogNotes\ApiAutomobile.cs" />
-    <Compile Remove="GasLogNotes\ApiAutomobileForCreate.cs" />
-    <Compile Remove="GasLogNotes\ApiAutomobileForUpdate.cs" />
-    <Compile Remove="GasLogNotes\ApiDiscount.cs" />
-    <Compile Remove="GasLogNotes\ApiDiscountForCreate.cs" />
-    <Compile Remove="GasLogNotes\ApiDiscountForUpdate.cs" />
-    <Compile Remove="GasLogNotes\ApiDiscountInfo.cs" />
-    <Compile Remove="GasLogNotes\ApiGasLog.cs" />
-    <Compile Remove="GasLogNotes\ApiGasLogForCreation.cs" />
-    <Compile Remove="GasLogNotes\ApiGasLogForUpdate.cs" />
     <Compile Remove="Profiles\GasDiscountProfile.cs" />
   </ItemGroup>
 
@@ -23,10 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="GasLogNotes\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\Hmm.Core.Map\Hmm.Core.Map.csproj" />
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
 

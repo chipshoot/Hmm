@@ -7,6 +7,11 @@
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Abootstrap_002Fd_003Adist_002Fd_003Ajs_002Ff_003Abootstrap_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Eslim_002Ejs/@EntryIndexedValue">True</s:Boolean>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=0aa6e718_002D9389_002D4e54_002Da25f_002D6a243ef6771e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AddTag_ReturnsBadRequest_WhenCreationFails" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
 	
 	
 	
@@ -121,6 +126,17 @@
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Cannot_Get_Deleted_Note&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Cannot_Delete_Not_Exists_Note&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.Get_ReturnsOkResult_WithListOfTags&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.Get_ReturnsNotFound_WhenNoTagFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.GetTagById_ReturnsOkResult_WithTag&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.GetTagById_ReturnsNotFound_WhenTagNotFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.AddTag_ReturnsCreatedResult_WithNewTag&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.AddTag_ReturnsBadRequest_WhenCreationFails&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsNotFound_WhenTagNotFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>

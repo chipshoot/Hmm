@@ -34,7 +34,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 {
                     Title = "AddAuthor",
                     Rel = "create_author",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddAuthor", null),
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddAuthor"),
                     Method = "POST"
                 },
                 new()
@@ -54,6 +54,49 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             };
 
             author.Links = links;
+        }
+
+        public static void CreateLinks(this ApiContact contact, ActionContext context, LinkGenerator linkGen)
+        {
+            if (context == null || linkGen == null)
+            {
+                return;
+            }
+
+            var links = new List<Link>
+            {
+                // self
+                new()
+                {
+                    Title = "self",
+                    Rel = "self",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetContactById", new { id = contact.Id }),
+                    Method = "Get"
+                },
+                new()
+                {
+                    Title = "AddContact",
+                    Rel = "create_contact",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddContact"),
+                    Method = "POST"
+                },
+                new()
+                {
+                    Title = "UpdateContact",
+                    Rel = "update_contact",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "UpdateContact", new {id=contact.Id}),
+                    Method = "PUT"
+                },
+                new()
+                {
+                    Title = "PatchContact",
+                    Rel = "patch_contact",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "PatchContact", new {id=contact.Id}),
+                    Method = "PATCH"
+                }
+            };
+
+            contact.Links = links;
         }
 
         public static void CreateLinks(this ApiNoteCatalog catalog, ActionContext context, LinkGenerator linkGen)
@@ -77,7 +120,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 {
                     Title = "AddNoteCatalog",
                     Rel = "create_noteCatalog",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddNoteCatalog", null),
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddNoteCatalog"),
                     Method = "POST"
                 },
                 new()
@@ -97,118 +140,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             };
 
             catalog.Links = links;
-        }
-
-        public static void CreateLinks(this ApiNoteRender render, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return;
-            }
-
-            var links = new List<Link>
-            {
-                // self
-                new()
-                {
-                    Title = "self",
-                    Rel = "self",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetNoteRenderById", new { id = render.Id }),
-                    Method = "Get"
-                },
-                new()
-                {
-                    Title = "AddNoteRender",
-                    Rel = "create_noteRender",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddNoteRender", null),
-                    Method = "POST"
-                },
-                new()
-                {
-                    Title = "UpdateNoteRender",
-                    Rel = "update_noteRender",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "UpdateNoteRender", new {id=render.Id}),
-                    Method = "PUT"
-                },
-                new()
-                {
-                    Title = "PatchNoteRender",
-                    Rel = "patch_noteRender",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "PatchNoteRender", new {id=render.Id}),
-                    Method = "PATCH"
-                }
-            };
-
-            render.Links = links;
-        }
-
-        public static void CreateLinks(this ApiSubsystem system, ActionContext context, LinkGenerator linkGen)
-        {
-            if (context == null || linkGen == null)
-            {
-                return;
-            }
-
-            var links = new List<Link>
-            {
-                // self
-                new()
-                {
-                    Title = "self",
-                    Rel = "self",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetSubsystemById", new { id = system.Id }),
-                    Method = "Get"
-                },
-                new()
-                {
-                    Title = "AddSubsystem",
-                    Rel = "create_subsystem",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddSubsystem", null),
-                    Method = "POST"
-                },
-                new()
-                {
-                    Title = "UpdateSubsystem",
-                    Rel = "update_subsystem",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "UpdateSubsystem", new { id = system.Id }),
-                    Method = "PUT"
-                },
-                new()
-                {
-                    Title = "PatchSubsystem",
-                    Rel = "patch_subsystem",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "PatchSubsystem", new { id = system.Id }),
-                    Method = "PATCH"
-                }
-            };
-
-            // child
-            var authorId = system.DefaultAuthorId;
-            if (authorId != Guid.Empty)
-            {
-                links.Add(
-                    new Link
-                    {
-                        Title = "Author",
-                        Rel = "get_defaultAuthor",
-                        Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetAuthorById", new { id = authorId }),
-                        Method = "Get"
-                    });
-            }
-
-            if (system.NoteCatalogIds != null && system.NoteCatalogIds.Any())
-            {
-                var catalogList = system.NoteCatalogIds.ToList();
-                links.AddRange(catalogList.Select(catId => new Link
-                {
-                    Title = "NoteCatalog",
-                    Rel = "get_childNoteCatalog",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetNoteCatalogById", new { id = catId }),
-                    Method = "Get"
-                }));
-            }
-
-            system.Links = links;
         }
 
         public static void CreateLinks(this ApiNote note, ActionContext context, LinkGenerator linkGen)
@@ -232,7 +163,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 {
                     Title = "AddNote",
                     Rel = "create_note",
-                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddNote", null),
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddNote"),
                     Method = "POST"
                 },
                 new()
@@ -279,6 +210,49 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             }
 
             note.Links = links;
+        }
+
+        public static void CreateLinks(this ApiTag tag, ActionContext context, LinkGenerator linkGen)
+        {
+            if (context == null || linkGen == null)
+            {
+                return;
+            }
+
+            var links = new List<Link>
+            {
+                // self
+                new()
+                {
+                    Title = "self",
+                    Rel = "self",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "GetTagById", new { id = tag.Id }),
+                    Method = "Get"
+                },
+                new()
+                {
+                    Title = "AddTag",
+                    Rel = "create_tag",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "AddTag"),
+                    Method = "POST"
+                },
+                new()
+                {
+                    Title = "UpdateTaq",
+                    Rel = "update_Tag",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "UpdateTag", new { id = tag.Id }),
+                    Method = "PUT"
+                },
+                new()
+                {
+                    Title = "PatchTag",
+                    Rel = "patch_Tag",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, "PatchTag", new { id = tag.Id }),
+                    Method = "PATCH"
+                }
+            };
+
+            tag.Links = links;
         }
 
         public static PageList<ExpandoObject> ShapeData<T>(this PageList<T> source, string fields)
@@ -385,7 +359,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 
                 foreach (var propertyInfo in propertyInfos)
                 {
-                    // remove links property, because it's will showing as links section
+                    // remove links property, because it's will show as links section
                     if (propertyInfo.Name == "Links")
                     {
                         continue;
@@ -401,7 +375,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 return dataShapedObject;
             }
 
-            // the field are separated by ",", so we split it.
+            // the field is separated by ",", so we split it.
             var fieldsAfterSplit = fields.Split(',');
 
             foreach (var field in fieldsAfterSplit)
@@ -431,5 +405,50 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             // return the list
             return dataShapedObject;
         }
+
+        public static List<Link> CreatePaginationLinks<T>(this PageList<T> records, string routName, ActionContext context, LinkGenerator linkGen, ResourceCollectionParameters resourceCollectionParameters)
+        {
+            var links = new List<Link>();
+            if (context == null || linkGen == null)
+            {
+                return links;
+            }
+
+            var orderBy = resourceCollectionParameters != null ? resourceCollectionParameters.OrderBy : string.Empty;
+            var fields = resourceCollectionParameters != null ? resourceCollectionParameters.Fields : string.Empty;
+
+            links.Add(new Link
+            {
+                Title = routName,
+                Rel = "self",
+                Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage, records.PageSize, orderBy, fields }),
+                Method = "Get"
+            });
+
+            if (records.HasPrevPage)
+            {
+                links.Add(new Link
+                {
+                    Title = routName,
+                    Rel = "prev_page",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage - 1, pageSize = records.PageSize, orderBy, fields }),
+                    Method = "Get"
+                });
+            }
+
+            if (records.HasNextPage)
+            {
+                links.Add(new Link
+                {
+                    Title = routName,
+                    Rel = "next_page",
+                    Href = linkGen.GetUriByRouteValues(context.HttpContext, routName, new { pageNumber = records.CurrentPage + 1, pageSize = records.PageSize, orderBy, fields }),
+                    Method = "Get"
+                });
+            }
+
+            return links;
+        }
+
     }
 }

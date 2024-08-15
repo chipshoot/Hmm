@@ -1,17 +1,15 @@
 ﻿using AutoMapper;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
-using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 {
-    public class AuthorsResultFilterAttribute : ResultFilterAttribute
+    public class TagResultFilterAttribute : ResultFilterAttribute
     {
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
@@ -23,21 +21,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 return;
             }
 
-            if (resultFromAction.Value is PageList<Author> authors && authors.Any())
+            var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
+            var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
+            if (mapper != null)
             {
-                var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-                var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-                if (mapper != null)
-                {
-                    var result = mapper.Map<PageList<Author>, PageList<ApiAuthor>>(authors);
-                    foreach (var author in result)
-                    {
-                        author.CreateLinks(context, linkGen);
-                    }
-
-                    resultFromAction.Value = result;
-                }
+                var newApiTag = mapper.Map<Tag, ApiTag>(resultFromAction.Value as Tag);
+                newApiTag.CreateLinks(context, linkGen);
+                resultFromAction.Value = newApiTag;
             }
+
             await next();
         }
     }

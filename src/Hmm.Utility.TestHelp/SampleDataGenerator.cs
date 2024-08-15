@@ -214,28 +214,28 @@ public static class SampleDataGenerator
     {
         var tags = new List<TagDao>
         {
-            new TagDao
+            new ()
             {
                 Id = 100,
                 Name = "ComputerPeripheral",
                 IsActivated = true,
                 Description = "This is tag for testing"
             },
-            new TagDao
+            new ()
             {
                 Id = 101,
                 Name = "SystemConfiguration",
                 IsActivated = true,
                 Description = "This is tag for testing"
             },
-            new TagDao
+            new ()
             {
                 Id = 102,
                 Name = "GasLog",
                 IsActivated = true,
                 Description = "This is tag for testing"
             },
-            new TagDao
+            new ()
             {
                 Id = 103,
                 Name = "Diary",

@@ -4,9 +4,11 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
     public class ApiAuthor : ApiEntity
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         public string AccountName { get; set; }
+
+        public ApiContact ContactInfo { get; set; }
 
         public string Role { get; set; }
 

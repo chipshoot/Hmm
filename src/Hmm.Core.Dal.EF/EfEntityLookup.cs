@@ -5,11 +5,11 @@ using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
 namespace Hmm.Core.Dal.EF
 {
@@ -75,6 +75,7 @@ namespace Hmm.Core.Dal.EF
             {
                 entities = _dataContext.Notes
                     .Include(n => n.Author)
+                    .Include(n => n.Tags)
                     .Include(n => n.Catalog).Cast<T>();
             }
             if (typeof(T) == typeof(NoteCatalogDao))
@@ -91,7 +92,7 @@ namespace Hmm.Core.Dal.EF
             }
             else if (typeof(T) == typeof(TagDao))
             {
-                entities = _dataContext.Tags.Cast<T>();
+                entities = _dataContext.Tags.Where(t => t.IsActivated).Select(t => t).Cast<T>();
             }
             else
             {

@@ -16,6 +16,7 @@ namespace Hmm.Utility.Dal.Query
             CurrentPage = 0;
             TotalPages = 1;
         }
+
         public PageList(IEnumerable<T> items, int count, int pageIndex, int pageSize)
         {
             TotalCount = count;
@@ -50,10 +51,17 @@ namespace Hmm.Utility.Dal.Query
         {
             Guard.Against<ArgumentOutOfRangeException>(pageIndex <= 0, nameof(pageIndex));
             Guard.Against<ArgumentOutOfRangeException>(pageSize < 1, nameof(pageSize));
-
-            var count = await source.CountAsync();
-            var items = await source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-            return new PageList<T>(items, count, pageIndex, pageSize);
+            try
+            {
+                var count = await source.CountAsync();
+                var items = await source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+                return new PageList<T>(items, count, pageIndex, pageSize);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

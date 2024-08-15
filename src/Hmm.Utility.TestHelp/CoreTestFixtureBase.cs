@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Hmm.Core.Map;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.ServiceApi.DtoEntity.Profiles;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -30,9 +31,12 @@ namespace Hmm.Utility.TestHelp
             SetMockEnvironment();
         }
 
+        #region Properties
+
         protected DateTime CurrentTime { get; set; } = DateTime.UtcNow;
 
         protected IRepository<AuthorDao> AuthorRepository { get; private set; }
+
         protected IRepository<ContactDao> ContactRepository { get; private set; }
 
         protected IVersionRepository<HmmNoteDao> NoteRepository { get; private set; }
@@ -45,7 +49,15 @@ namespace Hmm.Utility.TestHelp
 
         protected IDateTimeProvider DateProvider { get; private set; }
 
+        #endregion Properties
+
+        #region Setup Mapper
+
         protected IMapper Mapper { get; private set; }
+
+        protected IMapper ApiMapper { get; private set; }
+
+        #endregion Setup Mapper
 
         protected async Task<Author> GetTestAuthor(string accountName = null)
         {
@@ -157,6 +169,13 @@ namespace Hmm.Utility.TestHelp
                 cfg.AddProfile<HmmMappingProfile>();
             });
             Mapper = config.CreateMapper();
+
+            // Config API mapper
+            var apiConfig = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<ApiMappingProfile>();
+            });
+            ApiMapper = apiConfig.CreateMapper();
         }
 
         protected virtual void InsertSeedRecords()
@@ -169,6 +188,7 @@ namespace Hmm.Utility.TestHelp
 
             // Add default contacts
             _contactDaos.Add(SampleDataGenerator.GetContactDao());
+
             // Add authors records
             _authorDaos.AddRange(SampleDataGenerator.GetAuthorDaos());
 
@@ -182,12 +202,24 @@ namespace Hmm.Utility.TestHelp
             _tagDaos.AddRange(SampleDataGenerator.GetTagDaos());
         }
 
+        protected void InsertTag(Tag tag)
+        {
+            if (tag == null)
+            {
+                return;
+            }
+
+            var tagDao = Mapper.Map<TagDao>(tag);
+            _tagDaos.Add(tagDao);
+        }
+
         public void Dispose()
         {
             _contactDaos.Clear();
             _authorDaos.Clear();
             _catalogDaos.Clear();
             _noteDaos.Clear();
+            _tagDaos.Clear();
             GC.SuppressFinalize(this);
         }
 
@@ -382,7 +414,7 @@ namespace Hmm.Utility.TestHelp
             mockTags
                 .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
-                    var savedTag = _tagDaos.FirstOrDefault(n => n.Id == id);
+                    var savedTag = _tagDaos.FirstOrDefault(t => t.Id == id && t.IsActivated);
                     var backTag = savedTag?.Clone();
                     return backTag;
                 });
@@ -391,8 +423,9 @@ namespace Hmm.Utility.TestHelp
                     It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
                     (Expression<Func<TagDao, bool>> query,
                         ResourceCollectionParameters resourceCollectionParameters) => query == null
-                        ? PageList<TagDao>.Create(_tagDaos.AsQueryable(), PageIdx, PageSize)
-                        : PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query), PageIdx, PageSize));
+                        ? PageList<TagDao>.Create(_tagDaos.Where(t => t.IsActivated).AsQueryable(), PageIdx, PageSize)
+                        : PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query).Where(t => t.IsActivated),
+                            PageIdx, PageSize));
 
             return mockTags.Object;
         }
@@ -435,15 +468,15 @@ namespace Hmm.Utility.TestHelp
                     switch (backNote)
                     {
                         case { Tags: not null }:
-                        {
-                            foreach (var tag in backNote.Tags)
                             {
-                                tag.Tag ??= _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
-                                tag.Note ??= _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
-                            }
+                                foreach (var tag in backNote.Tags)
+                                {
+                                    tag.Tag ??= _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
+                                    tag.Note ??= _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                     }
                     return backNote;
                 });
@@ -456,5 +489,14 @@ namespace Hmm.Utility.TestHelp
                         : PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable().Where(query), PageIdx, PageSize));
             return mockNotes.Object;
         }
+
+        #region Reset data
+
+        protected void ResetTag()
+        {
+            _tagDaos.Clear();
+        }
+
+        #endregion Reset data
     }
 }

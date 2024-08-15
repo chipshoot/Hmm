@@ -9,7 +9,7 @@ using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 {
-    public class AuthorResultFilterAttribute : ResultFilterAttribute
+    public class ContactResultFilterAttribute : ResultFilterAttribute
     {
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
@@ -25,9 +25,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
             if (mapper != null)
             {
-                var newApiAuthor = mapper.Map<Author, ApiAuthor>(resultFromAction.Value as Author);
-                newApiAuthor.CreateLinks(context, linkGen);
-                resultFromAction.Value = newApiAuthor;
+                var newApiContact = mapper.Map<Contact, ApiContact>(resultFromAction.Value as Contact);
+                newApiContact.CreateLinks(context, linkGen);
+                resultFromAction.Value = newApiContact;
             }
 
             await next();

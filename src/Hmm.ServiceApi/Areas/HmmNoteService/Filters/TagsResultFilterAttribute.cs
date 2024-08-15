@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 {
-    public class AuthorsResultFilterAttribute : ResultFilterAttribute
+    public class TagsResultFilterAttribute : ResultFilterAttribute
     {
         public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
         {
@@ -23,16 +23,16 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 return;
             }
 
-            if (resultFromAction.Value is PageList<Author> authors && authors.Any())
+            if (resultFromAction.Value is PageList<Tag> tags && tags.Any())
             {
                 var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
                 var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
                 if (mapper != null)
                 {
-                    var result = mapper.Map<PageList<Author>, PageList<ApiAuthor>>(authors);
-                    foreach (var author in result)
+                    var result = mapper.Map<PageList<Tag>, PageList<ApiTag>>(tags);
+                    foreach (var tag in result)
                     {
-                        author.CreateLinks(context, linkGen);
+                        tag.CreateLinks(context, linkGen);
                     }
 
                     resultFromAction.Value = result;

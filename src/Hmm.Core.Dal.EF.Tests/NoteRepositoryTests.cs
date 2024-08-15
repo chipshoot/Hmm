@@ -245,6 +245,7 @@ namespace Hmm.Core.Dal.EF.Tests
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var catalogList = await CatalogRepository.GetEntitiesAsync();
             var catalog = catalogList.FirstOrDefault(cat => !cat.IsDefault);
+            Assert.NotNull(catalog);
             var note = new HmmNoteDao
             {
                 Author = _author,
@@ -292,6 +293,7 @@ namespace Hmm.Core.Dal.EF.Tests
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var initialCatalogList = await CatalogRepository.GetEntitiesAsync();
             var initialCatalog = initialCatalogList.FirstOrDefault(cat => !cat.IsDefault);
+            Assert.NotNull(initialCatalog);
             var note = new HmmNoteDao
             {
                 Author = _author,
@@ -332,6 +334,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var initialCatalogList = await CatalogRepository.GetEntitiesAsync();
             var initialCatalog = initialCatalogList.FirstOrDefault(cat => !cat.IsDefault);
+            Assert.NotNull(initialCatalog);
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
             var note = new HmmNoteDao

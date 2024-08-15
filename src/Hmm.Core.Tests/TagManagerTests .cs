@@ -226,7 +226,7 @@ namespace Hmm.Core.Tests
         }
 
         [Fact]
-        public async Task Can_Deactivate_Author()
+        public async Task Can_Deactivate_Tag()
         {
             // Arrange
             var tags = await _tagManager.GetEntitiesAsync();
@@ -241,7 +241,29 @@ namespace Hmm.Core.Tests
             // Assert
             Assert.True(_tagManager.ProcessResult.Success);
             Assert.Empty(_tagManager.ProcessResult.MessageList);
-            Assert.False(updatedTag.IsActivated);
+            Assert.Null(updatedTag);
+        }
+
+        [Fact]
+        public async Task Cannot_Get_Deactivated_Tag()
+        {
+            // Arrange
+            var tags = await _tagManager.GetEntitiesAsync();
+            var tagNum = tags.Count;
+            var tag = tags.FirstOrDefault();
+            Assert.NotNull(tag);
+            Assert.True(tag.IsActivated);
+
+            // Act
+            await _tagManager.DeActivateAsync(tag.Id);
+            var updatedTag = await _tagManager.GetTagByIdAsync(tag.Id);
+            tags = await _tagManager.GetEntitiesAsync();
+
+            // Assert
+            Assert.True(_tagManager.ProcessResult.Success);
+            Assert.Empty(_tagManager.ProcessResult.MessageList);
+            Assert.Null(updatedTag);
+            Assert.Equal(tagNum-1, tags.Count);
         }
 
         [Fact]
