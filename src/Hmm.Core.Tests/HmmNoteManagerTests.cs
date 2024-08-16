@@ -239,6 +239,32 @@ namespace Hmm.Core.Tests
         }
 
         [Fact]
+        public async Task Cannot_Apply_Deactivated_Tag_To_Note()
+        {
+            var tagList = await _tagManager.GetEntitiesAsync();
+            var tag = tagList.FirstOrDefault();
+            Assert.NotNull(tag);
+            tag.IsActivated = false;
+            var note = new HmmNote
+            {
+                Author = _author,
+                Catalog = _catalog,
+                Subject = "Testing note",
+                Content = "Test content",
+                Description = "Test note with tag applied"
+            };
+            var newNote = await _noteManager.CreateAsync(note);
+            Assert.NotNull(newNote);
+
+            // Act
+            var tags = await _noteManager.ApplyTag(note, tag);
+
+            // Assert
+            Assert.Null(tags);
+            Assert.False(_noteManager.ProcessResult.Success);
+        }
+
+        [Fact]
         public async Task Can_Apply_And_Create_New_Tag_To_Note()
         {
             var tagList = await _tagManager.GetEntitiesAsync();

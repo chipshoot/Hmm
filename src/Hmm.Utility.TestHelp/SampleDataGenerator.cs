@@ -5,7 +5,6 @@ using Hmm.Core.Map.DomainEntity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace Hmm.Utility.TestHelp;
 
@@ -138,6 +137,42 @@ public static class SampleDataGenerator
         };
 
         return catalogDao;
+    }
+
+    public static List<NoteCatalogDao> GetCatalogDaos()
+    {
+        var catalogs = new List<NoteCatalogDao>
+        {
+            new()
+            {
+                Id = 100,
+                Name = "Diary",
+                FormatType = Core.Map.DbEntity.NoteContentFormatType.Markdown,
+                Description = "Testing note catalog",
+                Schema = "",
+                IsDefault = false
+            },
+            new()
+            {
+                Id = 101,
+                Name = "GasLog",
+                FormatType = Core.Map.DbEntity.NoteContentFormatType.Xml,
+                Description = "Testing gas log catalog",
+                Schema = "",
+                IsDefault = false
+            },
+            new()
+            {
+                Id = 102,
+                Name = "SystemLog",
+                FormatType = Core.Map.DbEntity.NoteContentFormatType.PlainText,
+                Description = "Testing system log catalog",
+                Schema = "",
+                IsDefault = false
+            }
+        };
+
+        return catalogs;
     }
 
     public static HmmNote GetNote()

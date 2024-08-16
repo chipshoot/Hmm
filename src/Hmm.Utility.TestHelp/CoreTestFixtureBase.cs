@@ -193,7 +193,7 @@ namespace Hmm.Utility.TestHelp
             _authorDaos.AddRange(SampleDataGenerator.GetAuthorDaos());
 
             // Add default note catalogs
-            _catalogDaos.Add(SampleDataGenerator.GetCatalogDao());
+            _catalogDaos.AddRange(SampleDataGenerator.GetCatalogDaos());
 
             // Add default notes
             _noteDaos.Add(SampleDataGenerator.GetNoteDao());
@@ -414,7 +414,7 @@ namespace Hmm.Utility.TestHelp
             mockTags
                 .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
-                    var savedTag = _tagDaos.FirstOrDefault(t => t.Id == id && t.IsActivated);
+                    var savedTag = _tagDaos.FirstOrDefault(t => t.Id == id);
                     var backTag = savedTag?.Clone();
                     return backTag;
                 });
@@ -424,7 +424,7 @@ namespace Hmm.Utility.TestHelp
                     (Expression<Func<TagDao, bool>> query,
                         ResourceCollectionParameters resourceCollectionParameters) => query == null
                         ? PageList<TagDao>.Create(_tagDaos.Where(t => t.IsActivated).AsQueryable(), PageIdx, PageSize)
-                        : PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query).Where(t => t.IsActivated),
+                        : PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query),
                             PageIdx, PageSize));
 
             return mockTags.Object;

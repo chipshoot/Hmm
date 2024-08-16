@@ -92,7 +92,7 @@ namespace Hmm.Core.Dal.EF
             }
             else if (typeof(T) == typeof(TagDao))
             {
-                entities = _dataContext.Tags.Where(t => t.IsActivated).Select(t => t).Cast<T>();
+                entities = _dataContext.Tags.Cast<T>();
             }
             else
             {

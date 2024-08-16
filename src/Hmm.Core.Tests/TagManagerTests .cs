@@ -92,11 +92,58 @@ namespace Hmm.Core.Tests
         public async Task Can_Get_Tag_With_Query()
         {
             // Act
-            var tags = await _tagManager.GetEntitiesAsync(a => a.Name == "ComputerPeripheral");
+            var tags = await _tagManager.GetEntitiesAsync(t => t.Name == "ComputerPeripheral");
 
             // Assert
             Assert.True(_tagManager.ProcessResult.Success);
             Assert.Single(tags);
+        }
+
+        [Fact]
+        public async Task Cannot_Get_DeActivated_Tag()
+        {
+            // Arrange
+            var tag = await _tagManager.GetTagByIdAsync(100);
+            Assert.NotNull(tag);
+
+            // Act
+            await _tagManager.DeActivateAsync(100);
+            tag = await _tagManager.GetTagByIdAsync(100);
+
+            // Assert
+            Assert.Null(tag);
+        }
+
+        [Fact]
+        public async Task Cannot_Get_DeActivated_Tag_ByQuery()
+        {
+            // Arrange
+            var tag = await _tagManager.GetTagByNameAsync("GasLog");
+            Assert.NotNull(tag);
+
+            // Act
+            await _tagManager.DeActivateAsync(tag.Id);
+            tag = await _tagManager.GetTagByNameAsync("GasLog");
+
+            // Assert
+            Assert.Null(tag);
+        }
+
+        [Fact]
+        public async Task Get_TagList_Does_Not_Contain_Deactivated_Tag()
+        {
+            // Arrange
+            var tags = await _tagManager.GetEntitiesAsync();
+            var tagNumber = tags.Count;
+            var tag = await _tagManager.GetTagByIdAsync(100);
+            Assert.NotNull(tag);
+            await _tagManager.DeActivateAsync(100);
+
+            // Act
+            tags = await _tagManager.GetEntitiesAsync();
+
+            // Assert
+            Assert.Equal(tagNumber - 1, tags.Count);
         }
 
         [Fact]
@@ -263,7 +310,7 @@ namespace Hmm.Core.Tests
             Assert.True(_tagManager.ProcessResult.Success);
             Assert.Empty(_tagManager.ProcessResult.MessageList);
             Assert.Null(updatedTag);
-            Assert.Equal(tagNum-1, tags.Count);
+            Assert.Equal(tagNum - 1, tags.Count);
         }
 
         [Fact]
