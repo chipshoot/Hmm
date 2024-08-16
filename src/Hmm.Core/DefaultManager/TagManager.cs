@@ -68,7 +68,7 @@ namespace Hmm.Core.DefaultManager
             try
             {
                 var tagDao = await _tagRepository.GetEntityAsync(id);
-                return tagDao != null;
+                return tagDao is { IsActivated: true };
             }
             catch (Exception ex)
             {
@@ -85,14 +85,24 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
 
-            var tag = _mapper.Map<Tag>(tagDao);
-            switch (tag)
+            switch (tagDao.IsActivated)
             {
-                case null:
-                    ProcessResult.AddErrorMessage("Cannot convert TagDao to Tag");
+                case false:
                     return null;
+
                 default:
-                    return tag;
+                    {
+                        var tag = _mapper.Map<Tag>(tagDao);
+                        switch (tag)
+                        {
+                            case null:
+                                ProcessResult.AddErrorMessage("Cannot convert TagDao to Tag");
+                                return null;
+
+                            default:
+                                return tag;
+                        }
+                    }
             }
         }
 
@@ -103,21 +113,31 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
 
-            var tagDaos = await _tagRepository.GetEntitiesAsync(t=>t.Name == name);
+            var tagDaos = await _tagRepository.GetEntitiesAsync(t => t.Name == name);
             var tagDao = tagDaos.FirstOrDefault();
             if (tagDao == null)
             {
                 return null;
             }
 
-            var tag = _mapper.Map<Tag>(tagDao);
-            switch (tag)
+            switch (tagDao.IsActivated)
             {
-                case null:
-                    ProcessResult.AddErrorMessage("Cannot convert TagDao to Tag");
+                case false:
                     return null;
+
                 default:
-                    return tag;
+                    {
+                        var tag = _mapper.Map<Tag>(tagDao);
+                        switch (tag)
+                        {
+                            case null:
+                                ProcessResult.AddErrorMessage("Cannot convert TagDao to Tag");
+                                return null;
+
+                            default:
+                                return tag;
+                        }
+                    }
             }
         }
 
@@ -173,10 +193,23 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
+                Expression<Func<TagDao, bool>> isActivatedExpression = t => t.IsActivated;
                 Expression<Func<TagDao, bool>> daoQuery = null;
                 if (query != null)
                 {
-                    daoQuery = ExpressionMapper<Tag, TagDao>.MapExpression(query);
+                    var mappedQuery = ExpressionMapper<Tag, TagDao>.MapExpression(query);
+
+                    // Combine the mapped query with the IsActivated expression
+                    var parameter = Expression.Parameter(typeof(TagDao), "t");
+                    var body = Expression.AndAlso(
+                        Expression.Invoke(mappedQuery, parameter),
+                        Expression.Invoke(isActivatedExpression, parameter)
+                    );
+                    daoQuery = Expression.Lambda<Func<TagDao, bool>>(body, parameter);
+                }
+                else
+                {
+                    daoQuery = isActivatedExpression;
                 }
 
                 var tagDaos = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
