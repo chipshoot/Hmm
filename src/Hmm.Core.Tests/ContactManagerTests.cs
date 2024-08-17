@@ -80,13 +80,13 @@ namespace Hmm.Core.Tests
             Assert.True(contact.Id > 0, "contact.Id is greater then 0");
             Assert.True(contact.IsActivated);
 
-            //   Act
-            contact.IsActivated = false;
+            // Act
+            contact.FirstName = "Updated FirstName";
             var updatedContact = await _contactManager.UpdateAsync(contact);
 
-            //  Assert
+            // Assert
             Assert.NotNull(updatedContact);
-            Assert.False(updatedContact.IsActivated);
+            Assert.Equal("Updated FirstName", updatedContact.FirstName);
             Assert.True(_contactManager.ProcessResult.Success);
             Assert.Empty(_contactManager.ProcessResult.MessageList);
         }
