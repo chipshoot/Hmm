@@ -29,6 +29,49 @@ namespace Hmm.Core.DefaultManager
             _validator = new NoteCatalogValidator();
         }
 
+        public async Task<PageList<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        {
+            try
+            {
+                Expression<Func<NoteCatalogDao, bool>> daoQuery = null;
+                if (query != null)
+                {
+                    daoQuery = ExpressionMapper<NoteCatalog, NoteCatalogDao>.MapExpression(query);
+                }
+
+                var catalogDaos = await _catalogRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                var catalogs = _mapper.Map<PageList<NoteCatalog>>(catalogDaos);
+                return catalogs;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<NoteCatalog> GetEntityByIdAsync(int id)
+        {
+            try
+            {
+                var catalogDao = await _catalogRepository.GetEntityAsync(id);
+                var catalog = _mapper.Map<NoteCatalog>(catalogDao);
+                switch (catalog)
+                {
+                    case null:
+                        ProcessResult.AddErrorMessage("Cannot map CatalogDao to Catalog");
+                        return null;
+                    default:
+                        return catalog;
+                }
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
         public async Task<NoteCatalog> CreateAsync(NoteCatalog catalog)
         {
             try
@@ -99,47 +142,6 @@ namespace Hmm.Core.DefaultManager
                     ProcessResult.PropagandaResult(_catalogRepository.ProcessMessage);
                 }
 
-                return catalog;
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return null;
-            }
-        }
-
-        public async Task<PageList<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            try
-            {
-                Expression<Func<NoteCatalogDao, bool>> daoQuery = null;
-                if (query != null)
-                {
-                    daoQuery = ExpressionMapper<NoteCatalog, NoteCatalogDao>.MapExpression(query);
-                }
-
-                var catalogDaos = await _catalogRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-                var catalogs = _mapper.Map<PageList<NoteCatalog>>(catalogDaos);
-                return catalogs;
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return null;
-            }
-        }
-
-        public async Task<NoteCatalog> GetEntityByIdAsync(int id)
-        {
-            try
-            {
-                var catalogDao = await _catalogRepository.GetEntityAsync(id);
-                var catalog = _mapper.Map<NoteCatalog>(catalogDao);
-                if (catalog == null)
-                {
-                    ProcessResult.AddErrorMessage("Cannot map CatalogDao to Catalog");
-                    return null;
-                }
                 return catalog;
             }
             catch (Exception ex)

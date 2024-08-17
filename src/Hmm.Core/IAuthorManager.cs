@@ -11,7 +11,7 @@ namespace Hmm.Core
     {
         Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
-        Task<bool> AuthorExistsAsync(int id);
+        Task<bool> IsAuthorExistsAsync(int id);
 
         Task<Author> GetAuthorByIdAsync(int id);
 

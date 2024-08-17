@@ -322,7 +322,7 @@ namespace Hmm.Core.Tests
             Assert.NotNull(tag);
 
             // Act
-            var result = await _tagManager.TagExistsAsync(tag.Id);
+            var result = await _tagManager.IsTagExistsAsync(tag.Id);
 
             // Assert
             Assert.True(result);
@@ -334,7 +334,7 @@ namespace Hmm.Core.Tests
         {
             // Arrange
             // Act
-            var result = await _tagManager.TagExistsAsync(id);
+            var result = await _tagManager.IsTagExistsAsync(id);
 
             // Act & Assert
             Assert.Equal(result, expectResult);

@@ -11,7 +11,7 @@ namespace Hmm.Core
     {
         Task<PageList<Tag>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
-        Task<bool> TagExistsAsync(int id);
+        Task<bool> IsTagExistsAsync(int id);
 
         Task<Tag> GetTagByIdAsync(int id);
 

@@ -8,7 +8,7 @@ public class Tag : Entity
     [MaxLength(200)]
     public required string Name { get; set; }
 
-    public bool IsActivated { get; set; }
+    public bool IsActivated { get; set; } = true;
 
     public IEnumerable<HmmNote> Notes { get; set; } = [];
 }

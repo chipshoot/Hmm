@@ -41,6 +41,50 @@ namespace Hmm.Core.DefaultManager
             _validator = new NoteValidator(this);
         }
 
+        public async Task<PageList<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
+        {
+            PageList<HmmNoteDao> noteDaos;
+            if (query != null)
+            {
+                var daoQuery = ExpressionMapper<HmmNote, HmmNoteDao>.MapExpression(query);
+                var predicate = PredicateBuilder.True<HmmNoteDao>();
+                predicate = predicate.And(daoQuery);
+                predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
+                noteDaos = await _noteRepository.GetEntitiesAsync(predicate, resourceCollectionParameters);
+            }
+            else
+            {
+                noteDaos = includeDeleted
+                    ? await _noteRepository.GetEntitiesAsync(null, resourceCollectionParameters)
+                    : await _noteRepository.GetEntitiesAsync(n => !n.IsDeleted, resourceCollectionParameters);
+            }
+
+            var notes = _mapper.Map<PageList<HmmNote>>(noteDaos);
+            return notes;
+        }
+
+        public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
+        {
+            var noteDao = await _noteRepository.GetEntityAsync(id);
+            switch (noteDao)
+            {
+                case null:
+                case { IsDeleted: true } when !includeDelete:
+                    return null;
+            }
+
+            var note = _mapper.Map<HmmNote>(noteDao);
+            switch (note)
+            {
+                case null:
+                    ProcessResult.AddErrorMessage("Cannot map NoteDao to Note");
+                    return null;
+
+                default:
+                    return note;
+            }
+        }
+
         public async Task<HmmNote> CreateAsync(HmmNote note)
         {
             try
@@ -142,13 +186,26 @@ namespace Hmm.Core.DefaultManager
                 }
 
                 // Check if the tag exits in system
-                var retrievedTag = (tag.Id > 0
-                    ? await _tagManager.GetTagByIdAsync(tag.Id)
-                    : await _tagManager.GetTagByNameAsync(tag.Name)) ?? await _tagManager.CreateAsync(tag);
+                Tag retrievedTag;
+                if (tag.Id > 0)
+                {
+                    retrievedTag = await _tagManager.GetTagByIdAsync(tag.Id);
+                }
+                else
+                {
+                    retrievedTag = await _tagManager.GetTagByNameAsync(tag.Name);
+                    retrievedTag ??= await _tagManager.CreateAsync(tag);
+                }
 
                 if (retrievedTag == null)
                 {
                     ProcessResult.AddErrorMessage($"Cannot create tag {tag.Name}");
+                    return null;
+                }
+
+                if (!retrievedTag.IsActivated)
+                {
+                    ProcessResult.AddErrorMessage($"Cannot apply deactivated tag {tag.Name}");
                     return null;
                 }
 
@@ -234,46 +291,6 @@ namespace Hmm.Core.DefaultManager
 
             ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
             return false;
-        }
-
-        public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
-        {
-            var noteDao = await _noteRepository.GetEntityAsync(id);
-            switch (noteDao)
-            {
-                case null:
-                case { IsDeleted: true } when !includeDelete:
-                    return null;
-            }
-
-            var note = _mapper.Map<HmmNote>(noteDao);
-            if (note == null)
-            {
-                ProcessResult.AddErrorMessage("Cannot map NoteDao to Note");
-                return null;
-            }
-
-            return note;
-        }
-
-        public async Task<PageList<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            PageList<HmmNoteDao> noteDaos;
-            if (query != null)
-            {
-                var daoQuery = ExpressionMapper<HmmNote, HmmNoteDao>.MapExpression(query);
-                var predicate = PredicateBuilder.True<HmmNoteDao>();
-                predicate = predicate.And(daoQuery);
-                predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
-                noteDaos = await _noteRepository.GetEntitiesAsync(predicate, resourceCollectionParameters);
-            }
-            else
-            {
-                noteDaos = await _noteRepository.GetEntitiesAsync(null, resourceCollectionParameters);
-            }
-
-            var notes = _mapper.Map<PageList<HmmNote>>(noteDaos);
-            return notes;
         }
 
         public ProcessingResult ProcessResult { get; } = new();

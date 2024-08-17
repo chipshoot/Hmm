@@ -28,6 +28,81 @@ namespace Hmm.Core.DefaultManager
             _validator = new AuthorValidator(this);
         }
 
+        public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        {
+            try
+            {
+                ProcessResult.Rest();
+                Expression<Func<AuthorDao, bool>> isActivatedExpression = t => t.IsActivated;
+                Expression<Func<AuthorDao, bool>> daoQuery = null;
+                if (query != null)
+                {
+                    var mappedQuery = ExpressionMapper<Author, AuthorDao>.MapExpression(query);
+
+                    // Combine the mapped query with the IsActivated expression
+                    var parameter = Expression.Parameter(typeof(AuthorDao), "a");
+                    var body = Expression.AndAlso(
+                        Expression.Invoke(mappedQuery, parameter),
+                        Expression.Invoke(isActivatedExpression, parameter)
+                    );
+                    daoQuery = Expression.Lambda<Func<AuthorDao, bool>>(body, parameter);
+                }
+                else
+                {
+                    daoQuery = isActivatedExpression;
+                }
+
+                var authorDaos = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                var authors = _mapper.Map<PageList<Author>>(authorDaos);
+                return authors;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
+        public async Task<Author> GetAuthorByIdAsync(int id)
+        {
+            ProcessResult.Rest();
+            var authorDao = await _authorRepository.GetEntityAsync(id);
+            switch (authorDao)
+            {
+                case null:
+                    return null;
+
+                case { IsActivated: false }:
+                    return null;
+            }
+
+            var author = _mapper.Map<Author>(authorDao);
+            switch (author)
+            {
+                case null:
+                    ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
+                    return null;
+
+                default:
+                    return author;
+            }
+        }
+
+        public async Task<bool> IsAuthorExistsAsync(int id)
+        {
+            try
+            {
+                ProcessResult.Rest();
+                var authorDao = await _authorRepository.GetEntityAsync(id);
+                return authorDao != null;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return false;
+            }
+        }
+
         public async Task<Author> CreateAsync(Author authorInfo)
         {
             try
@@ -62,40 +137,6 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<bool> AuthorExistsAsync(int id)
-        {
-            try
-            {
-                ProcessResult.Rest();
-                var authorDao = await _authorRepository.GetEntityAsync(id);
-                return authorDao != null;
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return false;
-            }
-        }
-
-        public async Task<Author> GetAuthorByIdAsync(int id)
-        {
-            ProcessResult.Rest();
-            var authorDao = await _authorRepository.GetEntityAsync(id);
-            if (authorDao == null)
-            {
-                return null;
-            }
-
-            var author = _mapper.Map<Author>(authorDao);
-            if (author == null)
-            {
-                ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
-                return null;
-            }
-
-            return author;
-        }
-
         public async Task<Author> UpdateAsync(Author authorInfo)
         {
             try
@@ -128,35 +169,15 @@ namespace Hmm.Core.DefaultManager
                 }
 
                 var updatedUser = _mapper.Map<Author>(updatedUserDao);
-                if (updatedUser == null)
+                switch (updatedUser)
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
-                    return null;
+                    case null:
+                        ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
+                        return null;
+
+                    default:
+                        return updatedUser;
                 }
-
-                return updatedUser;
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return null;
-            }
-        }
-
-        public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            try
-            {
-                ProcessResult.Rest();
-                Expression<Func<AuthorDao, bool>> daoQuery = null;
-                if (query != null)
-                {
-                    daoQuery = ExpressionMapper<Author, AuthorDao>.MapExpression(query);
-                }
-
-                var authorDaos = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-                var authors = _mapper.Map<PageList<Author>>(authorDaos);
-                return authors;
             }
             catch (Exception ex)
             {
@@ -169,21 +190,29 @@ namespace Hmm.Core.DefaultManager
         {
             ProcessResult.Rest();
             var user = await _authorRepository.GetEntityAsync(id);
-            if (user == null)
+            switch (user)
             {
-                ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
-            }
-            else if (user.IsActivated)
-            {
-                try
-                {
-                    user.IsActivated = false;
-                    await _authorRepository.UpdateAsync(user);
-                }
-                catch (Exception ex)
-                {
-                    ProcessResult.WrapException(ex);
-                }
+                case null:
+                    ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
+                    break;
+
+                default:
+                    {
+                        if (user.IsActivated)
+                        {
+                            try
+                            {
+                                user.IsActivated = false;
+                                await _authorRepository.UpdateAsync(user);
+                            }
+                            catch (Exception ex)
+                            {
+                                ProcessResult.WrapException(ex);
+                            }
+                        }
+
+                        break;
+                    }
             }
         }
 

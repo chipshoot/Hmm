@@ -244,7 +244,7 @@ namespace Hmm.Core.Tests
             var tagList = await _tagManager.GetEntitiesAsync();
             var tag = tagList.FirstOrDefault();
             Assert.NotNull(tag);
-            tag.IsActivated = false;
+            await _tagManager.DeActivateAsync(tag.Id);
             var note = new HmmNote
             {
                 Author = _author,

@@ -154,7 +154,7 @@ namespace Hmm.Core.Tests
             // Assert
             Assert.True(_contactManager.ProcessResult.Success);
             Assert.Empty(_contactManager.ProcessResult.MessageList);
-            Assert.False(updatedContact.IsActivated);
+            Assert.Null(updatedContact);
         }
 
         [Theory]

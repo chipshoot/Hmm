@@ -29,51 +29,37 @@ namespace Hmm.Core.DefaultManager
             _validator = new TagValidator(this);
         }
 
-        public async Task<Tag> CreateAsync(Tag tag)
+        public async Task<PageList<Tag>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                ProcessResult.Rest();
-                var isValid = await _validator.IsValidEntityAsync(tag, ProcessResult);
-                if (!isValid)
+                Expression<Func<TagDao, bool>> isActivatedExpression = t => t.IsActivated;
+                Expression<Func<TagDao, bool>> daoQuery = null;
+                if (query != null)
                 {
-                    return null;
+                    var mappedQuery = ExpressionMapper<Tag, TagDao>.MapExpression(query);
+
+                    // Combine the mapped query with the IsActivated expression
+                    var parameter = Expression.Parameter(typeof(TagDao), "t");
+                    var body = Expression.AndAlso(
+                        Expression.Invoke(mappedQuery, parameter),
+                        Expression.Invoke(isActivatedExpression, parameter)
+                    );
+                    daoQuery = Expression.Lambda<Func<TagDao, bool>>(body, parameter);
                 }
-                var tagDao = _mapper.Map<TagDao>(tag);
-                if (tagDao == null)
+                else
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert Tag to TagDao");
-                    return null;
+                    daoQuery = isActivatedExpression;
                 }
 
-                var addedTagDao = await _tagRepository.AddAsync(tagDao);
-                if (addedTagDao == null)
-                {
-                    ProcessResult.PropagandaResult(_tagRepository.ProcessMessage);
-                    return null;
-                }
-
-                tag.Id = addedTagDao.Id;
-                return tag;
+                var tagDaos = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                var tags = _mapper.Map<PageList<Tag>>(tagDaos);
+                return tags;
             }
             catch (Exception ex)
             {
                 ProcessResult.WrapException(ex);
                 return null;
-            }
-        }
-
-        public async Task<bool> TagExistsAsync(int id)
-        {
-            try
-            {
-                var tagDao = await _tagRepository.GetEntityAsync(id);
-                return tagDao is { IsActivated: true };
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return false;
             }
         }
 
@@ -141,6 +127,54 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
+        public async Task<bool> IsTagExistsAsync(int id)
+        {
+            try
+            {
+                var tagDao = await _tagRepository.GetEntityAsync(id);
+                return tagDao is { IsActivated: true };
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return false;
+            }
+        }
+
+        public async Task<Tag> CreateAsync(Tag tag)
+        {
+            try
+            {
+                ProcessResult.Rest();
+                var isValid = await _validator.IsValidEntityAsync(tag, ProcessResult);
+                if (!isValid)
+                {
+                    return null;
+                }
+                var tagDao = _mapper.Map<TagDao>(tag);
+                if (tagDao == null)
+                {
+                    ProcessResult.AddErrorMessage("Cannot convert Tag to TagDao");
+                    return null;
+                }
+
+                var addedTagDao = await _tagRepository.AddAsync(tagDao);
+                if (addedTagDao == null)
+                {
+                    ProcessResult.PropagandaResult(_tagRepository.ProcessMessage);
+                    return null;
+                }
+
+                tag.Id = addedTagDao.Id;
+                return tag;
+            }
+            catch (Exception ex)
+            {
+                ProcessResult.WrapException(ex);
+                return null;
+            }
+        }
+
         public async Task<Tag> UpdateAsync(Tag tag)
         {
             try
@@ -181,40 +215,6 @@ namespace Hmm.Core.DefaultManager
                 }
 
                 return updatedTag;
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return null;
-            }
-        }
-
-        public async Task<PageList<Tag>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            try
-            {
-                Expression<Func<TagDao, bool>> isActivatedExpression = t => t.IsActivated;
-                Expression<Func<TagDao, bool>> daoQuery = null;
-                if (query != null)
-                {
-                    var mappedQuery = ExpressionMapper<Tag, TagDao>.MapExpression(query);
-
-                    // Combine the mapped query with the IsActivated expression
-                    var parameter = Expression.Parameter(typeof(TagDao), "t");
-                    var body = Expression.AndAlso(
-                        Expression.Invoke(mappedQuery, parameter),
-                        Expression.Invoke(isActivatedExpression, parameter)
-                    );
-                    daoQuery = Expression.Lambda<Func<TagDao, bool>>(body, parameter);
-                }
-                else
-                {
-                    daoQuery = isActivatedExpression;
-                }
-
-                var tagDaos = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-                var tags = _mapper.Map<PageList<Tag>>(tagDaos);
-                return tags;
             }
             catch (Exception ex)
             {

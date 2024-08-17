@@ -195,7 +195,7 @@ namespace Hmm.Core.Tests
             // Assert
             Assert.True(_authorManager.ProcessResult.Success);
             Assert.Empty(_authorManager.ProcessResult.MessageList);
-            Assert.False(updatedAuthor.IsActivated);
+            Assert.Null(updatedAuthor);
         }
 
         [Fact]
@@ -207,7 +207,7 @@ namespace Hmm.Core.Tests
             Assert.NotNull(author);
 
             // Act
-            var result =await _authorManager.AuthorExistsAsync(author.Id);
+            var result =await _authorManager.IsAuthorExistsAsync(author.Id);
 
             // Assert
             Assert.True(result);
@@ -219,7 +219,7 @@ namespace Hmm.Core.Tests
         {
             // Arrange
             // Act
-            var result = await _authorManager.AuthorExistsAsync(id);
+            var result = await _authorManager.IsAuthorExistsAsync(id);
 
             // Act & Assert
             Assert.Equal(result, expectResult);

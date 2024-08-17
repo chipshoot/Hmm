@@ -34,11 +34,24 @@ public class ContactManager : IContactManager
         try
         {
             ProcessResult.Rest();
+            Expression<Func<ContactDao, bool>> isActivatedExpression = t => t.IsActivated;
             Expression<Func<ContactDao, bool>> daoQuery = null;
             if (query != null)
             {
-                daoQuery = ExpressionMapper<Contact, ContactDao>.MapExpression(query);
+                var mappedQuery = ExpressionMapper<Contact, ContactDao>.MapExpression(query);
+
+                // Combine the mapped query with the IsActivated expression
+                var parameter = Expression.Parameter(typeof(ContactDao), "c");
+                var body = Expression.AndAlso(
+                    Expression.Invoke(mappedQuery, parameter),
+                    Expression.Invoke(isActivatedExpression, parameter));
+                daoQuery = Expression.Lambda<Func<ContactDao, bool>>(body, parameter);
             }
+            else
+            {
+                daoQuery = isActivatedExpression;
+            }
+
             var contactDaos = await _contactDaoRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
 
             var contacts = _mapper.Map<List<Contact>>(contactDaos);
@@ -48,6 +61,35 @@ public class ContactManager : IContactManager
                 : new PageList<Contact>(contacts, 1, resourceCollectionParameters.PageNumber,
                     resourceCollectionParameters.PageSize);
             return contactPage;
+        }
+        catch (Exception ex)
+        {
+            ProcessResult.WrapException(ex);
+            return null;
+        }
+    }
+
+    public async Task<Contact> GetContactByIdAsync(int id)
+    {
+        try
+        {
+            ProcessResult.Rest();
+            var contactDao = await _contactDaoRepository.GetEntityAsync(id);
+
+            switch (contactDao)
+            {
+                case null:
+                    return null;
+
+                case { IsActivated: false }:
+                    return null;
+
+                default:
+                    {
+                        var contact = _mapper.Map<Contact>(contactDao);
+                        return contact;
+                    }
+            }
         }
         catch (Exception ex)
         {
@@ -67,28 +109,6 @@ public class ContactManager : IContactManager
         {
             ProcessResult.WrapException(ex);
             return false;
-        }
-    }
-
-    public async Task<Contact> GetContactByIdAsync(int id)
-    {
-        try
-        {
-            ProcessResult.Rest();
-            var contactDao = await _contactDaoRepository.GetEntityAsync(id);
-
-            if (contactDao == null)
-            {
-                return null;
-            }
-
-            var contact = _mapper.Map<Contact>(contactDao);
-            return contact;
-        }
-        catch (Exception ex)
-        {
-            ProcessResult.WrapException(ex);
-            return null;
         }
     }
 
