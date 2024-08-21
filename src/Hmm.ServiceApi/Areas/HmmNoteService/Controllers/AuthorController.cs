@@ -31,15 +31,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         #region constructor
 
-        public AuthorController(IAuthorManager authorManager, IMapper mapper, IHttpClientFactory httpClientFactory)
+        public AuthorController(IAuthorManager authorManager, IMapper mapper)
         {
             Guard.Against<ArgumentNullException>(authorManager == null, nameof(authorManager));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-            Guard.Against<ArgumentNullException>(httpClientFactory == null, nameof(httpClientFactory));
+            //Guard.Against<ArgumentNullException>(httpClientFactory == null, nameof(httpClientFactory));
 
             _authorManager = authorManager;
             _mapper = mapper;
-            _httpClientFactory = httpClientFactory;
+            //_httpClientFactory = httpClientFactory;
         }
 
         #endregion constructor
@@ -70,7 +70,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             var author = await _authorManager.GetAuthorByIdAsync(id);
             if (author == null)
             {
-                return NotFound();
+                return NotFound($"The author {id} cannot be found.");
             }
 
             return Ok(author);
@@ -118,7 +118,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         // POST api/authors
         [HttpPost(Name = "AddAuthor")]
         [AuthorResultFilter]
-        public async Task<IActionResult> CreateAuthor(ApiAuthorForCreate author)
+        public async Task<IActionResult> Post(ApiAuthorForCreate author)
         {
             try
             {
@@ -156,7 +156,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (author == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("author information is null or invalid id found"));
+                return BadRequest(new ApiBadRequestResponse("Author information is null or invalid id found"));
             }
 
             try
@@ -221,10 +221,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var authorExists = await _authorManager.AuthorExistsAsync(id);
+            var authorExists = await _authorManager.IsAuthorExistsAsync(id);
             if (!authorExists)
             {
-                return NotFound($"The author: {id} cannot found");
+                return BadRequest($"Invalid author id found.");
             }
 
             try
@@ -235,7 +235,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     return NoContent();
                 }
 
-                throw new Exception($"Deleting author {id} failed on saving");
+                throw new Exception($"Deleting author {id} failed on saving.");
             }
             catch (Exception)
             {

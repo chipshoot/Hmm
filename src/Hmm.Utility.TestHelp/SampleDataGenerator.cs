@@ -54,6 +54,50 @@ public static class SampleDataGenerator
         return contactDao;
     }
 
+    public static List<ContactDao> GetContactDaos()
+    {
+        var contactDaos = new List<ContactDao>
+        {
+            new()
+            {
+                Id = 100,
+                Contact = """
+                          { "FirstName": "John", "LastName": "Doe", "Emails": [ { "Address": "fchy@yahoo.com", "Type": 0, "IsPrimary": true }, { "Address": "fchy5979@gamil.com", "Type": 0, "IsPrimary": false }, { "Address": "fchy@outlook.com", "Type": 1, "IsPrimary": false } ], "Phones": [ { "Number": "123-456-7890", "Type": 0, "IsPrimary": true }, { "Number": "098-765-4321", "Type": 2, "IsPrimary": false } ], "Addresses": [ { "Address": "123 Main St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 0, "IsPrimary": true }, { "Address": "456 Elm St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 1, "IsPrimary": false } ] }
+                          """,
+                Description = "testing contact1",
+                IsActivated = true
+            },
+            new()
+            {
+                Id = 101,
+                Contact = """
+                          { "FirstName": "Chaoyang", "LastName": "Fang", "Emails": [ { "Address": "fchy@yahoo.com", "Type": 0, "IsPrimary": true }, { "Address": "fchy5979@gamil.com", "Type": 0, "IsPrimary": false }, { "Address": "fchy@outlook.com", "Type": 1, "IsPrimary": false } ], "Phones": [ { "Number": "123-456-7890", "Type": 0, "IsPrimary": true }, { "Number": "098-765-4321", "Type": 2, "IsPrimary": false } ], "Addresses": [ { "Address": "123 Main St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 0, "IsPrimary": true }, { "Address": "456 Elm St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 1, "IsPrimary": false } ] }
+                          """,
+                Description = "testing contact2",
+                IsActivated = true
+            },
+            new()
+            {
+                Id = 102,
+                Contact = """
+                          { "FirstName": "John", "LastName": "Smith", "Emails": [ { "Address": "fchy@yahoo.com", "Type": 0, "IsPrimary": true }, { "Address": "fchy5979@gamil.com", "Type": 0, "IsPrimary": false }, { "Address": "fchy@outlook.com", "Type": 1, "IsPrimary": false } ], "Phones": [ { "Number": "123-456-7890", "Type": 0, "IsPrimary": true }, { "Number": "098-765-4321", "Type": 2, "IsPrimary": false } ], "Addresses": [ { "Address": "123 Main St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 0, "IsPrimary": true }, { "Address": "456 Elm St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 1, "IsPrimary": false } ] }
+                          """,
+                Description = "testing contact3",
+                IsActivated = true
+            },
+            new()
+            {
+                Id = 103,
+                Contact = """
+                          { "FirstName": "Amy", "LastName": "Wang", "Emails": [ { "Address": "fchy@yahoo.com", "Type": 0, "IsPrimary": true }, { "Address": "fchy5979@gamil.com", "Type": 0, "IsPrimary": false }, { "Address": "fchy@outlook.com", "Type": 1, "IsPrimary": false } ], "Phones": [ { "Number": "123-456-7890", "Type": 0, "IsPrimary": true }, { "Number": "098-765-4321", "Type": 2, "IsPrimary": false } ], "Addresses": [ { "Address": "123 Main St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 0, "IsPrimary": true }, { "Address": "456 Elm St", "City": "Springfield", "State": "IL", "PostalCode": "12345", "Country": "USA", "Type": 1, "IsPrimary": false } ] }
+                          """,
+                Description = "testing contact",
+                IsActivated = true
+            }
+        };
+        return contactDaos;
+    }
+
     public static Author GetAuthor()
     {
         var author = new Author
@@ -86,7 +130,7 @@ public static class SampleDataGenerator
     {
         var authors = new List<AuthorDao>
         {
-            new AuthorDao
+            new()
             {
                 Id = 100,
                 AccountName = "fchy",
@@ -96,13 +140,31 @@ public static class SampleDataGenerator
                 IsActivated = true
             },
 
-            new AuthorDao
+            new() 
             {
                 Id = 101,
                 AccountName = "jfang",
                 ContactInfo = GetContactDao(),
                 Role = Core.Map.DbEntity.AuthorRoleType.Author,
                 Description = "Testing Author2",
+                IsActivated = true
+            },
+            new() 
+            {
+                Id = 102,
+                AccountName = "amyWang",
+                ContactInfo = GetContactDao(),
+                Role = Core.Map.DbEntity.AuthorRoleType.Author,
+                Description = "Testing Author3",
+                IsActivated = true
+            },
+            new() 
+            {
+                Id = 103,
+                AccountName = "taoTao",
+                ContactInfo = GetContactDao(),
+                Role = Core.Map.DbEntity.AuthorRoleType.Author,
+                Description = "Testing Author4",
                 IsActivated = true
             },
         };
@@ -165,8 +227,17 @@ public static class SampleDataGenerator
             {
                 Id = 102,
                 Name = "SystemLog",
-                FormatType = Core.Map.DbEntity.NoteContentFormatType.PlainText,
+                FormatType = Core.Map.DbEntity.NoteContentFormatType.Json,
                 Description = "Testing system log catalog",
+                Schema = "",
+                IsDefault = false
+            },
+            new()
+            {
+                Id = 103,
+                Name = "Note",
+                FormatType = Core.Map.DbEntity.NoteContentFormatType.PlainText,
+                Description = "Testing system note log catalog",
                 Schema = "",
                 IsDefault = false
             }
@@ -404,14 +475,18 @@ public static class SampleDataGenerator
             {
                 Id = source.Id,
                 Name = source.Name,
-                Schema = source.Schema
+                Schema = source.Schema,
+                FormatType = source.FormatType,
+                Description = source.Description
             };
             return target;
         }
 
         targetCatalog.Id = source.Id;
         targetCatalog.Name = source.Name;
+        targetCatalog.FormatType = source.FormatType;
         targetCatalog.Schema = source.Schema;
+        targetCatalog.Description = source.Description;
 
         return targetCatalog;
     }

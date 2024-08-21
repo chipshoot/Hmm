@@ -67,7 +67,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             var contact = await _contactManager.GetContactByIdAsync(id);
             if (contact == null)
             {
-                return NotFound();
+                return NotFound($"The contact : {id} not found.");
             }
 
             return Ok(contact);
@@ -76,7 +76,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         // POST api/authors
         [HttpPost(Name = "AddContact")]
         [AuthorResultFilter]
-        public async Task<IActionResult> CreateAuthor(ApiContactForCreate contact)
+        public async Task<IActionResult> Post(ApiContactForCreate contact)
         {
             try
             {
@@ -103,7 +103,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (contact == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("contact information is null or invalid id found"));
+                return BadRequest(new ApiBadRequestResponse("Contact information is null or invalid id found"));
             }
 
             try
@@ -111,7 +111,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 var currentContact = await _contactManager.GetContactByIdAsync(id);
                 if (currentContact == null)
                 {
-                    return BadRequest($"The author {id} cannot be found.");
+                    return BadRequest($"The contact {id} cannot be found.");
                 }
 
                 currentContact = _mapper.Map(contact, currentContact);
@@ -171,7 +171,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             var contactExists = await _contactManager.GetContactByIdAsync(id);
             if (contactExists==null)
             {
-                return NotFound($"The contact: {id} cannot found");
+                return BadRequest($"The contact {id} cannot be found.");
             }
 
             try
@@ -182,7 +182,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     return NoContent();
                 }
 
-                throw new Exception($"Deleting contact {id} failed on saving");
+                throw new Exception($"Deleting contact {id} failed on saving.");
             }
             catch (Exception)
             {

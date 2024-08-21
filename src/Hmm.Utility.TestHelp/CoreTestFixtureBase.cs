@@ -1,4 +1,8 @@
-﻿using Hmm.Core.Map.DbEntity;
+﻿using AutoMapper;
+using Hmm.Core.Map;
+using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -8,10 +12,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using AutoMapper;
-using Hmm.Core.Map;
-using Hmm.Core.Map.DomainEntity;
-using Hmm.ServiceApi.DtoEntity.Profiles;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -187,7 +187,7 @@ namespace Hmm.Utility.TestHelp
             _tagDaos ??= [];
 
             // Add default contacts
-            _contactDaos.Add(SampleDataGenerator.GetContactDao());
+            _contactDaos.AddRange(SampleDataGenerator.GetContactDaos());
 
             // Add authors records
             _authorDaos.AddRange(SampleDataGenerator.GetAuthorDaos());
@@ -211,6 +211,16 @@ namespace Hmm.Utility.TestHelp
 
             var tagDao = Mapper.Map<TagDao>(tag);
             _tagDaos.Add(tagDao);
+        }
+        protected void InsertAuthor(Author author)
+        {
+            if (author == null)
+            {
+                return;
+            }
+
+            var authorDao = Mapper.Map<AuthorDao>(author);
+            _authorDaos.Add(authorDao);
         }
 
         public void Dispose()
@@ -309,7 +319,7 @@ namespace Hmm.Utility.TestHelp
         private IRepository<AuthorDao> GetAuthorRepository()
         {
             var mockAuthors = new Mock<IRepository<AuthorDao>>();
-            var nextId = 1;
+            var nextId = _authorDaos.Count + 1;
             var processingResult = new ProcessingResult();
 
             mockAuthors.Setup(a => a.ProcessMessage).Returns(processingResult);
@@ -492,9 +502,37 @@ namespace Hmm.Utility.TestHelp
 
         #region Reset data
 
-        protected void ResetTag()
+        protected void ResetDataSource(ElementType element)
         {
-            _tagDaos.Clear();
+            switch (element)
+            {
+                case ElementType.Author:
+                    _authorDaos.Clear();
+                    break;
+
+                case ElementType.Tag:
+                    _tagDaos.Clear();
+                    break;
+
+                case ElementType.NoteCatalog:
+                    _catalogDaos.Clear();
+                    break;
+
+                case ElementType.Contact:
+                    _contactDaos.Clear();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(element), element, null);
+            }
+        }
+
+        protected enum ElementType
+        {
+            Author,
+            NoteCatalog,
+            Contact,
+            Tag
         }
 
         #endregion Reset data

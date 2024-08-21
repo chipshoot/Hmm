@@ -26,7 +26,7 @@ namespace Hmm.Core.DefaultManager
 
             _mapper = mapper;
             _catalogRepository = dataSource;
-            _validator = new NoteCatalogValidator();
+            _validator = new NoteCatalogValidator(this);
         }
 
         public async Task<PageList<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)

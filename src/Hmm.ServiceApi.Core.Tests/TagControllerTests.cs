@@ -43,7 +43,7 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task Get_ReturnsNotFound_WhenNoTagFound()
         {
             // Arrange
-            ResetTag();
+            ResetDataSource(ElementType.Tag);
             // Act
             var result = await _controller.Get(new ResourceCollectionParameters());
 
@@ -113,7 +113,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Post(apiTag);
 
             // Assert
-            Assert.IsType<CreatedResult>(result);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         [Fact]
@@ -325,11 +325,11 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Act
             var result = await _controller.Delete(tagId);
-            var deletedTas = await _tagManager.GetTagByIdAsync(tagId);
+            var deletedTag = await _tagManager.GetTagByIdAsync(tagId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Null(deletedTas);
+            Assert.Null(deletedTag);
         }
 
         [Fact]

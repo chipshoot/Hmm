@@ -1,6 +1,6 @@
 ﻿namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
-    public class ApiTagForUpdate : ApiEntity
+    public class ApiTagForUpdate
     {
         public string Name { get; set; }
 

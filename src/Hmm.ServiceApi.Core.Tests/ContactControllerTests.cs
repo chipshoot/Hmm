@@ -1,0 +1,440 @@
+using Hmm.Core;
+using Hmm.Core.DefaultManager;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.ServiceApi.Areas.HmmNoteService.Controllers;
+using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.Models;
+using Hmm.Utility.Dal.Query;
+using Hmm.Utility.TestHelp;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
+using Moq;
+using AddressType = Hmm.ServiceApi.DtoEntity.HmmNote.AddressType;
+using EmailType = Hmm.ServiceApi.DtoEntity.HmmNote.EmailType;
+using TelephoneType = Hmm.ServiceApi.DtoEntity.HmmNote.TelephoneType;
+
+namespace Hmm.ServiceApi.Core.Tests
+{
+    public class ContactControllerTests : CoreTestFixtureBase
+    {
+        private readonly ContactManager _contactManager;
+        private readonly ContactController _controller;
+
+        public ContactControllerTests()
+        {
+            _contactManager = new ContactManager(ContactRepository, Mapper);
+            _controller = new ContactController(_contactManager, ApiMapper);
+        }
+
+        #region Get contact by Id
+
+        [Fact]
+        public async Task Get_ReturnsOkResult_WithListOfContacts()
+        {
+            // Arrange
+            // Act
+            var result = await _controller.Get(new ResourceCollectionParameters());
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnContacts = Assert.IsType<PageList<Contact>>(okResult.Value);
+            Assert.Equal(4, returnContacts.Count);
+        }
+
+        [Fact]
+        public async Task Get_ReturnsNotFound_WhenNoContactFound()
+        {
+            // Arrange
+            ResetDataSource(ElementType.Contact);
+            // Act
+            var result = await _controller.Get(new ResourceCollectionParameters());
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Theory]
+        [InlineData(100)]
+        [InlineData(101)]
+        [InlineData(102)]
+        [InlineData(103)]
+        public async Task GetContactById_ReturnsOkResult_WithContact(int contactId)
+        {
+            // Arrange
+            // Act
+            var result = await _controller.Get(contactId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnContact = Assert.IsType<Contact>(okResult.Value);
+            Assert.Equal(contactId, returnContact.Id);
+        }
+
+        [Fact]
+        public async Task GetContactById_ReturnsNotFound_WhenContactNotFound()
+        {
+            // Arrange
+            const int contactId = 20;
+            // Act
+            var result = await _controller.Get(contactId);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"The contact : {contactId} not found.", notFoundResult.Value);
+        }
+
+        #endregion Get contact by Id
+
+        #region Add a new contact
+
+        [Fact]
+        public async Task AddContact_ReturnsCreatedResult_WithNewContact()
+        {
+            // Arrange
+            var apiContact = new ApiContactForCreate
+            {
+                FirstName = "Jack",
+                LastName = "Fang",
+                Emails = new List<ApiEmail>
+                {
+                    new() { Address = "john.doe@example.com", IsPrimary = true, Type = EmailType.Work},
+                    new() { Address = "john.doe@work.com", IsPrimary = false, Type = EmailType.Personal}
+                },
+                Phones = new List<ApiPhone>
+                {
+                    new() { Number = "123-456-7890", Type = TelephoneType.Home },
+                    new() { Number = "098-765-4321", Type = TelephoneType.Mobile }
+                },
+                Addresses = new List<ApiAddressInfo>
+                {
+                    new() { Address = "123 Main St", City = "Toronto", State = "CA", Country = "Canada", PostalCode = "12345", Type = AddressType.Home}
+                },
+                IsActivated = true
+            };
+
+            // Act
+            var result = await _controller.Post(apiContact);
+
+            // Assert
+            var createdResult = Assert.IsType<CreatedResult>(result);
+            var returnContact = Assert.IsType<Contact>(createdResult.Value);
+            Assert.Equal(5, returnContact.Id);
+        }
+
+        [Fact]
+        public async Task AddContact_ReturnsBadRequest_WhenCreationFails()
+        {
+            // Arrange
+            var apiContact = new ApiContactForCreate
+            {
+                FirstName = GetRandomString(250),
+                LastName = "Fang",
+                Emails = new List<ApiEmail>
+                {
+                    new() { Address = "john.doe@example.com", IsPrimary = true, Type = EmailType.Work},
+                    new() { Address = "john.doe@work.com", IsPrimary = false, Type = EmailType.Personal}
+                },
+                Phones = new List<ApiPhone>
+                {
+                    new() { Number = "123-456-7890", Type = TelephoneType.Home },
+                    new() { Number = "098-765-4321", Type = TelephoneType.Mobile }
+                },
+                Addresses = new List<ApiAddressInfo>
+                {
+                    new() { Address = "123 Main St", City = "Toronto", State = "ON", Country = "Canada", PostalCode = "12345", Type = AddressType.Home}
+                },
+                IsActivated = true
+            };
+
+            // Act
+            var result = await _controller.Post(apiContact);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task AddContact_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            var apiContact = new ApiContactForCreate { FirstName = "TestContact" };
+            var mockContactManager = new Mock<IContactManager>();
+            mockContactManager.Setup(m => m.CreateAsync(It.IsAny<Contact>())).Throws(new Exception());
+            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+
+            // Act
+            var result = await controller.Post(apiContact);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        }
+
+        #endregion Add a new contact
+
+        #region Update contact
+
+        [Fact]
+        public async Task UpdateContact_ReturnsNoContent_WhenUpdateIsSuccessful()
+        {
+            // Arrange
+            const int contactId = 100;
+            var existingContact = await _contactManager.GetContactByIdAsync(contactId);
+            Assert.NotNull(existingContact);
+            var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existingContact);
+            apiContactForUpdate.Description = "Updated contact description";
+
+            // Act
+            var result = await _controller.Put(contactId, apiContactForUpdate);
+            var updatedContact = await _contactManager.GetContactByIdAsync(contactId);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            Assert.Equal(contactId, updatedContact.Id);
+            Assert.Equal(apiContactForUpdate.Description, updatedContact.Description);
+        }
+
+        [Fact]
+        public async Task UpdateContact_ReturnsBadRequest_WhenContactIsNullOrInvalidId()
+        {
+            // Arrange
+            ApiContactForUpdate? apiContactForUpdate = null;
+
+            // Act
+            var result = await _controller.Put(0, apiContactForUpdate);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Contact information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
+            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+        }
+
+        [Fact]
+        public async Task UpdateContact_ReturnsBadRequest_WhenContactNotFound()
+        {
+            // Arrange
+            const int contactId = 1000;
+            var apiContactForUpdate = new ApiContactForUpdate
+            {
+                FirstName = "Jane",
+                LastName = "Smith",
+                Emails = new List<ApiEmail>
+                {
+                    new() { Address = "jane.smith@example.com", IsPrimary = true, Type = EmailType.Other }
+                },
+                Phones = new List<ApiPhone>
+                {
+                    new() { Number = "555-555-5555", Type = TelephoneType.Work, IsPrimary = true }
+                },
+                Addresses = new List<ApiAddressInfo>
+                {
+                    new()
+                    {
+                        Address = "456 Elm St", City = "Toronto", State = "NY", Country = "Canada", PostalCode = "67890",
+                        Type = AddressType.Home
+                    }
+                },
+                IsActivated = false
+            };
+
+            // Act
+            var result = await _controller.Put(contactId, apiContactForUpdate);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal($"The contact {contactId} cannot be found.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task UpdateContact_ReturnsBadRequest_WhenUpdateFails()
+        {
+            // Arrange
+            var existingContact = await _contactManager.GetContactByIdAsync(100);
+            var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existingContact);
+            apiContactForUpdate.LastName = GetRandomString(255);
+
+            // Act
+            var result = await _controller.Put(existingContact.Id, apiContactForUpdate);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal(_contactManager.ProcessResult.MessageList, badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task UpdateContact_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            const int contactId = 100;
+            var existContact = await _contactManager.GetContactByIdAsync(contactId);
+            var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existContact);
+            var mockContactManager = new Mock<IContactManager>();
+            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Contact { Id = id, LastName = "Exists Contact" });
+            mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
+            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+
+            // Act
+            var result = await controller.Put(contactId, apiContactForUpdate);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        }
+
+        #endregion Update contact
+
+        #region Patch contact
+
+        [Fact]
+        public async Task PatchContact_ReturnsNoContent_WhenPatchIsSuccessful()
+        {
+            // Arrange
+            const int contactId = 100;
+            var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
+            var existsContact = await _contactManager.GetContactByIdAsync(contactId);
+            Assert.NotNull(existsContact);
+            patchDoc.Replace(c => c.Description, "Updated contact with new description");
+
+            // Act
+            var result = await _controller.Patch(contactId, patchDoc);
+            var updatedContact = await _contactManager.GetContactByIdAsync(contactId);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            Assert.Equal("Updated contact with new description", updatedContact.Description);
+        }
+
+        [Fact]
+        public async Task PatchContact_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId()
+        {
+            // Arrange
+            JsonPatchDocument<ApiContactForUpdate>? patchDoc = null;
+
+            // Act
+            var result = await _controller.Patch(0, patchDoc);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Patch information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
+            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+        }
+
+        [Fact]
+        public async Task PatchContact_ReturnsNotFound_WhenContactNotFound()
+        {
+            // Arrange
+            const int contactId = 1;
+            var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
+
+            // Act
+            var result = await _controller.Patch(contactId, patchDoc);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task PatchContact_ReturnsBadRequest_WhenUpdateFails()
+        {
+            // Arrange
+            const int contactId = 100;
+            var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
+            patchDoc.Replace(e => e.LastName, GetRandomString(255));
+
+            // Act
+            var result = await _controller.Patch(contactId, patchDoc);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal(_contactManager.ProcessResult.MessageList, badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task PatchContact_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            const int contactId = 100;
+            var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
+            patchDoc.Replace(e => e.FirstName, "SomeNewName");
+
+            var mockContactManager = new Mock<IContactManager>();
+            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Contact { Id = id, LastName = "Exists Contact" });
+            mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
+            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+
+            // Act
+            var result = await controller.Patch(contactId, patchDoc);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        }
+
+        #endregion Patch contact
+
+        #region Delete contact
+
+        [Fact]
+        public async Task Delete_ReturnsNoContent_WhenDeleteIsSuccessful()
+        {
+            // Arrange
+            const int contactId = 100;
+            var existingContact = await _contactManager.GetContactByIdAsync(contactId);
+            Assert.NotNull(existingContact);
+
+            // Act
+            var result = await _controller.Delete(contactId);
+            var deletedContact = await _contactManager.GetContactByIdAsync(contactId);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            Assert.Null(deletedContact);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsBadRequest_WhenIdIsInvalid()
+        {
+            // Act
+            var result = await _controller.Delete(0);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal($"The contact 0 cannot be found.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsBadRequest_WhenContactNotFound()
+        {
+            // Arrange
+            const int contactId = 1;
+
+            // Act
+            var result = await _controller.Delete(contactId);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal($"The contact {contactId} cannot be found.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            const int contactId = 1;
+            var mockContactManager = new Mock<IContactManager>();
+            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Contact { Id = id, LastName = "Exists Contact" });
+            mockContactManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
+            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+
+            // Act
+            var result = await controller.Delete(contactId);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        }
+
+        #endregion Delete contact
+    }
+}

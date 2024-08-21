@@ -1,15 +1,29 @@
-﻿using System.Threading.Tasks;
+﻿using AutoMapper;
+using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.Map;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Hmm.Core.Tests
 {
     public class NoteCatalogValidatorTests : CoreTestFixtureBase
     {
-        private readonly NoteCatalogValidator _validator = new();
+        private readonly NoteCatalogValidator _validator;
+
+        public NoteCatalogValidatorTests()
+        {
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<HmmMappingProfile>();
+            });
+            var mapper = config.CreateMapper();
+            var catalogManager = new NoteCatalogManager(CatalogRepository, mapper);
+            _validator = new NoteCatalogValidator(catalogManager);
+        }
 
         [Theory]
         [InlineData(0, false)]
@@ -80,7 +94,7 @@ namespace Hmm.Core.Tests
             // Act
 
             var processResult = new ProcessingResult();
-            var result =await _validator.IsValidEntityAsync(catalog, processResult);
+            var result = await _validator.IsValidEntityAsync(catalog, processResult);
 
             // Assert
             Assert.Equal(expected, result);

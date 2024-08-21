@@ -19,6 +19,7 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ForMember(d => d.Role, opt => opt.MapFrom(src => src.Role.ToString().ToLower()));
             CreateMap<ApiAuthorForCreate, Author>();
             CreateMap<ApiAuthorForUpdate, Author>();
+            CreateMap<Author, ApiAuthorForCreate>();
             CreateMap<Author, ApiAuthorForUpdate>();
             CreateMap<PageList<Author>, PageList<ApiAuthor>>()
                 .ConvertUsing(new PageListConverter<Author, ApiAuthor>());
@@ -26,6 +27,9 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             // Contact
             CreateMap<ApiContact, Contact>();
             CreateMap<Contact, ApiContact>();
+            CreateMap<ApiContactForCreate, Contact>();
+            CreateMap<ApiContactForUpdate, Contact>();
+            CreateMap<Contact, ApiContactForUpdate>();
             CreateMap<ApiEmail, Email>();
             CreateMap<Email, ApiEmail>();
             CreateMap<Phone, ApiPhone>();

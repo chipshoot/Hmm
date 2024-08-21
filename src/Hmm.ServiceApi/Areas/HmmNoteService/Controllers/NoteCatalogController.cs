@@ -23,21 +23,18 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         private readonly INoteCatalogManager _catalogManager;
         private readonly IMapper _mapper;
-        private readonly IEntityLookup _lookupRepository;
 
         #endregion private fields
 
         #region constructor
 
-        public NoteCatalogController(INoteCatalogManager catalogManager, IMapper mapper, IEntityLookup lookupRepository)
+        public NoteCatalogController(INoteCatalogManager catalogManager, IMapper mapper)
         {
             Guard.Against<ArgumentNullException>(catalogManager == null, nameof(catalogManager));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-            Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
 
             _catalogManager = catalogManager;
             _mapper = mapper;
-            _lookupRepository = lookupRepository;
         }
 
         #endregion constructor
@@ -98,7 +95,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (catalog == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("note catalog information is null or invalid id found"));
+                return BadRequest(new ApiBadRequestResponse("Note catalog information is null or invalid id found"));
             }
 
             try
@@ -157,13 +154,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-        }
-
-        // DELETE api/renders/5
-        [HttpDelete("{id:int}")]
-        public ActionResult Delete(int id)
-        {
-            return NoContent();
         }
     }
 }
