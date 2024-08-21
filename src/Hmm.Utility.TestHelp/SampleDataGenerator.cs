@@ -248,10 +248,6 @@ public static class SampleDataGenerator
 
     public static HmmNote GetNote()
     {
-        var b = new byte[8];
-        var rnd = new Random();
-        rnd.NextBytes(b);
-
         var note = new HmmNote
         {
             Id = 100,
@@ -263,7 +259,7 @@ public static class SampleDataGenerator
             LastModifiedDate = DateTime.Now,
             IsDeleted = false,
             Description = "This is test note",
-            Version = b
+            Version = GetVersionInfo()
         };
 
         return note;
@@ -271,9 +267,6 @@ public static class SampleDataGenerator
 
     public static HmmNoteDao GetNoteDao()
     {
-        var b = new byte[8];
-        var rnd = new Random();
-        rnd.NextBytes(b);
         var noteDao = new HmmNoteDao
         {
             Id = 100,
@@ -285,10 +278,92 @@ public static class SampleDataGenerator
             LastModifiedDate = DateTime.Now,
             IsDeleted = false,
             Description = "This is test note",
-            Version = b
+            Version = GetVersionInfo()
         };
 
         return noteDao;
+    }
+
+    public static List<HmmNoteDao> GetNoteDaos()
+    {
+        var notes = new List<HmmNoteDao>
+        {
+            new()
+            {
+                Id = 100,
+                Subject = "ComputerPeripheral",
+                Content = "This is a test note",
+                Author = GetAuthorDao(),
+                Catalog = GetCatalogDao(),
+                CreateDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now,
+                IsDeleted = false,
+                Description = "This is test note 1",
+                Version = GetVersionInfo()
+            },
+            new()
+            {
+                Id = 101,
+                Subject = "Gas log",
+                Content = "This is a test gas log",
+                Author = GetAuthorDao(),
+                Catalog = GetCatalogDao(),
+                CreateDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now,
+                IsDeleted = false,
+                Description = "This is test note 2",
+                Version = GetVersionInfo()
+            },
+            new()
+            {
+                Id = 102,
+                Subject = "Todo list",
+                Content = "This is a test todo list",
+                Author = GetAuthorDao(),
+                Catalog = GetCatalogDao(),
+                CreateDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now,
+                IsDeleted = false,
+                Description = "This is test note 3",
+                Version = GetVersionInfo()
+            },
+            new()
+            {
+                Id = 103,
+                Subject = "What to do today",
+                Content = "This is a test dairy note",
+                Author = GetAuthorDao(),
+                Catalog = GetCatalogDao(),
+                CreateDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now,
+                IsDeleted = false,
+                Description = "This is test note 4",
+                Version = GetVersionInfo()
+            },
+            new()
+            {
+                Id = 104,
+                Subject = "The shopping list of today",
+                Content = "This is a test shopping list",
+                Author = GetAuthorDao(),
+                Catalog = GetCatalogDao(),
+                CreateDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now,
+                IsDeleted = false,
+                Description = "This is test note 5",
+                Version = GetVersionInfo()
+            },
+        };
+
+        return notes;
+    }
+
+    private static byte[] GetVersionInfo()
+    {
+        var b = new byte[8];
+        var rnd = new Random();
+        rnd.NextBytes(b);
+        return b;
     }
 
     public static Tag GetTag()

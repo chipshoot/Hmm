@@ -178,7 +178,7 @@ namespace Hmm.Utility.TestHelp
             ApiMapper = apiConfig.CreateMapper();
         }
 
-        protected virtual void InsertSeedRecords()
+        private void InsertSeedRecords()
         {
             _contactDaos ??= [];
             _authorDaos ??= [];
@@ -196,7 +196,7 @@ namespace Hmm.Utility.TestHelp
             _catalogDaos.AddRange(SampleDataGenerator.GetCatalogDaos());
 
             // Add default notes
-            _noteDaos.Add(SampleDataGenerator.GetNoteDao());
+            _noteDaos.AddRange(SampleDataGenerator.GetNoteDaos());
 
             // Add default tags
             _tagDaos.AddRange(SampleDataGenerator.GetTagDaos());
@@ -212,6 +212,7 @@ namespace Hmm.Utility.TestHelp
             var tagDao = Mapper.Map<TagDao>(tag);
             _tagDaos.Add(tagDao);
         }
+
         protected void InsertAuthor(Author author)
         {
             if (author == null)
@@ -221,6 +222,17 @@ namespace Hmm.Utility.TestHelp
 
             var authorDao = Mapper.Map<AuthorDao>(author);
             _authorDaos.Add(authorDao);
+        }
+
+        protected void InsertNote(HmmNote note)
+        {
+            if (note == null)
+            {
+                return;
+            }
+
+            var noteDao = Mapper.Map<HmmNoteDao>(note);
+            _noteDaos.Add(noteDao);
         }
 
         public void Dispose()
@@ -522,6 +534,10 @@ namespace Hmm.Utility.TestHelp
                     _contactDaos.Clear();
                     break;
 
+                case ElementType.Note:
+                    _noteDaos.Clear();
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(element), element, null);
             }
@@ -532,7 +548,8 @@ namespace Hmm.Utility.TestHelp
             Author,
             NoteCatalog,
             Contact,
-            Tag
+            Tag,
+            Note
         }
 
         #endregion Reset data

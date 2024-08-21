@@ -29,6 +29,7 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<Contact, ApiContact>();
             CreateMap<ApiContactForCreate, Contact>();
             CreateMap<ApiContactForUpdate, Contact>();
+            CreateMap<Contact, ApiContactForCreate>();
             CreateMap<Contact, ApiContactForUpdate>();
             CreateMap<ApiEmail, Email>();
             CreateMap<Email, ApiEmail>();
@@ -66,6 +67,7 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ForMember(n => n.Author, opt => opt.MapFrom(s => new Author { Id = s.AuthorId }))
                 .ForMember(n => n.Catalog, opt => opt.MapFrom(s => new NoteCatalog() { Id = s.NoteCatalogId }));
             CreateMap<ApiNoteForUpdate, Core.Map.DomainEntity.HmmNote>();
+            CreateMap<Core.Map.DomainEntity.HmmNote, ApiNoteForCreate>();
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNoteForUpdate>();
             CreateMap<PageList<Core.Map.DomainEntity.HmmNote>, PageList<ApiNote>>()
                 .ConvertUsing(new PageListConverter<Core.Map.DomainEntity.HmmNote, ApiNote>());

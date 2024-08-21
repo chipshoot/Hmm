@@ -201,6 +201,28 @@
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Delete_ReturnsBadRequest_WhenAuthorNotFound&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Delete_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Get_ReturnsOkResult_WithListOfNotes&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Get_ReturnsNotFound_WhenNoNoteFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.GetNoteById_ReturnsOkResult_WithNote&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.GetNoteById_ReturnsNotFound_WhenNoteNotFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.AddNote_ReturnsCreatedResult_WithNewNote&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.AddNote_ReturnsBadRequest_WhenCreationFails&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.AddNote_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsNoContent_WhenUpdateIsSuccessful&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsBadRequest_WhenNoteIsNullOrInvalidId&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsBadRequest_WhenNoteNotFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsNoContent_WhenPatchIsSuccessful&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsNotFound_WhenNoteNotFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsNoContent_WhenDeleteIsSuccessful&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsBadRequest_WhenIdIsInvalid&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsBadRequest_WhenNoteNotFound&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>

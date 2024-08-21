@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="NoteSerializer\**" />
+    <EmbeddedResource Remove="NoteSerializer\**" />
+    <None Remove="NoteSerializer\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="DefaultManager\Validator\ExistsElementValidator.cs" />
     <Compile Remove="DefaultManager\Validator\ExistsUserValidator.cs" />
     <Compile Remove="DefaultManager\Validator\HmmNoteValidator.cs" />
