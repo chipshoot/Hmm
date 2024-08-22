@@ -5,6 +5,7 @@ using Hmm.ServiceApi.Areas.HmmNoteService.Controllers;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -213,7 +214,8 @@ namespace Hmm.ServiceApi.Core.Tests
             const int noteId = 100;
             var apiNoteForUpdate = new ApiNoteForUpdate { Subject = "UpdatedNote" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
-            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), It.IsAny<bool>())).ReturnsAsync((int id, bool includeDeleted) => new HmmNote { Id = id, Subject = "Exists Note" });
+            var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
+            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(note);
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
             var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
 
@@ -226,6 +228,99 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         #endregion Update note
+
+        #region Apply tag to note
+
+        [Fact]
+        public async Task ApplyTag_ReturnsNoContent_WhenTagAppliedSuccessfully()
+        {
+            // Arrange
+            const int noteId = 100;
+            var tagDto = new ApiTagForApply { Id = 100, Name = "Important" };
+            var note = await _noteManager.GetNoteByIdAsync(noteId);
+            Assert.NotNull(note);
+            Assert.Empty(note.Tags);
+
+            // Act
+            var result = await _controller.ApplyTag(noteId, tagDto);
+            note = await _noteManager.GetNoteByIdAsync(noteId);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            Assert.Single(note.Tags);
+        }
+
+        [Fact]
+        public async Task ApplyTag_ReturnsBadRequest_WhenTagIsNull()
+        {
+            // Arrange
+            const int noteId = 100;
+            ApiTagForApply? tagDto = null;
+
+            // Act
+            var result = await _controller.ApplyTag(noteId, tagDto);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, badRequestResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task ApplyTag_ReturnsBadRequest_WhenTagIsEmpty()
+        {
+            // Arrange
+            const int noteId = 100;
+            var tagDto = new ApiTagForApply { Name = "" };
+
+            // Act
+            var result = await _controller.ApplyTag(noteId, tagDto);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, badRequestResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task ApplyTag_ReturnsNotFound_WhenNoteDoesNotExist()
+        {
+            // Arrange
+            const int noteId = 10000;
+            var tagDto = new ApiTagForApply { Name = "Important" };
+
+            // Act
+            var result = await _controller.ApplyTag(noteId, tagDto);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal(StatusCodes.Status404NotFound, notFoundResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task ApplyTag_ReturnsBadRequest_WhenTagApplicationFails()
+        {
+            // Arrange
+            const int noteId = 100;
+            var tagDto = new ApiTagForApply { Name = "Important" };
+            var note = new HmmNote { Id = noteId, Tags = [] };
+            var tag = new Tag { Name = "Important" };
+
+            var errorMsg = new ProcessingResult();
+            errorMsg.AddErrorMessage("something went wrong");
+            var noteManagerMock = new Mock<IHmmNoteManager>();
+            noteManagerMock.Setup(m => m.GetNoteByIdAsync(noteId, false)).ReturnsAsync(note);
+            noteManagerMock.Setup(m => m.ApplyTag(note, tag)).ReturnsAsync(null as List<Tag>);
+            noteManagerMock.Setup(m => m.ProcessResult).Returns(errorMsg);
+            var controller =  new HmmNoteController(noteManagerMock.Object, ApiMapper);
+
+            // Act
+            var result = await controller.ApplyTag(noteId, tagDto);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, badRequestResult.StatusCode);
+        }
+
+        #endregion Apply tag to note
 
         #region Patch note
 
@@ -301,8 +396,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var patchDoc = new JsonPatchDocument<ApiNoteForUpdate>();
             patchDoc.Replace(e => e.Subject, "SomeNewSubject");
 
+            var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
-            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync((int id, bool includeDelete) => new HmmNote { Id = id, Subject = "Exists Note Subject" });
+            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(note);
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
             var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
 
@@ -365,8 +461,9 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int noteId = 1;
+            var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
-            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync((int id, bool includeDeleted) => new HmmNote { Id = id, Subject = "Exists Note" });
+            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(note);
             mockNoteManager.Setup(m => m.DeleteAsync(It.IsAny<int>())).Throws(new Exception());
             var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
 

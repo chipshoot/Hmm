@@ -51,6 +51,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             // Tag
             CreateMap<ApiTag, Tag>();
             CreateMap<Tag, ApiTag>();
+            CreateMap<ApiTagForApply, Tag>()
+                .ForMember(d => d.Description, opt => opt.Ignore());
 
             CreateMap<ApiTagForCreate, Tag>();
             CreateMap<ApiTagForUpdate, Tag>();

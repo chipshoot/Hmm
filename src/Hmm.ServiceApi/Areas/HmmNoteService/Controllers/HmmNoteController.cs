@@ -113,6 +113,49 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
+        // PUT api/notes/5/applyTag
+        [HttpPut("{id:int}/applyTag", Name = "ApplyTagToNote")]
+        public async Task<IActionResult> ApplyTag(int id, [FromBody] ApiTagForApply tag)
+        {
+            if (tag == null || string.IsNullOrWhiteSpace(tag.Name))
+            {
+                return BadRequest(new ApiBadRequestResponse("Tag information is null"));
+            }
+
+            try
+            {
+                var curNote = await _noteManager.GetNoteByIdAsync(id);
+                if (curNote == null)
+                {
+                    return NotFound($"The note {id} cannot be found.");
+                }
+
+                // Assuming the Note class has a Tags collection
+                var tagToApply = _mapper.Map<Tag>(tag);
+                var tagList = await _noteManager.ApplyTag(curNote, tagToApply);
+                switch (tagList)
+                {
+                    case null:
+                        return BadRequest(_noteManager.ProcessResult.MessageList);
+                    default:
+                    {
+                        if(!tagList.Any())
+                        {
+                            return BadRequest(_noteManager.ProcessResult.MessageList);
+                        }
+
+                        break;
+                    }
+                }
+
+                return NoContent();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
         // PATCH api/notes/5
         [HttpPatch("{id:int}", Name = "PatchNote")]
         public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<ApiNoteForUpdate> patchDoc)
