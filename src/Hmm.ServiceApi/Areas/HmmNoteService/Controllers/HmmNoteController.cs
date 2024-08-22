@@ -139,7 +139,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                         return BadRequest(_noteManager.ProcessResult.MessageList);
                     default:
                     {
-                        if(!tagList.Any())
+                        if(tagList.Count == 0)
                         {
                             return BadRequest(_noteManager.ProcessResult.MessageList);
                         }
