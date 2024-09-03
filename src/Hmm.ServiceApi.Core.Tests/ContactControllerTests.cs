@@ -23,7 +23,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public ContactControllerTests()
         {
-            _contactManager = new ContactManager(ContactRepository, Mapper);
+            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository);
             _controller = new ContactController(_contactManager, ApiMapper);
         }
 

@@ -2,8 +2,6 @@
 
 public class ApiEmail
 {
-    public bool IsActivated { get; set; }
-
     public string Address { get; set; }
 
     public EmailType Type { get; set; }

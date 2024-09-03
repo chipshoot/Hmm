@@ -42,7 +42,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         #endregion constructor
 
         [HttpGet(Name = "GetContacts")]
-        [ContactResultFilter]
+        [ContactsResultFilter]
         [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
@@ -56,7 +56,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet("{id:int}", Name = "GetContactById")]
-        [AuthorResultFilter]
+        [ContactResultFilter]
         public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
@@ -75,7 +75,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // POST api/authors
         [HttpPost(Name = "AddContact")]
-        [AuthorResultFilter]
+        [ContactResultFilter]
         public async Task<IActionResult> Post(ApiContactForCreate contact)
         {
             try
@@ -108,13 +108,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var currentContact = await _contactManager.GetContactByIdAsync(id);
-                if (currentContact == null)
-                {
-                    return BadRequest($"The contact {id} cannot be found.");
-                }
-
-                currentContact = _mapper.Map(contact, currentContact);
+                var currentContact = _mapper.Map<Contact>(contact);
+                currentContact.Id = id;
                 var newContact = await _contactManager.UpdateAsync(currentContact);
                 if (newContact == null)
                 {

@@ -8,6 +8,7 @@ using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity;
+using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
@@ -121,7 +122,7 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
                 //.AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
-                .AddAutoMapper(typeof(ApiEntity))
+                .AddAutoMapper(typeof(ApiMappingProfile))
                 .AddAutoMapper(typeof(HmmMappingProfile))
                 .AddSwaggerGen();
 

@@ -20,7 +20,7 @@ namespace Hmm.Core.Tests
                 cfg.AddProfile<HmmMappingProfile>();
             });
             var mapper = config.CreateMapper();
-            _contactManager = new ContactManager(ContactRepository, mapper);
+            _contactManager = new ContactManager(ContactRepository, mapper, LookupRepository);
         }
 
         [Fact]

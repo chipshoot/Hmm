@@ -19,14 +19,17 @@ public class ContactManager : IContactManager
     private readonly IRepository<ContactDao> _contactDaoRepository;
     private readonly IMapper _mapper;
     private readonly ValidatorBase<Contact> _validator;
+    private readonly IEntityLookup _lookup;
 
-    public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper)
+    public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper, IEntityLookup lookup)
     {
         Guard.Against<ArgumentNullException>(contactRepository == null, nameof(contactRepository));
         Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+        Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
         _contactDaoRepository = contactRepository;
         _mapper = mapper;
         _validator = new ContactValidator();
+        _lookup = lookup;
     }
 
     public async Task<PageList<Contact>> GetContactsAsync(Expression<Func<Contact, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -74,7 +77,7 @@ public class ContactManager : IContactManager
         try
         {
             ProcessResult.Rest();
-            var contactDao = await _contactDaoRepository.GetEntityAsync(id);
+            var contactDao = await _lookup.GetEntityAsync<ContactDao>(id);
 
             switch (contactDao)
             {
@@ -102,7 +105,7 @@ public class ContactManager : IContactManager
     {
         try
         {
-            var contactDao = await _contactDaoRepository.GetEntityAsync(id);
+            var contactDao = await _lookup.GetEntityAsync<ContactDao>(id);
             return contactDao != null;
         }
         catch (Exception ex)
@@ -160,7 +163,7 @@ public class ContactManager : IContactManager
             return null;
         }
 
-        var savedContact = await _contactDaoRepository.GetEntityAsync(contactInfo.Id);
+        var savedContact = await _lookup.GetEntityAsync<ContactDao>(contactInfo.Id);
         if (savedContact == null)
         {
             ProcessResult.AddErrorMessage($"Cannot find contact: {contactInfo.Id} for updating");
