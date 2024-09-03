@@ -18,14 +18,18 @@ namespace Hmm.Core.DefaultManager
         private readonly IRepository<AuthorDao> _authorRepository;
         private readonly ValidatorBase<Author> _validator;
         private readonly IMapper _mapper;
+        private readonly IEntityLookup _lookup;
 
-        public AuthorManager(IRepository<AuthorDao> authorRepository, IMapper mapper)
+        public AuthorManager(IRepository<AuthorDao> authorRepository, IMapper mapper, IEntityLookup lookup)
         {
             Guard.Against<ArgumentNullException>(authorRepository == null, nameof(authorRepository));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+
             _authorRepository = authorRepository;
             _mapper = mapper;
             _validator = new AuthorValidator(this);
+            _lookup = lookup;
         }
 
         public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -66,7 +70,7 @@ namespace Hmm.Core.DefaultManager
         public async Task<Author> GetAuthorByIdAsync(int id)
         {
             ProcessResult.Rest();
-            var authorDao = await _authorRepository.GetEntityAsync(id);
+            var authorDao = await _lookup.GetEntityAsync<AuthorDao>(id);
             switch (authorDao)
             {
                 case null:
@@ -93,7 +97,7 @@ namespace Hmm.Core.DefaultManager
             try
             {
                 ProcessResult.Rest();
-                var authorDao = await _authorRepository.GetEntityAsync(id);
+                var authorDao = await _lookup.GetEntityAsync<AuthorDao>(id);
                 return authorDao != null;
             }
             catch (Exception ex)
@@ -127,7 +131,7 @@ namespace Hmm.Core.DefaultManager
                     return null;
                 }
 
-                authorInfo.Id = addedUsrDao.Id;
+                authorInfo = _mapper.Map<Author>(addedUsrDao);
                 return authorInfo;
             }
             catch (Exception ex)
@@ -154,7 +158,7 @@ namespace Hmm.Core.DefaultManager
                     return null;
                 }
 
-                var savedAuthorDao = await _authorRepository.GetEntityAsync(authorInfo.Id);
+                var savedAuthorDao = await _lookup.GetEntityAsync<AuthorDao>(authorInfo.Id);
                 if (savedAuthorDao == null)
                 {
                     ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");

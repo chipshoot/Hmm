@@ -20,7 +20,7 @@ namespace Hmm.Core.Tests
                 cfg.AddProfile<HmmMappingProfile>();
             });
             var mapper = config.CreateMapper();
-            _authorManager = new AuthorManager(AuthorRepository, mapper);
+            _authorManager = new AuthorManager(AuthorRepository, mapper, LookupRepository);
         }
 
         [Fact]
@@ -53,6 +53,62 @@ namespace Hmm.Core.Tests
             {
                 AccountName = "jfang2",
                 ContactInfo = SampleDataGenerator.GetContact(),
+                Description = "Testing author",
+                IsActivated = true
+            };
+            var contacts = await ContactRepository.GetEntitiesAsync();
+            var contactCount = contacts.Count;
+
+            // Act
+            var newAuthor = await _authorManager.CreateAsync(author);
+            contacts = await ContactRepository.GetEntitiesAsync();
+            var contactCount2 = contacts.Count;
+
+            // Assert
+            Assert.True(_authorManager.ProcessResult.Success);
+            Assert.NotNull(newAuthor);
+            Assert.True(newAuthor.Id > 0, "newAuthor.Id is greater to 0");
+            Assert.Equal(contactCount + 1, contactCount2);
+            Assert.True(newAuthor.ContactInfo.Id > 0, "newAuthor's contact Id is greater to 0");
+        }
+
+        [Fact]
+        public async Task Can_Add_Valid_Author_With_Exits_Contact()
+        {
+            // Arrange
+            var contactDaos = await ContactRepository.GetEntitiesAsync();
+            var contact = Mapper.Map<Contact>(contactDaos.FirstOrDefault());
+            var author = new Author
+            {
+                AccountName = "jfang2",
+                ContactInfo = contact,
+                Description = "Testing author",
+                IsActivated = true
+            };
+            var contacts = await ContactRepository.GetEntitiesAsync();
+            var contactCount = contacts.Count;
+
+            // Act
+            var newAuthor = await _authorManager.CreateAsync(author);
+            contacts = await ContactRepository.GetEntitiesAsync();
+            var contactCount2 = contacts.Count;
+
+            // Assert
+            Assert.True(_authorManager.ProcessResult.Success);
+            Assert.NotNull(newAuthor);
+            Assert.True(newAuthor.Id > 0, "newAuthor.Id is greater to 0");
+            Assert.Equal(contactCount, contactCount2);
+            Assert.True(newAuthor.ContactInfo.Id > 0, "newAuthor's contact Id is greater to 0");
+        }
+
+
+        [Fact]
+        public async Task Can_Add_Author_With_Null_Contact()
+        {
+            // Arrange
+            var author = new Author
+            {
+                AccountName = "jfang2",
                 Description = "Testing author",
                 IsActivated = true
             };

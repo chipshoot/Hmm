@@ -13,7 +13,7 @@ namespace Hmm.Core.Map.DbEntity
         public string AccountName { get; set; }
 
         [ForeignKey("contactinfo")]
-        public ContactDao ContactInfo { get; set; }
+        public ContactDao? ContactInfo { get; set; }
 
         [Column("role")]
         public AuthorRoleType Role { get; set; }

@@ -92,7 +92,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 maxPageSize = ResourceCollectionParameters.MaxPageSize,
             };
 
-            context.HttpContext.Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+            context.HttpContext?.Response.Headers?.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
         }
     }
 }

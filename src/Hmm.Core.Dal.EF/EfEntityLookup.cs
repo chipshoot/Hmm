@@ -40,23 +40,23 @@ namespace Hmm.Core.Dal.EF
             T entity;
             if (typeof(T) == typeof(AuthorDao))
             {
-                entity = await _dataContext.Authors.FindAsync(id) as T;
+                entity = await _dataContext.Authors.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id) as T;
             }
             else if (typeof(T) == typeof(ContactDao))
             {
-                entity = await _dataContext.Contacts.FindAsync(id) as T;
+                entity = await _dataContext.Contacts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
             }
             else if (typeof(T) == typeof(HmmNoteDao))
             {
-                entity = await _dataContext.Notes.FindAsync(id) as T;
+                entity = await _dataContext.Notes.AsNoTracking().FirstOrDefaultAsync(n => n.Id == id) as T;
             }
             else if (typeof(T) == typeof(NoteCatalogDao))
             {
-                entity = await _dataContext.Catalogs.FindAsync(id) as T;
+                entity = await _dataContext.Catalogs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
             }
             else if (typeof(T) == typeof(TagDao))
             {
-                entity = await _dataContext.Tags.FindAsync(id) as T;
+                entity = await _dataContext.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id) as T;
             }
             else
             {
@@ -80,19 +80,20 @@ namespace Hmm.Core.Dal.EF
             }
             if (typeof(T) == typeof(NoteCatalogDao))
             {
-                entities = _dataContext.Catalogs.Cast<T>();
+                entities = _dataContext.Catalogs.AsNoTracking().Cast<T>();
             }
             else if (typeof(T) == typeof(AuthorDao))
             {
-                entities = _dataContext.Authors.Cast<T>();
+                entities = _dataContext.Authors
+                    .Include(a => a.ContactInfo).AsNoTracking().Cast<T>();
             }
             else if (typeof(T) == typeof(ContactDao))
             {
-                entities = _dataContext.Contacts.Cast<T>();
+                entities = _dataContext.Contacts.AsNoTracking().Cast<T>();
             }
             else if (typeof(T) == typeof(TagDao))
             {
-                entities = _dataContext.Tags.Cast<T>();
+                entities = _dataContext.Tags.AsNoTracking().Cast<T>();
             }
             else
             {

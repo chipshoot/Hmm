@@ -161,13 +161,14 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var currentAuthor = await _authorManager.GetAuthorByIdAsync(id);
-                if (currentAuthor == null)
-                {
-                    return BadRequest($"The author {id} cannot be found.");
-                }
+                //var currentAuthor = await _lookup.GetEntityAsync<Author>(id);
+                //if (currentAuthor == null)
+                //{
+                //    return BadRequest($"The author {id} cannot be found.");
+                //}
 
-                currentAuthor = _mapper.Map(author, currentAuthor);
+                var currentAuthor = _mapper.Map<Author>(author);
+                currentAuthor.Id = id;
                 var newAuthor = await _authorManager.UpdateAsync(currentAuthor);
                 if (newAuthor == null)
                 {

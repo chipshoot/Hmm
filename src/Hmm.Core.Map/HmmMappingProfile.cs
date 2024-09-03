@@ -12,6 +12,11 @@ public class HmmMappingProfile : Profile
         CreateMap<ContactDao, Contact>()
             .ConvertUsing((src, dest) =>
             {
+                if (src == null)
+                {
+                    return null;
+                }
+
                 var contactInfo = ContactDaoConvert(src.Contact);
                 dest = contactInfo == null
                     ? new Contact

@@ -36,6 +36,28 @@ namespace Hmm.Core.Dal.EF.Tests
         }
 
         [Fact]
+        public async Task Can_Add_Author_With_Null_Contact_To_DataSource()
+
+        {
+            // Arrange
+            var author = new AuthorDao
+            {
+                AccountName = "NotExistUser",
+                ContactInfo = null,
+                Description = "testing user",
+                IsActivated = true
+            };
+
+            // Act
+            var savedRec = await AuthorRepository.AddAsync(author);
+
+            // Assert
+            Assert.NotNull(savedRec);
+            Assert.True(savedRec.Id != 0, "savedRec.Id is not empty id 0");
+            Assert.Equal(author.Id, savedRec.Id);
+        }
+
+        [Fact]
         public async Task Cannot_Add_Already_Existed_AccountName_To_DataSource()
         {
             // Arrange
@@ -185,6 +207,41 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             Assert.NotNull(result);
             Assert.False(result.IsActivated);
+
+            // Arrange - update description
+            author.Description = "new testing user";
+
+            // Act
+            result = await AuthorRepository.UpdateAsync(author);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("new testing user", result.Description);
+        }
+
+        [Fact]
+        public async Task Can_Update_Author_With_New_Contact()
+        {
+            // Arrange - update first name
+            var author = new AuthorDao
+            {
+                AccountName = "glog",
+                ContactInfo = null,
+                Description = "testing user",
+                IsActivated = true
+            };
+
+            await AuthorRepository.AddAsync(author);
+
+            // Arrange - activate status
+            author.ContactInfo = _defaultContact;
+
+            // Act
+            var result = await AuthorRepository.UpdateAsync(author);
+
+            // Arrange
+            Assert.NotNull(result);
+            Assert.NotNull(result.ContactInfo);
 
             // Arrange - update description
             author.Description = "new testing user";

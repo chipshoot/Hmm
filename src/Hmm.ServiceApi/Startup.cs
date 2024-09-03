@@ -3,6 +3,7 @@ using Hmm.Core.Dal.EF;
 using Hmm.Core.Dal.EF.Repositories;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Configuration;
@@ -22,22 +23,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
+using Npgsql;
 using System;
 using System.IO;
 
 namespace Hmm.ServiceApi
 {
-    public class Startup
+    public class Startup(IConfiguration configuration)
     {
         private const string AllowCorsPolicy = "AllowCors";
         private InvalidModelStateConfig _invalidModelStateConfig;
 
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
+        private IConfiguration Configuration { get; } = configuration;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -105,22 +102,27 @@ namespace Hmm.ServiceApi
                 });
             });
             services
-                .AddDbContext<HmmDataContext>(opt => opt.UseSqlServer(appSetting.ConnectionString))
+                .AddDbContext<HmmDataContext>(opt => opt.UseNpgsql(appSetting.ConnectionString))
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
-                //.AddScoped<IVersionRepository<HmmNote>, NoteEfRepository>()
                 .AddScoped<IHmmDataContext, HmmDataContext>()
+                .AddScoped<IVersionRepository<HmmNoteDao>, NoteEfRepository>()
+                .AddScoped<ICompositeEntityRepository<TagDao, HmmNoteDao>, TagEfRepository>()
                 .AddScoped<IEntityLookup, EfEntityLookup>()
-                //.AddScoped<IRepository<Author>, AuthorEfRepository>()
+                .AddScoped<IRepository<AuthorDao>, AuthorEfRepository>()
+                .AddScoped<IRepository<ContactDao>, ContactEfRepository>()
                 .AddScoped<IRepository<NoteCatalogDao>, NoteCatalogEfRepository>()
-                // .AddScoped<IAuthorManager, AuthorManager>()
-                //.AddScoped<IHmmNoteManager, HmmNoteManager>()
-                //.AddScoped<INoteCatalogManager, NoteCatalogManager>()
-                //.AddScoped<IHmmValidator<Author>, AuthorValidator>()
+                .AddScoped<IAuthorManager, AuthorManager>()
+                .AddScoped<IContactManager, ContactManager>()
+                .AddScoped<IHmmNoteManager, HmmNoteManager>()
+                .AddScoped<INoteCatalogManager, NoteCatalogManager>()
+                .AddScoped<ITagManager, TagManager>()
+                .AddScoped<IHmmValidator<Author>, AuthorValidator>()
                 .AddScoped<IHmmValidator<NoteCatalog>, NoteCatalogValidator>()
-                //.AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
+                .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
                 //.AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
                 .AddAutoMapper(typeof(ApiEntity))
+                .AddAutoMapper(typeof(HmmMappingProfile))
                 .AddSwaggerGen();
 
             //var automobileStartup = new AutomobileInfoServiceStartup(services);

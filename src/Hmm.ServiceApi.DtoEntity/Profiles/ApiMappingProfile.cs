@@ -17,7 +17,8 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ForMember(d => d.Role, opt => opt.MapFrom(src => Enum.Parse(typeof(AuthorRoleType), src.Role, true)));
             CreateMap<Author, ApiAuthor>()
                 .ForMember(d => d.Role, opt => opt.MapFrom(src => src.Role.ToString().ToLower()));
-            CreateMap<ApiAuthorForCreate, Author>();
+            CreateMap<ApiAuthorForCreate, Author>()
+                .ForMember(d=>d.ContactInfo, opt=>opt.MapFrom(s=>s.Contact));
             CreateMap<ApiAuthorForUpdate, Author>();
             CreateMap<Author, ApiAuthorForCreate>();
             CreateMap<Author, ApiAuthorForUpdate>();

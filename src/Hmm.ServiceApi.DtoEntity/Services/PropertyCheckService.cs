@@ -14,7 +14,7 @@ public class PropertyCheckService : IPropertyCheckService
             return true;
         }
 
-        // the field are separated by ",", so we split it.
+        // the field is separated by ",", so we split it.
         var fieldsAfterSplit = fields.Split(',');
 
         // check if the requested fields exist on source

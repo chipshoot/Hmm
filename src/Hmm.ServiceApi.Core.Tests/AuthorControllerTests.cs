@@ -20,7 +20,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public AuthorControllerTests()
         {
-            _authorManager = new AuthorManager(AuthorRepository, Mapper);
+            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository);
             _controller = new AuthorController(_authorManager, ApiMapper);
         }
 
