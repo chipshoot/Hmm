@@ -19,14 +19,16 @@ namespace Hmm.Core.DefaultManager
         private readonly ICompositeEntityRepository<TagDao, HmmNoteDao> _tagRepository;
         private readonly IMapper _mapper;
         private readonly ValidatorBase<Tag> _validator;
+        private readonly IEntityLookup _lookup;
 
-        public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IMapper mapper)
+        public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IMapper mapper, IEntityLookup lookup)
         {
             Guard.Against<ArgumentNullException>(tagRepository == null, nameof(tagRepository));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
             _tagRepository = tagRepository;
             _mapper = mapper;
             _validator = new TagValidator(this);
+            _lookup = lookup;
         }
 
         public async Task<PageList<Tag>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -34,7 +36,7 @@ namespace Hmm.Core.DefaultManager
             try
             {
                 Expression<Func<TagDao, bool>> isActivatedExpression = t => t.IsActivated;
-                Expression<Func<TagDao, bool>> daoQuery = null;
+                Expression<Func<TagDao, bool>> daoQuery;
                 if (query != null)
                 {
                     var mappedQuery = ExpressionMapper<Tag, TagDao>.MapExpression(query);
@@ -65,7 +67,7 @@ namespace Hmm.Core.DefaultManager
 
         public async Task<Tag> GetTagByIdAsync(int id)
         {
-            var tagDao = await _tagRepository.GetEntityAsync(id);
+            var tagDao = await _lookup.GetEntityAsync<TagDao>(id);
             if (tagDao == null)
             {
                 return null;
@@ -99,7 +101,8 @@ namespace Hmm.Core.DefaultManager
                 return null;
             }
 
-            var tagDaos = await _tagRepository.GetEntitiesAsync(t => t.Name == name);
+            var tagName = name.Trim().ToLower();
+            var tagDaos = await _lookup.GetEntitiesAsync<TagDao>(t => t.Name.ToLower() == tagName);
             var tagDao = tagDaos.FirstOrDefault();
             if (tagDao == null)
             {
@@ -131,7 +134,7 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                var tagDao = await _tagRepository.GetEntityAsync(id);
+                var tagDao = await _lookup.GetEntityAsync<TagDao>(id);
                 return tagDao is { IsActivated: true };
             }
             catch (Exception ex)
@@ -193,7 +196,7 @@ namespace Hmm.Core.DefaultManager
                     return null;
                 }
 
-                var savedTagDao = await _tagRepository.GetEntityAsync(tag.Id);
+                var savedTagDao = await _lookup.GetEntityAsync<TagDao>(tag.Id);
                 if (savedTagDao == null)
                 {
                     ProcessResult.AddErrorMessage($"Cannot found Tag: {tag.Name} to update.");
@@ -225,7 +228,7 @@ namespace Hmm.Core.DefaultManager
 
         public async Task DeActivateAsync(int id)
         {
-            var tag = await _tagRepository.GetEntityAsync(id);
+            var tag = await _lookup.GetEntityAsync<TagDao>(id);
             if (tag == null)
             {
                 ProcessResult.AddErrorMessage($"Cannot find tag with id : {id}", true);

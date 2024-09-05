@@ -20,7 +20,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public TagControllerTests()
         {
-            _tagManager = new TagManager(TagRepository, Mapper);
+            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
             _controller = new TagController(_tagManager, ApiMapper);
         }
 

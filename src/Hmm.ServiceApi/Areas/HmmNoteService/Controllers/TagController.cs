@@ -66,6 +66,19 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(tag);
         }
 
+        [HttpGet("{name}", Name = "GetTagByName")]
+        [TagResultFilter]
+        public async Task<IActionResult> Get(string name)
+        {
+            var tag = await _tagManager.GetTagByNameAsync(name);
+            if (tag == null)
+            {
+                return NotFound($"The tag : {name} not found.");
+            }
+
+            return Ok(tag);
+        }
+
         // POST api/tags
         [HttpPost(Name = "AddTag")]
         [TagResultFilter]

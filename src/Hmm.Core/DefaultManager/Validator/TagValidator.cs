@@ -33,10 +33,10 @@ namespace Hmm.Core.DefaultManager.Validator
             var savedTag = await _tagManager.GetTagByIdAsync(tag.Id);
 
             // create new user, make sure account name is unique
-            var tname = tagName.Trim();
+            var tname = tagName.Trim().ToLower();
             if (savedTag == null)
             {
-                var sameNameTags= await _tagManager.GetEntitiesAsync(t => t.Name.Equals(tname, StringComparison.CurrentCultureIgnoreCase));
+                var sameNameTags= await _tagManager.GetEntitiesAsync(t => t.Name.ToLower() == tname);
                 if (sameNameTags.Any())
                 {
                     return false;
@@ -44,7 +44,7 @@ namespace Hmm.Core.DefaultManager.Validator
             }
             else
             {
-                var tagWithNames = await _tagManager.GetEntitiesAsync(t => t.Name.Equals(tname, StringComparison.CurrentCultureIgnoreCase) && t.Id != tag.Id);
+                var tagWithNames = await _tagManager.GetEntitiesAsync(t => t.Name.ToLower() == tname && t.Id != tag.Id);
                 return !tagWithNames.Any();
             }
 

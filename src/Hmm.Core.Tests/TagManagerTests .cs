@@ -20,7 +20,7 @@ namespace Hmm.Core.Tests
                 cfg.AddProfile<HmmMappingProfile>();
             });
             var mapper = config.CreateMapper();
-            _tagManager = new TagManager(TagRepository, mapper);
+            _tagManager = new TagManager(TagRepository, mapper, LookupRepository);
         }
 
         [Fact]
