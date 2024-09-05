@@ -34,10 +34,10 @@ namespace Hmm.Core.DefaultManager.Validator
             var savedCatalog = await _catalogManager.GetEntityByIdAsync(catalog.Id);
 
             // create new user, make sure account name is unique
-            var cname = catalogName.Trim();
+            var cname = catalogName.Trim().ToLower();
             if (savedCatalog == null)
             {
-                var sameNameCatalogs= await _catalogManager.GetEntitiesAsync(c => c.Name.Equals(cname, StringComparison.CurrentCultureIgnoreCase));
+                var sameNameCatalogs= await _catalogManager.GetEntitiesAsync(c => c.Name.ToLower() == cname);
                 if (sameNameCatalogs.Any())
                 {
                     return false;
@@ -45,7 +45,7 @@ namespace Hmm.Core.DefaultManager.Validator
             }
             else
             {
-                var catalogWithNames = await _catalogManager.GetEntitiesAsync(c => c.Name.Equals(cname, StringComparison.CurrentCultureIgnoreCase) && c.Id != catalog.Id);
+                var catalogWithNames = await _catalogManager.GetEntitiesAsync(c => c.Name.ToLower() == cname && c.Id != catalog.Id);
                 return !catalogWithNames.Any();
             }
 

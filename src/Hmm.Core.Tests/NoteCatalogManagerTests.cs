@@ -20,7 +20,7 @@ namespace Hmm.Core.Tests
                 cfg.AddProfile<HmmMappingProfile>();
             });
             var mapper = config.CreateMapper();
-            _catalogManager = new NoteCatalogManager(CatalogRepository, mapper);
+            _catalogManager = new NoteCatalogManager(CatalogRepository, mapper, LookupRepository);
         }
 
         [Fact]

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using System;
+using Moq;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -78,7 +79,9 @@ namespace Hmm.Utility.TestHelp
                 }
             }
 
-            DbContext = new HmmDataContext(_dbContextOptions);
+            var fakeConfig = new Mock<IConfiguration>();
+            fakeConfig.Setup(c => c.GetConnectionString(It.IsAny<string>())).Returns(connectString);
+            DbContext = new HmmDataContext(_dbContextOptions, fakeConfig.Object);
 
             LookupRepository = new EfEntityLookup(DbContext);
             var dateProvider = new DateTimeAdapter();

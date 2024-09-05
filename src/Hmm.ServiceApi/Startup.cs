@@ -103,7 +103,7 @@ namespace Hmm.ServiceApi
                 });
             });
             services
-                .AddDbContext<HmmDataContext>(opt => opt.UseNpgsql(appSetting.ConnectionString))
+                .AddDbContext<HmmDataContext>(opt => opt.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")))
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
                 .AddScoped<IHmmDataContext, HmmDataContext>()
                 .AddScoped<IVersionRepository<HmmNoteDao>, NoteEfRepository>()

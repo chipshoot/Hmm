@@ -18,15 +18,18 @@ namespace Hmm.Core.DefaultManager
         private readonly IRepository<NoteCatalogDao> _catalogRepository;
         private readonly IMapper _mapper;
         private readonly ValidatorBase<NoteCatalog> _validator;
+        private readonly IEntityLookup _lookup;
 
-        public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper)
+        public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper, IEntityLookup lookup)
         {
             Guard.Against<ArgumentNullException>(dataSource == null, nameof(dataSource));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
 
             _mapper = mapper;
             _catalogRepository = dataSource;
             _validator = new NoteCatalogValidator(this);
+            _lookup = lookup;
         }
 
         public async Task<PageList<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -54,7 +57,7 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                var catalogDao = await _catalogRepository.GetEntityAsync(id);
+                var catalogDao = await _lookup.GetEntityAsync<NoteCatalogDao>(id);
                 var catalog = _mapper.Map<NoteCatalog>(catalogDao);
                 switch (catalog)
                 {
@@ -130,7 +133,7 @@ namespace Hmm.Core.DefaultManager
                     ProcessResult.AddErrorMessage("Cannot map NoteCatalog to NoteCatalogDao");
                     return null;
                 }
-                var savedCatalogDao = await _catalogRepository.GetEntityAsync(catalog.Id);
+                var savedCatalogDao = await _lookup.GetEntityAsync<NoteCatalogDao>(catalog.Id);
                 if (savedCatalogDao == null)
                 {
                     ProcessResult.AddErrorMessage($"Cannot found catalog: {catalog.Name} for updating.");

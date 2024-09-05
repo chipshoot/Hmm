@@ -21,7 +21,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public NoteCatalogControllerTests()
         {
-            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper);
+            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository);
             _controller = new NoteCatalogController(_catalogManager, ApiMapper);
         }
 
