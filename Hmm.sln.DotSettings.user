@@ -12,6 +12,18 @@
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=269da746_002D58c2_002D4772_002Db063_002De817c83bd9ee/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Add_Note_To_DataSource" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Add_Note_To_DataSource&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5925bbf8_002D7bed_002D4b02_002D928b_002D6aeebdf79c7e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Can_Add_Note_To_DataSource #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Add_Note_To_DataSource&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Catalog&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_NoteCatalog_To_Non_Exists_Catalog_Default_Catalog_Applied&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
 	
 	
 	
@@ -223,6 +235,12 @@
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsBadRequest_WhenNoteNotFound&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Subject_Length&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Description_Length&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Author&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Catalog&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ValidatorTests.NoteValidatorTests.CannotChangeAuthorForExistsNote&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ValidatorTests.NoteValidatorTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>
