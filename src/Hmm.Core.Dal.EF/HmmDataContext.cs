@@ -59,6 +59,14 @@ namespace Hmm.Core.Dal.EF
             .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<HmmNoteDao>()
+                .Property(n => n.CreateDate)
+                .HasConversion(v=>v, v=>DateTime.SpecifyKind(v, DateTimeKind.Utc));
+            modelBuilder.Entity<HmmNoteDao>()
+                .Property(n => n.LastModifiedDate)
+                .HasConversion(v=>v, v=>DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+
+            modelBuilder.Entity<HmmNoteDao>()
                 .HasKey(n => n.Id);
 
             modelBuilder.Entity<AuthorDao>().ToTable("authors");
