@@ -98,11 +98,12 @@ public static class SampleDataGenerator
         return contactDaos;
     }
 
-    public static Author GetAuthor()
+    public static Author GetAuthor(string accountName = null)
     {
+        var acc = accountName ?? "fchy";
         var author = new Author
         {
-            AccountName = "fchy",
+            AccountName = acc,
             ContactInfo = GetContact(),
             Role = Core.Map.DomainEntity.AuthorRoleType.Author,
             IsActivated = true
@@ -140,7 +141,7 @@ public static class SampleDataGenerator
                 IsActivated = true
             },
 
-            new() 
+            new()
             {
                 Id = 101,
                 AccountName = "jfang",
@@ -149,7 +150,7 @@ public static class SampleDataGenerator
                 Description = "Testing Author2",
                 IsActivated = true
             },
-            new() 
+            new()
             {
                 Id = 102,
                 AccountName = "amyWang",
@@ -158,7 +159,7 @@ public static class SampleDataGenerator
                 Description = "Testing Author3",
                 IsActivated = true
             },
-            new() 
+            new()
             {
                 Id = 103,
                 AccountName = "taoTao",
@@ -172,11 +173,12 @@ public static class SampleDataGenerator
         return authors;
     }
 
-    public static NoteCatalog GetCatalog()
+    public static NoteCatalog GetCatalog(string name = null)
     {
+        var catalogName = name ?? "DiaryNote";
         var catalog = new NoteCatalog
         {
-            Name = "DiaryNote",
+            Name = catalogName,
             Schema = "",
             Type = Core.Map.DomainEntity.NoteContentFormatType.PlainText,
             IsDefault = true,
@@ -459,6 +461,7 @@ public static class SampleDataGenerator
         }
         else
         {
+            var tags = source.Tags.Select(tag => tag.Clone()).ToList();
             targetNote.Id = source.Id;
             targetNote.Subject = source.Subject;
             targetNote.Content = source.Content;
@@ -470,6 +473,7 @@ public static class SampleDataGenerator
             targetNote.LastModifiedDate = source.LastModifiedDate;
             targetNote.Tags = source.Tags.Select(tag => tag.Clone()).ToList();
             targetNote.Version = source.Version;
+            targetNote.Tags = tags;
 
             return targetNote;
         }

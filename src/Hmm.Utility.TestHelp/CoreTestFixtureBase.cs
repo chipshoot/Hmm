@@ -270,6 +270,13 @@ namespace Hmm.Utility.TestHelp
                     var recFound = _catalogDaos.FirstOrDefault(c => c.Id == id);
                     return recFound;
                 });
+
+                lookupMoc.Setup(lk => lk.GetEntityAsync<TagDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
+                {
+                    var recFound = _tagDaos.FirstOrDefault(c => c.Id == id);
+                    return recFound;
+                });
+
                 lookupMoc.Setup(lk => lk.GetEntitiesAsync(It.IsAny<Expression<Func<NoteCatalogDao, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>()))
                     .ReturnsAsync(() => PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable(), PageIdx, PageSize));
@@ -278,13 +285,32 @@ namespace Hmm.Utility.TestHelp
                     .ReturnsAsync((int id) =>
                     {
                         var rec = _noteDaos.FirstOrDefault(n => n.Id == id);
+                        switch (rec)
+                        {
+                            case { Tags: not null }:
+                            {
+                                foreach (var tag in rec.Tags)
+                                {
+                                    tag.Tag = _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
+                                    tag.Note = _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
+                                }
+
+                                break;
+                            }
+                        }
+
                         return rec;
                     });
+
                 lookupMoc.Setup(lk =>
                         lk.GetEntitiesAsync(It.IsAny<Expression<Func<HmmNoteDao, bool>>>(),
                             It.IsAny<ResourceCollectionParameters>()))
                     .ReturnsAsync(() => PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize));
 
+                lookupMoc.Setup(lk =>
+                        lk.GetEntitiesAsync(It.IsAny<Expression<Func<TagDao, bool>>>(),
+                            It.IsAny<ResourceCollectionParameters>()))
+                    .ReturnsAsync((Expression<Func<TagDao, bool>> query, ResourceCollectionParameters para) => PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query).Select(t => t), PageIdx, PageSize));
                 return lookupMoc.Object;
             }
             catch (Exception e)
@@ -345,8 +371,29 @@ namespace Hmm.Utility.TestHelp
                 }
                 var savedAuthor = author.Clone();
                 savedAuthor.Id = nextId++;
-                _authorDaos.Add(author);
+                _authorDaos.Add(savedAuthor);
                 author = savedAuthor.Clone(author);
+
+                // Check and add new contact if needed
+                if (author.ContactInfo == null)
+                {
+                    return author;
+                }
+
+                if (author.ContactInfo.Id <= 0)
+                {
+                    author.ContactInfo.Id = _contactDaos.Count + 1;
+                    _contactDaos.Add(author.ContactInfo);
+                }
+                else
+                {
+                    if (_contactDaos.All(c => c.Id != author.ContactInfo.Id))
+                    {
+                        author.ContactInfo.Id = _contactDaos.Count + 1;
+                        _contactDaos.Add(author.ContactInfo);
+                    }
+                }
+
                 return author;
             });
             mockAuthors.Setup(a => a.UpdateAsync(It.IsAny<AuthorDao>())).ReturnsAsync((AuthorDao author) =>
@@ -477,8 +524,8 @@ namespace Hmm.Utility.TestHelp
                 var ret = oldNote.Clone();
                 foreach (var tag in ret.Tags)
                 {
-                    tag.Note ??= _noteDaos.Where(n => n.Id == tag.NoteId).Select(n => n).FirstOrDefault();
-                    tag.Tag ??= _tagDaos.Where(t => t.Id == tag.TagId).Select(t => t).FirstOrDefault();
+                    tag.Note = _noteDaos.Where(n => n.Id == tag.NoteId).Select(n => n).FirstOrDefault();
+                    tag.Tag = _tagDaos.Where(t => t.Id == tag.TagId).Select(t => t).FirstOrDefault();
                 }
                 return ret;
             });
@@ -493,8 +540,8 @@ namespace Hmm.Utility.TestHelp
                             {
                                 foreach (var tag in backNote.Tags)
                                 {
-                                    tag.Tag ??= _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
-                                    tag.Note ??= _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
+                                    tag.Tag = _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
+                                    tag.Note = _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
                                 }
 
                                 break;

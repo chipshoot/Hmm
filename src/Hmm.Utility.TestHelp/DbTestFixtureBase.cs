@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using System;
-using Moq;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -21,6 +20,7 @@ namespace Hmm.Utility.TestHelp
     /// </summary>
     public class DbTestFixtureBase : IDisposable
     {
+        private const string DatabaseName = "hmm_postgres";
         protected IHmmDataContext DbContext;
         protected IDbContextTransaction Transaction;
         private static bool _initialized;
@@ -33,7 +33,7 @@ namespace Hmm.Utility.TestHelp
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            var connectString = config["ConnectionStrings:DefaultConnection"];
+            var connectString = config["AppSettings:ConnectionString"];
             SetDbEnvironment(connectString);
         }
 
@@ -46,7 +46,7 @@ namespace Hmm.Utility.TestHelp
 
         protected ICompositeEntityRepository<TagDao, HmmNoteDao> TagRepository { get; private set; }
 
-        private IEntityLookup LookupRepository { get; set; }
+        protected IEntityLookup LookupRepository { get; private set; }
 
         protected IDateTimeProvider DateProvider { get; private set; }
 
@@ -79,9 +79,10 @@ namespace Hmm.Utility.TestHelp
                 }
             }
 
-            var fakeConfig = new Mock<IConfiguration>();
-            fakeConfig.Setup(c => c.GetConnectionString(It.IsAny<string>())).Returns(connectString);
-            DbContext = new HmmDataContext(_dbContextOptions, fakeConfig.Object);
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .Build();
+            DbContext = new HmmDataContext(_dbContextOptions, config);
 
             LookupRepository = new EfEntityLookup(DbContext);
             var dateProvider = new DateTimeAdapter();
@@ -93,7 +94,24 @@ namespace Hmm.Utility.TestHelp
             DateProvider = new DateTimeAdapter();
 
             var contact = DbContext as DbContext;
-            contact?.Database.EnsureCreated();
+            EnsureDatabaseDeleted(config.GetConnectionString("DefaultConnection"));
+            EnsureDatabaseCreated();
+        }
+
+        private void EnsureDatabaseDeleted(string connectionString)
+        {
+            using var connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = $"DROP DATABASE IF EXISTS \"{DatabaseName}\" WITH (FORCE);";
+            command.ExecuteNonQuery();
+        }
+
+        private void EnsureDatabaseCreated()
+        {
+            var context = DbContext as DbContext;
+            context?.Database.EnsureCreated();
         }
     }
 }
