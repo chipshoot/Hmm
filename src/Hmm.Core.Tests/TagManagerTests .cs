@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using Hmm.Core.DefaultManager;
-using Hmm.Core.Map;
+﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
 using System.Linq;
@@ -15,12 +13,7 @@ namespace Hmm.Core.Tests
 
         public TagManagerTests()
         {
-            var config = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<HmmMappingProfile>();
-            });
-            var mapper = config.CreateMapper();
-            _tagManager = new TagManager(TagRepository, mapper, LookupRepository);
+            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
         }
 
         [Fact]

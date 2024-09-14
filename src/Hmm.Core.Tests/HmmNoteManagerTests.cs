@@ -19,7 +19,7 @@ namespace Hmm.Core.Tests
         public HmmNoteManagerTests()
         {
             _tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, _tagManager, DateProvider);
+            _noteManager = new HmmNoteManager(NoteRepository, Mapper, _tagManager, LookupRepository, DateProvider);
         }
 
         [Fact]

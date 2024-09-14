@@ -8,7 +8,7 @@ using Hmm.Utility.TestHelp;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Hmm.Core.Tests
+namespace Hmm.Core.Tests.ValidatorTests
 {
     public class NoteCatalogValidatorTests : CoreTestFixtureBase
     {

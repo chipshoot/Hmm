@@ -1,7 +1,5 @@
 using System.Linq;
-using AutoMapper;
 using Hmm.Core.DefaultManager;
-using Hmm.Core.Map;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
 using System.Threading.Tasks;
@@ -15,12 +13,7 @@ namespace Hmm.Core.Tests
 
         public NoteCatalogManagerTests()
         {
-            var config = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<HmmMappingProfile>();
-            });
-            var mapper = config.CreateMapper();
-            _catalogManager = new NoteCatalogManager(CatalogRepository, mapper, LookupRepository);
+            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository);
         }
 
         [Fact]

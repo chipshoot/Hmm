@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using Hmm.Core.DefaultManager;
-using Hmm.Core.Map;
+﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
 using System.Linq;
@@ -15,12 +13,7 @@ namespace Hmm.Core.Tests
 
         public AuthorManagerTests()
         {
-            var config = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<HmmMappingProfile>();
-            });
-            var mapper = config.CreateMapper();
-            _authorManager = new AuthorManager(AuthorRepository, mapper, LookupRepository);
+            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository);
         }
 
         [Fact]
@@ -38,7 +31,7 @@ namespace Hmm.Core.Tests
         public async Task Can_Get_Author_With_Query()
         {
             // Act
-            var authors = await _authorManager.GetEntitiesAsync(a=>a.AccountName=="fchy");
+            var authors = await _authorManager.GetEntitiesAsync(a => a.AccountName == "fchy");
 
             // Assert
             Assert.True(_authorManager.ProcessResult.Success);
@@ -101,7 +94,6 @@ namespace Hmm.Core.Tests
             Assert.True(newAuthor.ContactInfo.Id > 0, "newAuthor's contact Id is greater to 0");
         }
 
-
         [Fact]
         public async Task Can_Add_Author_With_Null_Contact()
         {
@@ -157,7 +149,7 @@ namespace Hmm.Core.Tests
                 Description = "Test update author"
             };
             var result = await _authorManager.CreateAsync(author);
-            Assert.True(author.Id > 0, "user.Id is greater then 0");
+            Assert.True(result.Id > 0, "user.Id is greater then 0");
 
             //   Act
             var savedAuthors = await _authorManager.GetEntitiesAsync();
@@ -184,8 +176,8 @@ namespace Hmm.Core.Tests
                 IsActivated = true,
                 Description = "Sample author"
             };
-            await _authorManager.CreateAsync(author);
-            Assert.True(author.Id > 0, "newAuthor.Id is greater then 0");
+            var result = await _authorManager.CreateAsync(author);
+            Assert.True(result.Id > 0, "newAuthor.Id is greater then 0");
 
             //   Act
             author.AccountName = "fchy";
@@ -239,7 +231,7 @@ namespace Hmm.Core.Tests
         public async Task Can_Deactivate_Author()
         {
             // Arrange
-            var authors =await _authorManager.GetEntitiesAsync();
+            var authors = await _authorManager.GetEntitiesAsync();
             var author = authors.FirstOrDefault();
             Assert.NotNull(author);
             Assert.True(author.IsActivated);
@@ -263,7 +255,7 @@ namespace Hmm.Core.Tests
             Assert.NotNull(author);
 
             // Act
-            var result =await _authorManager.IsAuthorExistsAsync(author.Id);
+            var result = await _authorManager.IsAuthorExistsAsync(author.Id);
 
             // Assert
             Assert.True(result);
