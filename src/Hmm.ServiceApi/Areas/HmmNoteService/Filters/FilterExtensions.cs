@@ -184,7 +184,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 
             // child
             var authorId = note.AuthorId;
-            if (authorId != Guid.Empty)
+            if (authorId > 0)
             {
                 links.Add(
                     new Link
@@ -449,6 +449,5 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 
             return links;
         }
-
     }
 }
