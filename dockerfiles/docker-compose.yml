@@ -1,0 +1,46 @@
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: hmm-postgres
+    environment:
+      POSTGRES_PASSWORD: Shcdlhgm1!
+    ports:
+      - "5432:5432"
+    networks:
+      - hmm-network
+    volumes:
+      - G:/Projects2/Hmm/data/progres:/var/lib/postgresql/data
+    command: ["postgres"]
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: hmm-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: fchy@outlook.com
+      PGADMIN_DEFAULT_PASSWORD: 123
+    ports:
+      - "8080:80"
+    networks:
+      - hmm-network
+
+  hmm-seq:
+    image: datalust/seq:latest
+    container_name: hmm-seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - 5341:5341
+      - 8081:80
+    networks:
+      - hmm-network
+
+networks:
+  hmm-network:
+    driver: bridge
+
+# Optionally, you can add a volume for the SQL script if needed
+# volumes:
+#   init-db:
+#     driver: local
+
