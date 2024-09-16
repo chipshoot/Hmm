@@ -40,7 +40,10 @@ namespace Hmm.Core.Dal.EF
             T entity;
             if (typeof(T) == typeof(AuthorDao))
             {
-                entity = await _dataContext.Authors.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id) as T;
+                entity = await _dataContext.Authors
+                    .AsNoTracking()
+                    .Include(a => a.ContactInfo)
+                    .FirstOrDefaultAsync(a => a.Id == id) as T;
             }
             else if (typeof(T) == typeof(ContactDao))
             {
@@ -48,7 +51,10 @@ namespace Hmm.Core.Dal.EF
             }
             else if (typeof(T) == typeof(HmmNoteDao))
             {
-                entity = await _dataContext.Notes.AsNoTracking().FirstOrDefaultAsync(n => n.Id == id) as T;
+                entity = await _dataContext.Notes
+                    .AsNoTracking()
+                    .Include(n=>n.Tags)
+                    .FirstOrDefaultAsync(n => n.Id == id) as T;
             }
             else if (typeof(T) == typeof(NoteCatalogDao))
             {
@@ -76,7 +82,7 @@ namespace Hmm.Core.Dal.EF
                 entities = _dataContext.Notes
                     .Include(n => n.Author)
                     .Include(n => n.Tags)
-                    .Include(n => n.Catalog).Cast<T>();
+                    .Include(n => n.Catalog).AsNoTracking().Cast<T>();
             }
             if (typeof(T) == typeof(NoteCatalogDao))
             {
