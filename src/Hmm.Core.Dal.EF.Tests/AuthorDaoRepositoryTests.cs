@@ -20,7 +20,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var author = new AuthorDao
             {
-                AccountName = "fchy",
+                AccountName = "fchy-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -42,7 +42,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var author = new AuthorDao
             {
-                AccountName = "NotExistUser",
+                AccountName = "NotExistUser-dal-test",
                 ContactInfo = null,
                 Description = "testing user",
                 IsActivated = true
@@ -64,14 +64,14 @@ namespace Hmm.Core.Dal.EF.Tests
             var authorExists = new AuthorDao
             {
                 Id = 1,
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing author",
                 IsActivated = true
             };
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing author",
                 IsActivated = true
@@ -93,7 +93,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -115,7 +115,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -126,7 +126,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var author2 = new AuthorDao
             {
                 Id = 1,
-                AccountName = "glog2",
+                AccountName = "glog-dal-test2",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -157,7 +157,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -190,7 +190,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange - update first name
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -225,7 +225,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange - update first name
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = null,
                 Description = "testing user",
                 IsActivated = true
@@ -260,7 +260,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -270,7 +270,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var author2 = new AuthorDao
             {
-                AccountName = "glog2",
+                AccountName = "glog-dal-test2",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -291,7 +291,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var author = new AuthorDao
             {
-                AccountName = "glog",
+                AccountName = "glog-dal-test",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true
@@ -300,7 +300,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var user2 = new AuthorDao
             {
-                AccountName = "glog2",
+                AccountName = "glog-dal-test2",
                 ContactInfo = _defaultContact,
                 Description = "testing user",
                 IsActivated = true

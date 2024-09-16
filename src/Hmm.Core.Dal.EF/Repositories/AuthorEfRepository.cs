@@ -5,6 +5,7 @@ using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -16,13 +17,14 @@ namespace Hmm.Core.Dal.EF.Repositories
         private readonly IHmmDataContext _dataContext;
         private readonly IEntityLookup _lookupRepo;
 
-        public AuthorEfRepository(IHmmDataContext dataContext, IEntityLookup lookupRepo)
+        public AuthorEfRepository(IHmmDataContext dataContext, IEntityLookup lookupRepo, ILogger logger = null)
         {
             Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
             Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
 
             _dataContext = dataContext;
             _lookupRepo = lookupRepo;
+            ProcessMessage = logger != null ? new ProcessingResult(logger) : new ProcessingResult();
         }
 
         public async Task<PageList<AuthorDao>> GetEntitiesAsync(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -71,6 +73,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
+
             ProcessMessage.Rest();
             try
             {
@@ -118,6 +121,6 @@ namespace Hmm.Core.Dal.EF.Repositories
             _dataContext.Save();
         }
 
-        public ProcessingResult ProcessMessage { get; } = new();
+        public ProcessingResult ProcessMessage { get; }
     }
 }

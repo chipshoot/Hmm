@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using System;
+using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -33,11 +35,22 @@ namespace Hmm.Utility.TestHelp
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
+            // Configure Serilog
+            var logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(config)
+                .CreateLogger();
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddSerilog(logger, true);
+            });
+            Logger = loggerFactory.CreateLogger("DbTestFixtureBase");
+
             var connectString = config["AppSettings:ConnectionString"];
             SetDbEnvironment(connectString);
         }
 
         protected IRepository<AuthorDao> AuthorRepository { get; private set; }
+
         protected IRepository<ContactDao> ContactRepository { get; private set; }
 
         protected IVersionRepository<HmmNoteDao> NoteRepository { get; private set; }
@@ -49,6 +62,8 @@ namespace Hmm.Utility.TestHelp
         protected IEntityLookup LookupRepository { get; private set; }
 
         protected IDateTimeProvider DateProvider { get; private set; }
+
+        protected Microsoft.Extensions.Logging.ILogger Logger { get;}
 
         protected void NoTrackingEntities()
         {
@@ -86,11 +101,11 @@ namespace Hmm.Utility.TestHelp
 
             LookupRepository = new EfEntityLookup(DbContext);
             var dateProvider = new DateTimeAdapter();
-            AuthorRepository = new AuthorEfRepository(DbContext, LookupRepository);
-            ContactRepository = new ContactEfRepository(DbContext, LookupRepository);
-            NoteRepository = new NoteEfRepository(DbContext, LookupRepository, dateProvider);
-            CatalogRepository = new NoteCatalogEfRepository(DbContext, LookupRepository, dateProvider);
-            TagRepository = new TagEfRepository(DbContext, LookupRepository, dateProvider);
+            AuthorRepository = new AuthorEfRepository(DbContext, LookupRepository, Logger);
+            ContactRepository = new ContactEfRepository(DbContext, LookupRepository, Logger);
+            NoteRepository = new NoteEfRepository(DbContext, LookupRepository, dateProvider, Logger);
+            CatalogRepository = new NoteCatalogEfRepository(DbContext, LookupRepository, dateProvider, Logger);
+            TagRepository = new TagEfRepository(DbContext, LookupRepository, dateProvider, Logger);
             DateProvider = new DateTimeAdapter();
 
             var contact = DbContext as DbContext;

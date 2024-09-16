@@ -10,14 +10,16 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
     public class NoteEfRepository(
         IHmmDataContext dataContext,
         IEntityLookup lookupRepository,
-        IDateTimeProvider dateTimeProvider)
-        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IVersionRepository<HmmNoteDao>
+        IDateTimeProvider dateTimeProvider,
+        ILogger logger = null)
+        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider, logger), IVersionRepository<HmmNoteDao>
     {
         public async Task<PageList<HmmNoteDao>> GetEntitiesAsync(Expression<Func<HmmNoteDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {

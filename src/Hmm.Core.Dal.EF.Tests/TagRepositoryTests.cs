@@ -283,6 +283,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Act
             await TagRepository.DeleteAsync(tag);
             var deleteTag = await TagRepository.GetEntityAsync(tagId);
+            savedNote = await NoteRepository.GetEntityAsync(note.Id);
 
             // Assert
             Assert.Null(deleteTag);

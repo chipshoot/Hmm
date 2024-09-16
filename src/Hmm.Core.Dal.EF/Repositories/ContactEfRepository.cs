@@ -5,6 +5,7 @@ using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -16,13 +17,14 @@ public class ContactEfRepository : IRepository<ContactDao>
     private readonly IHmmDataContext _dataContext;
     private readonly IEntityLookup _lookupRepository;
 
-    public ContactEfRepository(IHmmDataContext dataContext, IEntityLookup lookupRepository)
+    public ContactEfRepository(IHmmDataContext dataContext, IEntityLookup lookupRepository, ILogger logger = null)
     {
         Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
         Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
 
         _dataContext = dataContext;
         _lookupRepository = lookupRepository;
+        ProcessMessage = logger != null ? new ProcessingResult(logger) : new ProcessingResult();
     }
 
     public async Task<PageList<ContactDao>> GetEntitiesAsync(Expression<Func<ContactDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -118,5 +120,5 @@ public class ContactEfRepository : IRepository<ContactDao>
         _dataContext.Save();
     }
 
-    public ProcessingResult ProcessMessage { get; } = new();
+    public ProcessingResult ProcessMessage { get; }
 }

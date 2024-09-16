@@ -6,6 +6,7 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -16,8 +17,9 @@ namespace Hmm.Core.Dal.EF.Repositories
     public class TagEfRepository(
         IHmmDataContext dataContext,
         IEntityLookup lookupRepository,
-        IDateTimeProvider dateTimeProvider)
-        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), ICompositeEntityRepository<TagDao, HmmNoteDao>
+        IDateTimeProvider dateTimeProvider,
+        ILogger logger = null)
+        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider, logger), ICompositeEntityRepository<TagDao, HmmNoteDao>
     {
         public async Task<PageList<TagDao>> GetEntitiesAsync(Expression<Func<TagDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {

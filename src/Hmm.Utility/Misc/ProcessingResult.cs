@@ -10,27 +10,21 @@ namespace Hmm.Utility.Misc
     /// The class is used for holding information during processing.
     /// <remarks>
     /// for class who use the <see cref="ProcessingResult"/> to hold the processing
-    /// message should be careful to maintain the message before the each processing.
+    /// message should be careful to maintain the message before each processing.
     /// sometime be sure to RESET the message list before processing to make sure the
     /// message is only caused by current call
     /// </remarks>
     /// </summary>
-    public class ProcessingResult
+    public class ProcessingResult()
     {
         public ProcessingResult(ILogger logger) : this()
         {
             Logger = logger;
         }
 
-        public ProcessingResult()
-        {
-            Success = true;
-            MessageList = new List<ReturnMessage>();
-        }
+        public bool Success { get; set; } = true;
 
-        public bool Success { get; set; }
-
-        public List<ReturnMessage> MessageList { get; }
+        public List<ReturnMessage> MessageList { get; } = new();
 
         public ILogger Logger { get; }
 

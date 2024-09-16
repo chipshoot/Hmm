@@ -14,8 +14,9 @@ namespace Hmm.Core.Dal.EF.Tests
 {
     public class NoteRepositoryTests : DbTestFixtureBase, IAsyncLifetime
     {
-        private const string DefaultNoteCatalogName = "DefaultNoteCatalog";
-        private const string AlternativeNoteCatalogName = "RawTextNote";
+        private const string DefaultNoteCatalogName = "DefaultNoteCatalog-dal-test";
+        private const string AlternativeNoteCatalogName = "RawTextNote-dal-test";
+        private const string DefaultUserName = "fchy-dal-test";
         private AuthorDao _author;
         private NoteCatalogDao _catalog;
 
@@ -223,8 +224,9 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             // changed the note catalog
-            var catalogList = await CatalogRepository.GetEntitiesAsync(cat => !cat.IsDefault);
-            note.Catalog = catalogList.FirstOrDefault();
+            var catalogList = await LookupRepository.GetEntitiesAsync<NoteCatalogDao>(cat => !cat.IsDefault);
+            var newCat = catalogList.FirstOrDefault()?? _catalog;
+            note.Catalog = newCat;
 
             // Act
             var savedRec = await NoteRepository.UpdateAsync(note);
@@ -544,7 +546,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var contact = await ContactRepository.AddAsync(contactDb);
             var author = new AuthorDao
             {
-                AccountName = "fchy",
+                AccountName = DefaultUserName,
                 ContactInfo = contact,
                 Description = "testing user",
                 IsActivated = true

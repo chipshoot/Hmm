@@ -39,6 +39,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.Core.Map.Tests", "src\H
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hmm.ServiceApi.Core.Tests", "src\Hmm.ServiceApi.Core.Tests\Hmm.ServiceApi.Core.Tests.csproj", "{AEC4B791-538B-4EE7-84F7-DB85AE771D6B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6E3A60D9-2F3B-4809-95DD-6A0F711DF0A3}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

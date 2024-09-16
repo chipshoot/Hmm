@@ -8,14 +8,16 @@ using Hmm.Utility.Validation;
 using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
     public class NoteCatalogEfRepository(
         IHmmDataContext dataContext,
         IEntityLookup lookupRepository,
-        IDateTimeProvider dateTimeProvider)
-        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider), IRepository<NoteCatalogDao>
+        IDateTimeProvider dateTimeProvider,
+        ILogger logger = null)
+        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider, logger), IRepository<NoteCatalogDao>
     {
         public async Task<PageList<NoteCatalogDao>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
