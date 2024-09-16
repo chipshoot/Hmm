@@ -5,12 +5,13 @@ using Hmm.Utility.Validation;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Hmm.Core.Dal.EF
 {
     public abstract class RepositoryBase
     {
-        protected RepositoryBase(IHmmDataContext dataContext, IEntityLookup lookupRepository, IDateTimeProvider dateTimeProvider)
+        protected RepositoryBase(IHmmDataContext dataContext, IEntityLookup lookupRepository, IDateTimeProvider dateTimeProvider, ILogger logger = null)
         {
             Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
             Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
@@ -19,6 +20,7 @@ namespace Hmm.Core.Dal.EF
             DataContext = dataContext;
             LookupRepository = lookupRepository;
             DateTimeProvider = dateTimeProvider;
+            ProcessMessage = logger != null ? new ProcessingResult(logger) : new ProcessingResult();
         }
 
         protected IEntityLookup LookupRepository { get; }
@@ -58,6 +60,6 @@ namespace Hmm.Core.Dal.EF
             return false;
         }
 
-        public ProcessingResult ProcessMessage { get; } = new();
+        public ProcessingResult ProcessMessage { get; }
     }
 }

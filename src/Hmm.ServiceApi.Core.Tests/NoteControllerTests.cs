@@ -22,7 +22,7 @@ namespace Hmm.ServiceApi.Core.Tests
         public NoteControllerTests()
         {
             var tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, tagManager, DateProvider);
+            _noteManager = new HmmNoteManager(NoteRepository, Mapper, tagManager, LookupRepository, DateProvider);
             _controller = new HmmNoteController(_noteManager, ApiMapper);
         }
 
