@@ -19,6 +19,8 @@ namespace Hmm.Core.Dal.EF
 
         public DbSet<TagDao> Tags { get; set; }
 
+        public DbSet<NoteTagRefDao> NoteTagRefs { get; set; }
+
         public void Save()
         {
             try
@@ -78,7 +80,7 @@ namespace Hmm.Core.Dal.EF
             modelBuilder.Entity<TagDao>().ToTable("tags");
 
             modelBuilder.Entity<NoteTagRefDao>().ToTable("notetagrefs")
-                .HasKey(nt => new { nt.NoteId, nt.TagId });
+                .HasKey(nt => nt.Id);
             modelBuilder.Entity<NoteTagRefDao>()
                 .HasOne(nt => nt.Note)
                 .WithMany(n => n.Tags)

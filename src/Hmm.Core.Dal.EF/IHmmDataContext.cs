@@ -15,6 +15,8 @@ namespace Hmm.Core.Dal.EF
 
         DbSet<TagDao> Tags { get; set; }
 
+        DbSet<NoteTagRefDao> NoteTagRefs { get; set; }
+
         void Save();
 
         Task SaveAsync();

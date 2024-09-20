@@ -245,8 +245,8 @@ namespace Hmm.Core.Dal.EF.Tests
             foreach (var note in noteList)
             {
                 // Act
-                note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
-                await NoteRepository.UpdateAsync(note);
+                tag.Notes.Add(new NoteTagRefDao { Note = note, NoteId = note.Id, Tag = tag, TagId = tag.Id });
+                await TagRepository.UpdateAsync(tag);
             }
 
             var tagNotes = await TagRepository.GetNoteByTagAsync(tag.Id);

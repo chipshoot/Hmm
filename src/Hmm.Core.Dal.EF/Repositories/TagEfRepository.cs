@@ -23,8 +23,13 @@ namespace Hmm.Core.Dal.EF.Repositories
     {
         public async Task<PageList<TagDao>> GetEntitiesAsync(Expression<Func<TagDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var cats = await LookupRepository.GetEntitiesAsync(query, resourceCollectionParameters);
-            return cats;
+            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
+            var entities = DataContext.Tags;
+
+            var result = query == null
+                ? await PageList<TagDao>.CreateAsync(entities, pageIdx, pageSize)
+                : await PageList<TagDao>.CreateAsync(entities.Where(query), pageIdx, pageSize);
+            return result;
         }
 
         public async Task<PageList<HmmNoteDao>> GetNoteByTagAsync(int tagId, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -32,7 +37,7 @@ namespace Hmm.Core.Dal.EF.Repositories
             ProcessMessage.Rest();
             try
             {
-                var tag = await DataContext.Tags.Include(t => t.Notes).FirstOrDefaultAsync(t => t.Id == tagId);
+                var tag = await DataContext.Tags.Include(t => t.Notes).AsNoTracking().FirstOrDefaultAsync(t => t.Id == tagId);
 
                 PageList<HmmNoteDao> notePage = null;
                 if (tag != null)
