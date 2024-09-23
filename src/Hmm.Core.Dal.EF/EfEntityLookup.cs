@@ -53,6 +53,8 @@ namespace Hmm.Core.Dal.EF
             {
                 entity = await _dataContext.Notes
                     .AsNoTracking()
+                    .Include(n=>n.Author)
+                    .Include(n=>n.Catalog)
                     .Include(n=>n.Tags)
                     .FirstOrDefaultAsync(n => n.Id == id) as T;
             }

@@ -25,8 +25,8 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var notes = query == null
-                ? DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog)
-                : DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Where(query);
+                ? DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags)
+                : DataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags).Where(query);
             var result = resourceCollectionParameters == null
                 ? await PageList<HmmNoteDao>.CreateAsync(notes, pageIdx, pageSize)
                 : await PageList<HmmNoteDao>.CreateAsync(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);

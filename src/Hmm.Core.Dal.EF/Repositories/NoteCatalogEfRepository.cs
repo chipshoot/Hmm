@@ -5,10 +5,11 @@ using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
@@ -21,8 +22,13 @@ namespace Hmm.Core.Dal.EF.Repositories
     {
         public async Task<PageList<NoteCatalogDao>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var cats = await LookupRepository.GetEntitiesAsync(query, resourceCollectionParameters);
-            return cats;
+            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
+            var entities = DataContext.Catalogs;
+
+            var result = query == null
+                ? await PageList<NoteCatalogDao>.CreateAsync(entities, pageIdx, pageSize)
+                : await PageList<NoteCatalogDao>.CreateAsync(entities.Where(query), pageIdx, pageSize);
+            return result;
         }
 
         public async Task<NoteCatalogDao> GetEntityAsync(int id)

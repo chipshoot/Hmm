@@ -5,6 +5,8 @@ using Hmm.Utility.Validation;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Hmm.Core.Map.DbEntity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Hmm.Core.Dal.EF
@@ -50,9 +52,12 @@ namespace Hmm.Core.Dal.EF
                 return property;
             }
 
-            var defaultProps = await LookupRepository.GetEntitiesAsync<TP>(p => p.IsDefault);
-            var defaultProp = defaultProps.FirstOrDefault();
-            return defaultProp;
+            if (typeof(TP) == typeof(NoteCatalogDao))
+            {
+                var defaultCatalog = await DataContext.Catalogs.Cast<TP>().FirstOrDefaultAsync(c => c.IsDefault);
+                return defaultCatalog;
+            }
+            throw new DataSourceException($"{typeof(TP)} is not support");
         }
 
         protected virtual bool HasPropertyChanged<TP>(TP entity, string propertyName)

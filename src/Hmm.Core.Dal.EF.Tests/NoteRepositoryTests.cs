@@ -224,7 +224,7 @@ namespace Hmm.Core.Dal.EF.Tests
             Assert.True(NoteRepository.ProcessMessage.Success);
 
             // changed the note catalog
-            var catalogList = await LookupRepository.GetEntitiesAsync<NoteCatalogDao>(cat => !cat.IsDefault);
+            var catalogList = await CatalogRepository.GetEntitiesAsync(cat => !cat.IsDefault);
             var newCat = catalogList.FirstOrDefault()?? _catalog;
             note.Catalog = newCat;
 

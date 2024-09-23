@@ -9,10 +9,12 @@ using Hmm.Utility.Misc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
-using Npgsql;
-using System;
-using Serilog;
 using Microsoft.Extensions.Logging;
+using Npgsql;
+using Serilog;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -63,13 +65,29 @@ namespace Hmm.Utility.TestHelp
 
         protected IDateTimeProvider DateProvider { get; private set; }
 
-        protected Microsoft.Extensions.Logging.ILogger Logger { get;}
+        protected Microsoft.Extensions.Logging.ILogger Logger { get; }
 
-        protected void NoTrackingEntities()
+        protected async Task NoTrackingEntities(TagDao tag)
         {
-            if (DbContext is DbContext context)
+            try
             {
-                context.NoTracking();
+                DbContext.Tags.Entry(tag).State = EntityState.Detached;
+                await DbContext.Tags.LoadAsync();
+
+                var entities = DbContext.Tags.Local.ToList<TagDao>();
+                foreach (var entity in entities)
+                {
+                    if (entity.Id == tag.Id)
+                    {
+                        DbContext.Tags.Entry(entity).State = EntityState.Detached;
+                    }
+                }
+                DbContext.Tags.Entry(tag).State = EntityState.Modified;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
         }
 

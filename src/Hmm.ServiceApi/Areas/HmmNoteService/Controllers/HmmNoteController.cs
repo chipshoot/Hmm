@@ -70,7 +70,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
                 if (newNote == null)
                 {
-                    return BadRequest($"Internal error found when try to insert note: {note.Subject}");
+                    return BadRequest($"Internal error found when try to insert note: {note.Subject} {Environment.NewLine} {_noteManager.ProcessResult.GetWholeMessage()}");
                 }
 
                 return Created("", newNote);

@@ -5,6 +5,7 @@ using Hmm.ServiceApi.Areas.HmmNoteService.Controllers;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -184,7 +185,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"The author {authorId} cannot be found.", badRequestResult.Value);
+            var msg = (badRequestResult.Value as List<ReturnMessage>)?[0].Message;
+            Assert.Equal("Cannot update author: UpdatedAuthor, because system cannot find it in data source", msg);
         }
 
         [Fact]

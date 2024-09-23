@@ -58,6 +58,11 @@ namespace Hmm.Core.DefaultManager
             try
             {
                 var catalogDao = await _lookup.GetEntityAsync<NoteCatalogDao>(id);
+                if (catalogDao == null)
+                {
+                    return null;
+                }
+
                 var catalog = _mapper.Map<NoteCatalog>(catalogDao);
                 switch (catalog)
                 {

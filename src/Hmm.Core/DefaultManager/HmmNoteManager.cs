@@ -24,10 +24,11 @@ namespace Hmm.Core.DefaultManager
         private readonly NoteValidator _validator;
         private readonly IDateTimeProvider _dateProvider;
         private readonly ITagManager _tagManager;
+        private readonly IEntityLookup _lookup;
 
         #endregion private fields
 
-        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, ITagManager tagManager, IDateTimeProvider dateProvider)
+        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, ITagManager tagManager, IEntityLookup lookup, IDateTimeProvider dateProvider)
         {
             Guard.Against<ArgumentNullException>(noteRepository == null, nameof(noteRepository));
             Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
@@ -38,7 +39,8 @@ namespace Hmm.Core.DefaultManager
             _mapper = mapper;
             _dateProvider = dateProvider;
             _tagManager = tagManager;
-            _validator = new NoteValidator(this);
+            _lookup = lookup;
+            _validator = new NoteValidator(_lookup);
         }
 
         public async Task<PageList<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -65,7 +67,7 @@ namespace Hmm.Core.DefaultManager
 
         public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
         {
-            var noteDao = await _noteRepository.GetEntityAsync(id);
+            var noteDao = await _lookup.GetEntityAsync<HmmNoteDao>(id);
             switch (noteDao)
             {
                 case null:

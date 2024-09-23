@@ -92,6 +92,8 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             var note = SampleDataGenerator.GetNote();
+            note.Author = await GetTestAuthor();
+            note.Catalog = await GetTestCatalog();
             var apiNote = ApiMapper.Map<ApiNoteForCreate>(note);
             apiNote.Subject = "Test Note";
 

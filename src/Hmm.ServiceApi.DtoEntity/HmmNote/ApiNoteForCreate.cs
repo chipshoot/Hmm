@@ -12,7 +12,7 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 
         public int AuthorId { get; set; }
 
-        public int NoteCatalogId { get; set; }
+        public int CatalogId { get; set; }
 
         public string Description { get; set; }
     }
