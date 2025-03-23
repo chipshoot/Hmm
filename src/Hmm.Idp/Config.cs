@@ -7,21 +7,18 @@ namespace Hmm.Idp;
 public static class Config
 {
     public static IEnumerable<IdentityResource> IdentityResources =>
-        new IdentityResource[]
-        {
-            new IdentityResources.OpenId(),
+    [
+        new IdentityResources.OpenId(),
             new IdentityResources.Profile()
-        };
+    ];
 
     public static IEnumerable<ApiScope> ApiScopes =>
-        new ApiScope[]
-            { };
+        [];
 
     public static IEnumerable<Client> Clients =>
-        new Client[]
+    [
+        new()
         {
-            new Client
-            {
                 ClientName = HmmConstants.HmmWebConsoleName,
                 ClientId = HmmConstants.HmmWebConsoleId,
                 AllowOfflineAccess = true,
@@ -49,5 +46,5 @@ public static class Config
                     new Secret("secret".Sha256())
                 }
             }
-        };
+    ];
 }
