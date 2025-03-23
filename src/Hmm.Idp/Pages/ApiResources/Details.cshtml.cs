@@ -1,5 +1,4 @@
 // Pages/ApiResources/Details.cshtml.cs
-using Hmm.Idp.Models;
 using Hmm.Idp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -15,7 +14,7 @@ namespace Hmm.Idp.Pages.ApiResources
             _apiResourceService = apiResourceService;
         }
 
-        public ApiResourceViewModel ApiResource { get; set; }
+        public ViewModel ApiResource { get; set; }
 
         public async Task<IActionResult> OnGetAsync(string name)
         {

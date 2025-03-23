@@ -1,0 +1,37 @@
+﻿@page
+@model Hmm.Idp.Pages.Admin.Clients.IndexModel
+@{
+    ViewData["Title"] = "Client Management";
+}
+
+<h1>Client Management</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Create New Client</a>
+</p>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Client ID</th>
+        <th>Client Name</th>
+        <th>Enabled</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var client in Model.Clients)
+    {
+        <tr>
+            <td>@client.ClientId</td>
+            <td>@client.ClientName</td>
+            <td>@(client.Enabled ? "Yes" : "No")</td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@client.Id" class="btn btn-sm btn-secondary">Edit</a>
+                <a asp-page="./Details" asp-route-id="@client.Id" class="btn btn-sm btn-info">Details</a>
+                <a asp-page="./Delete" asp-route-id="@client.Id" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -1,0 +1,86 @@
+﻿@page
+@model Hmm.Idp.Pages.Admin.Clients.CreateModel
+@{
+    ViewData["Title"] = "Create Client";
+}
+
+<h1>Create Client</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Client.ClientId" class="control-label"></label>
+                <input asp-for="Client.ClientId" class="form-control" />
+                <span asp-validation-for="Client.ClientId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Client.ClientName" class="control-label"></label>
+                <input asp-for="Client.ClientName" class="form-control" />
+                <span asp-validation-for="Client.ClientName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Client.ClientSecret" class="control-label"></label>
+                <input asp-for="Client.ClientSecret" class="form-control" />
+                <span asp-validation-for="Client.ClientSecret" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <div class="form-check">
+                    <input asp-for="Client.RequirePkce" class="form-check-input" />
+                    <label asp-for="Client.RequirePkce" class="form-check-label"></label>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <div class="form-check">
+                    <input asp-for="Client.AllowOfflineAccess" class="form-check-input" />
+                    <label asp-for="Client.AllowOfflineAccess" class="form-check-label"></label>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <div class="form-check">
+                    <input asp-for="Client.UpdateAccessTokenClaimsOnRefresh" class="form-check-input" />
+                    <label asp-for="Client.UpdateAccessTokenClaimsOnRefresh" class="form-check-label"></label>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Client.RedirectUris" class="control-label"></label>
+                <textarea asp-for="Client.RedirectUris" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Client.RedirectUris" class="text-danger"></span>
+                <small class="form-text text-muted">Enter one URI per line.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Client.PostLogoutRedirectUris" class="control-label"></label>
+                <textarea asp-for="Client.PostLogoutRedirectUris" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Client.PostLogoutRedirectUris" class="text-danger"></span>
+                <small class="form-text text-muted">Enter one URI per line.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Client.AllowedScopes" class="control-label"></label>
+                <input asp-for="Client.AllowedScopes" class="form-control" />
+                <span asp-validation-for="Client.AllowedScopes" class="text-danger"></span>
+                <small class="form-text text-muted">Enter comma-separated scopes.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-page="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

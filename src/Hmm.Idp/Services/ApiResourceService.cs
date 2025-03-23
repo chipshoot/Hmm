@@ -2,7 +2,7 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Duende.IdentityServer.Models;
-using Hmm.Idp.Models;
+using Hmm.Idp.Pages.ApiResources;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hmm.Idp.Services
@@ -16,14 +16,14 @@ namespace Hmm.Idp.Services
             _context = context;
         }
 
-        public async Task<List<ApiResourceViewModel>> GetAllApiResourcesAsync()
+        public async Task<List<ViewModel>> GetAllApiResourcesAsync()
         {
             var apiResources = await _context.ApiResources
                 .Include(x => x.UserClaims)
                 .Include(x => x.Scopes)
                 .ToListAsync();
 
-            return apiResources.Select(ar => new ApiResourceViewModel
+            return apiResources.Select(ar => new ViewModel
             {
                 Name = ar.Name,
                 DisplayName = ar.DisplayName,
@@ -37,7 +37,7 @@ namespace Hmm.Idp.Services
             }).ToList();
         }
 
-        public async Task<ApiResourceViewModel> GetApiResourceByNameAsync(string name)
+        public async Task<ViewModel> GetApiResourceByNameAsync(string name)
         {
             var apiResource = await _context.ApiResources
                 .Include(x => x.UserClaims)
@@ -47,7 +47,7 @@ namespace Hmm.Idp.Services
             if (apiResource == null)
                 return null;
 
-            return new ApiResourceViewModel
+            return new ViewModel
             {
                 Name = apiResource.Name,
                 DisplayName = apiResource.DisplayName,
@@ -61,7 +61,7 @@ namespace Hmm.Idp.Services
             };
         }
 
-        public async Task CreateApiResourceAsync(ApiResourceViewModel model)
+        public async Task CreateApiResourceAsync(ViewModel model)
         {
             var apiResource = new ApiResource
             {
@@ -104,7 +104,7 @@ namespace Hmm.Idp.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateApiResourceAsync(ApiResourceViewModel model)
+        public async Task UpdateApiResourceAsync(ViewModel model)
         {
             var apiResource = await _context.ApiResources
                 .Include(x => x.UserClaims)

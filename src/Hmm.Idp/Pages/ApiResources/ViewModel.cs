@@ -2,9 +2,9 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Hmm.Idp.Models
+namespace Hmm.Idp.Pages.ApiResources
 {
-    public class ApiResourceViewModel
+    public class ViewModel
     {
         [Required]
         [StringLength(200)]

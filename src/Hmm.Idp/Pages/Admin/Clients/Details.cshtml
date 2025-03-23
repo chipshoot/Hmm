@@ -1,0 +1,88 @@
+﻿@page "{id:int}"
+@model Hmm.Idp.Pages.Admin.Clients.DetailsModel
+@{
+    ViewData["Title"] = "Client Details";
+}
+
+<h1>Client Details</h1>
+
+<div>
+    <h4>Client</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Client ID</dt>
+        <dd class="col-sm-9">@Model.Client.ClientId</dd>
+
+        <dt class="col-sm-3">Client Name</dt>
+        <dd class="col-sm-9">@Model.Client.ClientName</dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.Client.Description</dd>
+
+        <dt class="col-sm-3">Enabled</dt>
+        <dd class="col-sm-9">@(Model.Client.Enabled ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Require PKCE</dt>
+        <dd class="col-sm-9">@(Model.Client.RequirePkce ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Allow Offline Access</dt>
+        <dd class="col-sm-9">@(Model.Client.AllowOfflineAccess ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Grant Types</dt>
+        <dd class="col-sm-9">
+            @if (Model.Client.AllowedGrantTypes?.Any() == true)
+            {
+                <ul>
+                    @foreach (var grant in Model.Client.AllowedGrantTypes)
+                    {
+                        <li>@grant.GrantType</li>
+                    }
+                </ul>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Redirect URIs</dt>
+        <dd class="col-sm-9">
+            @if (Model.Client.RedirectUris?.Any() == true)
+            {
+                <ul>
+                    @foreach (var uri in Model.Client.RedirectUris)
+                    {
+                        <li>@uri.RedirectUri</li>
+                    }
+                </ul>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Post-Logout Redirect URIs</dt>
+        <dd class="col-sm-9">
+            @if (Model.Client.PostLogoutRedirectUris?.Any() == true)
+            {
+                <ul>
+                    @foreach (var uri in Model.Client.PostLogoutRedirectUris)
+                    {
+                        <li>@uri.PostLogoutRedirectUri</li>
+                    }
+                </ul>
+            }
+        </dd>
+
+        <dt class="col-sm-3">Allowed Scopes</dt>
+        <dd class="col-sm-9">
+            @if (Model.Client.AllowedScopes?.Any() == true)
+            {
+                <ul>
+                    @foreach (var scope in Model.Client.AllowedScopes)
+                    {
+                        <li>@scope.Scope</li>
+                    }
+                </ul>
+            }
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.Client.Id" class="btn btn-primary">Edit</a>
+    <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+</div>

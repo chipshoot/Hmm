@@ -1,5 +1,4 @@
 // Pages/ApiResources/Create.cshtml.cs
-using Hmm.Idp.Models;
 using Hmm.Idp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,7 +15,7 @@ namespace Hmm.Idp.Pages.ApiResources
         }
 
         [BindProperty]
-        public ApiResourceViewModel ApiResource { get; set; } = new();
+        public ViewModel ApiResource { get; set; } = new();
 
         [BindProperty]
         public string ClaimsInput { get; set; }
