@@ -89,6 +89,26 @@ namespace Hmm.Idp.Data.Migrations.IdentityServer.PersistedGrantDb
                     table.PrimaryKey("PK_ServerSideSessions", x => x.Id);
                 });
 
+            // Drop primary key first
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_ServerSideSessions",
+                table: "ServerSideSessions");
+        
+            // Alter column type
+            migrationBuilder.AlterColumn<long>(
+                name: "Id",
+                table: "ServerSideSessions",
+                type: "bigint",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "int");
+        
+            // Add primary key back
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_ServerSideSessions",
+                table: "ServerSideSessions",
+                column: "Id");
+
             migrationBuilder.CreateIndex(
                 name: "IX_DeviceCodes_DeviceCode",
                 table: "DeviceCodes",
