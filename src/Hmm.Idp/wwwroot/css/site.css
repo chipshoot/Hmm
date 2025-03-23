@@ -37,3 +37,37 @@
 .grants-page .card label {
   font-weight: bold;
 }
+
+/* Custom styles for HomeMadeMessage Identity Service */
+.welcome-page .lead {
+    margin-bottom: 2rem;
+    color: #495057;
+}
+
+.welcome-page .card-deck {
+    margin-bottom: 2rem;
+}
+
+.welcome-page .card {
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.welcome-page .card-title {
+    color: #2C3E50;
+    font-weight: 600;
+}
+
+.welcome-page .card-body {
+    padding: 1.5rem;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.nav-page .navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

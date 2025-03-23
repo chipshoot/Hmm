@@ -1,25 +1,23 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   # SQL Server Database
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong!Passw0rd
+      - SA_PASSWORD=Password1!
       - MSSQL_PID=Express
+      - MSSQL_GID=0
+      - MSSQL_UID=0
     ports:
-      - "1433:1433"
+      - "14333:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
     networks:
       - app-network
-    healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "Password1!" -Q "SELECT 1" || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    restart: always
+    user: "0:0"
+    command: /opt/mssql/bin/sqlservr
 
   # .NET 9 Razor Pages Application (Hmm.Idp)
   hmm-idp:
@@ -32,12 +30,12 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=HmmIdp;User Id=sa;Password=Password1!;TrustServerCertificate=True;
     ports:
-      - "8080:80"
+      - "5080:80"
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      - sqlserver
     networks:
       - app-network
+    restart: always
 
 networks:
   app-network:
