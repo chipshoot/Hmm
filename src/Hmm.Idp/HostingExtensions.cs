@@ -1,5 +1,6 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
+using Hmm.Idp.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using IServiceScopeFactory = Microsoft.Extensions.DependencyInjection.IServiceScopeFactory;
@@ -27,6 +28,9 @@ internal static class HostingExtensions
                 options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
             })
             .AddTestUsers(TestUsers.Users);
+
+        // Add this to ConfigureServices method in HostingExtensions.cs
+        builder.Services.AddScoped<ApiResourceService>();
 
         return builder.Build();
     }
@@ -61,22 +65,32 @@ internal static class HostingExtensions
         }
 
         using var serviceScope = scopeFactory.CreateScope();
-        serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
 
-        var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
-        context.Database.Migrate();
-
-        if (builder is WebApplication app && app.Environment.IsDevelopment())
+        try
         {
-            if (!context.Clients.Any())
-            {
-                foreach (var client in Config.Clients)
-                {
-                    context.Clients.Add(client.ToEntity());
-                }
+            var persistedGrantDbContext = serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>();
+            persistedGrantDbContext.Database.Migrate();
 
-                context.SaveChanges();
+            var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+            context.Database.Migrate();
+
+            if (builder is WebApplication app && app.Environment.IsDevelopment())
+            {
+                if (!context.Clients.Any())
+                {
+                    foreach (var client in Config.Clients)
+                    {
+                        context.Clients.Add(client.ToEntity());
+                    }
+
+                    context.SaveChanges();
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            // Log the exception but allow the application to continue
+            Log.Error(ex, "An error occurred while initializing the database");
         }
     }
 }

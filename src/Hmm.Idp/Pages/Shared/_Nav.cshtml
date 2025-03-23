@@ -11,8 +11,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 
         <a href="~/" class="navbar-brand">
-            <img src="~/duende-logo.svg" class="icon-banner">
-            Duende IdentityServer
+            <img src="~/hmm-logo.svg" class="icon-banner" onerror="this.src='~/duende-logo.svg'; this.onerror=null;">
+            HomeMadeMessage Identity
         </a>
 
         @if (!string.IsNullOrWhiteSpace(name))
@@ -20,13 +20,18 @@
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">@name <b class="caret"></b></a>
-                    
+
                     <div class="dropdown-menu">
                         <a class="dropdown-item" asp-page="/Account/Logout/Index">Logout</a>
                     </div>
-              </li>
+                </li>
+                <!-- Add this inside the navigation section of your layout -->
+                <li class="nav-item">
+                    <a class="nav-link text-dark" asp-area="" asp-page="/ApiResources/Index">API Resources</a>
+                </li>
+
             </ul>
         }
-    
+
     </nav>
 </div>

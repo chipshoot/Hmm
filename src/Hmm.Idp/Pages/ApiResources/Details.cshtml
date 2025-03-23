@@ -1,0 +1,71 @@
+﻿@page "{name}"
+@model Hmm.Idp.Pages.ApiResources.DetailsModel
+@{
+    ViewData["Title"] = "API Resource Details";
+}
+
+<h2>API Resource Details</h2>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.ApiResource.Name</dd>
+        
+        <dt class="col-sm-3">Display Name</dt>
+        <dd class="col-sm-9">@Model.ApiResource.DisplayName</dd>
+        
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.ApiResource.Description</dd>
+        
+        <dt class="col-sm-3">Enabled</dt>
+        <dd class="col-sm-9">@(Model.ApiResource.Enabled ? "Yes" : "No")</dd>
+        
+        <dt class="col-sm-3">Show In Discovery Document</dt>
+        <dd class="col-sm-9">@(Model.ApiResource.ShowInDiscoveryDocument ? "Yes" : "No")</dd>
+        
+        <dt class="col-sm-3">Require Resource Indicator</dt>
+        <dd class="col-sm-9">@(Model.ApiResource.RequireResourceIndicator ? "Yes" : "No")</dd>
+        
+        <dt class="col-sm-3">Allowed Access Token Signing Algorithms</dt>
+        <dd class="col-sm-9">@(Model.ApiResource.AllowedAccessTokenSigningAlgorithms ?? "Not specified")</dd>
+        
+        <dt class="col-sm-3">User Claims</dt>
+        <dd class="col-sm-9">
+            @if (Model.ApiResource.UserClaims?.Any() == true)
+            {
+                <ul>
+                    @foreach (var claim in Model.ApiResource.UserClaims)
+                    {
+                        <li>@claim</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <span>None</span>
+            }
+        </dd>
+        
+        <dt class="col-sm-3">Scopes</dt>
+        <dd class="col-sm-9">
+            @if (Model.ApiResource.Scopes?.Any() == true)
+            {
+                <ul>
+                    @foreach (var scope in Model.ApiResource.Scopes)
+                    {
+                        <li>@scope</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <span>None</span>
+            }
+        </dd>
+    </dl>
+    
+    <div>
+        <a asp-page="./Edit" asp-route-name="@Model.ApiResource.Name" class="btn btn-primary">Edit</a>
+        <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

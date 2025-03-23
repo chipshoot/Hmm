@@ -1,0 +1,70 @@
+﻿@page "{name}"
+@model Hmm.Idp.Pages.ApiResources.DeleteModel
+@{
+    ViewData["Title"] = "Delete API Resource";
+}
+
+<h2>Delete API Resource</h2>
+
+<div class="alert alert-danger">
+    <h3>Are you sure you want to delete this API Resource?</h3>
+</div>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.ApiResource.Name</dd>
+        
+        <dt class="col-sm-3">Display Name</dt>
+        <dd class="col-sm-9">@Model.ApiResource.DisplayName</dd>
+        
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.ApiResource.Description</dd>
+        
+        <dt class="col-sm-3">Enabled</dt>
+        <dd class="col-sm-9">@(Model.ApiResource.Enabled ? "Yes" : "No")</dd>
+        
+        <dt class="col-sm-3">Show In Discovery Document</dt>
+        <dd class="col-sm-9">@(Model.ApiResource.ShowInDiscoveryDocument ? "Yes" : "No")</dd>
+        
+        <dt class="col-sm-3">User Claims</dt>
+        <dd class="col-sm-9">
+            @if (Model.ApiResource.UserClaims?.Any() == true)
+            {
+                <ul>
+                    @foreach (var claim in Model.ApiResource.UserClaims)
+                    {
+                        <li>@claim</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <span>None</span>
+            }
+        </dd>
+        
+        <dt class="col-sm-3">Scopes</dt>
+        <dd class="col-sm-9">
+            @if (Model.ApiResource.Scopes?.Any() == true)
+            {
+                <ul>
+                    @foreach (var scope in Model.ApiResource.Scopes)
+                    {
+                        <li>@scope</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <span>None</span>
+            }
+        </dd>
+    </dl>
+    
+    <form method="post">
+        <input type="hidden" asp-for="ApiResource.Name" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+        <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
