@@ -22,7 +22,7 @@ namespace Hmm.Core.Dal.EF
             DataContext = dataContext;
             LookupRepository = lookupRepository;
             DateTimeProvider = dateTimeProvider;
-            ProcessMessage = logger != null ? new ProcessingResult(logger) : new ProcessingResult();
+            Logger = logger;
         }
 
         protected IEntityLookup LookupRepository { get; }
@@ -31,40 +31,56 @@ namespace Hmm.Core.Dal.EF
 
         protected IHmmDataContext DataContext { get; }
 
-        protected async Task<TP> PropertyCheckingAsync<TP>(TP property) where TP : HasDefaultEntity
+        protected ILogger Logger { get; }
+
+        protected async Task<ProcessingResult<TP>> PropertyCheckingAsync<TP>(TP property) where TP : HasDefaultEntity
         {
-            var defaultNeeded = false;
-            if (property == null)
+            try
             {
-                defaultNeeded = true;
-            }
-            else if (property.Id <= 0)
-            {
-                defaultNeeded = true;
-            }
-            else if (await LookupRepository.GetEntityAsync<TP>(property.Id) == null)
-            {
-                defaultNeeded = true;
-            }
+                var defaultNeeded = false;
+                if (property == null)
+                {
+                    defaultNeeded = true;
+                }
+                else if (property.Id <= 0)
+                {
+                    defaultNeeded = true;
+                }
+                else
+                {
+                    var lookupResult = await LookupRepository.GetEntityAsync<TP>(property.Id);
+                    if (!lookupResult.Success)
+                    {
+                        defaultNeeded = true;
+                    }
+                }
 
-            if (!defaultNeeded)
-            {
-                return property;
-            }
+                if (!defaultNeeded)
+                {
+                    return ProcessingResult<TP>.Ok(property);
+                }
 
-            if (typeof(TP) == typeof(NoteCatalogDao))
-            {
-                var defaultCatalog = await DataContext.Catalogs.Cast<TP>().FirstOrDefaultAsync(c => c.IsDefault);
-                return defaultCatalog;
+                if (typeof(TP) == typeof(NoteCatalogDao))
+                {
+                    var defaultCatalog = await DataContext.Catalogs.Cast<TP>().FirstOrDefaultAsync(c => c.IsDefault);
+                    if (defaultCatalog == null)
+                    {
+                        return ProcessingResult<TP>.NotFound($"No default {typeof(TP).Name} found");
+                    }
+                    return ProcessingResult<TP>.Ok(defaultCatalog);
+                }
+
+                return ProcessingResult<TP>.Fail($"{typeof(TP)} is not supported");
             }
-            throw new DataSourceException($"{typeof(TP)} is not support");
+            catch (Exception ex)
+            {
+                return ProcessingResult<TP>.FromException(ex);
+            }
         }
 
         protected virtual bool HasPropertyChanged<TP>(TP entity, string propertyName)
         {
             return false;
         }
-
-        public ProcessingResult ProcessMessage { get; }
     }
 }

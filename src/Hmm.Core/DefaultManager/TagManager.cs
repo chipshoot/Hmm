@@ -18,7 +18,7 @@ namespace Hmm.Core.DefaultManager
     {
         private readonly ICompositeEntityRepository<TagDao, HmmNoteDao> _tagRepository;
         private readonly IMapper _mapper;
-        private readonly ValidatorBase<Tag> _validator;
+        private readonly IHmmValidator<Tag> _validator;
         private readonly IEntityLookup _lookup;
 
         public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IMapper mapper, IEntityLookup lookup)
@@ -31,7 +31,7 @@ namespace Hmm.Core.DefaultManager
             _lookup = lookup;
         }
 
-        public async Task<PageList<Tag>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<ProcessingResult<PageList<Tag>>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
@@ -56,197 +56,189 @@ namespace Hmm.Core.DefaultManager
 
                 var tagDaos = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
                 var tags = _mapper.Map<PageList<Tag>>(tagDaos);
-                return tags;
+                return ProcessingResult<PageList<Tag>>.Ok(tags);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<PageList<Tag>>.FromException(ex);
             }
         }
 
-        public async Task<Tag> GetTagByIdAsync(int id)
+        public async Task<ProcessingResult<Tag>> GetTagByIdAsync(int id)
         {
-            var tagDao = await _lookup.GetEntityAsync<TagDao>(id);
-            if (tagDao == null)
+            var tagDaoResult = await _lookup.GetEntityAsync<TagDao>(id);
+
+            if (!tagDaoResult.Success)
             {
-                return null;
+                return ProcessingResult<Tag>.Fail(tagDaoResult.ErrorMessage, tagDaoResult.ErrorType);
             }
 
-            switch (tagDao.IsActivated)
+            var tagDao = tagDaoResult.Value;
+            if (!tagDao.IsActivated)
             {
-                case false:
-                    return null;
-
-                default:
-                    {
-                        var tag = _mapper.Map<Tag>(tagDao);
-                        switch (tag)
-                        {
-                            case null:
-                                ProcessResult.AddErrorMessage("Cannot convert TagDao to Tag");
-                                return null;
-
-                            default:
-                                return tag;
-                        }
-                    }
+                return ProcessingResult<Tag>.Deleted($"Tag with ID {id} has been deactivated");
             }
+
+            var tag = _mapper.Map<Tag>(tagDao);
+            if (tag == null)
+            {
+                return ProcessingResult<Tag>.Fail("Cannot convert TagDao to Tag");
+            }
+
+            return ProcessingResult<Tag>.Ok(tag);
         }
 
-        public async Task<Tag> GetTagByNameAsync(string name)
+        public async Task<ProcessingResult<Tag>> GetTagByNameAsync(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
-                return null;
+                return ProcessingResult<Tag>.Invalid("Tag name cannot be null or empty");
             }
 
             var tagName = name.Trim().ToLower();
-            var tagDaos = await _lookup.GetEntitiesAsync<TagDao>(t => t.Name.ToLower() == tagName);
-            var tagDao = tagDaos.FirstOrDefault();
+            var tagDaosResult = await _lookup.GetEntitiesAsync<TagDao>(t => t.Name.ToLower() == tagName);
+
+            if (!tagDaosResult.Success)
+            {
+                return ProcessingResult<Tag>.Fail(tagDaosResult.ErrorMessage, tagDaosResult.ErrorType);
+            }
+
+            var tagDao = tagDaosResult.Value.FirstOrDefault();
             if (tagDao == null)
             {
-                return null;
+                return ProcessingResult<Tag>.NotFound($"Tag with name '{name}' not found");
             }
 
-            switch (tagDao.IsActivated)
+            if (!tagDao.IsActivated)
             {
-                case false:
-                    return null;
-
-                default:
-                    {
-                        var tag = _mapper.Map<Tag>(tagDao);
-                        switch (tag)
-                        {
-                            case null:
-                                ProcessResult.AddErrorMessage("Cannot convert TagDao to Tag");
-                                return null;
-
-                            default:
-                                return tag;
-                        }
-                    }
+                return ProcessingResult<Tag>.Deleted($"Tag with name '{name}' has been deactivated");
             }
+
+            var tag = _mapper.Map<Tag>(tagDao);
+            if (tag == null)
+            {
+                return ProcessingResult<Tag>.Fail("Cannot convert TagDao to Tag");
+            }
+
+            return ProcessingResult<Tag>.Ok(tag);
         }
 
         public async Task<bool> IsTagExistsAsync(int id)
         {
             try
             {
-                var tagDao = await _lookup.GetEntityAsync<TagDao>(id);
-                return tagDao is { IsActivated: true };
+                var tagDaoResult = await _lookup.GetEntityAsync<TagDao>(id);
+                return tagDaoResult.Success && tagDaoResult.Value.IsActivated;
             }
-            catch (Exception ex)
+            catch
             {
-                ProcessResult.WrapException(ex);
                 return false;
             }
         }
 
-        public async Task<Tag> CreateAsync(Tag tag)
+        public async Task<ProcessingResult<Tag>> CreateAsync(Tag tag)
         {
             try
             {
-                ProcessResult.Rest();
-                var isValid = await _validator.IsValidEntityAsync(tag, ProcessResult);
-                if (!isValid)
+                var validationResult = await _validator.ValidateEntityAsync(tag);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<Tag>.Invalid(validationResult.GetWholeMessage());
                 }
+
                 var tagDao = _mapper.Map<TagDao>(tag);
                 if (tagDao == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert Tag to TagDao");
-                    return null;
+                    return ProcessingResult<Tag>.Fail("Cannot convert Tag to TagDao");
                 }
 
-                var addedTagDao = await _tagRepository.AddAsync(tagDao);
-                if (addedTagDao == null)
+                var addedTagDaoResult = await _tagRepository.AddAsync(tagDao);
+                if (!addedTagDaoResult.Success)
                 {
-                    ProcessResult.PropagandaResult(_tagRepository.ProcessMessage);
-                    return null;
+                    return ProcessingResult<Tag>.Fail(addedTagDaoResult.ErrorMessage, addedTagDaoResult.ErrorType);
                 }
 
-                tag.Id = addedTagDao.Id;
-                return tag;
+                var createdTag = _mapper.Map<Tag>(addedTagDaoResult.Value);
+                return ProcessingResult<Tag>.Ok(createdTag);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<Tag>.FromException(ex);
             }
         }
 
-        public async Task<Tag> UpdateAsync(Tag tag)
+        public async Task<ProcessingResult<Tag>> UpdateAsync(Tag tag)
         {
             try
             {
-                ProcessResult.Rest();
-                var isValid = await _validator.IsValidEntityAsync(tag, ProcessResult);
-                if (!isValid)
+                var validationResult = await _validator.ValidateEntityAsync(tag);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<Tag>.Invalid(validationResult.GetWholeMessage());
                 }
 
                 var tagDao = _mapper.Map<TagDao>(tag);
                 if (tagDao == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert Tag to TagDao");
-                    return null;
+                    return ProcessingResult<Tag>.Fail("Cannot convert Tag to TagDao");
                 }
 
-                var savedTagDao = await _lookup.GetEntityAsync<TagDao>(tag.Id);
-                if (savedTagDao == null)
+                var savedTagResult = await _lookup.GetEntityAsync<TagDao>(tag.Id);
+                if (!savedTagResult.Success)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot found Tag: {tag.Name} to update.");
-                    return null;
+                    return ProcessingResult<Tag>.NotFound($"Cannot update tag: {tag.Name}, because system cannot find it in data source");
                 }
 
-                var updatedTagDao = await _tagRepository.UpdateAsync(tagDao);
-                if (updatedTagDao == null)
+                var updatedTagDaoResult = await _tagRepository.UpdateAsync(tagDao);
+                if (!updatedTagDaoResult.Success)
                 {
-                    ProcessResult.PropagandaResult(_tagRepository.ProcessMessage);
-                    return null;
+                    return ProcessingResult<Tag>.Fail(updatedTagDaoResult.ErrorMessage, updatedTagDaoResult.ErrorType);
                 }
 
-                var updatedTag = _mapper.Map<Tag>(updatedTagDao);
+                var updatedTag = _mapper.Map<Tag>(updatedTagDaoResult.Value);
                 if (updatedTag == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert TagDao to Tag");
-                    return null;
+                    return ProcessingResult<Tag>.Fail("Cannot convert TagDao to Tag");
                 }
 
-                return updatedTag;
+                return ProcessingResult<Tag>.Ok(updatedTag);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<Tag>.FromException(ex);
             }
         }
 
-        public async Task DeActivateAsync(int id)
+        public async Task<ProcessingResult<Unit>> DeActivateAsync(int id)
         {
-            var tag = await _lookup.GetEntityAsync<TagDao>(id);
-            if (tag == null)
+            try
             {
-                ProcessResult.AddErrorMessage($"Cannot find tag with id : {id}", true);
+                var tagResult = await _lookup.GetEntityAsync<TagDao>(id);
+                if (!tagResult.Success)
+                {
+                    return ProcessingResult<Unit>.NotFound($"Cannot find tag with id: {id}");
+                }
+
+                var tag = tagResult.Value;
+                if (!tag.IsActivated)
+                {
+                    return ProcessingResult<Unit>.Ok(Unit.Value, $"Tag with id {id} is already deactivated");
+                }
+
+                tag.IsActivated = false;
+                var updatedResult = await _tagRepository.UpdateAsync(tag);
+
+                if (!updatedResult.Success)
+                {
+                    return ProcessingResult<Unit>.Fail("Failed to deactivate tag");
+                }
+
+                return ProcessingResult<Unit>.Ok(Unit.Value, $"Tag with id {id} has been deactivated");
             }
-            else if (tag.IsActivated)
+            catch (Exception ex)
             {
-                try
-                {
-                    tag.IsActivated = false;
-                    await _tagRepository.UpdateAsync(tag);
-                }
-                catch (Exception ex)
-                {
-                    ProcessResult.WrapException(ex);
-                }
+                return ProcessingResult<Unit>.FromException(ex);
             }
         }
-
-        public ProcessingResult ProcessResult { get; } = new();
     }
 }

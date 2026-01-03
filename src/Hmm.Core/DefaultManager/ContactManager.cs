@@ -18,7 +18,7 @@ public class ContactManager : IContactManager
 {
     private readonly IRepository<ContactDao> _contactDaoRepository;
     private readonly IMapper _mapper;
-    private readonly ValidatorBase<Contact> _validator;
+    private readonly IHmmValidator<Contact> _validator;
     private readonly IEntityLookup _lookup;
 
     public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper, IEntityLookup lookup)
@@ -32,11 +32,10 @@ public class ContactManager : IContactManager
         _lookup = lookup;
     }
 
-    public async Task<PageList<Contact>> GetContactsAsync(Expression<Func<Contact, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+    public async Task<ProcessingResult<PageList<Contact>>> GetContactsAsync(Expression<Func<Contact, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
     {
         try
         {
-            ProcessResult.Rest();
             Expression<Func<ContactDao, bool>> isActivatedExpression = t => t.IsActivated;
             Expression<Func<ContactDao, bool>> daoQuery = null;
             if (query != null)
@@ -47,7 +46,8 @@ public class ContactManager : IContactManager
                 var parameter = Expression.Parameter(typeof(ContactDao), "c");
                 var body = Expression.AndAlso(
                     Expression.Invoke(mappedQuery, parameter),
-                    Expression.Invoke(isActivatedExpression, parameter));
+                    Expression.Invoke(isActivatedExpression, parameter)
+                );
                 daoQuery = Expression.Lambda<Func<ContactDao, bool>>(body, parameter);
             }
             else
@@ -56,160 +56,154 @@ public class ContactManager : IContactManager
             }
 
             var contactDaos = await _contactDaoRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-
-            var contacts = _mapper.Map<List<Contact>>(contactDaos);
-
-            var contactPage = resourceCollectionParameters == null
-                ? new PageList<Contact>(contacts, 1, 0, contacts.Count)
-                : new PageList<Contact>(contacts, 1, resourceCollectionParameters.PageNumber,
-                    resourceCollectionParameters.PageSize);
-            return contactPage;
+            var contacts = _mapper.Map<PageList<Contact>>(contactDaos);
+            return ProcessingResult<PageList<Contact>>.Ok(contacts);
         }
         catch (Exception ex)
         {
-            ProcessResult.WrapException(ex);
-            return null;
+            return ProcessingResult<PageList<Contact>>.FromException(ex);
         }
     }
 
-    public async Task<Contact> GetContactByIdAsync(int id)
+    public async Task<ProcessingResult<Contact>> GetContactByIdAsync(int id)
     {
-        try
+        var contactDaoResult = await _lookup.GetEntityAsync<ContactDao>(id);
+
+        if (!contactDaoResult.Success)
         {
-            ProcessResult.Rest();
-            var contactDao = await _lookup.GetEntityAsync<ContactDao>(id);
-
-            switch (contactDao)
-            {
-                case null:
-                    return null;
-
-                case { IsActivated: false }:
-                    return null;
-
-                default:
-                    {
-                        var contact = _mapper.Map<Contact>(contactDao);
-                        return contact;
-                    }
-            }
+            return ProcessingResult<Contact>.Fail(contactDaoResult.ErrorMessage, contactDaoResult.ErrorType);
         }
-        catch (Exception ex)
+
+        var contactDao = contactDaoResult.Value;
+        if (!contactDao.IsActivated)
         {
-            ProcessResult.WrapException(ex);
-            return null;
+            return ProcessingResult<Contact>.Deleted($"Contact with ID {id} has been deactivated");
         }
+
+        var contact = _mapper.Map<Contact>(contactDao);
+        if (contact == null)
+        {
+            return ProcessingResult<Contact>.Fail("Cannot convert ContactDao to Contact");
+        }
+
+        return ProcessingResult<Contact>.Ok(contact);
     }
 
     public async Task<bool> IsContactExistsAsync(int id)
     {
         try
         {
-            var contactDao = await _lookup.GetEntityAsync<ContactDao>(id);
-            return contactDao != null;
+            var contactDaoResult = await _lookup.GetEntityAsync<ContactDao>(id);
+            return contactDaoResult.Success;
         }
-        catch (Exception ex)
+        catch
         {
-            ProcessResult.WrapException(ex);
             return false;
         }
     }
 
-    public async Task<Contact> CreateAsync(Contact contactInfo)
+    public async Task<ProcessingResult<Contact>> CreateAsync(Contact contactInfo)
     {
         try
         {
-            ProcessResult.Rest();
-            var isValid = await _validator.IsValidEntityAsync(contactInfo, ProcessResult);
-            if (!isValid)
+            var validationResult = await _validator.ValidateEntityAsync(contactInfo);
+            if (!validationResult.Success)
             {
-                return null;
+                return ProcessingResult<Contact>.Invalid(validationResult.GetWholeMessage());
             }
 
             var contactDao = _mapper.Map<ContactDao>(contactInfo);
             if (contactDao == null)
             {
-                ProcessResult.AddErrorMessage("Cannot convert Contact to ContactDao");
-                return null;
+                return ProcessingResult<Contact>.Fail("Cannot convert Contact to ContactDao");
             }
 
-            var addedContact = await _contactDaoRepository.AddAsync(contactDao);
-            if (addedContact == null)
+            var addedContactDaoResult = await _contactDaoRepository.AddAsync(contactDao);
+            if (!addedContactDaoResult.Success)
             {
-                ProcessResult.PropagandaResult(_contactDaoRepository.ProcessMessage);
-                return null;
+                return ProcessingResult<Contact>.Fail(addedContactDaoResult.ErrorMessage, addedContactDaoResult.ErrorType);
             }
 
-            contactInfo.Id = addedContact.Id;
-            return contactInfo;
+            var createdContact = _mapper.Map<Contact>(addedContactDaoResult.Value);
+            return ProcessingResult<Contact>.Ok(createdContact);
         }
         catch (Exception ex)
         {
-            ProcessResult.WrapException(ex);
-            return null;
+            return ProcessingResult<Contact>.FromException(ex);
         }
     }
 
-    public async Task<Contact> UpdateAsync(Contact contactInfo)
+    public async Task<ProcessingResult<Contact>> UpdateAsync(Contact contactInfo)
     {
-        if (contactInfo == null)
+        try
         {
-            return null;
-        }
+            var validationResult = await _validator.ValidateEntityAsync(contactInfo);
+            if (!validationResult.Success)
+            {
+                return ProcessingResult<Contact>.Invalid(validationResult.GetWholeMessage());
+            }
 
-        ProcessResult.Rest();
-        if (!await _validator.IsValidEntityAsync(contactInfo, ProcessResult))
+            var contactDao = _mapper.Map<ContactDao>(contactInfo);
+            if (contactDao == null)
+            {
+                return ProcessingResult<Contact>.Fail("Cannot convert Contact to ContactDao");
+            }
+
+            var savedContactResult = await _lookup.GetEntityAsync<ContactDao>(contactInfo.Id);
+            if (!savedContactResult.Success)
+            {
+                return ProcessingResult<Contact>.NotFound($"Cannot update contact: {contactInfo.Id}, because system cannot find it in data source");
+            }
+
+            var updatedContactDaoResult = await _contactDaoRepository.UpdateAsync(contactDao);
+            if (!updatedContactDaoResult.Success)
+            {
+                return ProcessingResult<Contact>.Fail(updatedContactDaoResult.ErrorMessage, updatedContactDaoResult.ErrorType);
+            }
+
+            var updatedContact = _mapper.Map<Contact>(updatedContactDaoResult.Value);
+            if (updatedContact == null)
+            {
+                return ProcessingResult<Contact>.Fail("Cannot convert ContactDao to Contact");
+            }
+
+            return ProcessingResult<Contact>.Ok(updatedContact);
+        }
+        catch (Exception ex)
         {
-            return null;
+            return ProcessingResult<Contact>.FromException(ex);
         }
-
-        var savedContact = await _lookup.GetEntityAsync<ContactDao>(contactInfo.Id);
-        if (savedContact == null)
-        {
-            ProcessResult.AddErrorMessage($"Cannot find contact: {contactInfo.Id} for updating");
-            return null;
-        }
-
-        // update Contact record
-        var contactDao = _mapper.Map<ContactDao>(contactInfo);
-        if (contactDao == null)
-        {
-            ProcessResult.AddErrorMessage("Cannot convert Contact to ContactDao");
-            return null;
-        }
-
-        var updatedContactDao = await _contactDaoRepository.UpdateAsync(contactDao);
-        if (updatedContactDao == null)
-        {
-            ProcessResult.PropagandaResult(_contactDaoRepository.ProcessMessage);
-        }
-
-        var updatedContact = _mapper.Map<Contact>(updatedContactDao);
-        return updatedContact;
     }
 
-    public async Task DeActivateAsync(int id)
+    public async Task<ProcessingResult<Unit>> DeActivateAsync(int id)
     {
-        ProcessResult.Rest();
-        var contact = await _contactDaoRepository.GetEntityAsync(id);
-        if (contact == null)
+        try
         {
-            ProcessResult.Success = false;
-            ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
+            var contactResult = await _contactDaoRepository.GetEntityAsync(id);
+            if (!contactResult.Success)
+            {
+                return ProcessingResult<Unit>.NotFound($"Cannot find contact with id: {id}");
+            }
+
+            var contact = contactResult.Value;
+            if (!contact.IsActivated)
+            {
+                return ProcessingResult<Unit>.Ok(Unit.Value, $"Contact with id {id} is already deactivated");
+            }
+
+            contact.IsActivated = false;
+            var updatedResult = await _contactDaoRepository.UpdateAsync(contact);
+
+            if (!updatedResult.Success)
+            {
+                return ProcessingResult<Unit>.Fail("Failed to deactivate contact");
+            }
+
+            return ProcessingResult<Unit>.Ok(Unit.Value, $"Contact with id {id} has been deactivated");
         }
-        else if (contact.IsActivated)
+        catch (Exception ex)
         {
-            try
-            {
-                contact.IsActivated = false;
-                await _contactDaoRepository.UpdateAsync(contact);
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-            }
+            return ProcessingResult<Unit>.FromException(ex);
         }
     }
-
-    public ProcessingResult ProcessResult { get; } = new();
 }

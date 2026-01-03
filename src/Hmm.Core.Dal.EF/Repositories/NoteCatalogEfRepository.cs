@@ -13,111 +13,153 @@ using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
-    public class NoteCatalogEfRepository(
-        IHmmDataContext dataContext,
-        IEntityLookup lookupRepository,
-        IDateTimeProvider dateTimeProvider,
-        ILogger logger = null)
-        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider, logger), IRepository<NoteCatalogDao>
+    public class NoteCatalogEfRepository : IRepository<NoteCatalogDao>
     {
-        public async Task<PageList<NoteCatalogDao>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        private readonly IHmmDataContext _dataContext;
+        private readonly IEntityLookup _lookupRepository;
+        private readonly ILogger _logger;
+
+        public NoteCatalogEfRepository(
+            IHmmDataContext dataContext,
+            IEntityLookup lookupRepository,
+            IDateTimeProvider dateTimeProvider,
+            ILogger logger = null)
+        {
+            Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
+            Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
+
+            _dataContext = dataContext;
+            _lookupRepository = lookupRepository;
+            _logger = logger;
+        }
+
+        public async Task<ProcessingResult<PageList<NoteCatalogDao>>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var entities = DataContext.Catalogs;
+            var entities = _dataContext.Catalogs;
 
             var result = query == null
                 ? await PageList<NoteCatalogDao>.CreateAsync(entities, pageIdx, pageSize)
                 : await PageList<NoteCatalogDao>.CreateAsync(entities.Where(query), pageIdx, pageSize);
-            return result;
+
+            var processResult = ProcessingResult<PageList<NoteCatalogDao>>.Ok(result);
+            if (_logger != null)
+            {
+                processResult.LogMessages(_logger);
+            }
+            return processResult;
         }
 
-        public async Task<NoteCatalogDao> GetEntityAsync(int id)
+        public async Task<ProcessingResult<NoteCatalogDao>> GetEntityAsync(int id)
         {
             try
             {
-                ProcessMessage.Rest();
-                var catalog = await DataContext.Catalogs.FindAsync(id);
-                return catalog;
+                var catalog = await _dataContext.Catalogs.FindAsync(id);
+
+                if (catalog == null)
+                {
+                    var result = ProcessingResult<NoteCatalogDao>.NotFound($"NoteCatalog with ID {id} not found");
+                    result.LogMessages(_logger);
+                    return result;
+                }
+
+                var successResult = ProcessingResult<NoteCatalogDao>.Ok(catalog);
+                successResult.LogMessages(_logger);
+                return successResult;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                ProcessMessage.WrapException(e);
-                return null;
+                var errorResult = ProcessingResult<NoteCatalogDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<NoteCatalogDao> AddAsync(NoteCatalogDao entity)
+        public async Task<ProcessingResult<NoteCatalogDao>> AddAsync(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            ProcessMessage.Rest();
-
             try
             {
-                // ReSharper disable once PossibleNullReferenceException
-                // reset the id to 0 to make sure it is a new entity
+                // Reset the id to 0 to make sure it is a new entity
                 entity.Id = 0;
-                DataContext.Catalogs.Add(entity);
-                await DataContext.SaveAsync();
-                return entity;
+                _dataContext.Catalogs.Add(entity);
+                await _dataContext.SaveAsync();
+
+                var result = ProcessingResult<NoteCatalogDao>.Ok(entity, $"NoteCatalog '{entity.Name}' created successfully");
+                result.LogMessages(_logger);
+                return result;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return null;
+                var errorResult = ProcessingResult<NoteCatalogDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<NoteCatalogDao> UpdateAsync(NoteCatalogDao entity)
+        public async Task<ProcessingResult<NoteCatalogDao>> UpdateAsync(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            ProcessMessage.Rest();
-
-            // ReSharper disable once PossibleNullReferenceException
-            if (entity.Id <= 0)
-            {
-                ProcessMessage.Success = false;
-                ProcessMessage.AddErrorMessage($"Can not update NoteCatalog with id {entity.Id}", true);
-                return null;
-            }
-
             try
             {
-                DataContext.Catalogs.Update(entity);
-                await DataContext.SaveAsync();
-                var newCatalog = await LookupRepository.GetEntityAsync<NoteCatalogDao>(entity.Id);
-                return newCatalog;
+                if (entity.Id <= 0)
+                {
+                    var invalidResult = ProcessingResult<NoteCatalogDao>.Invalid($"Cannot update NoteCatalog with invalid id {entity.Id}");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
+                }
+
+                _dataContext.Catalogs.Update(entity);
+                await _dataContext.SaveAsync();
+
+                var updatedCatalogResult = await _lookupRepository.GetEntityAsync<NoteCatalogDao>(entity.Id);
+                if (!updatedCatalogResult.Success)
+                {
+                    var errorResult = ProcessingResult<NoteCatalogDao>.Fail(
+                        $"NoteCatalog updated but failed to retrieve: {updatedCatalogResult.ErrorMessage}",
+                        updatedCatalogResult.ErrorType);
+                    errorResult.LogMessages(_logger);
+                    return errorResult;
+                }
+
+                var result = ProcessingResult<NoteCatalogDao>.Ok(updatedCatalogResult.Value, $"NoteCatalog '{entity.Name}' updated successfully");
+                result.LogMessages(_logger);
+                return result;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return null;
+                var errorResult = ProcessingResult<NoteCatalogDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<bool> DeleteAsync(NoteCatalogDao entity)
+        public async Task<ProcessingResult<Unit>> DeleteAsync(NoteCatalogDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            ProcessMessage.Rest();
             try
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Catalogs.Remove(entity);
-                await DataContext.SaveAsync();
-                return true;
+                _dataContext.Catalogs.Remove(entity);
+                await _dataContext.SaveAsync();
+
+                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"NoteCatalog '{entity.Name}' (ID: {entity.Id}) deleted successfully");
+                result.LogMessages(_logger);
+                return result;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return false;
+                var errorResult = ProcessingResult<Unit>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
         public void Flush()
         {
-            DataContext.Save();
+            _dataContext.Save();
         }
     }
 }

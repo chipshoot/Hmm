@@ -17,7 +17,7 @@ namespace Hmm.Core.DefaultManager
     {
         private readonly IRepository<NoteCatalogDao> _catalogRepository;
         private readonly IMapper _mapper;
-        private readonly ValidatorBase<NoteCatalog> _validator;
+        private readonly IHmmValidator<NoteCatalog> _validator;
         private readonly IEntityLookup _lookup;
 
         public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper, IEntityLookup lookup)
@@ -32,7 +32,7 @@ namespace Hmm.Core.DefaultManager
             _lookup = lookup;
         }
 
-        public async Task<PageList<NoteCatalog>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<ProcessingResult<PageList<NoteCatalog>>> GetEntitiesAsync(Expression<Func<NoteCatalog, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
@@ -44,121 +44,104 @@ namespace Hmm.Core.DefaultManager
 
                 var catalogDaos = await _catalogRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
                 var catalogs = _mapper.Map<PageList<NoteCatalog>>(catalogDaos);
-                return catalogs;
+                return ProcessingResult<PageList<NoteCatalog>>.Ok(catalogs);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<PageList<NoteCatalog>>.FromException(ex);
             }
         }
 
-        public async Task<NoteCatalog> GetEntityByIdAsync(int id)
+        public async Task<ProcessingResult<NoteCatalog>> GetEntityByIdAsync(int id)
         {
-            try
-            {
-                var catalogDao = await _lookup.GetEntityAsync<NoteCatalogDao>(id);
-                if (catalogDao == null)
-                {
-                    return null;
-                }
+            var catalogDaoResult = await _lookup.GetEntityAsync<NoteCatalogDao>(id);
 
-                var catalog = _mapper.Map<NoteCatalog>(catalogDao);
-                switch (catalog)
-                {
-                    case null:
-                        ProcessResult.AddErrorMessage("Cannot map CatalogDao to Catalog");
-                        return null;
-                    default:
-                        return catalog;
-                }
-            }
-            catch (Exception ex)
+            if (!catalogDaoResult.Success)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<NoteCatalog>.Fail(catalogDaoResult.ErrorMessage, catalogDaoResult.ErrorType);
             }
+
+            var catalogDao = catalogDaoResult.Value;
+            var catalog = _mapper.Map<NoteCatalog>(catalogDao);
+            if (catalog == null)
+            {
+                return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalogDao to NoteCatalog");
+            }
+
+            return ProcessingResult<NoteCatalog>.Ok(catalog);
         }
 
-        public async Task<NoteCatalog> CreateAsync(NoteCatalog catalog)
+        public async Task<ProcessingResult<NoteCatalog>> CreateAsync(NoteCatalog catalog)
         {
             try
             {
-                ProcessResult.Rest();
-                var isValid = await _validator.IsValidEntityAsync(catalog, ProcessResult);
-                if (!isValid)
+                var validationResult = await _validator.ValidateEntityAsync(catalog);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<NoteCatalog>.Invalid(validationResult.GetWholeMessage());
                 }
 
                 var catalogDao = _mapper.Map<NoteCatalogDao>(catalog);
                 if (catalogDao == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert NoteCatalog to NoteCatalogDao");
-                    return null;
+                    return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalog to NoteCatalogDao");
                 }
 
-                var addedCatalogDao = await _catalogRepository.AddAsync(catalogDao);
-                if (addedCatalogDao == null)
+                var addedCatalogDaoResult = await _catalogRepository.AddAsync(catalogDao);
+                if (!addedCatalogDaoResult.Success)
                 {
-                    ProcessResult.PropagandaResult(_catalogRepository.ProcessMessage);
-                    return null;
+                    return ProcessingResult<NoteCatalog>.Fail(addedCatalogDaoResult.ErrorMessage, addedCatalogDaoResult.ErrorType);
                 }
 
-                catalog.Id = addedCatalogDao.Id;
-                return catalog;
+                var createdCatalog = _mapper.Map<NoteCatalog>(addedCatalogDaoResult.Value);
+                return ProcessingResult<NoteCatalog>.Ok(createdCatalog);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<NoteCatalog>.FromException(ex);
             }
         }
 
-        public async Task<NoteCatalog> UpdateAsync(NoteCatalog catalog)
+        public async Task<ProcessingResult<NoteCatalog>> UpdateAsync(NoteCatalog catalog)
         {
             try
             {
-                if (catalog == null)
+                var validationResult = await _validator.ValidateEntityAsync(catalog);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<NoteCatalog>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                ProcessResult.Rest();
-                var isValid = await _validator.IsValidEntityAsync(catalog, ProcessResult);
-                if (!isValid)
-                {
-                    return null;
-                }
-
-                // update catalog record
                 var catalogDao = _mapper.Map<NoteCatalogDao>(catalog);
                 if (catalogDao == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot map NoteCatalog to NoteCatalogDao");
-                    return null;
+                    return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalog to NoteCatalogDao");
                 }
-                var savedCatalogDao = await _lookup.GetEntityAsync<NoteCatalogDao>(catalog.Id);
-                if (savedCatalogDao == null)
+
+                var savedCatalogResult = await _lookup.GetEntityAsync<NoteCatalogDao>(catalog.Id);
+                if (!savedCatalogResult.Success)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot found catalog: {catalog.Name} for updating.");
-                    return null;
+                    return ProcessingResult<NoteCatalog>.NotFound($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
                 }
-                var updatedCatalog = await _catalogRepository.UpdateAsync(catalogDao);
+
+                var updatedCatalogDaoResult = await _catalogRepository.UpdateAsync(catalogDao);
+                if (!updatedCatalogDaoResult.Success)
+                {
+                    return ProcessingResult<NoteCatalog>.Fail(updatedCatalogDaoResult.ErrorMessage, updatedCatalogDaoResult.ErrorType);
+                }
+
+                var updatedCatalog = _mapper.Map<NoteCatalog>(updatedCatalogDaoResult.Value);
                 if (updatedCatalog == null)
                 {
-                    ProcessResult.PropagandaResult(_catalogRepository.ProcessMessage);
+                    return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalogDao to NoteCatalog");
                 }
 
-                return catalog;
+                return ProcessingResult<NoteCatalog>.Ok(updatedCatalog);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<NoteCatalog>.FromException(ex);
             }
         }
-
-        public ProcessingResult ProcessResult { get; } = new();
     }
 }

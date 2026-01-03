@@ -14,145 +14,193 @@ using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
-    public class TagEfRepository(
-        IHmmDataContext dataContext,
-        IEntityLookup lookupRepository,
-        IDateTimeProvider dateTimeProvider,
-        ILogger logger = null)
-        : RepositoryBase(dataContext, lookupRepository, dateTimeProvider, logger), ICompositeEntityRepository<TagDao, HmmNoteDao>
+    public class TagEfRepository : ICompositeEntityRepository<TagDao, HmmNoteDao>
     {
-        public async Task<PageList<TagDao>> GetEntitiesAsync(Expression<Func<TagDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        private readonly IHmmDataContext _dataContext;
+        private readonly IEntityLookup _lookupRepository;
+        private readonly ILogger _logger;
+
+        public TagEfRepository(
+            IHmmDataContext dataContext,
+            IEntityLookup lookupRepository,
+            IDateTimeProvider dateTimeProvider,
+            ILogger logger = null)
+        {
+            Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
+            Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
+
+            _dataContext = dataContext;
+            _lookupRepository = lookupRepository;
+            _logger = logger;
+        }
+
+        public async Task<ProcessingResult<PageList<TagDao>>> GetEntitiesAsync(Expression<Func<TagDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var entities = DataContext.Tags;
+            var entities = _dataContext.Tags;
 
             var result = query == null
                 ? await PageList<TagDao>.CreateAsync(entities, pageIdx, pageSize)
                 : await PageList<TagDao>.CreateAsync(entities.Where(query), pageIdx, pageSize);
-            return result;
+
+            var processResult = ProcessingResult<PageList<TagDao>>.Ok(result);
+            if (_logger != null)
+            {
+                processResult.LogMessages(_logger);
+            }
+            return processResult;
         }
 
-        public async Task<PageList<HmmNoteDao>> GetNoteByTagAsync(int tagId, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<ProcessingResult<PageList<HmmNoteDao>>> GetNoteByTagAsync(int tagId, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            ProcessMessage.Rest();
             try
             {
-                var tag = await DataContext.Tags.Include(t => t.Notes).AsNoTracking().FirstOrDefaultAsync(t => t.Id == tagId);
+                var tag = await _dataContext.Tags.Include(t => t.Notes).AsNoTracking().FirstOrDefaultAsync(t => t.Id == tagId);
 
-                PageList<HmmNoteDao> notePage = null;
-                if (tag != null)
+                if (tag == null)
                 {
-                    if (resourceCollectionParameters != null)
-                    {
-                        var noteList = tag.Notes
-                            .Skip((resourceCollectionParameters.PageNumber - 1) * resourceCollectionParameters.PageSize)
-                            .Take(resourceCollectionParameters.PageSize)
-                            .Select(r => r.Note).ToList();
-                        notePage = new PageList<HmmNoteDao>(noteList, tag.Notes.Count(), resourceCollectionParameters.PageNumber,
-                            resourceCollectionParameters.PageSize);
-                    }
-                    else
-                    {
-                        var noteList = tag.Notes.Select(r => r.Note).ToList();
-                        notePage = new PageList<HmmNoteDao>(noteList, 1, 1, tag.Notes.Count());
-                    }
+                    var notFoundResult = ProcessingResult<PageList<HmmNoteDao>>.NotFound($"Tag with ID {tagId} not found");
+                    notFoundResult.LogMessages(_logger);
+                    return notFoundResult;
                 }
 
-                return notePage;
+                PageList<HmmNoteDao> notePage;
+                if (resourceCollectionParameters != null)
+                {
+                    var noteList = tag.Notes
+                        .Skip((resourceCollectionParameters.PageNumber - 1) * resourceCollectionParameters.PageSize)
+                        .Take(resourceCollectionParameters.PageSize)
+                        .Select(r => r.Note).ToList();
+                    notePage = new PageList<HmmNoteDao>(noteList, tag.Notes.Count(), resourceCollectionParameters.PageNumber,
+                        resourceCollectionParameters.PageSize);
+                }
+                else
+                {
+                    var noteList = tag.Notes.Select(r => r.Note).ToList();
+                    notePage = new PageList<HmmNoteDao>(noteList, 1, 1, tag.Notes.Count());
+                }
+
+                var result = ProcessingResult<PageList<HmmNoteDao>>.Ok(notePage);
+                result.LogMessages(_logger);
+                return result;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                ProcessMessage.WrapException(e);
-                return null;
+                var errorResult = ProcessingResult<PageList<HmmNoteDao>>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<TagDao> GetEntityAsync(int id)
+        public async Task<ProcessingResult<TagDao>> GetEntityAsync(int id)
         {
             try
             {
-                ProcessMessage.Rest();
-                var tag = await DataContext.Tags
+                var tag = await _dataContext.Tags
                     .FirstOrDefaultAsync(t => t.Id == id);
-                return tag;
-            }
-            catch (Exception e)
-            {
-                ProcessMessage.WrapException(e);
-                return null;
-            }
-        }
 
-        public async Task<TagDao> AddAsync(TagDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+                if (tag == null)
+                {
+                    var result = ProcessingResult<TagDao>.NotFound($"Tag with ID {id} not found");
+                    result.LogMessages(_logger);
+                    return result;
+                }
 
-            ProcessMessage.Rest();
-
-            try
-            {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Tags.Add(entity);
-                await DataContext.SaveAsync();
-                return entity;
+                var successResult = ProcessingResult<TagDao>.Ok(tag);
+                successResult.LogMessages(_logger);
+                return successResult;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return null;
+                var errorResult = ProcessingResult<TagDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<TagDao> UpdateAsync(TagDao entity)
+        public async Task<ProcessingResult<TagDao>> AddAsync(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            ProcessMessage.Rest();
-
-            // ReSharper disable once PossibleNullReferenceException
-            if (entity.Id <= 0)
-            {
-                ProcessMessage.Success = false;
-                ProcessMessage.AddErrorMessage($"Can not update Tag with id {entity.Id}", true);
-                return null;
-            }
-
             try
             {
-                DataContext.Tags.Update(entity);
-                await DataContext.SaveAsync();
-                var newTag = await LookupRepository.GetEntityAsync<TagDao>(entity.Id);
-                return newTag;
+                _dataContext.Tags.Add(entity);
+                await _dataContext.SaveAsync();
+
+                var result = ProcessingResult<TagDao>.Ok(entity, $"Tag '{entity.Name}' created successfully");
+                result.LogMessages(_logger);
+                return result;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return null;
+                var errorResult = ProcessingResult<TagDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<bool> DeleteAsync(TagDao entity)
+        public async Task<ProcessingResult<TagDao>> UpdateAsync(TagDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            ProcessMessage.Rest();
             try
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
-                DataContext.Tags.Remove(entity);
-                await DataContext.SaveAsync();
-                return true;
+                if (entity.Id <= 0)
+                {
+                    var invalidResult = ProcessingResult<TagDao>.Invalid($"Cannot update Tag with invalid id {entity.Id}");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
+                }
+
+                _dataContext.Tags.Update(entity);
+                await _dataContext.SaveAsync();
+
+                var updatedTagResult = await _lookupRepository.GetEntityAsync<TagDao>(entity.Id);
+                if (!updatedTagResult.Success)
+                {
+                    var errorResult = ProcessingResult<TagDao>.Fail(
+                        $"Tag updated but failed to retrieve: {updatedTagResult.ErrorMessage}",
+                        updatedTagResult.ErrorType);
+                    errorResult.LogMessages(_logger);
+                    return errorResult;
+                }
+
+                var result = ProcessingResult<TagDao>.Ok(updatedTagResult.Value, $"Tag '{entity.Name}' updated successfully");
+                result.LogMessages(_logger);
+                return result;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return false;
+                var errorResult = ProcessingResult<TagDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
+            }
+        }
+
+        public async Task<ProcessingResult<Unit>> DeleteAsync(TagDao entity)
+        {
+            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            try
+            {
+                _dataContext.Tags.Remove(entity);
+                await _dataContext.SaveAsync();
+
+                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Tag '{entity.Name}' (ID: {entity.Id}) deleted successfully");
+                result.LogMessages(_logger);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorResult = ProcessingResult<Unit>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
         public void Flush()
         {
-            DataContext.Save();
+            _dataContext.Save();
         }
     }
 }

@@ -8,33 +8,33 @@ namespace Hmm.Utility.Validation
 {
     public abstract class ValidatorBase<T> : AbstractValidator<T>, IHmmValidator<T>
     {
-        public async Task<bool> IsValidEntityAsync(T entity, ProcessingResult processResult)
+        /// <summary>
+        /// Validates an entity and returns an immutable Result.
+        /// Thread-safe and eliminates race conditions.
+        /// </summary>
+        public async Task<ProcessingResult<T>> ValidateEntityAsync(T entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
-            Guard.Against<ArgumentNullException>(processResult == null, nameof(processResult));
 
             try
             {
-                var result = await ValidateAsync(entity);
-                if (result.IsValid)
+                var validationResult = await ValidateAsync(entity);
+
+                if (validationResult.IsValid)
                 {
-                    return true;
+                    return ProcessingResult<T>.Ok(entity);
                 }
 
-                // ReSharper disable once PossibleNullReferenceException
-                processResult.Success = false;
-                processResult.MessageList.AddRange(result.Errors.Select(e =>
-                   new ReturnMessage
-                   {
-                       Message = $"{e.PropertyName} : {e.ErrorMessage}",
-                       Type = MessageType.Error
-                   }));
-                return false;
+                // Convert FluentValidation errors to Result error messages
+                var errorMessages = validationResult.Errors
+                    .Select(e => $"{e.PropertyName}: {e.ErrorMessage}")
+                    .ToArray();
+
+                return ProcessingResult<T>.Invalid(errorMessages);
             }
             catch (Exception ex)
             {
-                processResult?.WrapException(ex);
-                return false;
+                return ProcessingResult<T>.FromException(ex);
             }
         }
     }

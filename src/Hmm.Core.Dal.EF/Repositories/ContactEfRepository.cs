@@ -16,6 +16,7 @@ public class ContactEfRepository : IRepository<ContactDao>
 {
     private readonly IHmmDataContext _dataContext;
     private readonly IEntityLookup _lookupRepository;
+    private readonly ILogger _logger;
 
     public ContactEfRepository(IHmmDataContext dataContext, IEntityLookup lookupRepository, ILogger logger = null)
     {
@@ -24,94 +25,125 @@ public class ContactEfRepository : IRepository<ContactDao>
 
         _dataContext = dataContext;
         _lookupRepository = lookupRepository;
-        ProcessMessage = logger != null ? new ProcessingResult(logger) : new ProcessingResult();
+        _logger = logger;
     }
 
-    public async Task<PageList<ContactDao>> GetEntitiesAsync(Expression<Func<ContactDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+    public async Task<ProcessingResult<PageList<ContactDao>>> GetEntitiesAsync(Expression<Func<ContactDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
     {
-        var contacts = await _lookupRepository.GetEntitiesAsync(query, resourceCollectionParameters);
-        return contacts;
+        var contactsResult = await _lookupRepository.GetEntitiesAsync<ContactDao>(query, resourceCollectionParameters);
+
+        if (_logger != null && contactsResult.Success)
+        {
+            contactsResult.LogMessages(_logger);
+        }
+
+        return contactsResult;
     }
 
-    public async Task<ContactDao> GetEntityAsync(int id)
+    public async Task<ProcessingResult<ContactDao>> GetEntityAsync(int id)
     {
-        ProcessMessage.Rest();
         try
         {
             var contact = await _dataContext.Contacts.FindAsync(id);
-            return contact;
-        }
-        catch (Exception e)
-        {
-            ProcessMessage.WrapException(e);
-            return null;
-        }
-    }
 
-    public async Task<ContactDao> AddAsync(ContactDao entity)
-    {
-        Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            if (contact == null)
+            {
+                var result = ProcessingResult<ContactDao>.NotFound($"Contact with ID {id} not found");
+                result.LogMessages(_logger);
+                return result;
+            }
 
-        ProcessMessage.Rest();
-        try
-        {
-            // ReSharper disable once PossibleNullReferenceException
-            // reset id to 0 to make sure it is a new entity
-            entity.Id = 0;
-            _dataContext.Contacts.Add(entity);
-            await _dataContext.SaveAsync();
-            return entity;
+            var successResult = ProcessingResult<ContactDao>.Ok(contact);
+            successResult.LogMessages(_logger);
+            return successResult;
         }
         catch (Exception ex)
         {
-            ProcessMessage.WrapException(ex);
-            return null;
+            var errorResult = ProcessingResult<ContactDao>.FromException(ex);
+            errorResult.LogMessages(_logger);
+            return errorResult;
         }
     }
 
-    public async Task<ContactDao> UpdateAsync(ContactDao entity)
+    public async Task<ProcessingResult<ContactDao>> AddAsync(ContactDao entity)
     {
         Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-        ProcessMessage.Rest();
         try
         {
-            // ReSharper disable once PossibleNullReferenceException
+            // Reset id to 0 to make sure it is a new entity
+            entity.Id = 0;
+            _dataContext.Contacts.Add(entity);
+            await _dataContext.SaveAsync();
+
+            var result = ProcessingResult<ContactDao>.Ok(entity, $"Contact for '{entity.Contact}' created successfully");
+            result.LogMessages(_logger);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var errorResult = ProcessingResult<ContactDao>.FromException(ex);
+            errorResult.LogMessages(_logger);
+            return errorResult;
+        }
+    }
+
+    public async Task<ProcessingResult<ContactDao>> UpdateAsync(ContactDao entity)
+    {
+        Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+        try
+        {
             if (entity.Id <= 0)
             {
-                ProcessMessage.Success = false;
-                ProcessMessage.AddErrorMessage($"Can not update contact with id {entity.Id}");
-                return null;
+                var invalidResult = ProcessingResult<ContactDao>.Invalid($"Cannot update contact with invalid id {entity.Id}");
+                invalidResult.LogMessages(_logger);
+                return invalidResult;
             }
 
             _dataContext.Contacts.Update(entity);
             await _dataContext.SaveAsync();
-            var updateContactDb = await _lookupRepository.GetEntityAsync<ContactDao>(entity.Id);
-            return updateContactDb;
+
+            var updatedContactResult = await _lookupRepository.GetEntityAsync<ContactDao>(entity.Id);
+            if (!updatedContactResult.Success)
+            {
+                var errorResult = ProcessingResult<ContactDao>.Fail(
+                    $"Contact updated but failed to retrieve: {updatedContactResult.ErrorMessage}",
+                    updatedContactResult.ErrorType);
+                errorResult.LogMessages(_logger);
+                return errorResult;
+            }
+
+            var result = ProcessingResult<ContactDao>.Ok(updatedContactResult.Value, $"Contact for '{entity.Contact}' updated successfully");
+            result.LogMessages(_logger);
+            return result;
         }
         catch (Exception ex)
         {
-            ProcessMessage.WrapException(ex);
-            return null;
+            var errorResult = ProcessingResult<ContactDao>.FromException(ex);
+            errorResult.LogMessages(_logger);
+            return errorResult;
         }
     }
 
-    public async Task<bool> DeleteAsync(ContactDao entity)
+    public async Task<ProcessingResult<Unit>> DeleteAsync(ContactDao entity)
     {
         Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-        ProcessMessage.Rest();
         try
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
             _dataContext.Contacts.Remove(entity);
             await _dataContext.SaveAsync();
-            return true;
+
+            var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Contact for '{entity.Contact}' (ID: {entity.Id}) deleted successfully");
+            result.LogMessages(_logger);
+            return result;
         }
         catch (Exception ex)
         {
-            ProcessMessage.WrapException(ex);
-            return false;
+            var errorResult = ProcessingResult<Unit>.FromException(ex);
+            errorResult.LogMessages(_logger);
+            return errorResult;
         }
     }
 
@@ -119,6 +151,4 @@ public class ContactEfRepository : IRepository<ContactDao>
     {
         _dataContext.Save();
     }
-
-    public ProcessingResult ProcessMessage { get; }
 }

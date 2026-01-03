@@ -21,7 +21,7 @@ namespace Hmm.Core.DefaultManager
 
         private readonly IVersionRepository<HmmNoteDao> _noteRepository;
         private readonly IMapper _mapper;
-        private readonly NoteValidator _validator;
+        private readonly IHmmValidator<HmmNote> _validator;
         private readonly IDateTimeProvider _dateProvider;
         private readonly ITagManager _tagManager;
         private readonly IEntityLookup _lookup;
@@ -43,58 +43,65 @@ namespace Hmm.Core.DefaultManager
             _validator = new NoteValidator(_lookup);
         }
 
-        public async Task<PageList<HmmNote>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<ProcessingResult<PageList<HmmNote>>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            PageList<HmmNoteDao> noteDaos;
+            ProcessingResult<PageList<HmmNoteDao>> noteDaosResult;
             if (query != null)
             {
                 var daoQuery = ExpressionMapper<HmmNote, HmmNoteDao>.MapExpression(query);
                 var predicate = PredicateBuilder.True<HmmNoteDao>();
                 predicate = predicate.And(daoQuery);
                 predicate = includeDeleted ? predicate : predicate.And(n => !n.IsDeleted);
-                noteDaos = await _noteRepository.GetEntitiesAsync(predicate, resourceCollectionParameters);
+                noteDaosResult = await _noteRepository.GetEntitiesAsync(predicate, resourceCollectionParameters);
             }
             else
             {
-                noteDaos = includeDeleted
+                noteDaosResult = includeDeleted
                     ? await _noteRepository.GetEntitiesAsync(null, resourceCollectionParameters)
                     : await _noteRepository.GetEntitiesAsync(n => !n.IsDeleted, resourceCollectionParameters);
             }
 
-            var notes = _mapper.Map<PageList<HmmNote>>(noteDaos);
-            return notes;
+            if (!noteDaosResult.Success)
+            {
+                return ProcessingResult<PageList<HmmNote>>.Fail(noteDaosResult.ErrorMessage, noteDaosResult.ErrorType);
+            }
+
+            var notes = _mapper.Map<PageList<HmmNote>>(noteDaosResult.Value);
+            return ProcessingResult<PageList<HmmNote>>.Ok(notes);
         }
 
-        public async Task<HmmNote> GetNoteByIdAsync(int id, bool includeDelete = false)
+        public async Task<ProcessingResult<HmmNote>> GetNoteByIdAsync(int id, bool includeDelete = false)
         {
-            var noteDao = await _lookup.GetEntityAsync<HmmNoteDao>(id);
-            switch (noteDao)
+            var noteDaoResult = await _lookup.GetEntityAsync<HmmNoteDao>(id);
+
+            if (!noteDaoResult.Success)
             {
-                case null:
-                case { IsDeleted: true } when !includeDelete:
-                    return null;
+                return ProcessingResult<HmmNote>.Fail(noteDaoResult.ErrorMessage, noteDaoResult.ErrorType);
+            }
+
+            var noteDao = noteDaoResult.Value;
+            if (noteDao.IsDeleted && !includeDelete)
+            {
+                return ProcessingResult<HmmNote>.Deleted($"Note with ID {id} has been deleted");
             }
 
             var note = _mapper.Map<HmmNote>(noteDao);
-            switch (note)
+            if (note == null)
             {
-                case null:
-                    ProcessResult.AddErrorMessage("Cannot map NoteDao to Note");
-                    return null;
-
-                default:
-                    return note;
+                return ProcessingResult<HmmNote>.Fail("Cannot convert HmmNoteDao to HmmNote");
             }
+
+            return ProcessingResult<HmmNote>.Ok(note);
         }
 
-        public async Task<HmmNote> CreateAsync(HmmNote note)
+        public async Task<ProcessingResult<HmmNote>> CreateAsync(HmmNote note)
         {
             try
             {
-                ProcessResult.Rest();
-                if (!await _validator.IsValidEntityAsync(note, ProcessResult))
+                var validationResult = await _validator.ValidateEntityAsync(note);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<HmmNote>.Invalid(validationResult.GetWholeMessage());
                 }
 
                 note.CreateDate = _dateProvider.UtcNow;
@@ -102,199 +109,205 @@ namespace Hmm.Core.DefaultManager
                 var noteDao = _mapper.Map<HmmNoteDao>(note);
                 if (noteDao == null)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot map note {note.Subject} to NoteDao");
-                    return null;
-                }
-                var ret = await _noteRepository.AddAsync(noteDao);
-                if (ret == null)
-                {
-                    ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-                    return null;
+                    return ProcessingResult<HmmNote>.Fail($"Cannot convert note {note.Subject} to NoteDao");
                 }
 
-                note.Id = ret.Id;
-                note.Version = ret.Version;
-                return note;
+                var addedNoteDaoResult = await _noteRepository.AddAsync(noteDao);
+                if (!addedNoteDaoResult.Success)
+                {
+                    return ProcessingResult<HmmNote>.Fail(addedNoteDaoResult.ErrorMessage, addedNoteDaoResult.ErrorType);
+                }
+
+                var createdNote = _mapper.Map<HmmNote>(addedNoteDaoResult.Value);
+                return ProcessingResult<HmmNote>.Ok(createdNote);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<HmmNote>.FromException(ex);
             }
         }
 
-        public async Task<HmmNote> UpdateAsync(HmmNote note)
+        public async Task<ProcessingResult<HmmNote>> UpdateAsync(HmmNote note)
         {
             try
             {
-                ProcessResult.Rest();
-                var isValid = await _validator.IsValidEntityAsync(note, ProcessResult);
-                if (!isValid)
+                var validationResult = await _validator.ValidateEntityAsync(note);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<HmmNote>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                // make sure not update note which get cached in current session
-                var curNoteDao = await GetNoteByIdAsync(note.Id);
-                if (curNoteDao == null)
+                // Make sure not to update note which is cached in current session
+                var curNoteResult = await GetNoteByIdAsync(note.Id);
+                if (!curNoteResult.Success)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot find note {note.Id} ");
-                    return null;
+                    return ProcessingResult<HmmNote>.NotFound($"Cannot update note: {note.Id}, because system cannot find it in data source");
                 }
 
                 var noteDao = _mapper.Map<HmmNoteDao>(note);
                 if (noteDao == null)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot map note {note.Subject} to NoteDao");
-                    return null;
+                    return ProcessingResult<HmmNote>.Fail($"Cannot convert note {note.Subject} to NoteDao");
                 }
 
                 noteDao.LastModifiedDate = _dateProvider.UtcNow;
-                var updatedNoteDao = await _noteRepository.UpdateAsync(noteDao);
-                if (updatedNoteDao == null)
+                var updatedNoteDaoResult = await _noteRepository.UpdateAsync(noteDao);
+                if (!updatedNoteDaoResult.Success)
                 {
-                    ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-                    return null;
+                    return ProcessingResult<HmmNote>.Fail(updatedNoteDaoResult.ErrorMessage, updatedNoteDaoResult.ErrorType);
                 }
 
-                var updatedNote = _mapper.Map<HmmNote>(updatedNoteDao);
+                var updatedNote = _mapper.Map<HmmNote>(updatedNoteDaoResult.Value);
                 if (updatedNote == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot map NoteDao to note");
-                    return null;
+                    return ProcessingResult<HmmNote>.Fail("Cannot convert NoteDao to HmmNote");
                 }
 
-                return updatedNote;
+                return ProcessingResult<HmmNote>.Ok(updatedNote);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<HmmNote>.FromException(ex);
             }
         }
 
-        public async Task<List<Tag>> ApplyTag(HmmNote note, Tag tag)
+        public async Task<ProcessingResult<List<Tag>>> ApplyTag(HmmNote note, Tag tag)
         {
             try
             {
-                ProcessResult.Rest();
-
-                // Retrieve the HmmNote entity based on the HmmNoteDao
-                var hmmNote = await GetNoteByIdAsync(note.Id);
-                if (hmmNote == null)
+                // Retrieve the HmmNote entity
+                var hmmNoteResult = await GetNoteByIdAsync(note.Id);
+                if (!hmmNoteResult.Success)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot find note {note.Id}");
-                    return null;
+                    return ProcessingResult<List<Tag>>.Fail($"Cannot find note {note.Id}: {hmmNoteResult.ErrorMessage}", hmmNoteResult.ErrorType);
                 }
+                var hmmNote = hmmNoteResult.Value;
 
-                // Check if the tag exits in system
-                Tag retrievedTag;
+                // Check if the tag exists in system
+                Tag retrievedTag = null;
                 if (tag.Id > 0)
                 {
-                    retrievedTag = await _tagManager.GetTagByIdAsync(tag.Id);
+                    var tagResult = await _tagManager.GetTagByIdAsync(tag.Id);
+                    if (tagResult.Success)
+                    {
+                        retrievedTag = tagResult.Value;
+                    }
                 }
                 else
                 {
-                    retrievedTag = await _tagManager.GetTagByNameAsync(tag.Name);
-                    retrievedTag ??= await _tagManager.CreateAsync(tag);
+                    var tagByNameResult = await _tagManager.GetTagByNameAsync(tag.Name);
+                    if (tagByNameResult.Success)
+                    {
+                        retrievedTag = tagByNameResult.Value;
+                    }
+                    else
+                    {
+                        var createdTagResult = await _tagManager.CreateAsync(tag);
+                        if (createdTagResult.Success)
+                        {
+                            retrievedTag = createdTagResult.Value;
+                        }
+                    }
                 }
 
                 if (retrievedTag == null)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot create tag {tag.Name}");
-                    return null;
+                    return ProcessingResult<List<Tag>>.Fail($"Cannot create or find tag {tag.Name}");
                 }
 
                 if (!retrievedTag.IsActivated)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot apply deactivated tag {tag.Name}");
-                    return null;
+                    return ProcessingResult<List<Tag>>.Invalid($"Cannot apply deactivated tag {tag.Name}");
                 }
 
                 // Check if the tag is already associated with the HmmNote entity
                 if (hmmNote.Tags.Any(t => t.Id == retrievedTag.Id))
                 {
-                    ProcessResult.AddInfoMessage($"Tag {tag.Name} is already associated with note {note.Id}");
-                    return hmmNote.Tags;
+                    return ProcessingResult<List<Tag>>.Ok(hmmNote.Tags, $"Tag {tag.Name} is already associated with note {note.Id}");
                 }
 
                 // Apply the tag to the HmmNote entity
                 hmmNote.Tags.Add(retrievedTag);
 
                 // Update the HmmNote entity in the repository
-                var updatedHmmNote = await UpdateAsync(hmmNote);
+                var updatedHmmNoteResult = await UpdateAsync(hmmNote);
+                if (!updatedHmmNoteResult.Success)
+                {
+                    return ProcessingResult<List<Tag>>.Fail(updatedHmmNoteResult.ErrorMessage, updatedHmmNoteResult.ErrorType);
+                }
+
+                var updatedHmmNote = updatedHmmNoteResult.Value;
                 note.Tags = updatedHmmNote.Tags;
 
                 // Return the list of tags associated with the HmmNote entity
-                return updatedHmmNote.Tags;
+                return ProcessingResult<List<Tag>>.Ok(updatedHmmNote.Tags);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<List<Tag>>.FromException(ex);
             }
         }
 
-        public async Task<List<Tag>> RemoveTag(HmmNote note, int tagId)
+        public async Task<ProcessingResult<List<Tag>>> RemoveTag(HmmNote note, int tagId)
         {
             try
             {
-                ProcessResult.Rest();
-
-                // Retrieve the HmmNote entity based on the HmmNoteDao
-                var hmmNote = await GetNoteByIdAsync(note.Id);
-                if (hmmNote == null)
+                // Retrieve the HmmNote entity
+                var hmmNoteResult = await GetNoteByIdAsync(note.Id);
+                if (!hmmNoteResult.Success)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot find note {note.Id}");
-                    return null;
+                    return ProcessingResult<List<Tag>>.Fail($"Cannot find note {note.Id}: {hmmNoteResult.ErrorMessage}", hmmNoteResult.ErrorType);
                 }
+                var hmmNote = hmmNoteResult.Value;
 
-                // Check if the tag is already associated with the HmmNote entity
+                // Check if the tag is associated with the HmmNote entity
                 var tag = hmmNote.Tags.FirstOrDefault(t => t.Id == tagId);
                 if (tag == null)
                 {
-                    ProcessResult.AddInfoMessage($"Tag {tagId} is does not associated with note {note.Id}");
-                    return hmmNote.Tags;
+                    return ProcessingResult<List<Tag>>.Ok(hmmNote.Tags, $"Tag {tagId} is not associated with note {note.Id}");
                 }
 
-                // Apply the tag to the HmmNote entity
+                // Remove the tag from the HmmNote entity
                 hmmNote.Tags.Remove(tag);
 
                 // Update the HmmNote entity in the repository
-                var updatedHmmNote = await UpdateAsync(hmmNote);
+                var updatedHmmNoteResult = await UpdateAsync(hmmNote);
+                if (!updatedHmmNoteResult.Success)
+                {
+                    return ProcessingResult<List<Tag>>.Fail(updatedHmmNoteResult.ErrorMessage, updatedHmmNoteResult.ErrorType);
+                }
+
+                var updatedHmmNote = updatedHmmNoteResult.Value;
                 note.Tags = updatedHmmNote.Tags;
 
                 // Return the list of tags associated with the HmmNote entity
-                return updatedHmmNote.Tags;
+                return ProcessingResult<List<Tag>>.Ok(updatedHmmNote.Tags);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<List<Tag>>.FromException(ex);
             }
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<ProcessingResult<Unit>> DeleteAsync(int id)
         {
-            var noteDao = await GetNoteByIdAsync(id);
+            var noteResult = await GetNoteByIdAsync(id);
 
-            if (noteDao == null)
+            if (!noteResult.Success)
             {
-                ProcessResult.AddErrorMessage($"Cannot find note with id {id}", true);
-                return false;
+                return ProcessingResult<Unit>.NotFound($"Cannot find note with id {id}");
             }
 
-            noteDao.IsDeleted = true;
-            var deletedNoteDao = await UpdateAsync(noteDao);
-            if (deletedNoteDao != null)
+            var note = noteResult.Value;
+            note.IsDeleted = true;
+            var deletedNoteResult = await UpdateAsync(note);
+
+            if (!deletedNoteResult.Success)
             {
-                return true;
+                return ProcessingResult<Unit>.Fail(deletedNoteResult.ErrorMessage, deletedNoteResult.ErrorType);
             }
 
-            ProcessResult.PropagandaResult(_noteRepository.ProcessMessage);
-            return false;
+            return ProcessingResult<Unit>.Ok(Unit.Value, $"Note with id {id} has been deleted");
         }
-
-        public ProcessingResult ProcessResult { get; } = new();
     }
 }

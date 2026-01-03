@@ -9,25 +9,23 @@ namespace Hmm.Core
 {
     public interface ITagManager
     {
-        Task<PageList<Tag>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<ProcessingResult<PageList<Tag>>> GetEntitiesAsync(Expression<Func<Tag, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         Task<bool> IsTagExistsAsync(int id);
 
-        Task<Tag> GetTagByIdAsync(int id);
+        Task<ProcessingResult<Tag>> GetTagByIdAsync(int id);
 
-        Task<Tag> GetTagByNameAsync(string name);
+        Task<ProcessingResult<Tag>> GetTagByNameAsync(string name);
 
-        Task<Tag> CreateAsync(Tag tag);
+        Task<ProcessingResult<Tag>> CreateAsync(Tag tag);
 
-        Task<Tag> UpdateAsync(Tag tag);
+        Task<ProcessingResult<Tag>> UpdateAsync(Tag tag);
 
         /// <summary>
-        /// Set the flag to deactivate author to make it invisible for system.
-        /// author may be associated with note, so we not want to delete everything
+        /// Set the flag to deactivate tag to make it invisible for system.
+        /// tag may be associated with note, so we not want to delete everything
         /// </summary>
-        /// <param name="id">The id of author whose activate flag will be set</param>
-        Task DeActivateAsync(int id);
-
-        ProcessingResult ProcessResult { get; }
+        /// <param name="id">The id of tag whose activate flag will be set</param>
+        Task<ProcessingResult<Unit>> DeActivateAsync(int id);
     }
 }

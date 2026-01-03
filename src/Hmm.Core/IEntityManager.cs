@@ -14,33 +14,27 @@ namespace Hmm.Core
         /// </summary>
         /// <param name="entity">The <see cref="Entity"/> object which contains all
         /// new entity information except entity id.</param>
-        /// <returns>if entity successfully be created, return the entity with unique id,
-        /// otherwise return null</returns>
-        Task<T> CreateAsync(T entity);
+        /// <returns>ProcessingResult containing the created entity with unique id, or error information if the operation failed</returns>
+        Task<ProcessingResult<T>> CreateAsync(T entity);
 
         /// <summary>
         /// Updates the specified entity with new information asynchronously.
         /// </summary>
         /// <param name="entity">The <see cref="Entity"/> with update information and id </param>
-        /// <returns>if entity has been updated successfully, return updated entity, otherwise return
-        ///  null </returns>
-        Task<T> UpdateAsync(T entity);
+        /// <returns>ProcessingResult containing the updated entity, or error information if the operation failed</returns>
+        Task<ProcessingResult<T>> UpdateAsync(T entity);
 
         /// <summary>
         /// Get <see cref="Entity"/> list from data source asynchronously.
         /// </summary>
-        Task<PageList<T>> GetEntitiesAsync(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        /// <returns>ProcessingResult containing the paginated list of entities, or error information if the operation failed</returns>
+        Task<ProcessingResult<PageList<T>>> GetEntitiesAsync(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
         /// Get <see cref="Entity"/> with id asynchronously.
         /// </summary>
         /// <param name="id">Entity id</param>
-        /// <returns>Entity with id, null if no entity found</returns>
-        Task<T> GetEntityByIdAsync(int id);
-
-        /// <summary>
-        /// The processing result of the interface, contains the flag for result (fail or success) and message
-        /// </summary>
-        ProcessingResult ProcessResult { get; }
+        /// <returns>ProcessingResult containing the entity if found, NotFound if entity doesn't exist, or error information if the operation failed</returns>
+        Task<ProcessingResult<T>> GetEntityByIdAsync(int id);
     }
 }
