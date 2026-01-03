@@ -2,8 +2,30 @@
 {
     public class ReturnMessage
     {
-        public string Message { get; set; }
+       /// <summary>
+        /// The message content
+        /// </summary>
+        public string Message { get; init; }
 
-        public MessageType Type { get; set; }
+        /// <summary>
+        /// The type/severity of the message
+        /// </summary>
+        public MessageType Type { get; init; }
+
+        /// <summary>
+        /// Creates a new return message
+        /// </summary>
+        public ReturnMessage()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new return message with specified values
+        /// </summary>
+        public ReturnMessage(string message, MessageType type)
+        {
+            Message = message;
+            Type = type;
+        }
     }
 }

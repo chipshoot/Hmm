@@ -18,19 +18,15 @@ namespace Hmm.Utility.Dal.Query
         /// <param name="resourceCollectionParameters">Resource collection control information, e.g. pagination, sort and search information.
         /// if null applied system will use default pagination setting for the searching</param>
         /// <returns>
-        /// The list of entity that match the criteria
+        /// ProcessingResult containing the list of entities that match the criteria, or error information if the operation failed
         /// </returns>
-        Task<PageList<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<ProcessingResult<PageList<T>>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>
-        /// Gets the int id entity by its id asynchronously.
+        /// Gets the entity by its id asynchronously.
         /// </summary>
-        /// <returns>The entity that get id</returns>
-        Task<T> GetEntityAsync<T>(int id) where T : Entity;
-
-        /// <summary>
-        /// Hole query processing result
-        /// </summary>
-        ProcessingResult ProcessResult { get; }
+        /// <param name="id">The entity id</param>
+        /// <returns>ProcessingResult containing the entity if found, NotFound if entity doesn't exist, or error information if the operation failed</returns>
+        Task<ProcessingResult<T>> GetEntityAsync<T>(int id) where T : Entity;
     }
 }

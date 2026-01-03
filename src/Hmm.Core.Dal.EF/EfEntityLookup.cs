@@ -23,58 +23,75 @@ namespace Hmm.Core.Dal.EF
             _dataContext = dataContext;
         }
 
-        public async Task<PageList<T>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<ProcessingResult<PageList<T>>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var entities = GetQueryableEntities<T>();
+            try
+            {
+                var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
+                var entities = GetQueryableEntities<T>();
 
-            var result = query == null
-                ? await PageList<T>.CreateAsync(entities, pageIdx, pageSize)
-                : await PageList<T>.CreateAsync(entities.Where(query), pageIdx, pageSize);
+                var result = query == null
+                    ? await PageList<T>.CreateAsync(entities, pageIdx, pageSize)
+                    : await PageList<T>.CreateAsync(entities.Where(query), pageIdx, pageSize);
 
-            return result;
+                return ProcessingResult<PageList<T>>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ProcessingResult<PageList<T>>.FromException(ex);
+            }
         }
 
-        public async Task<T> GetEntityAsync<T>(int id) where T : Entity
+        public async Task<ProcessingResult<T>> GetEntityAsync<T>(int id) where T : Entity
         {
-            T entity;
-            if (typeof(T) == typeof(AuthorDao))
+            try
             {
-                entity = await _dataContext.Authors
-                    .AsNoTracking()
-                    .Include(a => a.ContactInfo)
-                    .FirstOrDefaultAsync(a => a.Id == id) as T;
-            }
-            else if (typeof(T) == typeof(ContactDao))
-            {
-                entity = await _dataContext.Contacts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
-            }
-            else if (typeof(T) == typeof(HmmNoteDao))
-            {
-                entity = await _dataContext.Notes
-                    .AsNoTracking()
-                    .Include(n=>n.Author)
-                    .Include(n=>n.Catalog)
-                    .Include(n=>n.Tags)
-                    .FirstOrDefaultAsync(n => n.Id == id) as T;
-            }
-            else if (typeof(T) == typeof(NoteCatalogDao))
-            {
-                entity = await _dataContext.Catalogs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
-            }
-            else if (typeof(T) == typeof(TagDao))
-            {
-                entity = await _dataContext.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id) as T;
-            }
-            else
-            {
-                throw new DataSourceException($"{typeof(T)} is not support");
-            }
+                T entity;
+                if (typeof(T) == typeof(AuthorDao))
+                {
+                    entity = await _dataContext.Authors
+                        .AsNoTracking()
+                        .Include(a => a.ContactInfo)
+                        .FirstOrDefaultAsync(a => a.Id == id) as T;
+                }
+                else if (typeof(T) == typeof(ContactDao))
+                {
+                    entity = await _dataContext.Contacts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
+                }
+                else if (typeof(T) == typeof(HmmNoteDao))
+                {
+                    entity = await _dataContext.Notes
+                        .AsNoTracking()
+                        .Include(n => n.Author)
+                        .Include(n => n.Catalog)
+                        .Include(n => n.Tags)
+                        .FirstOrDefaultAsync(n => n.Id == id) as T;
+                }
+                else if (typeof(T) == typeof(NoteCatalogDao))
+                {
+                    entity = await _dataContext.Catalogs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
+                }
+                else if (typeof(T) == typeof(TagDao))
+                {
+                    entity = await _dataContext.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id) as T;
+                }
+                else
+                {
+                    return ProcessingResult<T>.Fail($"{typeof(T).Name} is not supported", ErrorCategory.ValidationError);
+                }
 
-            return entity;
+                if (entity == null)
+                {
+                    return ProcessingResult<T>.NotFound($"{typeof(T).Name} with ID {id} not found");
+                }
+
+                return ProcessingResult<T>.Ok(entity);
+            }
+            catch (Exception ex)
+            {
+                return ProcessingResult<T>.FromException(ex);
+            }
         }
-
-        public ProcessingResult ProcessResult { get; } = new();
 
         private IQueryable<T> GetQueryableEntities<T>()
         {

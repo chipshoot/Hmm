@@ -38,6 +38,21 @@ namespace Hmm.Utility.Misc
         /// <summary>
         /// Business rule violation (maps to HTTP 422)
         /// </summary>
-        BusinessRuleViolation = 6
+        BusinessRuleViolation = 6,
+
+        /// <summary>
+        /// The entity has been deleted (maps to HTTP 410)
+        /// </summary>
+        Deleted = 7,
+
+        /// <summary>
+        /// The user is not authorized to perform the action (maps to HTTP 401)
+        /// </summary>
+        Unauthorized = 8,
+
+        /// <summary>
+        /// The request could not be completed due to a conflict with the current state of the resource (maps to HTTP 409)
+        /// </summary>
+        Conflict = 9,
     }
 }

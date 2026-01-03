@@ -16,7 +16,7 @@ namespace Hmm.Core.DefaultManager
     public class AuthorManager : IAuthorManager
     {
         private readonly IRepository<AuthorDao> _authorRepository;
-        private readonly ValidatorBase<Author> _validator;
+        private readonly IHmmValidator<Author> _validator;
         private readonly IMapper _mapper;
         private readonly IEntityLookup _lookup;
 
@@ -28,15 +28,14 @@ namespace Hmm.Core.DefaultManager
 
             _authorRepository = authorRepository;
             _mapper = mapper;
-            _validator = new AuthorValidator(this);
+            _validator = new AuthorValidator(authorRepository);
             _lookup = lookup;
         }
 
-        public async Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<ProcessingResult<PageList<Author>>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                ProcessResult.Rest();
                 Expression<Func<AuthorDao, bool>> isActivatedExpression = t => t.IsActivated;
                 Expression<Func<AuthorDao, bool>> daoQuery = null;
                 if (query != null)
@@ -58,168 +57,153 @@ namespace Hmm.Core.DefaultManager
 
                 var authorDaos = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
                 var authors = _mapper.Map<PageList<Author>>(authorDaos);
-                return authors;
+                return ProcessingResult<PageList<Author>>.Ok(authors);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<PageList<Author>>.FromException(ex);
             }
         }
 
-        public async Task<Author> GetAuthorByIdAsync(int id)
+        public async Task<ProcessingResult<Author>> GetAuthorByIdAsync(int id)
         {
-            ProcessResult.Rest();
-            var authorDao = await _lookup.GetEntityAsync<AuthorDao>(id);
-            switch (authorDao)
-            {
-                case null:
-                    return null;
+            var authorDaoResult = await _lookup.GetEntityAsync<AuthorDao>(id);
 
-                case { IsActivated: false }:
-                    return null;
+            if (!authorDaoResult.Success)
+            {
+                return ProcessingResult<Author>.Fail(authorDaoResult.ErrorMessage, authorDaoResult.ErrorType);
+            }
+
+            var authorDao = authorDaoResult.Value;
+            if (!authorDao.IsActivated)
+            {
+                return ProcessingResult<Author>.Deleted($"Author with ID {id} has been deactivated");
             }
 
             var author = _mapper.Map<Author>(authorDao);
-            switch (author)
+            if (author == null)
             {
-                case null:
-                    ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
-                    return null;
-
-                default:
-                    return author;
+                return ProcessingResult<Author>.Fail("Cannot convert AuthorDao to Author");
             }
+
+            return ProcessingResult<Author>.Ok(author);
         }
 
         public async Task<bool> IsAuthorExistsAsync(int id)
         {
             try
             {
-                ProcessResult.Rest();
-                var authorDao = await _lookup.GetEntityAsync<AuthorDao>(id);
-                return authorDao != null;
+                var authorDaoResult = await _lookup.GetEntityAsync<AuthorDao>(id);
+                return authorDaoResult.Success;
             }
-            catch (Exception ex)
+            catch
             {
-                ProcessResult.WrapException(ex);
                 return false;
             }
         }
 
-        public async Task<Author> CreateAsync(Author authorInfo)
+        public async Task<ProcessingResult<Author>> CreateAsync(Author authorInfo)
         {
             try
             {
-                ProcessResult.Rest();
-                if (!await _validator.IsValidEntityAsync(authorInfo, ProcessResult))
+                var validationResult = await _validator.ValidateEntityAsync(authorInfo);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<Author>.Invalid(validationResult.GetWholeMessage());
                 }
 
                 var userDao = _mapper.Map<AuthorDao>(authorInfo);
                 if (userDao == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert Author to AuthorDao");
-                    return null;
+                    return ProcessingResult<Author>.Fail("Cannot convert Author to AuthorDao");
                 }
 
                 var addedUsrDao = await _authorRepository.AddAsync(userDao);
                 if (addedUsrDao == null)
                 {
-                    ProcessResult.PropagandaResult(_authorRepository.ProcessMessage);
-                    return null;
+                    return ProcessingResult<Author>.Fail("Failed to add author to repository");
                 }
 
-                authorInfo = _mapper.Map<Author>(addedUsrDao);
-                return authorInfo;
+                var createdAuthor = _mapper.Map<Author>(addedUsrDao);
+                return ProcessingResult<Author>.Ok(createdAuthor);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<Author>.FromException(ex);
             }
         }
 
-        public async Task<Author> UpdateAsync(Author authorInfo)
+        public async Task<ProcessingResult<Author>> UpdateAsync(Author authorInfo)
         {
             try
             {
-                ProcessResult.Rest();
-                if (!await _validator.IsValidEntityAsync(authorInfo, ProcessResult))
+                var validationResult = await _validator.ValidateEntityAsync(authorInfo);
+                if (!validationResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<Author>.Invalid(validationResult.GetWholeMessage());
                 }
 
                 var authorDao = _mapper.Map<AuthorDao>(authorInfo);
                 if (authorDao == null)
                 {
-                    ProcessResult.AddErrorMessage("Cannot convert Author to AuthorDao");
-                    return null;
+                    return ProcessingResult<Author>.Fail("Cannot convert Author to AuthorDao");
                 }
 
-                var savedAuthorDao = await _lookup.GetEntityAsync<AuthorDao>(authorInfo.Id);
-                if (savedAuthorDao == null)
+                var savedAuthorDaoResult = await _lookup.GetEntityAsync<AuthorDao>(authorInfo.Id);
+                if (!savedAuthorDaoResult.Success)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
-                    return null;
+                    return ProcessingResult<Author>.NotFound($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
                 }
 
                 var updatedUserDao = await _authorRepository.UpdateAsync(authorDao);
                 if (updatedUserDao == null)
                 {
-                    ProcessResult.PropagandaResult(_authorRepository.ProcessMessage);
-                    return null;
+                    return ProcessingResult<Author>.Fail("Failed to update author in repository");
                 }
 
                 var updatedUser = _mapper.Map<Author>(updatedUserDao);
-                switch (updatedUser)
+                if (updatedUser == null)
                 {
-                    case null:
-                        ProcessResult.AddErrorMessage("Cannot convert AuthorDao to Author");
-                        return null;
-
-                    default:
-                        return updatedUser;
+                    return ProcessingResult<Author>.Fail("Cannot convert AuthorDao to Author");
                 }
+
+                return ProcessingResult<Author>.Ok(updatedUser);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return null;
+                return ProcessingResult<Author>.FromException(ex);
             }
         }
 
-        public async Task DeActivateAsync(int id)
+        public async Task<ProcessingResult<Unit>> DeActivateAsync(int id)
         {
-            ProcessResult.Rest();
-            var user = await _authorRepository.GetEntityAsync(id);
-            switch (user)
+            try
             {
-                case null:
-                    ProcessResult.AddErrorMessage($"Cannot find user with id : {id}", true);
-                    break;
+                var user = await _authorRepository.GetEntityAsync(id);
+                if (user == null)
+                {
+                    return ProcessingResult<Unit>.NotFound($"Cannot find user with id: {id}");
+                }
 
-                default:
-                    {
-                        if (user.IsActivated)
-                        {
-                            try
-                            {
-                                user.IsActivated = false;
-                                await _authorRepository.UpdateAsync(user);
-                            }
-                            catch (Exception ex)
-                            {
-                                ProcessResult.WrapException(ex);
-                            }
-                        }
+                if (!user.IsActivated)
+                {
+                    return ProcessingResult<Unit>.Ok(Unit.Value, $"User with id {id} is already deactivated");
+                }
 
-                        break;
-                    }
+                user.IsActivated = false;
+                var updated = await _authorRepository.UpdateAsync(user);
+
+                if (updated == null)
+                {
+                    return ProcessingResult<Unit>.Fail("Failed to deactivate user");
+                }
+
+                return ProcessingResult<Unit>.Ok(Unit.Value, $"User with id {id} has been deactivated");
+            }
+            catch (Exception ex)
+            {
+                return ProcessingResult<Unit>.FromException(ex);
             }
         }
-
-        public ProcessingResult ProcessResult { get; } = new();
     }
 }

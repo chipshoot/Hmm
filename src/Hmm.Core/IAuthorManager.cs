@@ -9,23 +9,21 @@ namespace Hmm.Core
 {
     public interface IAuthorManager
     {
-        Task<PageList<Author>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<ProcessingResult<PageList<Author>>> GetEntitiesAsync(Expression<Func<Author, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
         Task<bool> IsAuthorExistsAsync(int id);
 
-        Task<Author> GetAuthorByIdAsync(int id);
+        Task<ProcessingResult<Author>> GetAuthorByIdAsync(int id);
 
-        Task<Author> CreateAsync(Author authorInfo);
+        Task<ProcessingResult<Author>> CreateAsync(Author authorInfo);
 
-        Task<Author> UpdateAsync(Author authorInfo);
+        Task<ProcessingResult<Author>> UpdateAsync(Author authorInfo);
 
         /// <summary>
         /// Set the flag to deactivate author to make it invisible for system.
         /// author may be associated with note, so we not want to delete everything
         /// </summary>
         /// <param name="id">The id of author whose activate flag will be set</param>
-        Task DeActivateAsync(int id);
-
-        ProcessingResult ProcessResult { get; }
+        Task<ProcessingResult<Unit>> DeActivateAsync(int id);
     }
 }
