@@ -118,13 +118,13 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Author>.Fail("Cannot convert Author to AuthorDao");
                 }
 
-                var addedUsrDao = await _authorRepository.AddAsync(userDao);
-                if (addedUsrDao == null)
+                var addedUsrDaoResult = await _authorRepository.AddAsync(userDao);
+                if (!addedUsrDaoResult.Success)
                 {
-                    return ProcessingResult<Author>.Fail("Failed to add author to repository");
+                    return ProcessingResult<Author>.Fail(addedUsrDaoResult.ErrorMessage, addedUsrDaoResult.ErrorType);
                 }
 
-                var createdAuthor = _mapper.Map<Author>(addedUsrDao);
+                var createdAuthor = _mapper.Map<Author>(addedUsrDaoResult.Value);
                 return ProcessingResult<Author>.Ok(createdAuthor);
             }
             catch (Exception ex)
@@ -155,13 +155,13 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Author>.NotFound($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
                 }
 
-                var updatedUserDao = await _authorRepository.UpdateAsync(authorDao);
-                if (updatedUserDao == null)
+                var updatedUserDaoResult = await _authorRepository.UpdateAsync(authorDao);
+                if (!updatedUserDaoResult.Success)
                 {
-                    return ProcessingResult<Author>.Fail("Failed to update author in repository");
+                    return ProcessingResult<Author>.Fail(updatedUserDaoResult.ErrorMessage, updatedUserDaoResult.ErrorType);
                 }
 
-                var updatedUser = _mapper.Map<Author>(updatedUserDao);
+                var updatedUser = _mapper.Map<Author>(updatedUserDaoResult.Value);
                 if (updatedUser == null)
                 {
                     return ProcessingResult<Author>.Fail("Cannot convert AuthorDao to Author");

@@ -16,6 +16,7 @@ namespace Hmm.Core.Dal.EF.Repositories
     {
         private readonly IHmmDataContext _dataContext;
         private readonly IEntityLookup _lookupRepo;
+        private readonly ILogger _logger;
 
         public AuthorEfRepository(IHmmDataContext dataContext, IEntityLookup lookupRepo, ILogger logger = null)
         {
@@ -24,95 +25,125 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             _dataContext = dataContext;
             _lookupRepo = lookupRepo;
-            ProcessMessage = logger != null ? new ProcessingResult(logger) : new ProcessingResult();
+            _logger = logger;
         }
 
-        public async Task<PageList<AuthorDao>> GetEntitiesAsync(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
+        public async Task<ProcessingResult<PageList<AuthorDao>>> GetEntitiesAsync(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
-            var authors = await _lookupRepo.GetEntitiesAsync(query, resourceCollectionParameters);
-            return authors;
+            var authorsResult = await _lookupRepo.GetEntitiesAsync<AuthorDao>(query, resourceCollectionParameters);
+
+            if (_logger != null && authorsResult.Success)
+            {
+                authorsResult.LogMessages(_logger);
+            }
+
+            return authorsResult;
         }
 
-        public async Task<AuthorDao> GetEntityAsync(int id)
+        public async Task<ProcessingResult<AuthorDao>> GetEntityAsync(int id)
         {
             try
             {
-                ProcessMessage.Rest();
                 var author = await _dataContext.Authors.FindAsync(id);
-                return author;
-            }
-            catch (Exception e)
-            {
-                ProcessMessage.WrapException(e);
-                return null;
-            }
-        }
 
-        public async Task<AuthorDao> AddAsync(AuthorDao entity)
-        {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+                if (author == null)
+                {
+                    var result = ProcessingResult<AuthorDao>.NotFound($"Author with ID {id} not found");
+                    result.LogMessages(_logger);
+                    return result;
+                }
 
-            ProcessMessage.Rest();
-            try
-            {
-                // ReSharper disable once PossibleNullReferenceException
-                // reset id to 0 to make sure it is a new entity
-                entity.Id = 0;
-                _dataContext.Authors.Add(entity);
-                await _dataContext.SaveAsync();
-                return entity;
+                var successResult = ProcessingResult<AuthorDao>.Ok(author);
+                successResult.LogMessages(_logger);
+                return successResult;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return null;
+                var errorResult = ProcessingResult<AuthorDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<AuthorDao> UpdateAsync(AuthorDao entity)
+        public async Task<ProcessingResult<AuthorDao>> AddAsync(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-
-            ProcessMessage.Rest();
             try
             {
-                // ReSharper disable once PossibleNullReferenceException
+                // Reset id to 0 to make sure it is a new entity
+                entity.Id = 0;
+                _dataContext.Authors.Add(entity);
+                await _dataContext.SaveAsync();
+
+                var result = ProcessingResult<AuthorDao>.Ok(entity, $"Author '{entity.AccountName}' created successfully");
+                result.LogMessages(_logger);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorResult = ProcessingResult<AuthorDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
+            }
+        }
+
+        public async Task<ProcessingResult<AuthorDao>> UpdateAsync(AuthorDao entity)
+        {
+            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+
+            try
+            {
                 if (entity.Id <= 0)
                 {
-                    ProcessMessage.Success = false;
-                    ProcessMessage.AddErrorMessage($"Can not update author with id {entity.Id}");
-                    return null;
+                    var invalidResult = ProcessingResult<AuthorDao>.Invalid($"Cannot update author with invalid id {entity.Id}");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
                 }
 
                 _dataContext.Authors.Update(entity);
                 await _dataContext.SaveAsync();
-                var updateAuthor = await _lookupRepo.GetEntityAsync<AuthorDao>(entity.Id);
-                return updateAuthor;
+
+                var updatedAuthorResult = await _lookupRepo.GetEntityAsync<AuthorDao>(entity.Id);
+                if (!updatedAuthorResult.Success)
+                {
+                    var errorResult = ProcessingResult<AuthorDao>.Fail(
+                        $"Author updated but failed to retrieve: {updatedAuthorResult.ErrorMessage}",
+                        updatedAuthorResult.ErrorType);
+                    errorResult.LogMessages(_logger);
+                    return errorResult;
+                }
+
+                var result = ProcessingResult<AuthorDao>.Ok(updatedAuthorResult.Value, $"Author '{entity.AccountName}' updated successfully");
+                result.LogMessages(_logger);
+                return result;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return null;
+                var errorResult = ProcessingResult<AuthorDao>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
-        public async Task<bool> DeleteAsync(AuthorDao entity)
+        public async Task<ProcessingResult<Unit>> DeleteAsync(AuthorDao entity)
         {
             Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
 
-            ProcessMessage.Rest();
             try
             {
-                // ReSharper disable once AssignNullToNotNullAttribute
                 _dataContext.Authors.Remove(entity);
                 await _dataContext.SaveAsync();
-                return true;
+
+                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Author '{entity.AccountName}' (ID: {entity.Id}) deleted successfully");
+                result.LogMessages(_logger);
+                return result;
             }
             catch (Exception ex)
             {
-                ProcessMessage.WrapException(ex);
-                return false;
+                var errorResult = ProcessingResult<Unit>.FromException(ex);
+                errorResult.LogMessages(_logger);
+                return errorResult;
             }
         }
 
@@ -120,7 +151,5 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             _dataContext.Save();
         }
-
-        public ProcessingResult ProcessMessage { get; }
     }
 }
