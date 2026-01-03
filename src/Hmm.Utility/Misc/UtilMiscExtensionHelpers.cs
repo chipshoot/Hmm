@@ -15,7 +15,7 @@ namespace Hmm.Utility.Misc
             return returnMessages.Any(msg => msg.Message.Equals(message));
         }
 
-        public static bool HasReturnedMessage(this ProcessingResult result)
+        public static bool HasReturnedMessage<T>(this ProcessingResult<T> result)
         {
             return result != null && (result.HasInfo || result.HasWarning || result.HasError || result.HasFatal);
         }
