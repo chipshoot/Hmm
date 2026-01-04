@@ -1,4 +1,4 @@
-﻿// Ignore Spelling: Ef
+// Ignore Spelling: Ef
 
 using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
@@ -27,9 +27,9 @@ namespace Hmm.Core.Dal.EF.Repositories
             IDateTimeProvider dateTimeProvider,
             ILogger logger = null)
         {
-            Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
-            Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
-            Guard.Against<ArgumentNullException>(dateTimeProvider == null, nameof(dateTimeProvider));
+            ArgumentNullException.ThrowIfNull(dataContext);
+            ArgumentNullException.ThrowIfNull(lookupRepository);
+            ArgumentNullException.ThrowIfNull(dateTimeProvider);
 
             _dataContext = dataContext;
             _lookupRepository = lookupRepository;
@@ -65,7 +65,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 if (note == null)
                 {
-                    var result = ProcessingResult<HmmNoteDao>.NotFound($"Note with ID {id} not found");
+                    var result = ProcessingResult<HmmNoteDao>.EmptyOk($"Note with ID {id} not found");
                     result.LogMessages(_logger);
                     return result;
                 }
@@ -84,7 +84,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<HmmNoteDao>> AddAsync(HmmNoteDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
@@ -171,7 +171,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<HmmNoteDao>> UpdateAsync(HmmNoteDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
@@ -213,7 +213,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<Unit>> DeleteAsync(HmmNoteDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {

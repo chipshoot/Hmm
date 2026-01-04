@@ -20,8 +20,8 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public AuthorEfRepository(IHmmDataContext dataContext, IEntityLookup lookupRepo, ILogger logger = null)
         {
-            Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            ArgumentNullException.ThrowIfNull(dataContext);
+            ArgumentNullException.ThrowIfNull(lookupRepo);
 
             _dataContext = dataContext;
             _lookupRepo = lookupRepo;
@@ -48,7 +48,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 if (author == null)
                 {
-                    var result = ProcessingResult<AuthorDao>.NotFound($"Author with ID {id} not found");
+                    var result = ProcessingResult<AuthorDao>.EmptyOk($"Author with ID {id} not found");
                     result.LogMessages(_logger);
                     return result;
                 }
@@ -67,7 +67,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<AuthorDao>> AddAsync(AuthorDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
@@ -90,7 +90,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<AuthorDao>> UpdateAsync(AuthorDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
@@ -128,7 +128,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<Unit>> DeleteAsync(AuthorDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {

@@ -19,7 +19,7 @@ namespace Hmm.Core.Dal.EF
 
         public EfEntityLookup(IHmmDataContext dataContext)
         {
-            Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
+            ArgumentNullException.ThrowIfNull(dataContext);
             _dataContext = dataContext;
         }
 
@@ -82,7 +82,7 @@ namespace Hmm.Core.Dal.EF
 
                 if (entity == null)
                 {
-                    return ProcessingResult<T>.NotFound($"{typeof(T).Name} with ID {id} not found");
+                    return ProcessingResult<T>.EmptyOk($"{typeof(T).Name} with ID {id} not found");
                 }
 
                 return ProcessingResult<T>.Ok(entity);

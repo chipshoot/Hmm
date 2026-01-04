@@ -15,9 +15,9 @@ namespace Hmm.Core.Dal.EF
     {
         protected RepositoryBase(IHmmDataContext dataContext, IEntityLookup lookupRepository, IDateTimeProvider dateTimeProvider, ILogger logger = null)
         {
-            Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
-            Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
-            Guard.Against<ArgumentNullException>(dateTimeProvider == null, nameof(dateTimeProvider));
+            ArgumentNullException.ThrowIfNull(dataContext);
+            ArgumentNullException.ThrowIfNull(lookupRepository);
+            ArgumentNullException.ThrowIfNull(dateTimeProvider);
 
             DataContext = dataContext;
             LookupRepository = lookupRepository;

@@ -1,4 +1,4 @@
-﻿// Ignore Spelling: Ef
+// Ignore Spelling: Ef
 
 using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
@@ -25,8 +25,8 @@ namespace Hmm.Core.Dal.EF.Repositories
             IDateTimeProvider dateTimeProvider,
             ILogger logger = null)
         {
-            Guard.Against<ArgumentNullException>(dataContext == null, nameof(dataContext));
-            Guard.Against<ArgumentNullException>(lookupRepository == null, nameof(lookupRepository));
+            ArgumentNullException.ThrowIfNull(dataContext);
+            ArgumentNullException.ThrowIfNull(lookupRepository);
 
             _dataContext = dataContext;
             _lookupRepository = lookupRepository;
@@ -58,7 +58,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 if (catalog == null)
                 {
-                    var result = ProcessingResult<NoteCatalogDao>.NotFound($"NoteCatalog with ID {id} not found");
+                    var result = ProcessingResult<NoteCatalogDao>.EmptyOk($"NoteCatalog with ID {id} not found");
                     result.LogMessages(_logger);
                     return result;
                 }
@@ -77,7 +77,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<NoteCatalogDao>> AddAsync(NoteCatalogDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
@@ -100,7 +100,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<NoteCatalogDao>> UpdateAsync(NoteCatalogDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
@@ -138,7 +138,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public async Task<ProcessingResult<Unit>> DeleteAsync(NoteCatalogDao entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {

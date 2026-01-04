@@ -21,7 +21,7 @@ public static class RepositoryHelperExtensions
         var orderBys = orderBy.Split(',');
         var orderByString = string.Empty;
         var propInfos = typeof(T).GetProperties();
-        foreach (var orderClause in orderBys.Reverse())
+        foreach (var orderClause in orderBys)
         {
             var trimmedClause = orderClause.Trim();
             var idxOfSpace = trimmedClause.IndexOf(" ", StringComparison.Ordinal);
