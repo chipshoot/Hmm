@@ -1,5 +1,4 @@
 ﻿using Hmm.Utility.Dal.Exceptions;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -224,36 +223,6 @@ namespace Hmm.Utility.Misc
                 : ErrorCategory.None;
 
             return new ProcessingResult<T>(combinedSuccess, Value, combinedMessages, combinedErrorType);
-        }
-
-        /// <summary>
-        /// Logs all messages using the provided logger
-        /// </summary>
-        public void LogMessages(ILogger logger)
-        {
-            if (logger == null || !_messages.Any())
-            {
-                return;
-            }
-
-            foreach (var msg in _messages)
-            {
-                switch (msg.Type)
-                {
-                    case MessageType.Info:
-                        logger.LogInformation(msg.Message);
-                        break;
-
-                    case MessageType.Error:
-                    case MessageType.Fatal:
-                        logger.LogError(msg.Message);
-                        break;
-
-                    case MessageType.Warning:
-                        logger.LogWarning(msg.Message);
-                        break;
-                }
-            }
         }
 
         /// <summary>

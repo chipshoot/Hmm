@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 
 namespace Hmm.Utility.Misc
@@ -18,6 +19,33 @@ namespace Hmm.Utility.Misc
         public static bool HasReturnedMessage<T>(this ProcessingResult<T> result)
         {
             return result != null && (result.HasInfo || result.HasWarning || result.HasError || result.HasFatal);
+        }
+
+        public static void Log<T>(this ProcessingResult<T> result, ILogger logger)
+        {
+            if (result == null || logger == null || !result.Messages.Any())
+            {
+                return;
+            }
+
+            foreach (var msg in result.Messages)
+            {
+                switch (msg.Type)
+                {
+                    case MessageType.Info:
+                        logger.LogInformation(msg.Message);
+                        break;
+
+                    case MessageType.Error:
+                    case MessageType.Fatal:
+                        logger.LogError(msg.Message);
+                        break;
+
+                    case MessageType.Warning:
+                        logger.LogWarning(msg.Message);
+                        break;
+                }
+            }
         }
     }
 }
