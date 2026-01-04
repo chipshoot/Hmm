@@ -7,8 +7,8 @@ namespace Hmm.Utility.Specification
     {
         internal OrSpecification(ISpecification<TEntity> spec1, ISpecification<TEntity> spec2)
         {
-            Guard.Against<ArgumentNullException>(spec1 == null, "spec1");
-            Guard.Against<ArgumentNullException>(spec2 == null, "spec2");
+            ArgumentNullException.ThrowIfNull(spec1);
+            ArgumentNullException.ThrowIfNull(spec2);
 
             Spec1 = spec1;
             Spec2 = spec2;

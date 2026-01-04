@@ -40,8 +40,8 @@ namespace Hmm.Utility.Dal.Query
 
         public static PageList<T> Create(IQueryable<T> source, int pageIndex, int pageSize)
         {
-            Guard.Against<ArgumentOutOfRangeException>(pageIndex <= 0, nameof(pageIndex));
-            Guard.Against<ArgumentOutOfRangeException>(pageSize < 1, nameof(pageSize));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pageIndex);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pageSize);
             var count = source.Count();
             var items = source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
             return new PageList<T>(items, count, pageIndex, pageSize);
@@ -49,8 +49,8 @@ namespace Hmm.Utility.Dal.Query
 
         public static async Task<PageList<T>> CreateAsync(IQueryable<T> source, int pageIndex, int pageSize)
         {
-            Guard.Against<ArgumentOutOfRangeException>(pageIndex <= 0, nameof(pageIndex));
-            Guard.Against<ArgumentOutOfRangeException>(pageSize < 1, nameof(pageSize));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pageIndex);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pageSize);
             try
             {
                 var count = await source.CountAsync();

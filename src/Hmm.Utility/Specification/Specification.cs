@@ -9,7 +9,7 @@ namespace Hmm.Utility.Specification
 
         public Specification(Func<TEntity, bool> spec)
         {
-            Guard.Against<ArgumentNullException>(spec == null, "spec");
+            ArgumentNullException.ThrowIfNull(spec);
             _spec = spec;
         }
 

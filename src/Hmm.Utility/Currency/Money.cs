@@ -1,5 +1,4 @@
 ﻿using Hmm.Utility.HmmNoteContentMap;
-using Hmm.Utility.Validation;
 using System;
 using System.ComponentModel;
 using System.Globalization;
@@ -196,7 +195,8 @@ namespace Hmm.Utility.Currency
                 return 1;
             }
 
-            Guard.TypeOf<Money>(obj, "Argument must be Money");
+            if (obj is not Money)
+                throw new ArgumentException("Argument must be Money", nameof(obj));
 
             return CompareTo((Money)obj);
         }

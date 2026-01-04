@@ -61,6 +61,13 @@ namespace Hmm.Utility.Misc
         /// </summary>
         public string ErrorMessage => _messages.FirstOrDefault(m => m.Type == MessageType.Error)?.Message ?? string.Empty;
 
+        /// <summary>
+        /// Indicates whether the result represents a "not found" state.
+        /// Returns true for both NotFound() and EmptyOk() results.
+        /// Check Success property to distinguish: Success=true means expected absence, Success=false means error.
+        /// </summary>
+        public bool IsNotFound => ErrorType == ErrorCategory.NotFound;
+
         public bool HasInfo => _messages.Any(m => m.Type == MessageType.Info);
 
         public bool HasWarning => _messages.Any(m => m.Type == MessageType.Warning);
@@ -85,7 +92,22 @@ namespace Hmm.Utility.Misc
         }
 
         /// <summary>
-        /// Creates a failure result indicating resource not found
+        /// Creates a successful result with no value (for queries where absence is normal).
+        /// Use this when "not found" is an expected, valid outcome rather than an error.
+        /// Example: Optional lookups, checking existence before creation, search queries with no results.
+        /// Note: IsNotFound will return true for this result, but Success will also be true.
+        /// </summary>
+        public static ProcessingResult<T> EmptyOk(string message = "No data found")
+        {
+            var msg = new ReturnMessage { Message = message, Type = MessageType.Info };
+            return new ProcessingResult<T>(true, default, new[] { msg }, ErrorCategory.NotFound);
+        }
+
+        /// <summary>
+        /// Creates a failure result indicating resource not found.
+        /// Use this when the operation REQUIRES the resource to exist (e.g., Update, Delete).
+        /// For queries where absence is normal, use EmptyOk() instead.
+        /// Note: IsNotFound will return true, and Success will be false.
         /// </summary>
         public static ProcessingResult<T> NotFound(string message = "Resource not found")
         {

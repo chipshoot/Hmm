@@ -9,7 +9,7 @@ namespace Hmm.Utility.Specification
 
         internal NotSpecification(ISpecification<TEntity> spec)
         {
-            Guard.Against<ArgumentNullException>(spec == null, "spec");
+            ArgumentNullException.ThrowIfNull(spec);
 
             Wrapped = spec;
         }

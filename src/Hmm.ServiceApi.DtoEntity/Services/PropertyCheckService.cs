@@ -5,39 +5,44 @@ namespace Hmm.ServiceApi.DtoEntity.Services;
 
 public class PropertyCheckService : IPropertyCheckService
 {
-    public ProcessingResult ProcessingResult { get; set; } = new ProcessingResult();
-
-    public bool TypeHasProperties<T>(string fields)
+    public ProcessingResult<bool> TypeHasProperties<T>(string fields)
     {
         if (string.IsNullOrWhiteSpace(fields))
         {
-            return true;
+            return ProcessingResult<bool>.Ok(true);
         }
 
-        // the field is separated by ",", so we split it.
+        // The field is separated by ",", so we split it.
         var fieldsAfterSplit = fields.Split(',');
+        var missingProperties = new System.Collections.Generic.List<string>();
 
-        // check if the requested fields exist on source
+        // Check if the requested fields exist on source
         foreach (var field in fieldsAfterSplit)
         {
-            // trim each field, as it might contain leading
-            // or trailing spaces. Can't trim the var in for each,
+            // Trim each field, as it might contain leading
+            // or trailing spaces. Can't trim the var in foreach,
             // so use another var.
             var propertyName = field.Trim();
 
-            // use reflection to check if the property can be
+            // Use reflection to check if the property can be
             // found on T.
             var propertyInfo = typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
-            // it can't be found, return false
+            // It can't be found, add to missing properties list
             if (propertyInfo == null)
             {
-                ProcessingResult.AddErrorMessage($"Cannot find property name: {propertyName}");
-                return false;
+                missingProperties.Add(propertyName);
             }
         }
 
-        // all checks out, return true
-        return true;
+        // If there are missing properties, return invalid result
+        if (missingProperties.Count > 0)
+        {
+            var errorMessage = $"Cannot find the following properties on type {typeof(T).Name}: {string.Join(", ", missingProperties)}";
+            return ProcessingResult<bool>.Invalid(errorMessage);
+        }
+
+        // All checks out, return true
+        return ProcessingResult<bool>.Ok(true);
     }
 }

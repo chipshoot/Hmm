@@ -30,45 +30,53 @@
 //        _propertyMappings.Add(new PropertyMapping<ApiGasLog, GasLog>(_gasLogPropertyMapping));
 //    }
 
-//    public ProcessingResult ProcessingResult { get; set; } = new ProcessingResult();
-
-//    public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>()
+//    public ProcessingResult<Dictionary<string, PropertyMappingValue>> GetPropertyMapping<TSource, TDestination>()
 //    {
 //        var matchingMapping = _propertyMappings.OfType<PropertyMapping<TSource, TDestination>>().ToList();
 
 //        if (matchingMapping.Any())
 //        {
-//            return matchingMapping.First().MappingDictionary;
+//            return ProcessingResult<Dictionary<string, PropertyMappingValue>>.Ok(matchingMapping.First().MappingDictionary);
 //        }
 
-//        var errMsg = $"Cannot find exact property mapping instance for <{typeof(TSource)}, {typeof(TDestination)}";
-//        ProcessingResult.AddErrorMessage(errMsg);
-//        throw new Exception(errMsg);
+//        var errMsg = $"Cannot find exact property mapping instance for <{typeof(TSource)}, {typeof(TDestination)}>";
+//        return ProcessingResult<Dictionary<string, PropertyMappingValue>>.NotFound(errMsg);
 //    }
 
-//    public bool ValidMappingExistsFor<TSource, TDestination>(string fields)
+//    public ProcessingResult<bool> ValidMappingExistsFor<TSource, TDestination>(string fields)
 //    {
 //        if (string.IsNullOrEmpty(fields))
 //        {
-//            return true;
+//            return ProcessingResult<bool>.Ok(true);
 //        }
 
-//        var propertyMapping = GetPropertyMapping<TSource, TDestination>();
+//        var propertyMappingResult = GetPropertyMapping<TSource, TDestination>();
+//        if (!propertyMappingResult.Success)
+//        {
+//            return ProcessingResult<bool>.Fail(propertyMappingResult.ErrorMessage, propertyMappingResult.ErrorType);
+//        }
+
+//        var propertyMapping = propertyMappingResult.Value;
 //        var fieldArr = fields.Split(',');
+//        var missingProperties = new List<string>();
+
 //        foreach (var fieldRaw in fieldArr)
 //        {
 //            var field = fieldRaw.Trim();
 //            var idxSpace = field.IndexOf(' ');
 //            var propName = idxSpace == -1 ? field : field[..idxSpace];
-//            if (propertyMapping.ContainsKey(propName))
+//            if (!propertyMapping.ContainsKey(propName))
 //            {
-//                continue;
+//                missingProperties.Add(propName);
 //            }
-
-//            ProcessingResult.AddErrorMessage($"Cannot find property name: {propName}");
-//            return false;
 //        }
 
-//        return true;
+//        if (missingProperties.Count > 0)
+//        {
+//            var errorMessage = $"Cannot find the following property mappings: {string.Join(", ", missingProperties)}";
+//            return ProcessingResult<bool>.Invalid(errorMessage);
+//        }
+
+//        return ProcessingResult<bool>.Ok(true);
 //    }
 //}

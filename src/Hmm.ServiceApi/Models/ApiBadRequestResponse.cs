@@ -10,7 +10,8 @@ namespace Hmm.ServiceApi.Models
     {
         public ApiBadRequestResponse(ModelStateDictionary modelState) : base(400)
         {
-            Guard.Against<ArgumentException>(modelState.IsValid, $"ModelState must be invalid : {nameof(modelState)}");
+            if (modelState.IsValid)
+                throw new ArgumentException($"ModelState must be invalid : {nameof(modelState)}", nameof(modelState));
 
             // ReSharper disable once PossibleNullReferenceException
             Errors = modelState.SelectMany(x => x.Value.Errors)

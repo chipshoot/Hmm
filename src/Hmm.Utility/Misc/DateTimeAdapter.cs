@@ -23,7 +23,7 @@ namespace Hmm.Utility.Misc
 
         public DateTime AddBusinessDays(DateTime startUtcDate, int days, ICollection<string> holidays = null)
         {
-            Guard.Against<ArgumentOutOfRangeException>(days < 0, "days cannot be negative");
+            ArgumentOutOfRangeException.ThrowIfNegative(days);
 
             if (holidays == null)
             {
@@ -87,7 +87,7 @@ namespace Hmm.Utility.Misc
         {
             // Given a date and day of week,
             // find the next date whose day of the week equals the specified day of the week.
-            Guard.Against<ArgumentOutOfRangeException>(numberToSkip < 0, "Cannot passing numberToSkip which is less than zero");
+            ArgumentOutOfRangeException.ThrowIfNegative(numberToSkip);
             return startUtcDate.AddDays(DaysToAdd(startUtcDate.DayOfWeek, desiredDay, numberToSkip));
         }
 

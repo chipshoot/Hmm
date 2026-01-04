@@ -192,7 +192,8 @@ namespace Hmm.Utility.StringEnumeration
         /// <returns>all name of the enum</returns>
         public static ICollection<string> GetEnumStringList<T>() where T : struct
         {
-            Guard.Against<ArgumentException>(!typeof(T).IsEnum, "Cannot get list for non enum type");
+            if (!typeof(T).IsEnum)
+                throw new ArgumentException("Cannot get list for non enum type");
 
             var types = new StringEnum(typeof(T));
             var ret = (types.GetStringValues()).OfType<string>().ToList();

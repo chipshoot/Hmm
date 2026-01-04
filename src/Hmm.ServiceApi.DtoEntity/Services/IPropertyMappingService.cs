@@ -5,9 +5,7 @@ namespace Hmm.ServiceApi.DtoEntity.Services;
 
 public interface IPropertyMappingService
 {
-    Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>();
+    ProcessingResult<Dictionary<string, PropertyMappingValue>> GetPropertyMapping<TSource, TDestination>();
 
-    bool ValidMappingExistsFor<TSource, TDestination>(string fields);
-
-    ProcessingResult ProcessingResult { get; }
+    ProcessingResult<bool> ValidMappingExistsFor<TSource, TDestination>(string fields);
 }

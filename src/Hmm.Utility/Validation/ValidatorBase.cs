@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Hmm.Utility.Misc;
 using System;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace Hmm.Utility.Validation
         /// </summary>
         public async Task<ProcessingResult<T>> ValidateEntityAsync(T entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             try
             {
