@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -14,8 +14,8 @@ namespace Hmm.Infrastructure
     {
         public static async Task<string> GetUserClaimAsync(string type, HttpContext context, HttpClient httpClient)
         {
-            Guard.Against<ArgumentNullException>(context == null, nameof(context));
-            Guard.Against<ArgumentNullException>(httpClient == null, nameof(httpClient));
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(httpClient);
 
             var response = await GetUserProfileAsync(context, httpClient);
 
