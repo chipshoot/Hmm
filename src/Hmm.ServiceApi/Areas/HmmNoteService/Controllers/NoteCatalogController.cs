@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
-using Hmm.Utility.Validation;
+using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -30,8 +30,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         public NoteCatalogController(INoteCatalogManager catalogManager, IMapper mapper)
         {
-            Guard.Against<ArgumentNullException>(catalogManager == null, nameof(catalogManager));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            ArgumentNullException.ThrowIfNull(catalogManager);
+            ArgumentNullException.ThrowIfNull(mapper);
 
             _catalogManager = catalogManager;
             _mapper = mapper;
@@ -44,29 +44,38 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var noteCatalogs = await _catalogManager.GetEntitiesAsync(null, resourceCollectionParameters);
-            if (!noteCatalogs.Any())
+            var noteCatalogsResult = await _catalogManager.GetEntitiesAsync(null, resourceCollectionParameters);
+            if (!noteCatalogsResult.Success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, noteCatalogsResult.ErrorMessage);
+            }
+
+            if (noteCatalogsResult.Value == null || !noteCatalogsResult.Value.Any())
             {
                 return NotFound();
             }
 
-            return Ok(noteCatalogs);
+            return Ok(noteCatalogsResult.Value);
         }
 
         [HttpGet("{id:int}", Name = "GetNoteCatalogById")]
         [NoteCatalogResultFilter]
         public async Task<IActionResult> Get(int id)
         {
-            var catalog = await _catalogManager.GetEntityByIdAsync(id);
-            if (catalog == null)
+            var catalogResult = await _catalogManager.GetEntityByIdAsync(id);
+            if (!catalogResult.Success)
             {
-                return NotFound($"The note catalog: {id} not found.");
+                if (catalogResult.IsNotFound)
+                {
+                    return NotFound($"The note catalog: {id} not found.");
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, catalogResult.ErrorMessage);
             }
 
-            return Ok(catalog);
+            return Ok(catalogResult.Value);
         }
 
-        // POST api/catalogs
+        // POST api/notecatalogs
         [HttpPost(Name = "AddNoteCatalog")]
         [NoteCatalogResultFilter]
         public async Task<IActionResult> Post([FromBody] ApiNoteCatalogForCreate catalog)
@@ -74,22 +83,26 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             try
             {
                 var noteCatalog = _mapper.Map<ApiNoteCatalogForCreate, NoteCatalog>(catalog);
-                var newCatalog = await _catalogManager.CreateAsync(noteCatalog);
+                var newCatalogResult = await _catalogManager.CreateAsync(noteCatalog);
 
-                if (newCatalog == null)
+                if (!newCatalogResult.Success)
                 {
-                    return BadRequest();
+                    if (newCatalogResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(newCatalogResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, newCatalogResult.ErrorMessage);
                 }
 
-                return Created("", newCatalog);
+                return Created("", newCatalogResult.Value);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
-        // PUT api/catalogs/5
+        // PUT api/notecatalogs/{id}
         [HttpPut("{id:int}", Name = "UpdateNoteCatalog")]
         public async Task<IActionResult> Put(int id, [FromBody] ApiNoteCatalogForUpdate catalog)
         {
@@ -100,28 +113,41 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curCatalog = await _catalogManager.GetEntityByIdAsync(id);
-                if (curCatalog == null)
+                var curCatalogResult = await _catalogManager.GetEntityByIdAsync(id);
+                if (!curCatalogResult.Success)
                 {
-                    return BadRequest($"Note catalog {id} cannot be found.");
+                    if (curCatalogResult.IsNotFound)
+                    {
+                        return NotFound($"Note catalog {id} cannot be found.");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curCatalogResult.ErrorMessage);
                 }
 
-                curCatalog = _mapper.Map(catalog, curCatalog);
-                var newCatalog = await _catalogManager.UpdateAsync(curCatalog);
-                if (newCatalog == null)
+                var curCatalog = _mapper.Map(catalog, curCatalogResult.Value);
+                var updateResult = await _catalogManager.UpdateAsync(curCatalog);
+
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_catalogManager.ProcessResult.MessageList);
+                    if (updateResult.IsNotFound)
+                    {
+                        return NotFound($"Note catalog with id {id} not found");
+                    }
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
-        // PATCH api/catalogs/5
+        // PATCH api/notecatalogs/{id}
         [HttpPatch("{id:int}", Name = "PatchNoteCatalog")]
         public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<ApiNoteCatalogForUpdate> patchDoc)
         {
@@ -132,27 +158,35 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curCatalog = await _catalogManager.GetEntityByIdAsync(id);
-                if (curCatalog == null)
+                var curCatalogResult = await _catalogManager.GetEntityByIdAsync(id);
+                if (!curCatalogResult.Success)
                 {
-                    return NotFound();
+                    if (curCatalogResult.IsNotFound)
+                    {
+                        return NotFound($"Note catalog with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curCatalogResult.ErrorMessage);
                 }
 
-                var catalog2Update = _mapper.Map<ApiNoteCatalogForUpdate>(curCatalog);
+                var catalog2Update = _mapper.Map<ApiNoteCatalogForUpdate>(curCatalogResult.Value);
                 patchDoc.ApplyTo(catalog2Update);
-                _mapper.Map(catalog2Update, curCatalog);
+                _mapper.Map(catalog2Update, curCatalogResult.Value);
 
-                var newCatalog = await _catalogManager.UpdateAsync(curCatalog);
-                if (newCatalog == null)
+                var updateResult = await _catalogManager.UpdateAsync(curCatalogResult.Value);
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_catalogManager.ProcessResult.MessageList);
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
     }

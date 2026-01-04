@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
-using Hmm.Utility.Validation;
+using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -32,8 +32,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         public ContactController(IContactManager contactManager, IMapper mapper)
         {
-            Guard.Against<ArgumentNullException>(contactManager == null, nameof(contactManager));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            ArgumentNullException.ThrowIfNull(contactManager);
+            ArgumentNullException.ThrowIfNull(mapper);
 
             _contactManager = contactManager;
             _mapper = mapper;
@@ -46,13 +46,18 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var contacts = await _contactManager.GetContactsAsync(null, resourceCollectionParameters);
-            if (!contacts.Any())
+            var contactsResult = await _contactManager.GetContactsAsync(null, resourceCollectionParameters);
+            if (!contactsResult.Success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, contactsResult.ErrorMessage);
+            }
+
+            if (contactsResult.Value == null || !contactsResult.Value.Any())
             {
                 return NotFound();
             }
 
-            return Ok(contacts);
+            return Ok(contactsResult.Value);
         }
 
         [HttpGet("{id:int}", Name = "GetContactById")]
@@ -61,19 +66,23 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (id <= 0)
             {
-                BadRequest();
+                return BadRequest("Invalid contact id");
             }
 
-            var contact = await _contactManager.GetContactByIdAsync(id);
-            if (contact == null)
+            var contactResult = await _contactManager.GetContactByIdAsync(id);
+            if (!contactResult.Success)
             {
-                return NotFound($"The contact : {id} not found.");
+                if (contactResult.IsNotFound)
+                {
+                    return NotFound($"The contact : {id} not found.");
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, contactResult.ErrorMessage);
             }
 
-            return Ok(contact);
+            return Ok(contactResult.Value);
         }
 
-        // POST api/authors
+        // POST api/contacts
         [HttpPost(Name = "AddContact")]
         [ContactResultFilter]
         public async Task<IActionResult> Post(ApiContactForCreate contact)
@@ -82,22 +91,26 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 var contactObj = _mapper.Map<ApiContactForCreate, Contact>(contact);
                 contactObj.IsActivated = true;
-                var newContact = await _contactManager.CreateAsync(contactObj);
+                var newContactResult = await _contactManager.CreateAsync(contactObj);
 
-                if (newContact == null)
+                if (!newContactResult.Success)
                 {
-                    return BadRequest(new ApiBadRequestResponse("null contact found"));
+                    if (newContactResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(newContactResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, newContactResult.ErrorMessage);
                 }
 
-                return Created("", newContact);
+                return Created("", newContactResult.Value);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
-        // PUT api/authors/5
+        // PUT api/contacts/{id}
         [HttpPut("{id:int}", Name = "UpdateContact")]
         public async Task<IActionResult> Put(int id, ApiContactForUpdate contact)
         {
@@ -110,21 +123,30 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 var currentContact = _mapper.Map<Contact>(contact);
                 currentContact.Id = id;
-                var newContact = await _contactManager.UpdateAsync(currentContact);
-                if (newContact == null)
+                var updateResult = await _contactManager.UpdateAsync(currentContact);
+
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_contactManager.ProcessResult.MessageList);
+                    if (updateResult.IsNotFound)
+                    {
+                        return NotFound($"Contact with id {id} not found");
+                    }
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
-        // PATCH api/authors/5
+        // PATCH api/contacts/{id}
         [HttpPatch("{id:int}", Name = "PatchContact")]
         public async Task<IActionResult> Patch(int id, JsonPatchDocument<ApiContactForUpdate> patchDoc)
         {
@@ -135,53 +157,60 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curContact = await _contactManager.GetContactByIdAsync(id);
-                if (curContact == null)
+                var curContactResult = await _contactManager.GetContactByIdAsync(id);
+                if (!curContactResult.Success)
                 {
-                    return NotFound();
+                    if (curContactResult.IsNotFound)
+                    {
+                        return NotFound($"Contact with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curContactResult.ErrorMessage);
                 }
 
-                var contact2Update = _mapper.Map<ApiContactForUpdate>(curContact);
+                var contact2Update = _mapper.Map<ApiContactForUpdate>(curContactResult.Value);
                 patchDoc.ApplyTo(contact2Update);
-                _mapper.Map(contact2Update, curContact);
+                _mapper.Map(contact2Update, curContactResult.Value);
 
-                var newContact = await _contactManager.UpdateAsync(curContact);
-                if (newContact == null)
+                var updateResult = await _contactManager.UpdateAsync(curContactResult.Value);
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_contactManager.ProcessResult.MessageList);
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
-        // DELETE api/authors/5
+        // DELETE api/contacts/{id}
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var contactExists = await _contactManager.GetContactByIdAsync(id);
-            if (contactExists==null)
-            {
-                return BadRequest($"The contact {id} cannot be found.");
-            }
-
             try
             {
-                await _contactManager.DeActivateAsync(id);
-                if (_contactManager.ProcessResult.Success)
+                var deleteResult = await _contactManager.DeActivateAsync(id);
+
+                if (!deleteResult.Success)
                 {
-                    return NoContent();
+                    if (deleteResult.IsNotFound)
+                    {
+                        return NotFound($"Contact with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, deleteResult.ErrorMessage);
                 }
 
-                throw new Exception($"Deleting contact {id} failed on saving.");
+                return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
     }

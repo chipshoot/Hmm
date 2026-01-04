@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
-using Hmm.Utility.Validation;
+using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -33,9 +33,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         public AuthorController(IAuthorManager authorManager, IMapper mapper)
         {
-            Guard.Against<ArgumentNullException>(authorManager == null, nameof(authorManager));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-            //Guard.Against<ArgumentNullException>(httpClientFactory == null, nameof(httpClientFactory));
+            ArgumentNullException.ThrowIfNull(authorManager);
+            ArgumentNullException.ThrowIfNull(mapper);
+            //ArgumentNullException.ThrowIfNull(httpClientFactory);
 
             _authorManager = authorManager;
             _mapper = mapper;
@@ -49,13 +49,18 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var authors = await _authorManager.GetEntitiesAsync(null, resourceCollectionParameters);
-            if (!authors.Any())
+            var authorsResult = await _authorManager.GetEntitiesAsync(null, resourceCollectionParameters);
+            if (!authorsResult.Success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, authorsResult.ErrorMessage);
+            }
+
+            if (authorsResult.Value == null || !authorsResult.Value.Any())
             {
                 return NotFound();
             }
 
-            return Ok(authors);
+            return Ok(authorsResult.Value);
         }
 
         [HttpGet("{id:int}", Name = "GetAuthorById")]
@@ -64,16 +69,20 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (id <= 0)
             {
-                BadRequest();
+                return BadRequest("Invalid author id");
             }
 
-            var author = await _authorManager.GetAuthorByIdAsync(id);
-            if (author == null)
+            var authorResult = await _authorManager.GetAuthorByIdAsync(id);
+            if (!authorResult.Success)
             {
-                return NotFound($"The author {id} cannot be found.");
+                if (authorResult.IsNotFound)
+                {
+                    return NotFound($"The author {id} cannot be found.");
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, authorResult.ErrorMessage);
             }
 
-            return Ok(author);
+            return Ok(authorResult.Value);
         }
 
         //        //[HttpGet("{subject}", Name = "GetAuthorBySubject")]
@@ -122,31 +131,24 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             try
             {
-                //var subject = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-                //if (string.IsNullOrEmpty(subject))
-                //{
-                //    return BadRequest();
-                //}
-
-                //if (_authorManager.AuthorExists(subject))
-                //{
-                //    return BadRequest();
-                //}
-
                 var usr = _mapper.Map<ApiAuthorForCreate, Author>(author);
                 usr.IsActivated = true;
-                var newAuthor = await _authorManager.CreateAsync(usr);
+                var newAuthorResult = await _authorManager.CreateAsync(usr);
 
-                if (newAuthor == null)
+                if (!newAuthorResult.Success)
                 {
-                    return BadRequest(new ApiBadRequestResponse("null author found"));
+                    if (newAuthorResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(newAuthorResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, newAuthorResult.ErrorMessage);
                 }
 
-                return Created("", newAuthor);
+                return Created("", newAuthorResult.Value);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -163,17 +165,26 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 var currentAuthor = _mapper.Map<Author>(author);
                 currentAuthor.Id = id;
-                var newAuthor = await _authorManager.UpdateAsync(currentAuthor);
-                if (newAuthor == null)
+                var updateResult = await _authorManager.UpdateAsync(currentAuthor);
+
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_authorManager.ProcessResult.MessageList);
+                    if (updateResult.IsNotFound)
+                    {
+                        return NotFound($"Author with id {id} not found");
+                    }
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -188,27 +199,35 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curUsr = await _authorManager.GetAuthorByIdAsync(id);
-                if (curUsr == null)
+                var curUsrResult = await _authorManager.GetAuthorByIdAsync(id);
+                if (!curUsrResult.Success)
                 {
-                    return NotFound();
+                    if (curUsrResult.IsNotFound)
+                    {
+                        return NotFound($"Author with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curUsrResult.ErrorMessage);
                 }
 
-                var author2Update = _mapper.Map<ApiAuthorForUpdate>(curUsr);
+                var author2Update = _mapper.Map<ApiAuthorForUpdate>(curUsrResult.Value);
                 patchDoc.ApplyTo(author2Update);
-                _mapper.Map(author2Update, curUsr);
+                _mapper.Map(author2Update, curUsrResult.Value);
 
-                var newAuthor = await _authorManager.UpdateAsync(curUsr);
-                if (newAuthor == null)
+                var updateResult = await _authorManager.UpdateAsync(curUsrResult.Value);
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_authorManager.ProcessResult.MessageList);
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -216,25 +235,24 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var authorExists = await _authorManager.IsAuthorExistsAsync(id);
-            if (!authorExists)
-            {
-                return BadRequest($"Invalid author id found.");
-            }
-
             try
             {
-                await _authorManager.DeActivateAsync(id);
-                if (_authorManager.ProcessResult.Success)
+                var deleteResult = await _authorManager.DeActivateAsync(id);
+
+                if (!deleteResult.Success)
                 {
-                    return NoContent();
+                    if (deleteResult.IsNotFound)
+                    {
+                        return NotFound($"Author with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, deleteResult.ErrorMessage);
                 }
 
-                throw new Exception($"Deleting author {id} failed on saving.");
+                return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
     }

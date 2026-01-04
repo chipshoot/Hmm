@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
-using Hmm.Utility.Validation;
+using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -24,8 +24,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         public HmmNoteController(IHmmNoteManager noteManager, IMapper mapper)
         {
-            Guard.Against<ArgumentNullException>(noteManager == null, nameof(noteManager));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            ArgumentNullException.ThrowIfNull(noteManager);
+            ArgumentNullException.ThrowIfNull(mapper);
 
             _noteManager = noteManager;
             _mapper = mapper;
@@ -36,26 +36,35 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var noteList = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);
-            if (!noteList.Any())
+            var noteListResult = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);
+            if (!noteListResult.Success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, noteListResult.ErrorMessage);
+            }
+
+            if (noteListResult.Value == null || !noteListResult.Value.Any())
             {
                 return NotFound();
             }
 
-            return Ok(noteList);
+            return Ok(noteListResult.Value);
         }
 
         [HttpGet("{id:int}", Name = "GetNoteById")]
         [NoteResultFilter]
         public async Task<IActionResult> Get(int id)
         {
-            var note = await _noteManager.GetNoteByIdAsync(id);
-            if (note == null)
+            var noteResult = await _noteManager.GetNoteByIdAsync(id);
+            if (!noteResult.Success)
             {
-                return NotFound($"The note {id} not found.");
+                if (noteResult.IsNotFound)
+                {
+                    return NotFound($"The note {id} not found.");
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, noteResult.ErrorMessage);
             }
 
-            return Ok(note);
+            return Ok(noteResult.Value);
         }
 
         // POST api/notes
@@ -66,18 +75,22 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             try
             {
                 var noteNote = _mapper.Map<ApiNoteForCreate, HmmNote>(note);
-                var newNote = await _noteManager.CreateAsync(noteNote);
+                var newNoteResult = await _noteManager.CreateAsync(noteNote);
 
-                if (newNote == null)
+                if (!newNoteResult.Success)
                 {
-                    return BadRequest($"Internal error found when try to insert note: {note.Subject} {Environment.NewLine} {_noteManager.ProcessResult.GetWholeMessage()}");
+                    if (newNoteResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(newNoteResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, newNoteResult.ErrorMessage);
                 }
 
-                return Created("", newNote);
+                return Created("", newNoteResult.Value);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -92,24 +105,37 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curNote = await _noteManager.GetNoteByIdAsync(id);
-                if (curNote == null)
+                var curNoteResult = await _noteManager.GetNoteByIdAsync(id);
+                if (!curNoteResult.Success)
                 {
-                    return BadRequest($"The note {id} cannot be found.");
+                    if (curNoteResult.IsNotFound)
+                    {
+                        return NotFound($"Note with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
                 }
 
-                curNote = _mapper.Map(note, curNote);
-                var newNote = await _noteManager.UpdateAsync(curNote);
-                if (newNote == null)
+                var curNote = _mapper.Map(note, curNoteResult.Value);
+                var updateResult = await _noteManager.UpdateAsync(curNote);
+
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_noteManager.ProcessResult.MessageList);
+                    if (updateResult.IsNotFound)
+                    {
+                        return NotFound($"Note with id {id} not found");
+                    }
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -124,35 +150,33 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curNote = await _noteManager.GetNoteByIdAsync(id);
-                if (curNote == null)
+                var curNoteResult = await _noteManager.GetNoteByIdAsync(id);
+                if (!curNoteResult.Success)
                 {
-                    return NotFound($"The note {id} cannot be found.");
+                    if (curNoteResult.IsNotFound)
+                    {
+                        return NotFound($"The note {id} cannot be found.");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
                 }
 
-                // Assuming the Note class has a Tags collection
                 var tagToApply = _mapper.Map<Tag>(tag);
-                var tagList = await _noteManager.ApplyTag(curNote, tagToApply);
-                switch (tagList)
-                {
-                    case null:
-                        return BadRequest(_noteManager.ProcessResult.MessageList);
-                    default:
-                    {
-                        if(tagList.Count == 0)
-                        {
-                            return BadRequest(_noteManager.ProcessResult.MessageList);
-                        }
+                var tagListResult = await _noteManager.ApplyTag(curNoteResult.Value, tagToApply);
 
-                        break;
+                if (!tagListResult.Success)
+                {
+                    if (tagListResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(tagListResult.ErrorMessage));
                     }
+                    return StatusCode(StatusCodes.Status500InternalServerError, tagListResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -167,27 +191,35 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curNote = await _noteManager.GetNoteByIdAsync(id);
-                if (curNote == null)
+                var curNoteResult = await _noteManager.GetNoteByIdAsync(id);
+                if (!curNoteResult.Success)
                 {
-                    return NotFound();
+                    if (curNoteResult.IsNotFound)
+                    {
+                        return NotFound($"Note with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
                 }
 
-                var note2Update = _mapper.Map<ApiNoteForUpdate>(curNote);
+                var note2Update = _mapper.Map<ApiNoteForUpdate>(curNoteResult.Value);
                 patchDoc.ApplyTo(note2Update);
-                _mapper.Map(note2Update, curNote);
+                _mapper.Map(note2Update, curNoteResult.Value);
 
-                var newNote = await _noteManager.UpdateAsync(curNote);
-                if (newNote == null)
+                var updateResult = await _noteManager.UpdateAsync(curNoteResult.Value);
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_noteManager.ProcessResult.MessageList);
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -195,31 +227,35 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id)
         {
-            if (id <= 0)
-            {
-                return BadRequest(new ApiBadRequestResponse("Invalid note id found"));
-            }
-
             try
             {
-                var curNote = await _noteManager.GetNoteByIdAsync(id);
-                if (curNote == null)
+                var curNoteResult = await _noteManager.GetNoteByIdAsync(id);
+                if (!curNoteResult.Success)
                 {
-                    return BadRequest($"The note {id} cannot be found.");
+                    if (curNoteResult.IsNotFound)
+                    {
+                        return NotFound($"Note with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
                 }
 
-                curNote.IsDeleted = true;
-                var apiUpdatedNote = await _noteManager.UpdateAsync(curNote);
-                if (apiUpdatedNote == null)
+                curNoteResult.Value.IsDeleted = true;
+                var updateResult = await _noteManager.UpdateAsync(curNoteResult.Value);
+
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_noteManager.ProcessResult.MessageList);
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
     }

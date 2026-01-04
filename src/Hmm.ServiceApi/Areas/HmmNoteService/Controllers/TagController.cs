@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
-using Hmm.Utility.Validation;
+using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -30,8 +30,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         public TagController(ITagManager tagManager, IMapper mapper)
         {
-            Guard.Against<ArgumentNullException>(tagManager == null, nameof(tagManager));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            ArgumentNullException.ThrowIfNull(tagManager);
+            ArgumentNullException.ThrowIfNull(mapper);
 
             _tagManager = tagManager;
             _mapper = mapper;
@@ -44,39 +44,52 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [CollectionResultFilter]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
-            var tags = await _tagManager.GetEntitiesAsync(null, resourceCollectionParameters);
-            if (!tags.Any())
+            var tagsResult = await _tagManager.GetEntitiesAsync(null, resourceCollectionParameters);
+            if (!tagsResult.Success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, tagsResult.ErrorMessage);
+            }
+
+            if (tagsResult.Value == null || !tagsResult.Value.Any())
             {
                 return NotFound();
             }
 
-            return Ok(tags);
+            return Ok(tagsResult.Value);
         }
 
         [HttpGet("{id:int}", Name = "GetTagById")]
         [TagResultFilter]
         public async Task<IActionResult> Get(int id)
         {
-            var tag = await _tagManager.GetTagByIdAsync(id);
-            if (tag == null)
+            var tagResult = await _tagManager.GetTagByIdAsync(id);
+            if (!tagResult.Success)
             {
-                return NotFound($"The tag : {id} not found.");
+                if (tagResult.IsNotFound)
+                {
+                    return NotFound($"The tag : {id} not found.");
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, tagResult.ErrorMessage);
             }
 
-            return Ok(tag);
+            return Ok(tagResult.Value);
         }
 
         [HttpGet("{name}", Name = "GetTagByName")]
         [TagResultFilter]
         public async Task<IActionResult> Get(string name)
         {
-            var tag = await _tagManager.GetTagByNameAsync(name);
-            if (tag == null)
+            var tagResult = await _tagManager.GetTagByNameAsync(name);
+            if (!tagResult.Success)
             {
-                return NotFound($"The tag : {name} not found.");
+                if (tagResult.IsNotFound)
+                {
+                    return NotFound($"The tag : {name} not found.");
+                }
+                return StatusCode(StatusCodes.Status500InternalServerError, tagResult.ErrorMessage);
             }
 
-            return Ok(tag);
+            return Ok(tagResult.Value);
         }
 
         // POST api/tags
@@ -87,18 +100,22 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             try
             {
                 var tag = _mapper.Map<ApiTagForCreate, Tag>(apiTag);
-                var newTag = await _tagManager.CreateAsync(tag);
+                var newTagResult = await _tagManager.CreateAsync(tag);
 
-                if (newTag == null)
+                if (!newTagResult.Success)
                 {
-                    return BadRequest(_tagManager.ProcessResult.GetWholeMessage());
+                    if (newTagResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(newTagResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, newTagResult.ErrorMessage);
                 }
 
-                return Created("", newTag);
+                return Created("", newTagResult.Value);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -113,24 +130,37 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curTag = await _tagManager.GetTagByIdAsync(id);
-                if (curTag == null)
+                var curTagResult = await _tagManager.GetTagByIdAsync(id);
+                if (!curTagResult.Success)
                 {
-                    return BadRequest($"Tag {id} cannot be found.");
+                    if (curTagResult.IsNotFound)
+                    {
+                        return NotFound($"Tag with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curTagResult.ErrorMessage);
                 }
 
-                curTag = _mapper.Map(tag, curTag);
-                var newTag = await _tagManager.UpdateAsync(curTag);
-                if (newTag == null)
+                var curTag = _mapper.Map(tag, curTagResult.Value);
+                var updateResult = await _tagManager.UpdateAsync(curTag);
+
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_tagManager.ProcessResult.MessageList);
+                    if (updateResult.IsNotFound)
+                    {
+                        return NotFound($"Tag with id {id} not found");
+                    }
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -145,27 +175,35 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curTag = await _tagManager.GetTagByIdAsync(id);
-                if (curTag == null)
+                var curTagResult = await _tagManager.GetTagByIdAsync(id);
+                if (!curTagResult.Success)
                 {
-                    return NotFound();
+                    if (curTagResult.IsNotFound)
+                    {
+                        return NotFound($"Tag with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, curTagResult.ErrorMessage);
                 }
 
-                var tag2Update = _mapper.Map<ApiTagForUpdate>(curTag);
+                var tag2Update = _mapper.Map<ApiTagForUpdate>(curTagResult.Value);
                 patchDoc.ApplyTo(tag2Update);
-                _mapper.Map(tag2Update, curTag);
+                _mapper.Map(tag2Update, curTagResult.Value);
 
-                var newTag = await _tagManager.UpdateAsync(curTag);
-                if (newTag == null)
+                var updateResult = await _tagManager.UpdateAsync(curTagResult.Value);
+                if (!updateResult.Success)
                 {
-                    return BadRequest(_tagManager.ProcessResult.MessageList);
+                    if (updateResult.ErrorType == ErrorCategory.ValidationError)
+                    {
+                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
                 }
 
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
 
@@ -173,26 +211,24 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (id <= 0)
-            {
-                return BadRequest(new ApiBadRequestResponse("Invalid tag id found"));
-            }
-
             try
             {
-                var curTag = await _tagManager.GetTagByIdAsync(id);
-                if (curTag == null)
+                var deleteResult = await _tagManager.DeActivateAsync(id);
+
+                if (!deleteResult.Success)
                 {
-                    return BadRequest($"Tag {id} cannot be found.");
+                    if (deleteResult.IsNotFound)
+                    {
+                        return NotFound($"Tag with id {id} not found");
+                    }
+                    return StatusCode(StatusCodes.Status500InternalServerError, deleteResult.ErrorMessage);
                 }
 
-                curTag.IsActivated = false;
-                await _tagManager.DeActivateAsync(id);
                 return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
     }
