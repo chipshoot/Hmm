@@ -15,7 +15,7 @@ namespace Hmm.Core.DefaultManager.Validator
 
         public NoteValidator(IEntityLookup lookup)
         {
-            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+            ArgumentNullException.ThrowIfNull(lookup);
             _lookup = lookup;
 
             RuleFor(n => n.Subject).NotNull().Length(1, 1000);
@@ -33,8 +33,8 @@ namespace Hmm.Core.DefaultManager.Validator
                 return false;
             }
 
-            var savedAuthor = await _lookup.GetEntityAsync<AuthorDao>(author.Id);
-            return savedAuthor != null;
+            var savedAuthorResult = await _lookup.GetEntityAsync<AuthorDao>(author.Id);
+            return savedAuthorResult.Success && savedAuthorResult.IsNotFound;
         }
 
         private async Task<bool> AuthorNotChanged(HmmNote note, Author author, CancellationToken cancellationToken)
@@ -44,16 +44,16 @@ namespace Hmm.Core.DefaultManager.Validator
                 return false;
             }
 
-            var savedNote = await _lookup.GetEntityAsync<HmmNoteDao>(note.Id);
+            var savedNoteResult = await _lookup.GetEntityAsync<HmmNoteDao>(note.Id);
 
             // create new user, make sure account name is unique
             var authorId = author.Id;
-            if (savedNote == null)
+            if (savedNoteResult.Success && savedNoteResult.IsNotFound)
             {
                 return true;
             }
 
-            return savedNote.Author.Id == authorId;
+            return savedNoteResult.Value.Id == authorId;
         }
 
         private async Task<bool> NoteCatalogExists(NoteCatalog catalog, CancellationToken cancellationToken)
@@ -63,8 +63,8 @@ namespace Hmm.Core.DefaultManager.Validator
                 return false;
             }
 
-            var savedCatalog = await _lookup.GetEntityAsync<NoteCatalogDao>(catalog.Id);
-            return savedCatalog != null;
+            var savedCatalogResult = await _lookup.GetEntityAsync<NoteCatalogDao>(catalog.Id);
+            return savedCatalogResult.Success&& savedCatalogResult.IsNotFound;
         }
     }
 }

@@ -1,21 +1,23 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Validation;
 
 namespace Hmm.Core.DefaultManager.Validator
 {
     public class NoteCatalogValidator : ValidatorBase<NoteCatalog>
     {
-        private readonly INoteCatalogManager _catalogManager;
+        private readonly IRepository<NoteCatalogDao> _catalogRepository;
 
-        public NoteCatalogValidator(INoteCatalogManager catalogManager)
+        public NoteCatalogValidator(IRepository<NoteCatalogDao> catalogRepository)
         {
-            Guard.Against<ArgumentNullException>(catalogManager == null, nameof(catalogManager));
-            _catalogManager = catalogManager;
+            ArgumentNullException.ThrowIfNull(catalogRepository);
+            _catalogRepository = catalogRepository;
 
             RuleFor(c => c.Name).NotNull().Length(1, 200);
             RuleFor(c => c.Name).MustAsync(CatalogNameUnique).WithMessage(n => $"Note catalog name {n.Name} is not unique");
@@ -31,22 +33,27 @@ namespace Hmm.Core.DefaultManager.Validator
                 return false;
             }
 
-            var savedCatalog = await _catalogManager.GetEntityByIdAsync(catalog.Id);
+            var savedCatalogResult = await _catalogRepository.GetEntityAsync(catalog.Id);
 
-            // create new user, make sure account name is unique
+            // create new catalog, make sure catalog name is unique
             var cname = catalogName.Trim().ToLower();
-            if (savedCatalog == null)
+            if (!savedCatalogResult.Success || savedCatalogResult.Value == null)
             {
-                var sameNameCatalogs= await _catalogManager.GetEntitiesAsync(c => c.Name.ToLower() == cname);
-                if (sameNameCatalogs.Any())
+                // Creating new catalog - check for existing catalog names
+                var sameNameCatalogsResult = await _catalogRepository.GetEntitiesAsync(c => c.Name.ToLower() == cname);
+                if (sameNameCatalogsResult.Success && !sameNameCatalogsResult.IsNotFound)
                 {
                     return false;
                 }
             }
             else
             {
-                var catalogWithNames = await _catalogManager.GetEntitiesAsync(c => c.Name.ToLower() == cname && c.Id != catalog.Id);
-                return !catalogWithNames.Any();
+                // Updating existing catalog - check for conflicts with other catalogs
+                var catalogWithNamesResult = await _catalogRepository.GetEntitiesAsync(c => c.Name.ToLower() == cname && c.Id != catalog.Id);
+                if (catalogWithNamesResult.Success && !catalogWithNamesResult.IsNotFound)
+                {
+                    return !catalogWithNamesResult.Value.Any();
+                }
             }
 
             return true;

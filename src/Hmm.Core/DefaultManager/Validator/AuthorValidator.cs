@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Validation;
 using System;
 using System.Linq;
@@ -10,12 +12,12 @@ namespace Hmm.Core.DefaultManager.Validator
 {
     public class AuthorValidator : ValidatorBase<Author>
     {
-        private readonly IAuthorManager _authorManager;
+        private readonly IRepository<AuthorDao> _authorRepository;
 
-        public AuthorValidator(IAuthorManager authorSource)
+        public AuthorValidator(IRepository<AuthorDao> authorRepository)
         {
-            Guard.Against<ArgumentNullException>(authorSource == null, nameof(authorSource));
-            _authorManager = authorSource;
+            ArgumentNullException.ThrowIfNull(authorRepository);
+            _authorRepository = authorRepository;
 
             RuleFor(a => a.AccountName).NotNull().Length(1, 256).WithMessage("AccountName is longer then 256 characters");
             RuleFor(a => a.AccountName).MustAsync(UniqueAccountName).WithMessage("Duplicated account name");
@@ -24,22 +26,27 @@ namespace Hmm.Core.DefaultManager.Validator
 
         private async Task<bool> UniqueAccountName(Author user, string accountName, CancellationToken cancellationToken)
         {
-            var savedAuthor = await _authorManager.GetAuthorByIdAsync(user.Id);
+            var savedAuthorResult = await _authorRepository.GetEntityAsync(user.Id);
 
-            // create new user, make sure account name is unique
+            // Create new user, make sure account name is unique
             var acc = accountName.Trim().ToLower();
-            if (savedAuthor == null)
+            if (!savedAuthorResult.Success || savedAuthorResult.IsNotFound)
             {
-                var sameAccountUsers = await _authorManager.GetEntitiesAsync(u => u.AccountName.ToLower() == acc && u.IsActivated);
-                if (sameAccountUsers.Count > 0)
+                // Creating new author - check for existing account names
+                var sameAccountUsersResult = await _authorRepository.GetEntitiesAsync(u => u.AccountName.ToLower() == acc && u.IsActivated);
+                if (sameAccountUsersResult.Success && !sameAccountUsersResult.IsNotFound)
                 {
                     return false;
                 }
             }
             else
             {
-                var userWithAccounts = await _authorManager.GetEntitiesAsync(u => u.AccountName.ToLower() == acc && u.Id != user.Id && u.IsActivated);
-                return !userWithAccounts.Any();
+                // Updating existing author - check for conflicts with other authors
+                var userWithAccountsResult = await _authorRepository.GetEntitiesAsync(u => u.AccountName.ToLower() == acc && u.Id != user.Id && u.IsActivated);
+                if (userWithAccountsResult.Success && !userWithAccountsResult.IsNotFound)
+                {
+                    return !userWithAccountsResult.Value.Any();
+                }
             }
 
             return true;

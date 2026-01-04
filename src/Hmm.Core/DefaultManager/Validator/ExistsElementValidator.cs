@@ -12,7 +12,7 @@ namespace Hmm.Core.DefaultManager.Validator
 
         public ExistsElementValidator(IEntityLookup lookupRepo)
         {
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            ArgumentNullException.ThrowIfNull(lookupRepo);
 
             _lookupRepo = lookupRepo;
             RuleFor(e => e.Id).GreaterThan(0).Must(Exists);

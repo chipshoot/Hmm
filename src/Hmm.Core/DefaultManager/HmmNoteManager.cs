@@ -30,10 +30,10 @@ namespace Hmm.Core.DefaultManager
 
         public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, ITagManager tagManager, IEntityLookup lookup, IDateTimeProvider dateProvider)
         {
-            Guard.Against<ArgumentNullException>(noteRepository == null, nameof(noteRepository));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-            Guard.Against<ArgumentNullException>(tagManager == null, nameof(tagManager));
-            Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));
+            ArgumentNullException.ThrowIfNull(noteRepository);
+            ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(tagManager);
+            ArgumentNullException.ThrowIfNull(dateProvider);
 
             _noteRepository = noteRepository;
             _mapper = mapper;

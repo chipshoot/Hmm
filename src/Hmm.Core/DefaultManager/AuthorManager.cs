@@ -22,9 +22,9 @@ namespace Hmm.Core.DefaultManager
 
         public AuthorManager(IRepository<AuthorDao> authorRepository, IMapper mapper, IEntityLookup lookup)
         {
-            Guard.Against<ArgumentNullException>(authorRepository == null, nameof(authorRepository));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+            ArgumentNullException.ThrowIfNull(authorRepository);
+            ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(lookup);
 
             _authorRepository = authorRepository;
             _mapper = mapper;
@@ -179,23 +179,24 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                var user = await _authorRepository.GetEntityAsync(id);
-                if (user == null)
+                var userResult = await _lookup.GetEntityAsync<AuthorDao>(id);
+                if (!userResult.Success)
                 {
                     return ProcessingResult<Unit>.NotFound($"Cannot find user with id: {id}");
                 }
 
+                var user = userResult.Value;
                 if (!user.IsActivated)
                 {
                     return ProcessingResult<Unit>.Ok(Unit.Value, $"User with id {id} is already deactivated");
                 }
 
                 user.IsActivated = false;
-                var updated = await _authorRepository.UpdateAsync(user);
+                var updatedResult = await _authorRepository.UpdateAsync(user);
 
-                if (updated == null)
+                if (!updatedResult.Success)
                 {
-                    return ProcessingResult<Unit>.Fail("Failed to deactivate user");
+                    return ProcessingResult<Unit>.Fail(updatedResult.ErrorMessage, updatedResult.ErrorType);
                 }
 
                 return ProcessingResult<Unit>.Ok(Unit.Value, $"User with id {id} has been deactivated");

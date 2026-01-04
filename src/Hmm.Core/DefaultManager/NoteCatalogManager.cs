@@ -22,13 +22,13 @@ namespace Hmm.Core.DefaultManager
 
         public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper, IEntityLookup lookup)
         {
-            Guard.Against<ArgumentNullException>(dataSource == null, nameof(dataSource));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+            ArgumentNullException.ThrowIfNull(dataSource);
+            ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(lookup);
 
             _mapper = mapper;
             _catalogRepository = dataSource;
-            _validator = new NoteCatalogValidator(this);
+            _validator = new NoteCatalogValidator(dataSource);
             _lookup = lookup;
         }
 

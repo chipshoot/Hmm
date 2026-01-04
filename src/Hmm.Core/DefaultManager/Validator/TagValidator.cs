@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Validation;
 using System;
 using System.Linq;
@@ -10,12 +12,12 @@ namespace Hmm.Core.DefaultManager.Validator
 {
     public class TagValidator : ValidatorBase<Tag>
     {
-        private readonly ITagManager _tagManager;
+        private readonly ICompositeEntityRepository<TagDao, HmmNoteDao> _tagRepository;
 
-        public TagValidator(ITagManager tagManager)
+        public TagValidator(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository)
         {
-            Guard.Against<ArgumentNullException>(tagManager == null, nameof(tagManager));
-            _tagManager = tagManager;
+            ArgumentNullException.ThrowIfNull(tagRepository);
+            _tagRepository = tagRepository;
 
             RuleFor(n => n.Name).NotNull().Length(1, 200);
             RuleFor(n => n.Name).MustAsync(TagNameUnique).WithMessage(n => $"Tag name {n.Name} is not unique");
@@ -30,22 +32,27 @@ namespace Hmm.Core.DefaultManager.Validator
                 return false;
             }
 
-            var savedTag = await _tagManager.GetTagByIdAsync(tag.Id);
+            var savedTagResult = await _tagRepository.GetEntityAsync(tag.Id);
 
-            // create new user, make sure account name is unique
+            // create new tag, make sure tag name is unique
             var tname = tagName.Trim().ToLower();
-            if (savedTag == null)
+            if (!savedTagResult.Success || savedTagResult.IsNotFound)
             {
-                var sameNameTags= await _tagManager.GetEntitiesAsync(t => t.Name.ToLower() == tname);
-                if (sameNameTags.Any())
+                // Creating new tag - check for existing tag names
+                var sameNameTagsResult = await _tagRepository.GetEntitiesAsync(t => t.Name.ToLower() == tname && t.IsActivated);
+                if (sameNameTagsResult.Success && !sameNameTagsResult.IsNotFound)
                 {
                     return false;
                 }
             }
             else
             {
-                var tagWithNames = await _tagManager.GetEntitiesAsync(t => t.Name.ToLower() == tname && t.Id != tag.Id);
-                return !tagWithNames.Any();
+                // Updating existing tag - check for conflicts with other tags
+                var tagWithNamesResult = await _tagRepository.GetEntitiesAsync(t => t.Name.ToLower() == tname && t.Id != tag.Id && t.IsActivated);
+                if (tagWithNamesResult.Success && !tagWithNamesResult.IsNotFound)
+                {
+                    return !tagWithNamesResult.Value.Any();
+                }
             }
 
             return true;

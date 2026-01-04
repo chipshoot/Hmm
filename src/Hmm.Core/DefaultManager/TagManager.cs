@@ -23,11 +23,11 @@ namespace Hmm.Core.DefaultManager
 
         public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IMapper mapper, IEntityLookup lookup)
         {
-            Guard.Against<ArgumentNullException>(tagRepository == null, nameof(tagRepository));
-            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+            ArgumentNullException.ThrowIfNull(tagRepository);
+            ArgumentNullException.ThrowIfNull(mapper);
             _tagRepository = tagRepository;
             _mapper = mapper;
-            _validator = new TagValidator(this);
+            _validator = new TagValidator(tagRepository);
             _lookup = lookup;
         }
 

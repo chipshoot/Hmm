@@ -23,9 +23,9 @@ public class ContactManager : IContactManager
 
     public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper, IEntityLookup lookup)
     {
-        Guard.Against<ArgumentNullException>(contactRepository == null, nameof(contactRepository));
-        Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-        Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+        ArgumentNullException.ThrowIfNull(contactRepository);
+        ArgumentNullException.ThrowIfNull(mapper);
+        ArgumentNullException.ThrowIfNull(lookup);
         _contactDaoRepository = contactRepository;
         _mapper = mapper;
         _validator = new ContactValidator();
