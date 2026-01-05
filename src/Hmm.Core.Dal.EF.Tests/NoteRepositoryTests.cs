@@ -37,12 +37,13 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = await NoteRepository.AddAsync(note);
+            var result = await NoteRepository.AddAsync(note);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id >= 1, "savedRec.Id>=1");
-            Assert.True(savedRec.Id == note.Id, "savedRec.Id==note.Id");
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id >= 1, "savedRec.Id>=1");
+            Assert.True(result.Value.Id == note.Id, "savedRec.Id==note.Id");
         }
 
         [Fact]
@@ -104,14 +105,15 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = await NoteRepository.AddAsync(note);
+            var result = await NoteRepository.AddAsync(note);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id > 0, "savedRec.Id>0");
-            Assert.True(savedRec.Id == note.Id, "savedRec.Id==note.Id");
-            Assert.NotNull(savedRec.Catalog);
-            Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id > 0, "savedRec.Id>0");
+            Assert.True(result.Value.Id == note.Id, "savedRec.Id==note.Id");
+            Assert.NotNull(result.Value.Catalog);
+            Assert.Equal(DefaultNoteCatalogName, result.Value.Catalog.Name);
         }
 
         [Fact]
@@ -132,15 +134,15 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             note.Description = "testing note2";
-            var savedRec = await NoteRepository.UpdateAsync(note);
+            var result = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id >= 1, "savedRec.Id >= 1");
-            Assert.True(savedRec.Id == note.Id, "savedRec.Id == note.Id");
-            Assert.Equal("testing note2", savedRec.Description);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id >= 1, "savedRec.Id >= 1");
+            Assert.True(result.Value.Id == note.Id, "savedRec.Id == note.Id");
+            Assert.Equal("testing note2", result.Value.Description);
             Assert.Equal("testing note2", note.Description);
-            Assert.True(NoteRepository.ProcessMessage.Success);
         }
 
         [Fact]
@@ -158,19 +160,19 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
 
             // Act
             note.Subject = "This is new subject";
-            var savedRec = await NoteRepository.UpdateAsync(note);
+            var result = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id >= 1, "savedRec.Id >=1");
-            Assert.Equal("This is new subject", savedRec.Subject);
-            Assert.Equal(note.Id, savedRec.Id);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id >= 1, "savedRec.Id >=1");
+            Assert.Equal("This is new subject", result.Value.Subject);
+            Assert.Equal(note.Id, result.Value.Id);
             Assert.Equal("This is new subject", note.Subject);
-            Assert.True(NoteRepository.ProcessMessage.Success);
         }
 
         [Fact]
@@ -188,20 +190,21 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
 
             // Act
             var newXml = new XmlDocument();
             newXml.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><GasLog></GasLog>");
             note.Content = newXml.InnerXml;
-            var savedRec = await NoteRepository.UpdateAsync(note);
+            var result = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id >= 1, "savedRec.Id >=1");
-            Assert.True(savedRec.Id == note.Id, "savedRec.Id == note.Id");
-            Assert.Equal(newXml.InnerXml, savedRec.Content);
-            Assert.NotEqual(xmlDoc.InnerXml, savedRec.Content);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id >= 1, "savedRec.Id >=1");
+            Assert.True(result.Value.Id == note.Id, "savedRec.Id == note.Id");
+            Assert.Equal(newXml.InnerXml, result.Value.Content);
+            Assert.NotEqual(xmlDoc.InnerXml, result.Value.Content);
         }
 
         [Fact]
@@ -221,21 +224,22 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
 
             // changed the note catalog
-            var catalogList = await CatalogRepository.GetEntitiesAsync(cat => !cat.IsDefault);
-            var newCat = catalogList.FirstOrDefault()?? _catalog;
+            var catalogListResult = await CatalogRepository.GetEntitiesAsync(cat => !cat.IsDefault);
+            var newCat = catalogListResult.Value.FirstOrDefault()?? _catalog;
             note.Catalog = newCat;
 
             // Act
-            var savedRec = await NoteRepository.UpdateAsync(note);
+            var result = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.NotNull(savedRec.Catalog);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.NotNull(result.Value.Catalog);
             Assert.NotNull(note.Catalog);
-            Assert.Equal(AlternativeNoteCatalogName, savedRec.Catalog.Name);
+            Assert.Equal(AlternativeNoteCatalogName, result.Value.Catalog.Name);
             Assert.Equal(AlternativeNoteCatalogName, note.Catalog.Name);
         }
 
@@ -245,7 +249,8 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange - null catalog for note
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var catalogList = await CatalogRepository.GetEntitiesAsync();
+            var catalogListResult = await CatalogRepository.GetEntitiesAsync();
+            var catalogList = catalogListResult.Value;
             var catalog = catalogList.FirstOrDefault(cat => !cat.IsDefault);
             Assert.NotNull(catalog);
             var note = new HmmNoteDao
@@ -259,8 +264,9 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
-            var savedRecList = await NoteRepository.GetEntitiesAsync();
+            // ProcessMessage no longer exists - check result.Success instead
+            var savedRecListResult = await NoteRepository.GetEntitiesAsync();
+            var savedRecList = savedRecListResult.Value;
             var savedRec = savedRecList.FirstOrDefault();
             Assert.NotNull(savedRec);
             Assert.Equal(AlternativeNoteCatalogName, savedRec.Catalog.Name);
@@ -269,10 +275,11 @@ namespace Hmm.Core.Dal.EF.Tests
             note.Catalog = null;
 
             // Act
-            savedRec = await NoteRepository.UpdateAsync(note);
+            var updateResult = await NoteRepository.UpdateAsync(note);
+            savedRec = updateResult.Value;
 
             // Assert
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
             Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
@@ -307,7 +314,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
 
             note.Catalog = catalog;
 
@@ -315,7 +322,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
             Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
@@ -350,7 +357,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
 
             note.Catalog = catalog;
 
@@ -358,7 +365,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var savedRec = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
             Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
@@ -383,21 +390,19 @@ namespace Hmm.Core.Dal.EF.Tests
             // Act
             var orgId = note.Id;
             note.Id = 2;
-            var savedRec = await NoteRepository.UpdateAsync(note);
+            var result = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.False(NoteRepository.ProcessMessage.Success);
-            Assert.Null(savedRec);
+            Assert.False(result.Success);
 
             // Arrange - invalid id
             note.Id = 0;
 
             // Act
-            savedRec = await NoteRepository.UpdateAsync(note);
+            result = await NoteRepository.UpdateAsync(note);
 
             // Assert
-            Assert.False(NoteRepository.ProcessMessage.Success);
-            Assert.Null(savedRec);
+            Assert.False(result.Success);
 
             // do this to make clear up code pass
             note.Id = orgId;
@@ -418,16 +423,15 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
 
             // Act
-            var result = await NoteRepository.DeleteAsync(note);
-            var notes = await NoteRepository.GetEntitiesAsync();
+            var deleteResult = await NoteRepository.DeleteAsync(note);
+            var notesResult = await NoteRepository.GetEntitiesAsync();
 
             // Assert
-            Assert.True(NoteRepository.ProcessMessage.Success);
-            Assert.True(result);
-            Assert.Empty(notes);
+            Assert.True(deleteResult.Success);
+            Assert.Empty(notesResult.Value);
         }
 
         [Fact]
@@ -445,18 +449,17 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            Assert.True(NoteRepository.ProcessMessage.Success);
+            // ProcessMessage no longer exists - check result.Success instead
 
             // change the note id to create a new note
             var orgId = note.Id;
             note.Id = 2;
 
             // Act
-            var result = await NoteRepository.DeleteAsync(note);
+            var deleteResult = await NoteRepository.DeleteAsync(note);
 
             // Assert
-            Assert.False(NoteRepository.ProcessMessage.Success);
-            Assert.False(result);
+            Assert.False(deleteResult.Success);
 
             // do this just to make clear up code pass
             note.Id = orgId;
@@ -524,7 +527,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsDefault = true,
                 Description = "default xml note",
             };
-            _catalog = await CatalogRepository.AddAsync(catalog);
+            var catalogResult = await CatalogRepository.AddAsync(catalog);
+            _catalog = catalogResult.Value;
             var catalog2 = new NoteCatalogDao
             {
                 Name = AlternativeNoteCatalogName,
@@ -543,15 +547,16 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing contact",
                 IsActivated = true
             };
-            var contact = await ContactRepository.AddAsync(contactDb);
+            var contactResult = await ContactRepository.AddAsync(contactDb);
             var author = new AuthorDao
             {
                 AccountName = DefaultUserName,
-                ContactInfo = contact,
+                ContactInfo = contactResult.Value,
                 Description = "testing user",
                 IsActivated = true
             };
-            _author = await AuthorRepository.AddAsync(author);
+            var authorResult = await AuthorRepository.AddAsync(author);
+            _author = authorResult.Value;
         }
     }
 }

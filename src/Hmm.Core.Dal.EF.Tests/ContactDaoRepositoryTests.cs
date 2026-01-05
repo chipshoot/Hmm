@@ -16,12 +16,13 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         var contact = SampleDataGenerator.GetContactDao();
 
         // Act
-        var savedRec = await ContactRepository.AddAsync(contact);
+        var result = await ContactRepository.AddAsync(contact);
 
         // Assert
-        Assert.NotNull(savedRec);
-        Assert.True(savedRec.Id >= 0, "savedRec.Id is greater then 0");
-        Assert.Equal(contact.Id, savedRec.Id);
+        Assert.True(result.Success);
+        Assert.NotNull(result.Value);
+        Assert.True(result.Value.Id >= 0, "savedRec.Id is greater then 0");
+        Assert.Equal(contact.Id, result.Value.Id);
     }
 
     [Fact]
@@ -29,13 +30,13 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
     {
         // Arrange
         var contact = SampleDataGenerator.GetContactDao();
-        var savedContact = await ContactRepository.AddAsync(contact);
+        var addResult = await ContactRepository.AddAsync(contact);
 
         // Act
-        var result = await ContactRepository.DeleteAsync(savedContact);
+        var result = await ContactRepository.DeleteAsync(addResult.Value);
 
         // Assert
-        Assert.True(result);
+        Assert.True(result.Success);
     }
 
     [Fact]
@@ -53,9 +54,8 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         var result = await ContactRepository.DeleteAsync(contact2);
 
         // Assert
-        Assert.False(result);
-        Assert.False(ContactRepository.ProcessMessage.Success);
-        Assert.Single(ContactRepository.ProcessMessage.MessageList);
+        Assert.False(result.Success);
+        Assert.True(result.Messages.Count > 0);
     }
 
     [Fact]
@@ -72,8 +72,9 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         var result = await ContactRepository.UpdateAsync(contact);
 
         // Arrange
-        Assert.NotNull(result);
-        Assert.False(result.IsActivated);
+        Assert.True(result.Success);
+        Assert.NotNull(result.Value);
+        Assert.False(result.Value.IsActivated);
 
         // Arrange - update description
         contact.Description = "new testing contact";
@@ -82,8 +83,9 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         result = await ContactRepository.UpdateAsync(contact);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal("new testing contact", result.Description);
+        Assert.True(result.Success);
+        Assert.NotNull(result.Value);
+        Assert.Equal("new testing contact", result.Value.Description);
     }
 
     public async Task InitializeAsync()

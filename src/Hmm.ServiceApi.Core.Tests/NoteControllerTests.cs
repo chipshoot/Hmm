@@ -206,7 +206,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_noteManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -217,7 +218,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiNoteForUpdate = new ApiNoteForUpdate { Subject = "UpdatedNote" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
-            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(note);
+            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
             var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
 
@@ -306,12 +307,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var note = new HmmNote { Id = noteId, Tags = [] };
             var tag = new Tag { Name = "Important" };
 
-            var errorMsg = new ProcessingResult();
-            errorMsg.AddErrorMessage("something went wrong");
             var noteManagerMock = new Mock<IHmmNoteManager>();
-            noteManagerMock.Setup(m => m.GetNoteByIdAsync(noteId, false)).ReturnsAsync(note);
-            noteManagerMock.Setup(m => m.ApplyTag(note, tag)).ReturnsAsync(null as List<Tag>);
-            noteManagerMock.Setup(m => m.ProcessResult).Returns(errorMsg);
+            noteManagerMock.Setup(m => m.GetNoteByIdAsync(noteId, false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
+            noteManagerMock.Setup(m => m.ApplyTag(note, tag)).ReturnsAsync(ProcessingResult<List<Tag>>.Invalid("something went wrong"));
             var controller =  new HmmNoteController(noteManagerMock.Object, ApiMapper);
 
             // Act
@@ -387,7 +385,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_noteManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -400,7 +399,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
-            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(note);
+            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
             var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
 
@@ -465,7 +464,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int noteId = 1;
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
-            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(note);
+            mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.DeleteAsync(It.IsAny<int>())).Throws(new Exception());
             var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
 

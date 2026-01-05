@@ -143,19 +143,22 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int authorId = 100;
-            var existingAuthor = await _authorManager.GetAuthorByIdAsync(authorId);
+            var existingAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
+            Assert.True(existingAuthorResult.Success);
+            var existingAuthor = existingAuthorResult.Value;
             Assert.NotNull(existingAuthor);
             var apiAuthorForUpdate = ApiMapper.Map<ApiAuthorForUpdate>(existingAuthor);
             apiAuthorForUpdate.AccountName = "UpdatedAuthor";
 
             // Act
             var result = await _controller.Put(authorId, apiAuthorForUpdate);
-            var updatedAuthor = await _authorManager.GetAuthorByIdAsync(authorId);
+            var updatedAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Equal(authorId, updatedAuthor.Id);
-            Assert.Equal(apiAuthorForUpdate.AccountName, updatedAuthor.AccountName);
+            Assert.True(updatedAuthorResult.Success);
+            Assert.Equal(authorId, updatedAuthorResult.Value.Id);
+            Assert.Equal(apiAuthorForUpdate.AccountName, updatedAuthorResult.Value.AccountName);
         }
 
         [Fact]
@@ -193,8 +196,14 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task UpdateAuthor_ReturnsBadRequest_WhenUpdateFails()
         {
             // Arrange
-            var existingAuthor = await _authorManager.GetAuthorByIdAsync(100);
-            var existingAuthor2 = await _authorManager.GetAuthorByIdAsync(101);
+            var existingAuthorResult = await _authorManager.GetAuthorByIdAsync(100);
+            Assert.True(existingAuthorResult.Success);
+            var existingAuthor = existingAuthorResult.Value;
+            
+            var existingAuthor2Result = await _authorManager.GetAuthorByIdAsync(101);
+            Assert.True(existingAuthor2Result.Success);
+            var existingAuthor2 = existingAuthor2Result.Value;
+            
             var apiAuthorForUpdate = new ApiAuthorForUpdate { AccountName = existingAuthor2.AccountName };
 
             // Act
@@ -202,7 +211,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_authorManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -212,7 +222,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int authorId = 100;
             var apiAuthorForUpdate = new ApiAuthorForUpdate { AccountName = "UpdatedAuthor" };
             var mockAuthorManager = new Mock<IAuthorManager>();
-            mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Author { Id = id, AccountName = "Exists Author" });
+            mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "Exists Author" }));
             mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>())).Throws(new Exception());
             var controller = new AuthorController(mockAuthorManager.Object, ApiMapper);
 
@@ -234,19 +244,22 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int authorId = 100;
             var patchDoc = new JsonPatchDocument<ApiAuthorForUpdate>();
-            var existingAuthor = await _authorManager.GetAuthorByIdAsync(authorId);
+            var existingAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
+            Assert.True(existingAuthorResult.Success);
+            var existingAuthor = existingAuthorResult.Value;
             Assert.NotNull(existingAuthor);
             patchDoc.Replace(e => e.Description, "Updated author with new description");
             patchDoc.Replace(e => e.ContactInfo.FirstName, "Updated author contact first name");
 
             // Act
             var result = await _controller.Patch(authorId, patchDoc);
-            var updatedAuthor = await _authorManager.GetAuthorByIdAsync(authorId);
+            var updatedAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Equal("Updated author with new description", updatedAuthor.Description);
-            Assert.Equal("Updated author contact first name", updatedAuthor.ContactInfo.FirstName);
+            Assert.True(updatedAuthorResult.Success);
+            Assert.Equal("Updated author with new description", updatedAuthorResult.Value.Description);
+            Assert.Equal("Updated author contact first name", updatedAuthorResult.Value.ContactInfo.FirstName);
         }
 
         [Fact]
@@ -284,7 +297,9 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int authorId = 100;
             var patchDoc = new JsonPatchDocument<ApiAuthorForUpdate>();
-            var existingAuthor = await _authorManager.GetAuthorByIdAsync(authorId);
+            var existingAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
+            Assert.True(existingAuthorResult.Success);
+            var existingAuthor = existingAuthorResult.Value;
             patchDoc.Replace(e => e.AccountName, existingAuthor.AccountName);
 
             // Act
@@ -292,7 +307,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_authorManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -304,7 +320,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(e => e.AccountName, "SomeNewName");
 
             var mockAuthorManager = new Mock<IAuthorManager>();
-            mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Author { Id = id, AccountName = "ExistsAuthor" });
+            mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "ExistsAuthor" }));
             mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>())).Throws(new Exception());
             var controller = new AuthorController(mockAuthorManager.Object, ApiMapper);
 
@@ -325,16 +341,17 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int authorId = 100;
-            var existingAuthor = await _authorManager.GetAuthorByIdAsync(authorId);
-            Assert.NotNull(existingAuthor);
+            var existingAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
+            Assert.True(existingAuthorResult.Success);
+            Assert.NotNull(existingAuthorResult.Value);
 
             // Act
             var result = await _controller.Delete(authorId);
-            var deletedAuthor = await _authorManager.GetAuthorByIdAsync(authorId);
+            var deletedAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Null(deletedAuthor);
+            Assert.False(deletedAuthorResult.Success);
         }
 
         [Fact]
@@ -368,7 +385,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int authorId = 100;
             var mockAuthorManager = new Mock<IAuthorManager>();
-            mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Author { Id = id, AccountName = "ExistsAuthor" });
+            mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "ExistsAuthor" }));
             mockAuthorManager.Setup(a => a.IsAuthorExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
             mockAuthorManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
             var controller = new AuthorController(mockAuthorManager.Object, ApiMapper);

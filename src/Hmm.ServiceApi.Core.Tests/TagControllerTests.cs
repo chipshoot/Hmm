@@ -199,7 +199,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_tagManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -209,7 +210,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int tagId = 100;
             var apiTagForUpdate = new ApiTagForUpdate { Name = "UpdatedTag" };
             var mockTagManager = new Mock<ITagManager>();
-            mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Tag { Id = id, Name = "Exists Tag" });
+            mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Tag>.Ok(new Tag { Id = id, Name = "Exists Tag" }));
             mockTagManager.Setup(m => m.UpdateAsync(It.IsAny<Tag>())).Throws(new Exception());
             var controller = new TagController(mockTagManager.Object, ApiMapper);
 
@@ -287,7 +288,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_tagManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -299,7 +301,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(e => e.Name, "SomeNewName");
 
             var mockTagManager = new Mock<ITagManager>();
-            mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Tag { Id = id, Name = "Exists Tag" });
+            mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Tag>.Ok(new Tag { Id = id, Name = "Exists Tag" }));
             mockTagManager.Setup(m => m.UpdateAsync(It.IsAny<Tag>())).Throws(new Exception());
             var controller = new TagController(mockTagManager.Object, ApiMapper);
 
@@ -363,7 +365,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int tagId = 1;
             var mockTagManager = new Mock<ITagManager>();
-            mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Tag { Id = id, Name = "Exists Tag" });
+            mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Tag>.Ok(new Tag { Id = id, Name = "Exists Tag" }));
             mockTagManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
             var controller = new TagController(mockTagManager.Object, ApiMapper);
 

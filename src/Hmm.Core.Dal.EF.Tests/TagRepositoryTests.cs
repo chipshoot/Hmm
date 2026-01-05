@@ -21,25 +21,26 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = await TagRepository.AddAsync(tag);
+            var result = await TagRepository.AddAsync(tag);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id > 0, "savedRec.Id > 0");
-            Assert.True(tag.Id == savedRec.Id, "tag.Id == savedRec.Id");
-            Assert.True(TagRepository.ProcessMessage.Success);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id > 0, "savedRec.Id > 0");
+            Assert.True(tag.Id == result.Value.Id, "tag.Id == savedRec.Id");
         }
 
         [Fact]
         public async Task CanNot_Add_Already_Existed_Tag_To_DataSource()
         {
             // Arrange
-            await TagRepository.AddAsync(new TagDao
+            var firstResult = await TagRepository.AddAsync(new TagDao
             {
                 Name = "GasLog",
                 IsActivated = true,
                 Description = "testing tag",
             });
+            Assert.True(firstResult.Success);
 
             var tag = new TagDao
             {
@@ -49,13 +50,12 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = await TagRepository.AddAsync(tag);
+            var result = await TagRepository.AddAsync(tag);
 
             // Assert
-            Assert.Null(savedRec);
+            Assert.False(result.Success);
             Assert.True(tag.Id <= 0, "tag.Id <=0");
-            Assert.False(TagRepository.ProcessMessage.Success);
-            Assert.Single(TagRepository.ProcessMessage.MessageList);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -69,14 +69,14 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing tag"
             };
 
-            await TagRepository.AddAsync(tag);
+            var addResult = await TagRepository.AddAsync(tag);
+            Assert.True(addResult.Success);
 
             // Act
             var result = await TagRepository.DeleteAsync(tag);
 
             // Assert
-            Assert.True(result);
-            Assert.True(TagRepository.ProcessMessage.Success);
+            Assert.True(result.Success);
         }
 
         [Fact]
@@ -90,7 +90,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing tag"
             };
 
-            await TagRepository.AddAsync(tag);
+            var addResult = await TagRepository.AddAsync(tag);
+            Assert.True(addResult.Success);
 
             var tag2 = new TagDao
             {
@@ -103,9 +104,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await TagRepository.DeleteAsync(tag2);
 
             // Assert
-            Assert.False(result);
-            Assert.False(TagRepository.ProcessMessage.Success);
-            Assert.Single(TagRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -119,8 +119,9 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing tag"
             };
 
-            var savedTag = await TagRepository.AddAsync(tag);
-            Assert.NotNull(savedTag);
+            var addResult = await TagRepository.AddAsync(tag);
+            Assert.True(addResult.Success);
+            Assert.NotNull(addResult.Value);
 
             tag.Name = "GasLog2";
 
@@ -128,8 +129,9 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await TagRepository.UpdateAsync(tag);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("GasLog2", result.Name);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("GasLog2", result.Value.Name);
 
             // Arrange - update description
             tag.Description = "new testing tag";
@@ -138,8 +140,9 @@ namespace Hmm.Core.Dal.EF.Tests
             result = await TagRepository.UpdateAsync(tag);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("new testing tag", result.Description);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("new testing tag", result.Value.Description);
         }
 
         [Fact]
@@ -153,7 +156,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing tag"
             };
 
-            await TagRepository.AddAsync(tag);
+            var addResult = await TagRepository.AddAsync(tag);
+            Assert.True(addResult.Success);
 
             var tag2 = new TagDao
             {
@@ -166,9 +170,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await TagRepository.UpdateAsync(tag2);
 
             // Assert
-            Assert.Null(result);
-            Assert.False(TagRepository.ProcessMessage.Success);
-            Assert.Single(TagRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -181,7 +184,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true,
                 Description = "testing tag"
             };
-            await TagRepository.AddAsync(tag);
+            var addResult1 = await TagRepository.AddAsync(tag);
+            Assert.True(addResult1.Success);
 
             var tag2 = new TagDao
             {
@@ -189,7 +193,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true,
                 Description = "testing tag2"
             };
-            await TagRepository.AddAsync(tag2);
+            var addResult2 = await TagRepository.AddAsync(tag2);
+            Assert.True(addResult2.Success);
 
             tag.Name = tag2.Name;
 
@@ -197,9 +202,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await TagRepository.UpdateAsync(tag);
 
             // Assert
-            Assert.Null(result);
-            Assert.False(TagRepository.ProcessMessage.Success);
-            Assert.Single(TagRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Theory]
@@ -209,20 +213,25 @@ namespace Hmm.Core.Dal.EF.Tests
         {
             // Arrange
             await SetTestingData();
-            var noteList = await NoteRepository.GetEntitiesAsync();
-            var note = noteList.FirstOrDefault();
+            var noteListResult = await NoteRepository.GetEntitiesAsync();
+            Assert.True(noteListResult.Success);
+            var note = noteListResult.Value.FirstOrDefault();
             Assert.NotNull(note);
             var tagNameList = tags.Split(",").ToList();
-            var savedTags = await TagRepository.GetEntitiesAsync();
-            var tagList = savedTags.Where(tag => tagNameList.Contains(tag.Name)).ToList();
+            var savedTagsResult = await TagRepository.GetEntitiesAsync();
+            Assert.True(savedTagsResult.Success);
+            var tagList = savedTagsResult.Value.Where(tag => tagNameList.Contains(tag.Name)).ToList();
 
             foreach (var tag in tagList)
             {
                 // Act
                 note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
-                await NoteRepository.UpdateAsync(note);
+                var updateResult = await NoteRepository.UpdateAsync(note);
+                Assert.True(updateResult.Success);
             }
-            var savedNote = await NoteRepository.GetEntityAsync(note.Id);
+            var savedNoteResult = await NoteRepository.GetEntityAsync(note.Id);
+            Assert.True(savedNoteResult.Success);
+            var savedNote = savedNoteResult.Value;
 
             // Assert
             Assert.True(savedNote.Tags.ToList().Count == expectTagNumber);
@@ -236,30 +245,36 @@ namespace Hmm.Core.Dal.EF.Tests
         {
             // Arrange
             await SetTestingData();
-            var tagList = await TagRepository.GetEntitiesAsync();
-            var tag = tagList.FirstOrDefault();
+            var tagListResult = await TagRepository.GetEntitiesAsync();
+            Assert.True(tagListResult.Success);
+            var tag = tagListResult.Value.FirstOrDefault();
             Assert.NotNull(tag);
             var noteSubjectList = notes.Split(",").ToList();
-            var savedNotes = await NoteRepository.GetEntitiesAsync();
-            var noteList = savedNotes.Where(n => noteSubjectList.Contains(n.Subject)).ToList();
+            var savedNotesResult = await NoteRepository.GetEntitiesAsync();
+            Assert.True(savedNotesResult.Success);
+            var noteList = savedNotesResult.Value.Where(n => noteSubjectList.Contains(n.Subject)).ToList();
             foreach (var note in noteList)
             {
                 // Act
                 tag.Notes.Add(new NoteTagRefDao { Note = note, NoteId = note.Id, Tag = tag, TagId = tag.Id });
-                await TagRepository.UpdateAsync(tag);
+                var updateResult = await TagRepository.UpdateAsync(tag);
+                Assert.True(updateResult.Success);
             }
 
-            var tagNotes = await TagRepository.GetNoteByTagAsync(tag.Id);
+            var tagNotesResult = await TagRepository.GetNoteByTagAsync(tag.Id);
+            Assert.True(tagNotesResult.Success);
 
             // Assert
             foreach (var note in noteList)
             {
-                var savedNote = await NoteRepository.GetEntityAsync(note.Id);
+                var savedNoteResult = await NoteRepository.GetEntityAsync(note.Id);
+                Assert.True(savedNoteResult.Success);
+                var savedNote = savedNoteResult.Value;
                 Assert.Single(savedNote.Tags);
                 Assert.Equal(tag.Name, savedNote.Tags.FirstOrDefault()!.Tag.Name);
             }
 
-            Assert.Equal(expectTagNumber, tagNotes.Count);
+            Assert.Equal(expectTagNumber, tagNotesResult.Value.Count);
         }
 
         [Fact]
@@ -267,27 +282,32 @@ namespace Hmm.Core.Dal.EF.Tests
         {
             // Arrange
             await SetTestingData();
-            var tags = await TagRepository.GetEntitiesAsync();
-            var tag = tags.FirstOrDefault();
+            var tagsResult = await TagRepository.GetEntitiesAsync();
+            Assert.True(tagsResult.Success);
+            var tag = tagsResult.Value.FirstOrDefault();
             Assert.NotNull(tag);
             var tagId = tag.Id;
-            var notes = await NoteRepository.GetEntitiesAsync();
-            var note = notes.FirstOrDefault();
+            var notesResult = await NoteRepository.GetEntitiesAsync();
+            Assert.True(notesResult.Success);
+            var note = notesResult.Value.FirstOrDefault();
             Assert.NotNull(note);
 
             note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
-            var savedNote = await NoteRepository.UpdateAsync(note);
-            Assert.NotNull(savedNote);
-            Assert.Single(savedNote.Tags);
+            var savedNoteResult = await NoteRepository.UpdateAsync(note);
+            Assert.True(savedNoteResult.Success);
+            Assert.NotNull(savedNoteResult.Value);
+            Assert.Single(savedNoteResult.Value.Tags);
 
             // Act
-            await TagRepository.DeleteAsync(tag);
-            var deleteTag = await TagRepository.GetEntityAsync(tagId);
-            savedNote = await NoteRepository.GetEntityAsync(note.Id);
+            var deleteResult = await TagRepository.DeleteAsync(tag);
+            Assert.True(deleteResult.Success);
+            var deleteTagResult = await TagRepository.GetEntityAsync(tagId);
+            var finalNoteResult = await NoteRepository.GetEntityAsync(note.Id);
 
             // Assert
-            Assert.Null(deleteTag);
-            Assert.Empty(savedNote.Tags);
+            Assert.False(deleteTagResult.Success);
+            Assert.True(finalNoteResult.Success);
+            Assert.Empty(finalNoteResult.Value.Tags);
         }
 
         private async Task SetTestingData()
@@ -299,8 +319,9 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "The tag should show in reference table",
                 IsActivated = true,
             };
-            var newTag = await TagRepository.AddAsync(tag);
-            Assert.NotNull(newTag);
+            var newTagResult = await TagRepository.AddAsync(tag);
+            Assert.True(newTagResult.Success);
+            Assert.NotNull(newTagResult.Value);
 
             tag = new TagDao
             {
@@ -308,8 +329,9 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "The tag number 2 should show in reference table",
                 IsActivated = true,
             };
-            newTag = await TagRepository.AddAsync(tag);
-            Assert.NotNull(newTag);
+            newTagResult = await TagRepository.AddAsync(tag);
+            Assert.True(newTagResult.Success);
+            Assert.NotNull(newTagResult.Value);
 
             // setup note table
             var catalog = new NoteCatalogDao
@@ -320,18 +342,25 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsDefault = false,
                 Description = "Description"
             };
-            var savedCatalog = await CatalogRepository.AddAsync(catalog);
+            var catalogResult = await CatalogRepository.AddAsync(catalog);
+            Assert.True(catalogResult.Success);
+            Assert.NotNull(catalogResult.Value);
 
             var contact = SampleDataGenerator.GetContactDao();
-            var savedContact = await ContactRepository.AddAsync(contact);
+            var contactResult = await ContactRepository.AddAsync(contact);
+            Assert.True(contactResult.Success);
+            Assert.NotNull(contactResult.Value);
+
             var author = new AuthorDao
             {
                 AccountName = "glog",
-                ContactInfo = savedContact,
+                ContactInfo = contactResult.Value,
                 Description = "testing user",
                 IsActivated = true
             };
-            var savedUser = await AuthorRepository.AddAsync(author);
+            var authorResult = await AuthorRepository.AddAsync(author);
+            Assert.True(authorResult.Success);
+            Assert.NotNull(authorResult.Value);
 
             var note = new HmmNoteDao
             {
@@ -339,11 +368,13 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = "This is first testing note, please check the ts for version control",
                 CreateDate = DateProvider.UtcNow,
                 LastModifiedDate = DateProvider.UtcNow,
-                Author = savedUser,
-                Catalog = savedCatalog,
+                Author = authorResult.Value,
+                Catalog = catalogResult.Value,
                 Description = "Testing note1"
             };
-            await NoteRepository.AddAsync(note);
+            var noteResult1 = await NoteRepository.AddAsync(note);
+            Assert.True(noteResult1.Success);
+            Assert.NotNull(noteResult1.Value);
 
             note = new HmmNoteDao
             {
@@ -351,11 +382,13 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = "This is second testing note, please check the ts for version control",
                 CreateDate = DateProvider.UtcNow,
                 LastModifiedDate = DateProvider.UtcNow,
-                Author = savedUser,
-                Catalog = savedCatalog,
+                Author = authorResult.Value,
+                Catalog = catalogResult.Value,
                 Description = "Testing note2"
             };
-            await NoteRepository.AddAsync(note);
+            var noteResult2 = await NoteRepository.AddAsync(note);
+            Assert.True(noteResult2.Success);
+            Assert.NotNull(noteResult2.Value);
         }
 
         public async Task InitializeAsync()

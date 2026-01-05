@@ -26,13 +26,13 @@ namespace Hmm.Core.Dal.EF.Tests
             var catalog = SampleDataGenerator.GetCatalogDao();
 
             // Act
-            var savedRec = await CatalogRepository.AddAsync(catalog);
+            var result = await CatalogRepository.AddAsync(catalog);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id > 0, "savedRec.Id > 0");
-            Assert.True(catalog.Id == savedRec.Id, "cat.Id == savedRec.Id");
-            Assert.True(CatalogRepository.ProcessMessage.Success);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id > 0, "savedRec.Id > 0");
+            Assert.True(catalog.Id == result.Value.Id, "cat.Id == savedRec.Id");
         }
 
         [Fact]
@@ -44,13 +44,12 @@ namespace Hmm.Core.Dal.EF.Tests
             var cat = SampleDataGenerator.GetCatalogDao();
 
             // Act
-            var savedRec = await CatalogRepository.AddAsync(cat);
+            var result = await CatalogRepository.AddAsync(cat);
 
             // Assert
-            Assert.Null(savedRec);
+            Assert.False(result.Success);
             Assert.True(cat.Id <= 0, "cat.Id <=0");
-            Assert.False(CatalogRepository.ProcessMessage.Success);
-            Assert.Single(CatalogRepository.ProcessMessage.MessageList);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -64,8 +63,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await CatalogRepository.DeleteAsync(catalog);
 
             // Assert
-            Assert.True(result);
-            Assert.True(CatalogRepository.ProcessMessage.Success);
+            Assert.True(result.Success);
         }
 
         [Fact]
@@ -88,9 +86,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await CatalogRepository.DeleteAsync(catalog2);
 
             // Assert
-            Assert.False(result);
-            Assert.False(CatalogRepository.ProcessMessage.Success);
-            Assert.Single(CatalogRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -98,7 +95,7 @@ namespace Hmm.Core.Dal.EF.Tests
         {
             // Arrange
             var catalog = SampleDataGenerator.GetCatalogDao();
-            var savedCatalog = await CatalogRepository.AddAsync(catalog);
+            var catalogResult = await CatalogRepository.AddAsync(catalog);
 
             var author = new AuthorDao
             {
@@ -116,17 +113,16 @@ namespace Hmm.Core.Dal.EF.Tests
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
                 Author = author,
-                Catalog = savedCatalog
+                Catalog = catalogResult.Value
             };
             await NoteRepository.AddAsync(note);
 
             // Act
-            var result =await CatalogRepository.DeleteAsync(catalog);
+            var result = await CatalogRepository.DeleteAsync(catalog);
 
             // Assert
-            Assert.False(result, "Error: deleted catalog with note attached to it");
-            Assert.False(CatalogRepository.ProcessMessage.Success);
-            Assert.Single(CatalogRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success, "Error: deleted catalog with note attached to it");
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -141,8 +137,9 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await CatalogRepository.UpdateAsync(catalog);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("GasLog2", result.Name);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("GasLog2", result.Value.Name);
 
             // Arrange - update description
             catalog.Description = "new testing note";
@@ -151,8 +148,9 @@ namespace Hmm.Core.Dal.EF.Tests
             result = await CatalogRepository.UpdateAsync(catalog);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("new testing note", result.Description);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("new testing note", result.Value.Description);
         }
 
         [Fact]
@@ -175,9 +173,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await CatalogRepository.UpdateAsync(catalog2);
 
             // Assert
-            Assert.Null(result);
-            Assert.False(CatalogRepository.ProcessMessage.Success);
-            Assert.Single(CatalogRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -203,9 +200,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await CatalogRepository.UpdateAsync(catalog);
 
             // Assert
-            Assert.Null(result);
-            Assert.False(CatalogRepository.ProcessMessage.Success);
-            Assert.Single(CatalogRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         public async Task InitializeAsync()

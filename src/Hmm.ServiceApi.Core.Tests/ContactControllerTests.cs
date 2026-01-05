@@ -181,19 +181,22 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int contactId = 100;
-            var existingContact = await _contactManager.GetContactByIdAsync(contactId);
+            var existingContactResult = await _contactManager.GetContactByIdAsync(contactId);
+            Assert.True(existingContactResult.Success);
+            var existingContact = existingContactResult.Value;
             Assert.NotNull(existingContact);
             var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existingContact);
             apiContactForUpdate.Description = "Updated contact description";
 
             // Act
             var result = await _controller.Put(contactId, apiContactForUpdate);
-            var updatedContact = await _contactManager.GetContactByIdAsync(contactId);
+            var updatedContactResult = await _contactManager.GetContactByIdAsync(contactId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Equal(contactId, updatedContact.Id);
-            Assert.Equal(apiContactForUpdate.Description, updatedContact.Description);
+            Assert.True(updatedContactResult.Success);
+            Assert.Equal(contactId, updatedContactResult.Value.Id);
+            Assert.Equal(apiContactForUpdate.Description, updatedContactResult.Value.Description);
         }
 
         [Fact]
@@ -252,7 +255,9 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task UpdateContact_ReturnsBadRequest_WhenUpdateFails()
         {
             // Arrange
-            var existingContact = await _contactManager.GetContactByIdAsync(100);
+            var existingContactResult = await _contactManager.GetContactByIdAsync(100);
+            Assert.True(existingContactResult.Success);
+            var existingContact = existingContactResult.Value;
             var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existingContact);
             apiContactForUpdate.LastName = GetRandomString(255);
 
@@ -261,7 +266,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_contactManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -269,10 +275,12 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int contactId = 100;
-            var existContact = await _contactManager.GetContactByIdAsync(contactId);
+            var existContactResult = await _contactManager.GetContactByIdAsync(contactId);
+            Assert.True(existContactResult.Success);
+            var existContact = existContactResult.Value;
             var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existContact);
             var mockContactManager = new Mock<IContactManager>();
-            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Contact { Id = id, LastName = "Exists Contact" });
+            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
             var controller = new ContactController(mockContactManager.Object, ApiMapper);
 
@@ -294,17 +302,20 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int contactId = 100;
             var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
-            var existsContact = await _contactManager.GetContactByIdAsync(contactId);
+            var existsContactResult = await _contactManager.GetContactByIdAsync(contactId);
+            Assert.True(existsContactResult.Success);
+            var existsContact = existsContactResult.Value;
             Assert.NotNull(existsContact);
             patchDoc.Replace(c => c.Description, "Updated contact with new description");
 
             // Act
             var result = await _controller.Patch(contactId, patchDoc);
-            var updatedContact = await _contactManager.GetContactByIdAsync(contactId);
+            var updatedContactResult = await _contactManager.GetContactByIdAsync(contactId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Equal("Updated contact with new description", updatedContact.Description);
+            Assert.True(updatedContactResult.Success);
+            Assert.Equal("Updated contact with new description", updatedContactResult.Value.Description);
         }
 
         [Fact]
@@ -349,7 +360,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal(_contactManager.ProcessResult.MessageList, badRequestResult.Value);
+            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.NotEmpty(apiResponse.Errors);
         }
 
         [Fact]
@@ -361,7 +373,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(e => e.FirstName, "SomeNewName");
 
             var mockContactManager = new Mock<IContactManager>();
-            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Contact { Id = id, LastName = "Exists Contact" });
+            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
             var controller = new ContactController(mockContactManager.Object, ApiMapper);
 
@@ -382,16 +394,17 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int contactId = 100;
-            var existingContact = await _contactManager.GetContactByIdAsync(contactId);
-            Assert.NotNull(existingContact);
+            var existingContactResult = await _contactManager.GetContactByIdAsync(contactId);
+            Assert.True(existingContactResult.Success);
+            Assert.NotNull(existingContactResult.Value);
 
             // Act
             var result = await _controller.Delete(contactId);
-            var deletedContact = await _contactManager.GetContactByIdAsync(contactId);
+            var deletedContactResult = await _contactManager.GetContactByIdAsync(contactId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Null(deletedContact);
+            Assert.False(deletedContactResult.Success);
         }
 
         [Fact]
@@ -425,7 +438,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int contactId = 1;
             var mockContactManager = new Mock<IContactManager>();
-            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => new Contact { Id = id, LastName = "Exists Contact" });
+            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
             var controller = new ContactController(mockContactManager.Object, ApiMapper);
 

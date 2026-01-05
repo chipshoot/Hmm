@@ -27,12 +27,13 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = await AuthorRepository.AddAsync(author);
+            var result = await AuthorRepository.AddAsync(author);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id != 0, "savedRec.Id is not empty id 0");
-            Assert.Equal(author.Id, savedRec.Id);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id != 0, "savedRec.Id is not empty id 0");
+            Assert.Equal(author.Id, result.Value.Id);
         }
 
         [Fact]
@@ -49,12 +50,13 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             // Act
-            var savedRec = await AuthorRepository.AddAsync(author);
+            var result = await AuthorRepository.AddAsync(author);
 
             // Assert
-            Assert.NotNull(savedRec);
-            Assert.True(savedRec.Id != 0, "savedRec.Id is not empty id 0");
-            Assert.Equal(author.Id, savedRec.Id);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.True(result.Value.Id != 0, "savedRec.Id is not empty id 0");
+            Assert.Equal(author.Id, result.Value.Id);
         }
 
         [Fact]
@@ -79,12 +81,11 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             await AuthorRepository.AddAsync(authorExists);
-            var savedAuthor = await AuthorRepository.AddAsync(author);
+            var result = await AuthorRepository.AddAsync(author);
 
             // Assert
-            Assert.Null(savedAuthor);
-            Assert.False(AuthorRepository.ProcessMessage.Success);
-            Assert.Single(AuthorRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -99,13 +100,13 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
 
-            var savedAuthor = await AuthorRepository.AddAsync(author);
+            var addResult = await AuthorRepository.AddAsync(author);
 
             // Act
-            var result = await AuthorRepository.DeleteAsync(savedAuthor);
+            var result = await AuthorRepository.DeleteAsync(addResult.Value);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
         }
 
         [Fact]
@@ -136,9 +137,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await AuthorRepository.DeleteAsync(author2);
 
             // Assert
-            Assert.False(result);
-            Assert.False(AuthorRepository.ProcessMessage.Success);
-            Assert.Single(AuthorRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -153,7 +153,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsDefault = false,
                 Description = "Description"
             };
-            var savedCatalog = await CatalogRepository.AddAsync(catalog);
+            var catalogResult = await CatalogRepository.AddAsync(catalog);
 
             var author = new AuthorDao
             {
@@ -162,7 +162,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing user",
                 IsActivated = true
             };
-            var savedUser = await AuthorRepository.AddAsync(author);
+            var authorResult = await AuthorRepository.AddAsync(author);
 
             var note = new HmmNoteDao
             {
@@ -170,8 +170,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = string.Empty,
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
-                Author = savedUser,
-                Catalog = savedCatalog
+                Author = authorResult.Value,
+                Catalog = catalogResult.Value
             };
             await NoteRepository.AddAsync(note);
 
@@ -179,9 +179,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await AuthorRepository.DeleteAsync(author);
 
             // Assert
-            Assert.False(result, "Error: deleted user with note");
-            Assert.False(AuthorRepository.ProcessMessage.Success);
-            Assert.Single(AuthorRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success, "Error: deleted user with note");
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -205,8 +204,9 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await AuthorRepository.UpdateAsync(author);
 
             // Arrange
-            Assert.NotNull(result);
-            Assert.False(result.IsActivated);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.False(result.Value.IsActivated);
 
             // Arrange - update description
             author.Description = "new testing user";
@@ -215,8 +215,9 @@ namespace Hmm.Core.Dal.EF.Tests
             result = await AuthorRepository.UpdateAsync(author);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("new testing user", result.Description);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("new testing user", result.Value.Description);
         }
 
         [Fact]
@@ -240,8 +241,9 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await AuthorRepository.UpdateAsync(author);
 
             // Arrange
-            Assert.NotNull(result);
-            Assert.NotNull(result.ContactInfo);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.NotNull(result.Value.ContactInfo);
 
             // Arrange - update description
             author.Description = "new testing user";
@@ -250,8 +252,9 @@ namespace Hmm.Core.Dal.EF.Tests
             result = await AuthorRepository.UpdateAsync(author);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal("new testing user", result.Description);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("new testing user", result.Value.Description);
         }
 
         [Fact]
@@ -280,9 +283,8 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await AuthorRepository.UpdateAsync(author2);
 
             // Assert
-            Assert.Null(result);
-            Assert.False(AuthorRepository.ProcessMessage.Success);
-            Assert.Single(AuthorRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         [Fact]
@@ -313,17 +315,16 @@ namespace Hmm.Core.Dal.EF.Tests
             var result = await AuthorRepository.UpdateAsync(author);
 
             // Assert
-            Assert.Null(result);
-            Assert.False(AuthorRepository.ProcessMessage.Success);
-            Assert.Single(AuthorRepository.ProcessMessage.MessageList);
+            Assert.False(result.Success);
+            Assert.True(result.Messages.Count > 0);
         }
 
         public async Task InitializeAsync()
         {
             Transaction = await ((DbContext)DbContext).Database.BeginTransactionAsync();
             var contact = SampleDataGenerator.GetContactDao();
-            await ContactRepository.AddAsync(contact);
-            _defaultContact = contact;
+            var result = await ContactRepository.AddAsync(contact);
+            _defaultContact = result.Value;
         }
 
         public async Task DisposeAsync()

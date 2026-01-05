@@ -64,8 +64,8 @@ namespace Hmm.Utility.TestHelp
             AuthorDao authorDao;
             if (string.IsNullOrEmpty(accountName))
             {
-                var authorDaos = await AuthorRepository.GetEntitiesAsync();
-                authorDao = authorDaos.FirstOrDefault();
+                var authorDaosResult = await AuthorRepository.GetEntitiesAsync();
+                authorDao = authorDaosResult.Value.FirstOrDefault();
                 if (authorDao == null)
                 {
                     return null;
@@ -73,8 +73,8 @@ namespace Hmm.Utility.TestHelp
             }
             else
             {
-                var authorDaos = await AuthorRepository.GetEntitiesAsync(a => a.AccountName == accountName);
-                authorDao = authorDaos.FirstOrDefault();
+                var authorDaosResult = await AuthorRepository.GetEntitiesAsync(a => a.AccountName == accountName);
+                authorDao = authorDaosResult.Value.FirstOrDefault();
                 if (authorDao == null)
                 {
                     return null;
@@ -87,8 +87,8 @@ namespace Hmm.Utility.TestHelp
 
         protected async Task<NoteCatalog> GetTestCatalog()
         {
-            var catalogDaos = await CatalogRepository.GetEntitiesAsync();
-            var catalogDao = catalogDaos.FirstOrDefault();
+            var catalogDaosResult = await CatalogRepository.GetEntitiesAsync();
+            var catalogDao = catalogDaosResult.Value.FirstOrDefault();
             if (catalogDao == null)
             {
                 return null;
@@ -103,8 +103,8 @@ namespace Hmm.Utility.TestHelp
             TagDao tagDao;
             if (string.IsNullOrEmpty(tagName))
             {
-                var tagDaos = await TagRepository.GetEntitiesAsync();
-                tagDao = tagDaos.FirstOrDefault();
+                var tagDaosResult = await TagRepository.GetEntitiesAsync();
+                tagDao = tagDaosResult.Value.FirstOrDefault();
                 if (tagDao == null)
                 {
                     return null;
@@ -112,8 +112,8 @@ namespace Hmm.Utility.TestHelp
             }
             else
             {
-                var tagDaos = await TagRepository.GetEntitiesAsync(t => t.Name == tagName);
-                tagDao = tagDaos.FirstOrDefault();
+                var tagDaosResult = await TagRepository.GetEntitiesAsync(t => t.Name == tagName);
+                tagDao = tagDaosResult.Value.FirstOrDefault();
                 if (tagDao == null)
                 {
                     return null;
@@ -253,38 +253,53 @@ namespace Hmm.Utility.TestHelp
                 lookupMoc.Setup(lk => lk.GetEntityAsync<ContactDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
                     var recFound = _contactDaos.FirstOrDefault(c => c.Id == id);
-                    return recFound;
+                    return recFound != null
+                        ? ProcessingResult<ContactDao>.Ok(recFound)
+                        : ProcessingResult<ContactDao>.NotFound($"Contact with ID {id} not found");
                 });
                 lookupMoc.Setup(lk => lk.GetEntityAsync<AuthorDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
                     var recFound = _authorDaos.FirstOrDefault(c => c.Id == id);
-                    return recFound;
+                    return recFound != null
+                        ? ProcessingResult<AuthorDao>.Ok(recFound)
+                        : ProcessingResult<AuthorDao>.NotFound($"Author with ID {id} not found");
                 });
                 lookupMoc.Setup(lk =>
                         lk.GetEntitiesAsync(It.IsAny<Expression<Func<AuthorDao, bool>>>(),
                             It.IsAny<ResourceCollectionParameters>()))
-                    .ReturnsAsync(() => PageList<AuthorDao>.Create(_authorDaos.AsQueryable(), PageIdx, PageSize));
+                    .ReturnsAsync(() => ProcessingResult<PageList<AuthorDao>>.Ok(
+                        PageList<AuthorDao>.Create(_authorDaos.AsQueryable(), PageIdx, PageSize)));
 
                 lookupMoc.Setup(lk => lk.GetEntityAsync<NoteCatalogDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
                     var recFound = _catalogDaos.FirstOrDefault(c => c.Id == id);
-                    return recFound;
+                    return recFound != null
+                        ? ProcessingResult<NoteCatalogDao>.Ok(recFound)
+                        : ProcessingResult<NoteCatalogDao>.NotFound($"NoteCatalog with ID {id} not found");
                 });
 
                 lookupMoc.Setup(lk => lk.GetEntityAsync<TagDao>(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
                     var recFound = _tagDaos.FirstOrDefault(c => c.Id == id);
-                    return recFound;
+                    return recFound != null
+                        ? ProcessingResult<TagDao>.Ok(recFound)
+                        : ProcessingResult<TagDao>.NotFound($"Tag with ID {id} not found");
                 });
 
                 lookupMoc.Setup(lk => lk.GetEntitiesAsync(It.IsAny<Expression<Func<NoteCatalogDao, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>()))
-                    .ReturnsAsync(() => PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable(), PageIdx, PageSize));
+                    .ReturnsAsync(() => ProcessingResult<PageList<NoteCatalogDao>>.Ok(
+                        PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable(), PageIdx, PageSize)));
 
                 lookupMoc.Setup(lk => lk.GetEntityAsync<HmmNoteDao>(It.IsAny<int>()))
                     .ReturnsAsync((int id) =>
                     {
                         var rec = _noteDaos.FirstOrDefault(n => n.Id == id);
+                        if (rec == null)
+                        {
+                            return ProcessingResult<HmmNoteDao>.NotFound($"Note with ID {id} not found");
+                        }
+
                         switch (rec)
                         {
                             case { Tags: not null }:
@@ -299,18 +314,21 @@ namespace Hmm.Utility.TestHelp
                             }
                         }
 
-                        return rec;
+                        return ProcessingResult<HmmNoteDao>.Ok(rec);
                     });
 
                 lookupMoc.Setup(lk =>
                         lk.GetEntitiesAsync(It.IsAny<Expression<Func<HmmNoteDao, bool>>>(),
                             It.IsAny<ResourceCollectionParameters>()))
-                    .ReturnsAsync(() => PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize));
+                    .ReturnsAsync(() => ProcessingResult<PageList<HmmNoteDao>>.Ok(
+                        PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize)));
 
                 lookupMoc.Setup(lk =>
                         lk.GetEntitiesAsync(It.IsAny<Expression<Func<TagDao, bool>>>(),
                             It.IsAny<ResourceCollectionParameters>()))
-                    .ReturnsAsync((Expression<Func<TagDao, bool>> query, ResourceCollectionParameters para) => PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query).Select(t => t), PageIdx, PageSize));
+                    .ReturnsAsync((Expression<Func<TagDao, bool>> query, ResourceCollectionParameters para) =>
+                        ProcessingResult<PageList<TagDao>>.Ok(
+                            PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query).Select(t => t), PageIdx, PageSize)));
                 return lookupMoc.Object;
             }
             catch (Exception e)
@@ -330,27 +348,33 @@ namespace Hmm.Utility.TestHelp
                 savedContact.Id = nextId++;
                 _contactDaos.Add(contact);
                 contact = savedContact.Clone(contact);
-                return contact;
+                return ProcessingResult<ContactDao>.Ok(contact);
             });
             mockContacts.Setup(a => a.UpdateAsync(It.IsAny<ContactDao>())).ReturnsAsync((ContactDao contact) =>
             {
                 var oldContact = _contactDaos.FirstOrDefault(a => a.Id == contact.Id);
                 if (oldContact == null)
                 {
-                    return null;
+                    return ProcessingResult<ContactDao>.NotFound($"Contact with ID {contact.Id} not found");
                 }
 
                 oldContact = contact.Clone(oldContact);
-                return oldContact.Clone();
+                return ProcessingResult<ContactDao>.Ok(oldContact.Clone());
             });
             mockContacts
                 .Setup(a => a.GetEntitiesAsync(It.IsAny<Expression<Func<ContactDao, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
                     (Expression<Func<ContactDao, bool>> query, ResourceCollectionParameters resourceCollectionParameters) =>
                         query == null
-                            ? PageList<ContactDao>.Create(_contactDaos.AsQueryable(), PageIdx, PageSize)
-                            : PageList<ContactDao>.Create(_contactDaos.AsQueryable().Where(query), PageIdx, PageSize));
-            mockContacts.Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) => _contactDaos.FirstOrDefault(a => a.Id == id));
+                            ? ProcessingResult<PageList<ContactDao>>.Ok(PageList<ContactDao>.Create(_contactDaos.AsQueryable(), PageIdx, PageSize))
+                            : ProcessingResult<PageList<ContactDao>>.Ok(PageList<ContactDao>.Create(_contactDaos.AsQueryable().Where(query), PageIdx, PageSize)));
+            mockContacts.Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
+            {
+                var contact = _contactDaos.FirstOrDefault(a => a.Id == id);
+                return contact != null
+                    ? ProcessingResult<ContactDao>.Ok(contact)
+                    : ProcessingResult<ContactDao>.NotFound($"Contact with ID {id} not found");
+            });
             return mockContacts.Object;
         }
 
@@ -358,16 +382,13 @@ namespace Hmm.Utility.TestHelp
         {
             var mockAuthors = new Mock<IRepository<AuthorDao>>();
             var nextId = _authorDaos.Count + 1;
-            var processingResult = new ProcessingResult();
 
-            mockAuthors.Setup(a => a.ProcessMessage).Returns(processingResult);
             mockAuthors.Setup(a => a.AddAsync(It.IsAny<AuthorDao>())).ReturnsAsync((AuthorDao author) =>
             {
                 var userNames = _authorDaos.Select(a => a.AccountName).ToList();
                 if (userNames.Contains(author.AccountName))
                 {
-                    processingResult.AddErrorMessage("Author is invalid");
-                    return null;
+                    return ProcessingResult<AuthorDao>.Invalid("Author account name already exists");
                 }
                 var savedAuthor = author.Clone();
                 savedAuthor.Id = nextId++;
@@ -377,7 +398,7 @@ namespace Hmm.Utility.TestHelp
                 // Check and add new contact if needed
                 if (author.ContactInfo == null)
                 {
-                    return author;
+                    return ProcessingResult<AuthorDao>.Ok(author);
                 }
 
                 if (author.ContactInfo.Id <= 0)
@@ -394,27 +415,33 @@ namespace Hmm.Utility.TestHelp
                     }
                 }
 
-                return author;
+                return ProcessingResult<AuthorDao>.Ok(author);
             });
             mockAuthors.Setup(a => a.UpdateAsync(It.IsAny<AuthorDao>())).ReturnsAsync((AuthorDao author) =>
             {
                 var oldAuthor = _authorDaos.FirstOrDefault(a => a.Id == author.Id);
                 if (oldAuthor == null)
                 {
-                    return null;
+                    return ProcessingResult<AuthorDao>.NotFound($"Author with ID {author.Id} not found");
                 }
 
                 oldAuthor = author.Clone(oldAuthor);
-                return oldAuthor.Clone();
+                return ProcessingResult<AuthorDao>.Ok(oldAuthor.Clone());
             });
             mockAuthors
                 .Setup(a => a.GetEntitiesAsync(It.IsAny<Expression<Func<AuthorDao, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
                     (Expression<Func<AuthorDao, bool>> query, ResourceCollectionParameters resourceCollectionParameters) =>
                         query == null
-                            ? PageList<AuthorDao>.Create(_authorDaos.AsQueryable(), PageIdx, PageSize)
-                            : PageList<AuthorDao>.Create(_authorDaos.AsQueryable().Where(query), PageIdx, PageSize));
-            mockAuthors.Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) => _authorDaos.FirstOrDefault(a => a.Id == id));
+                            ? ProcessingResult<PageList<AuthorDao>>.Ok(PageList<AuthorDao>.Create(_authorDaos.AsQueryable(), PageIdx, PageSize))
+                            : ProcessingResult<PageList<AuthorDao>>.Ok(PageList<AuthorDao>.Create(_authorDaos.AsQueryable().Where(query), PageIdx, PageSize)));
+            mockAuthors.Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
+            {
+                var author = _authorDaos.FirstOrDefault(a => a.Id == id);
+                return author != null
+                    ? ProcessingResult<AuthorDao>.Ok(author)
+                    : ProcessingResult<AuthorDao>.NotFound($"Author with ID {id} not found");
+            });
             return mockAuthors.Object;
         }
 
@@ -427,33 +454,35 @@ namespace Hmm.Utility.TestHelp
                 savedCat.Id += _catalogDaos.Count + 1;
                 _catalogDaos.Add(savedCat);
                 catalog = savedCat.Clone();
-                return catalog;
+                return ProcessingResult<NoteCatalogDao>.Ok(catalog);
             });
             mockCatalogs.Setup(c => c.UpdateAsync(It.IsAny<NoteCatalogDao>())).ReturnsAsync((NoteCatalogDao cat) =>
             {
                 var oldCat = _catalogDaos.FirstOrDefault(c => c.Id == cat.Id);
                 if (oldCat == null)
                 {
-                    return null;
+                    return ProcessingResult<NoteCatalogDao>.NotFound($"NoteCatalog with ID {cat.Id} not found");
                 }
 
                 oldCat = cat.Clone(oldCat);
-                return oldCat;
+                return ProcessingResult<NoteCatalogDao>.Ok(oldCat);
             });
             mockCatalogs
                 .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
                     var savedCat = _catalogDaos.FirstOrDefault(n => n.Id == id);
                     var backCat = savedCat?.Clone();
-                    return backCat;
+                    return backCat != null
+                        ? ProcessingResult<NoteCatalogDao>.Ok(backCat)
+                        : ProcessingResult<NoteCatalogDao>.NotFound($"NoteCatalog with ID {id} not found");
                 });
             mockCatalogs
                 .Setup(c => c.GetEntitiesAsync(It.IsAny<Expression<Func<NoteCatalogDao, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
                     (Expression<Func<NoteCatalogDao, bool>> query,
                         ResourceCollectionParameters resourceCollectionParameters) => query == null
-                        ? PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable(), PageIdx, PageSize)
-                        : PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable().Where(query), PageIdx, PageSize));
+                        ? ProcessingResult<PageList<NoteCatalogDao>>.Ok(PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable(), PageIdx, PageSize))
+                        : ProcessingResult<PageList<NoteCatalogDao>>.Ok(PageList<NoteCatalogDao>.Create(_catalogDaos.AsQueryable().Where(query), PageIdx, PageSize)));
 
             return mockCatalogs.Object;
         }
@@ -467,34 +496,36 @@ namespace Hmm.Utility.TestHelp
                 savedTag.Id += _tagDaos.Count + 1;
                 _tagDaos.Add(savedTag);
                 tag = savedTag.Clone();
-                return tag;
+                return ProcessingResult<TagDao>.Ok(tag);
             });
             mockTags.Setup(c => c.UpdateAsync(It.IsAny<TagDao>())).ReturnsAsync((TagDao tag) =>
             {
                 var oldTag = _tagDaos.FirstOrDefault(c => c.Id == tag.Id);
                 if (oldTag == null)
                 {
-                    return null;
+                    return ProcessingResult<TagDao>.NotFound($"Tag with ID {tag.Id} not found");
                 }
 
                 oldTag = tag.Clone(oldTag);
-                return oldTag;
+                return ProcessingResult<TagDao>.Ok(oldTag);
             });
             mockTags
                 .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
                     var savedTag = _tagDaos.FirstOrDefault(t => t.Id == id);
                     var backTag = savedTag?.Clone();
-                    return backTag;
+                    return backTag != null
+                        ? ProcessingResult<TagDao>.Ok(backTag)
+                        : ProcessingResult<TagDao>.NotFound($"Tag with ID {id} not found");
                 });
             mockTags
                 .Setup(c => c.GetEntitiesAsync(It.IsAny<Expression<Func<TagDao, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>())).ReturnsAsync(
                     (Expression<Func<TagDao, bool>> query,
                         ResourceCollectionParameters resourceCollectionParameters) => query == null
-                        ? PageList<TagDao>.Create(_tagDaos.Where(t => t.IsActivated).AsQueryable(), PageIdx, PageSize)
-                        : PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query),
-                            PageIdx, PageSize));
+                        ? ProcessingResult<PageList<TagDao>>.Ok(PageList<TagDao>.Create(_tagDaos.Where(t => t.IsActivated).AsQueryable(), PageIdx, PageSize))
+                        : ProcessingResult<PageList<TagDao>>.Ok(PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query),
+                            PageIdx, PageSize)));
 
             return mockTags.Object;
         }
@@ -509,14 +540,14 @@ namespace Hmm.Utility.TestHelp
                 savedNote.Version = Guid.NewGuid().ToByteArray();
                 _noteDaos.Add(savedNote);
                 note = savedNote.Clone(note);
-                return note;
+                return ProcessingResult<HmmNoteDao>.Ok(note);
             });
             mockNotes.Setup(a => a.UpdateAsync(It.IsAny<HmmNoteDao>())).ReturnsAsync((HmmNoteDao note) =>
             {
                 var oldNote = _noteDaos.FirstOrDefault(n => n.Id == note.Id);
                 if (oldNote == null)
                 {
-                    return null;
+                    return ProcessingResult<HmmNoteDao>.NotFound($"Note with ID {note.Id} not found");
                 }
 
                 oldNote = note.Clone(oldNote);
@@ -527,13 +558,18 @@ namespace Hmm.Utility.TestHelp
                     tag.Note = _noteDaos.Where(n => n.Id == tag.NoteId).Select(n => n).FirstOrDefault();
                     tag.Tag = _tagDaos.Where(t => t.Id == tag.TagId).Select(t => t).FirstOrDefault();
                 }
-                return ret;
+                return ProcessingResult<HmmNoteDao>.Ok(ret);
             });
             mockNotes
                 .Setup(a => a.GetEntityAsync(It.IsAny<int>())).ReturnsAsync((int id) =>
                 {
                     var savedNote = _noteDaos.FirstOrDefault(n => n.Id == id);
                     var backNote = savedNote?.Clone();
+                    if (backNote == null)
+                    {
+                        return ProcessingResult<HmmNoteDao>.NotFound($"Note with ID {id} not found");
+                    }
+
                     switch (backNote)
                     {
                         case { Tags: not null }:
@@ -547,15 +583,15 @@ namespace Hmm.Utility.TestHelp
                                 break;
                             }
                     }
-                    return backNote;
+                    return ProcessingResult<HmmNoteDao>.Ok(backNote);
                 });
             mockNotes
                 .Setup(a => a.GetEntitiesAsync(It.IsAny<Expression<Func<HmmNoteDao, bool>>>(),
                     It.IsAny<ResourceCollectionParameters>())).ReturnsAsync((Expression<Func<HmmNoteDao, bool>> query,
                         ResourceCollectionParameters resourceCollectionParameters) =>
                     query == null
-                        ? PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize)
-                        : PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable().Where(query), PageIdx, PageSize));
+                        ? ProcessingResult<PageList<HmmNoteDao>>.Ok(PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize))
+                        : ProcessingResult<PageList<HmmNoteDao>>.Ok(PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable().Where(query), PageIdx, PageSize)));
             return mockNotes.Object;
         }
 
