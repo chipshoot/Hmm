@@ -21,7 +21,7 @@ namespace Hmm.Utility.Misc
             return result != null && (result.HasInfo || result.HasWarning || result.HasError || result.HasFatal);
         }
 
-        public static void Log<T>(this ProcessingResult<T> result, ILogger logger)
+        public static void LogMessages<T>(this ProcessingResult<T> result, ILogger logger)
         {
             if (result == null || logger == null || !result.Messages.Any())
             {
