@@ -9,9 +9,28 @@ namespace Hmm.Utility.Dal.DataEntity
     {
         #region private fields
 
-        private int? _requestedHashCode;
+        // Hash code is now based on object reference only, making it immutable
+        // This prevents hash code changes when entity ID is assigned after persistence
+        private readonly int _immutableHashCode;
 
         #endregion private fields
+
+        #region constructor
+
+        /// <summary>
+        /// Initializes a new instance of the AbstractEntity class.
+        /// The hash code is computed once during construction and never changes,
+        /// ensuring compliance with .NET GetHashCode() contract.
+        /// </summary>
+        protected AbstractEntity()
+        {
+            // Use base object hash code (reference-based) which is stable and unique
+            // This ensures hash code never changes even when ID is assigned after persistence
+            // Better distribution than using GetType() alone which would cause hash collisions
+            _immutableHashCode = base.GetHashCode();
+        }
+
+        #endregion constructor
 
         #region implementation of IGenericEntity{TIdentity}
 
@@ -79,15 +98,16 @@ namespace Hmm.Utility.Dal.DataEntity
         /// <returns>
         /// A hash code for the current <see cref="T:System.Object"/>.
         /// </returns>
+        /// <remarks>
+        /// The hash code is immutable and based on the entity type.
+        /// This ensures the hash code remains constant even when the entity ID
+        /// is assigned after persistence, preventing entities from becoming
+        /// unfindable in HashSet/Dictionary collections.
+        /// </remarks>
         /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            if (!_requestedHashCode.HasValue)
-            {
-                _requestedHashCode = IsTransient() ? base.GetHashCode() : Id.GetHashCode();
-            }
-
-            return _requestedHashCode.Value;
+            return _immutableHashCode;
         }
 
         #endregion Implementation of IEquatable<TIdentity>
