@@ -146,14 +146,16 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int noteId = 100;
-            var existingNote = await _noteManager.GetNoteByIdAsync(noteId);
+            var existingNoteResult = await _noteManager.GetNoteByIdAsync(noteId);
+            var existingNote = existingNoteResult.Value;
             Assert.NotNull(existingNote);
             var apiNoteForUpdate = ApiMapper.Map<ApiNoteForUpdate>(existingNote);
             apiNoteForUpdate.Subject = "Updated note subject";
 
             // Act
             var result = await _controller.Put(noteId, apiNoteForUpdate);
-            var updatedNote = await _noteManager.GetNoteByIdAsync(noteId);
+            var updatedNoteResult = await _noteManager.GetNoteByIdAsync(noteId);
+            var updatedNote = updatedNoteResult.Value;
 
             // Assert
             Assert.IsType<NoContentResult>(result);
@@ -181,7 +183,8 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int noteId = 1000;
-            var existsNote = await _noteManager.GetNoteByIdAsync(100);
+            var existsNoteResult = await _noteManager.GetNoteByIdAsync(100);
+            var existsNote = existsNoteResult.Value;
             var apiNoteForUpdate = ApiMapper.Map<ApiNoteForUpdate>(existsNote);
             apiNoteForUpdate.Subject = "Updated note subject";
 
@@ -197,7 +200,8 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task UpdateNote_ReturnsBadRequest_WhenUpdateFails()
         {
             // Arrange
-            var existingNote = await _noteManager.GetNoteByIdAsync(100);
+            var existingNoteResult = await _noteManager.GetNoteByIdAsync(100);
+            var existingNote = existingNoteResult.Value;
             var apiNoteForUpdate = ApiMapper.Map<ApiNoteForUpdate>(existingNote);
             apiNoteForUpdate.Subject = GetRandomString(2000);
 
@@ -240,13 +244,15 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int noteId = 100;
             var tagDto = new ApiTagForApply { Id = 100, Name = "Important" };
-            var note = await _noteManager.GetNoteByIdAsync(noteId);
+            var noteResult = await _noteManager.GetNoteByIdAsync(noteId);
+            var note = noteResult.Value;
             Assert.NotNull(note);
             Assert.Empty(note.Tags);
 
             // Act
             var result = await _controller.ApplyTag(noteId, tagDto);
-            note = await _noteManager.GetNoteByIdAsync(noteId);
+            noteResult = await _noteManager.GetNoteByIdAsync(noteId);
+            note = noteResult.Value;
 
             // Assert
             Assert.IsType<NoContentResult>(result);
@@ -330,13 +336,15 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int noteId = 100;
             var patchDoc = new JsonPatchDocument<ApiNoteForUpdate>();
-            var existingNote = await _noteManager.GetNoteByIdAsync(noteId);
+            var existingNoteResult = await _noteManager.GetNoteByIdAsync(noteId);
+            var existingNote = existingNoteResult.Value;
             Assert.NotNull(existingNote);
             patchDoc.Replace(e => e.Description, "UpdatedNote with new description");
 
             // Act
             var result = await _controller.Patch(noteId, patchDoc);
-            var updatedNote = await _noteManager.GetNoteByIdAsync(noteId);
+            var updatedNoteResult = await _noteManager.GetNoteByIdAsync(noteId);
+            var updatedNote = updatedNoteResult.Value;
 
             // Assert
             Assert.IsType<NoContentResult>(result);

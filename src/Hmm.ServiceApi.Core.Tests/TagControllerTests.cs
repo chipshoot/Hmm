@@ -5,6 +5,7 @@ using Hmm.ServiceApi.Areas.HmmNoteService.Controllers;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -142,13 +143,15 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int tagId = 100;
-            var existingTag = await _tagManager.GetTagByIdAsync(tagId);
+            var existingTagResult = await _tagManager.GetTagByIdAsync(tagId);
+            var existingTag = existingTagResult.Value;
             Assert.NotNull(existingTag);
             var apiTagForUpdate = new ApiTagForUpdate { Name = "UpdatedTag" };
 
             // Act
             var result = await _controller.Put(tagId, apiTagForUpdate);
-            var updatedTag = await _tagManager.GetTagByIdAsync(tagId);
+            var updatedTagResult = await _tagManager.GetTagByIdAsync(tagId);
+            var updatedTag = updatedTagResult.Value;
 
             // Assert
             Assert.IsType<NoContentResult>(result);
@@ -190,8 +193,10 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task UpdateTag_ReturnsBadRequest_WhenUpdateFails()
         {
             // Arrange
-            var existingTag = await _tagManager.GetTagByIdAsync(100);
-            var existingTag2 = await _tagManager.GetTagByIdAsync(101);
+            var existingTagResult = await _tagManager.GetTagByIdAsync(100);
+            var existingTag = existingTagResult.Value;
+            var existingTag2Result = await _tagManager.GetTagByIdAsync(101);
+            var existingTag2 = existingTag2Result.Value;
             var apiTagForUpdate = new ApiTagForUpdate { Name = existingTag2.Name };
 
             // Act
@@ -232,13 +237,15 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int tagId = 100;
             var patchDoc = new JsonPatchDocument<ApiTagForUpdate>();
-            var existingTag = await _tagManager.GetTagByIdAsync(tagId);
+            var existingTagResult = await _tagManager.GetTagByIdAsync(tagId);
+            var existingTag = existingTagResult.Value;
             Assert.NotNull(existingTag);
             patchDoc.Replace(e => e.Description, "UpdatedTag with new description");
 
             // Act
             var result = await _controller.Patch(tagId, patchDoc);
-            var updatedTag = await _tagManager.GetTagByIdAsync(tagId);
+            var updatedTagResult = await _tagManager.GetTagByIdAsync(tagId);
+            var updatedTag = updatedTagResult.Value;
 
             // Assert
             Assert.IsType<NoContentResult>(result);
@@ -280,7 +287,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int tagId = 100;
             var patchDoc = new JsonPatchDocument<ApiTagForUpdate>();
-            var existingTag = await _tagManager.GetTagByIdAsync(tagId);
+            var existingTagResult = await _tagManager.GetTagByIdAsync(tagId);
+            var existingTag = existingTagResult.Value;
             patchDoc.Replace(e => e.Name, existingTag.Name);
 
             // Act
