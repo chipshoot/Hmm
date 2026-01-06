@@ -34,7 +34,7 @@ namespace Hmm.Core.DefaultManager.Validator
             }
 
             var savedAuthorResult = await _lookup.GetEntityAsync<AuthorDao>(author.Id);
-            return savedAuthorResult.Success && savedAuthorResult.IsNotFound;
+            return savedAuthorResult.Success && !savedAuthorResult.IsNotFound;
         }
 
         private async Task<bool> AuthorNotChanged(HmmNote note, Author author, CancellationToken cancellationToken)
@@ -64,7 +64,7 @@ namespace Hmm.Core.DefaultManager.Validator
             }
 
             var savedCatalogResult = await _lookup.GetEntityAsync<NoteCatalogDao>(catalog.Id);
-            return savedCatalogResult.Success&& savedCatalogResult.IsNotFound;
+            return savedCatalogResult.Success && !savedCatalogResult.IsNotFound;
         }
     }
 }
