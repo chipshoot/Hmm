@@ -10,6 +10,7 @@ using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Hmm.ServiceApi.Core.Tests
@@ -22,7 +23,7 @@ namespace Hmm.ServiceApi.Core.Tests
         public AuthorControllerTests()
         {
             _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository);
-            _controller = new AuthorController(_authorManager, ApiMapper);
+            _controller = new AuthorController(_authorManager, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
         }
 
         #region Get author by Id
@@ -124,7 +125,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiAuthor = new ApiAuthorForCreate { AccountName = "TestAuthor" };
             var mockAuthorManager = new Mock<IAuthorManager>();
             mockAuthorManager.Setup(m => m.CreateAsync(It.IsAny<Author>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper);
+            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
 
             // Act
             var result = await controller.Post(apiAuthor);
@@ -224,7 +225,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockAuthorManager = new Mock<IAuthorManager>();
             mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "Exists Author" }));
             mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper);
+            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
 
             // Act
             var result = await controller.Put(authorId, apiAuthorForUpdate);
@@ -322,7 +323,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockAuthorManager = new Mock<IAuthorManager>();
             mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "ExistsAuthor" }));
             mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper);
+            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
 
             // Act
             var result = await controller.Patch(authorId, patchDoc);
@@ -388,7 +389,7 @@ namespace Hmm.ServiceApi.Core.Tests
             mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "ExistsAuthor" }));
             mockAuthorManager.Setup(a => a.IsAuthorExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
             mockAuthorManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper);
+            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
 
             // Act
             var result = await controller.Delete(authorId);

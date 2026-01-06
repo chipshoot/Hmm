@@ -10,6 +10,7 @@ using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using AddressType = Hmm.ServiceApi.DtoEntity.HmmNote.AddressType;
 using EmailType = Hmm.ServiceApi.DtoEntity.HmmNote.EmailType;
@@ -25,7 +26,7 @@ namespace Hmm.ServiceApi.Core.Tests
         public ContactControllerTests()
         {
             _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository);
-            _controller = new ContactController(_contactManager, ApiMapper);
+            _controller = new ContactController(_contactManager, ApiMapper, new Mock<ILogger<ContactController>>().Object);
         }
 
         #region Get contact by Id
@@ -162,7 +163,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiContact = new ApiContactForCreate { FirstName = "TestContact" };
             var mockContactManager = new Mock<IContactManager>();
             mockContactManager.Setup(m => m.CreateAsync(It.IsAny<Contact>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
 
             // Act
             var result = await controller.Post(apiContact);
@@ -282,7 +283,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockContactManager = new Mock<IContactManager>();
             mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
 
             // Act
             var result = await controller.Put(contactId, apiContactForUpdate);
@@ -375,7 +376,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockContactManager = new Mock<IContactManager>();
             mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
 
             // Act
             var result = await controller.Patch(contactId, patchDoc);
@@ -440,7 +441,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockContactManager = new Mock<IContactManager>();
             mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper);
+            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
 
             // Act
             var result = await controller.Delete(contactId);

@@ -10,6 +10,7 @@ using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Hmm.ServiceApi.Core.Tests
@@ -23,7 +24,7 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             var tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
             _noteManager = new HmmNoteManager(NoteRepository, Mapper, tagManager, LookupRepository, DateProvider);
-            _controller = new HmmNoteController(_noteManager, ApiMapper);
+            _controller = new HmmNoteController(_noteManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
         }
 
         #region Get note by Id
@@ -127,7 +128,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiNote = new ApiNoteForCreate { Subject = "TestNote" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
-            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
+            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
 
             // Act
             var result = await controller.Post(apiNote);
@@ -224,7 +225,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
-            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
+            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
 
             // Act
             var result = await controller.Put(noteId, apiNoteForUpdate);
@@ -316,7 +317,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var noteManagerMock = new Mock<IHmmNoteManager>();
             noteManagerMock.Setup(m => m.GetNoteByIdAsync(noteId, false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             noteManagerMock.Setup(m => m.ApplyTag(note, tag)).ReturnsAsync(ProcessingResult<List<Tag>>.Invalid("something went wrong"));
-            var controller =  new HmmNoteController(noteManagerMock.Object, ApiMapper);
+            var controller =  new HmmNoteController(noteManagerMock.Object, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
 
             // Act
             var result = await controller.ApplyTag(noteId, tagDto);
@@ -409,7 +410,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
-            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
+            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
 
             // Act
             var result = await controller.Patch(noteId, patchDoc);
@@ -474,7 +475,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.DeleteAsync(It.IsAny<int>())).Throws(new Exception());
-            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper);
+            var controller = new HmmNoteController(mockNoteManager.Object, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
 
             // Act
             var result = await controller.Delete(noteId);

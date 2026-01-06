@@ -10,6 +10,7 @@ using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NoteContentFormatType = Hmm.ServiceApi.DtoEntity.HmmNote.NoteContentFormatType;
 
@@ -23,7 +24,7 @@ namespace Hmm.ServiceApi.Core.Tests
         public NoteCatalogControllerTests()
         {
             _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository);
-            _controller = new NoteCatalogController(_catalogManager, ApiMapper);
+            _controller = new NoteCatalogController(_catalogManager, ApiMapper, new Mock<ILogger<NoteCatalogController>>().Object);
         }
 
         #region Get catalog by Id
@@ -144,7 +145,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
             var mockCatalogManager = new Mock<INoteCatalogManager>();
             mockCatalogManager.Setup(m => m.CreateAsync(It.IsAny<NoteCatalog>())).Throws(new Exception());
-            var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper);
+            var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper, new Mock<ILogger<NoteCatalogController>>().Object);
 
             // Act
             var result = await controller.Post(apiCatalog);
@@ -264,7 +265,7 @@ namespace Hmm.ServiceApi.Core.Tests
             mockCatalogManager.Setup(c => c.GetEntityByIdAsync(It.IsAny<int>()))
                 .ReturnsAsync((int id) => ProcessingResult<NoteCatalog>.Ok(new NoteCatalog { Id = id, Name = "Exists Catalog" }));
             mockCatalogManager.Setup(m => m.UpdateAsync(It.IsAny<NoteCatalog>())).Throws(new Exception());
-            var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper);
+            var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper, new Mock<ILogger<NoteCatalogController>>().Object);
 
             // Act
             var result = await controller.Put(catalogId, apiCatalogForUpdate);
@@ -362,7 +363,7 @@ namespace Hmm.ServiceApi.Core.Tests
             mockCatalogManager.Setup(a => a.GetEntityByIdAsync(It.IsAny<int>()))
                 .ReturnsAsync((int id) => ProcessingResult<NoteCatalog>.Ok(new NoteCatalog { Id = id, Name = "Exists Catalog" }));
             mockCatalogManager.Setup(m => m.UpdateAsync(It.IsAny<NoteCatalog>())).Throws(new Exception());
-            var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper);
+            var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper, new Mock<ILogger<NoteCatalogController>>().Object);
 
             // Act
             var result = await controller.Patch(catalogId, patchDoc);

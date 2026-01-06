@@ -9,6 +9,7 @@ using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,14 +22,17 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     {
         private readonly IHmmNoteManager _noteManager;
         private readonly IMapper _mapper;
+        private readonly ILogger<HmmNoteController> _logger;
 
-        public HmmNoteController(IHmmNoteManager noteManager, IMapper mapper)
+        public HmmNoteController(IHmmNoteManager noteManager, IMapper mapper, ILogger<HmmNoteController> logger)
         {
             ArgumentNullException.ThrowIfNull(noteManager);
             ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(logger);
 
             _noteManager = noteManager;
             _mapper = mapper;
+            _logger = logger;
         }
 
         [HttpGet(Name = "GetNotes")]
@@ -39,7 +43,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             var noteListResult = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);
             if (!noteListResult.Success)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, noteListResult.ErrorMessage);
+                _logger.LogError("Failed to retrieve notes. Error: {ErrorMessage}, TraceId: {TraceId}",
+                    noteListResult.ErrorMessage, HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving notes.");
             }
 
             if (noteListResult.Value == null || !noteListResult.Value.Any())
@@ -61,7 +67,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     return NotFound($"The note {id} not found.");
                 }
-                return StatusCode(StatusCodes.Status500InternalServerError, noteResult.ErrorMessage);
+                _logger.LogError("Failed to retrieve note {NoteId}. Error: {ErrorMessage}, TraceId: {TraceId}",
+                    id, noteResult.ErrorMessage, HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note.");
             }
 
             return Ok(noteResult.Value);
@@ -83,14 +91,17 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return BadRequest(new ApiBadRequestResponse(newNoteResult.ErrorMessage));
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, newNoteResult.ErrorMessage);
+                    _logger.LogError("Failed to create note. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        newNoteResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the note.");
                 }
 
                 return Created("", newNoteResult.Value);
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                _logger.LogError(ex, "Unexpected error occurred while creating note. TraceId: {TraceId}", HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while creating the note.");
             }
         }
 
@@ -112,7 +123,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return NotFound($"Note with id {id} not found");
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
+                    _logger.LogError("Failed to retrieve note {NoteId} for update. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, curNoteResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note.");
                 }
 
                 var curNote = _mapper.Map(note, curNoteResult.Value);
@@ -128,14 +141,17 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
+                    _logger.LogError("Failed to update note {NoteId}. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the note.");
                 }
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                _logger.LogError(ex, "Unexpected error occurred while updating note {NoteId}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while updating the note.");
             }
         }
 
@@ -157,7 +173,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return NotFound($"The note {id} cannot be found.");
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
+                    _logger.LogError("Failed to retrieve note {NoteId} for tag application. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, curNoteResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note.");
                 }
 
                 var tagToApply = _mapper.Map<Tag>(tag);
@@ -169,14 +187,17 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return BadRequest(new ApiBadRequestResponse(tagListResult.ErrorMessage));
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, tagListResult.ErrorMessage);
+                    _logger.LogError("Failed to apply tag to note {NoteId}. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, tagListResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while applying the tag.");
                 }
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                _logger.LogError(ex, "Unexpected error occurred while applying tag to note {NoteId}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while applying the tag.");
             }
         }
 
@@ -198,7 +219,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return NotFound($"Note with id {id} not found");
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
+                    _logger.LogError("Failed to retrieve note {NoteId} for patching. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, curNoteResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note.");
                 }
 
                 var note2Update = _mapper.Map<ApiNoteForUpdate>(curNoteResult.Value);
@@ -212,14 +235,17 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
+                    _logger.LogError("Failed to patch note {NoteId}. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the note.");
                 }
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                _logger.LogError(ex, "Unexpected error occurred while patching note {NoteId}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while updating the note.");
             }
         }
 
@@ -236,7 +262,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return NotFound($"Note with id {id} not found");
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, curNoteResult.ErrorMessage);
+                    _logger.LogError("Failed to retrieve note {NoteId} for deletion. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, curNoteResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note.");
                 }
 
                 curNoteResult.Value.IsDeleted = true;
@@ -248,14 +276,17 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     {
                         return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
                     }
-                    return StatusCode(StatusCodes.Status500InternalServerError, updateResult.ErrorMessage);
+                    _logger.LogError("Failed to delete note {NoteId}. Error: {ErrorMessage}, TraceId: {TraceId}",
+                        id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while deleting the note.");
                 }
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                _logger.LogError(ex, "Unexpected error occurred while deleting note {NoteId}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while deleting the note.");
             }
         }
     }
