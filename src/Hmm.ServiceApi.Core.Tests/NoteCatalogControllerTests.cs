@@ -5,6 +5,7 @@ using Hmm.ServiceApi.Areas.HmmNoteService.Controllers;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -162,7 +163,9 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int catalogId = 100;
-            var existingCatalog = await _catalogManager.GetEntityByIdAsync(catalogId);
+            var existingCatalogResult = await _catalogManager.GetEntityByIdAsync(catalogId);
+            Assert.True(existingCatalogResult.Success);
+            var existingCatalog = existingCatalogResult.Value;
             Assert.NotNull(existingCatalog);
             var apiCatalogForUpdate = new ApiNoteCatalogForUpdate
             {
@@ -175,12 +178,13 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Act
             var result = await _controller.Put(catalogId, apiCatalogForUpdate);
-            var updatedCatalog = await _catalogManager.GetEntityByIdAsync(catalogId);
+            var updatedCatalogResult = await _catalogManager.GetEntityByIdAsync(catalogId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Equal(catalogId, updatedCatalog.Id);
-            Assert.Equal(apiCatalogForUpdate.Name, updatedCatalog.Name);
+            Assert.True(updatedCatalogResult.Success);
+            Assert.Equal(catalogId, updatedCatalogResult.Value.Id);
+            Assert.Equal(apiCatalogForUpdate.Name, updatedCatalogResult.Value.Name);
         }
 
         [Fact]
@@ -224,8 +228,14 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task UpdateCatalog_ReturnsBadRequest_WhenUpdateFails()
         {
             // Arrange
-            var existingCatalog = await _catalogManager.GetEntityByIdAsync(100);
-            var existingCatalog2 = await _catalogManager.GetEntityByIdAsync(101);
+            var existingCatalogResult = await _catalogManager.GetEntityByIdAsync(100);
+            Assert.True(existingCatalogResult.Success);
+            var existingCatalog = existingCatalogResult.Value;
+
+            var existingCatalog2Result = await _catalogManager.GetEntityByIdAsync(101);
+            Assert.True(existingCatalog2Result.Success);
+            var existingCatalog2 = existingCatalog2Result.Value;
+            
             var apiCatalogForUpdate = new ApiNoteCatalogForUpdate
             {
                 Name = existingCatalog2.Name,
@@ -251,7 +261,8 @@ namespace Hmm.ServiceApi.Core.Tests
             const int catalogId = 100;
             var apiCatalogForUpdate = new ApiNoteCatalogForUpdate { Name = "UpdatedCatalog" };
             var mockCatalogManager = new Mock<INoteCatalogManager>();
-            mockCatalogManager.Setup(c => c.GetEntityByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<NoteCatalog>.Ok(new NoteCatalog { Id = id, Name = "Exists Catalog" }));
+            mockCatalogManager.Setup(c => c.GetEntityByIdAsync(It.IsAny<int>()))
+                .ReturnsAsync((int id) => ProcessingResult<NoteCatalog>.Ok(new NoteCatalog { Id = id, Name = "Exists Catalog" }));
             mockCatalogManager.Setup(m => m.UpdateAsync(It.IsAny<NoteCatalog>())).Throws(new Exception());
             var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper);
 
@@ -273,17 +284,21 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int catalogId = 100;
             var patchDoc = new JsonPatchDocument<ApiNoteCatalogForUpdate>();
-            var existingCatalog = await _catalogManager.GetEntityByIdAsync(catalogId);
+            var existingCatalogResult = await _catalogManager.GetEntityByIdAsync(catalogId);
+            Assert.True(existingCatalogResult.Success);
+            var existingCatalog = existingCatalogResult.Value;
             Assert.NotNull(existingCatalog);
+            
             patchDoc.Replace(e => e.Description, "Updated note catalog with new description");
 
             // Act
             var result = await _controller.Patch(catalogId, patchDoc);
-            var updatedCatalog = await _catalogManager.GetEntityByIdAsync(catalogId);
+            var updatedCatalogResult = await _catalogManager.GetEntityByIdAsync(catalogId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Equal("Updated note catalog with new description", updatedCatalog.Description);
+            Assert.True(updatedCatalogResult.Success);
+            Assert.Equal("Updated note catalog with new description", updatedCatalogResult.Value.Description);
         }
 
         [Fact]
@@ -321,7 +336,9 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int catalogId = 100;
             var patchDoc = new JsonPatchDocument<ApiNoteCatalogForUpdate>();
-            var existingCatalog = await _catalogManager.GetEntityByIdAsync(catalogId);
+            var existingCatalogResult = await _catalogManager.GetEntityByIdAsync(catalogId);
+            Assert.True(existingCatalogResult.Success);
+            var existingCatalog = existingCatalogResult.Value;
             patchDoc.Replace(e => e.Name, existingCatalog.Name);
 
             // Act
@@ -342,7 +359,8 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(e => e.Name, "SomeNewName");
 
             var mockCatalogManager = new Mock<INoteCatalogManager>();
-            mockCatalogManager.Setup(a => a.GetEntityByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<NoteCatalog>.Ok(new NoteCatalog { Id = id, Name = "Exists Catalog" }));
+            mockCatalogManager.Setup(a => a.GetEntityByIdAsync(It.IsAny<int>()))
+                .ReturnsAsync((int id) => ProcessingResult<NoteCatalog>.Ok(new NoteCatalog { Id = id, Name = "Exists Catalog" }));
             mockCatalogManager.Setup(m => m.UpdateAsync(It.IsAny<NoteCatalog>())).Throws(new Exception());
             var controller = new NoteCatalogController(mockCatalogManager.Object, ApiMapper);
 

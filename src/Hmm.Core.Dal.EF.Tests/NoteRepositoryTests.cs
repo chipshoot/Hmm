@@ -300,8 +300,8 @@ namespace Hmm.Core.Dal.EF.Tests
 
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
-            var initialCatalogList = await CatalogRepository.GetEntitiesAsync();
-            var initialCatalog = initialCatalogList.FirstOrDefault(cat => !cat.IsDefault);
+            var initialCatalogListResult = await CatalogRepository.GetEntitiesAsync();
+            var initialCatalog = initialCatalogListResult.Value.FirstOrDefault(cat => !cat.IsDefault);
             Assert.NotNull(initialCatalog);
             var note = new HmmNoteDao
             {
@@ -319,7 +319,8 @@ namespace Hmm.Core.Dal.EF.Tests
             note.Catalog = catalog;
 
             // Act
-            var savedRec = await NoteRepository.UpdateAsync(note);
+            var savedRecResult = await NoteRepository.UpdateAsync(note);
+            var savedRec = savedRecResult.Value;
 
             // Assert
             // ProcessMessage no longer exists - check result.Success instead
@@ -341,8 +342,8 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "Testing catalog"
             };
 
-            var initialCatalogList = await CatalogRepository.GetEntitiesAsync();
-            var initialCatalog = initialCatalogList.FirstOrDefault(cat => !cat.IsDefault);
+            var initialCatalogListResult = await CatalogRepository.GetEntitiesAsync();
+            var initialCatalog = initialCatalogListResult.Value.FirstOrDefault(cat => !cat.IsDefault);
             Assert.NotNull(initialCatalog);
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><root><time>2017-08-01</time></root>");
@@ -362,7 +363,8 @@ namespace Hmm.Core.Dal.EF.Tests
             note.Catalog = catalog;
 
             // Act
-            var savedRec = await NoteRepository.UpdateAsync(note);
+            var savedRecResult = await NoteRepository.UpdateAsync(note);
+            var savedRec = savedRecResult.Value;
 
             // Assert
             // ProcessMessage no longer exists - check result.Success instead
