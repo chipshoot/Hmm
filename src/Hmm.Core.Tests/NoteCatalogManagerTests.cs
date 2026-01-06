@@ -27,13 +27,13 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newCatalog = await _catalogManager.CreateAsync(catalog);
+            var newCatalogResult = await _catalogManager.CreateAsync(catalog);
 
             // Assert
-            Assert.True(_catalogManager.ProcessResult.Success);
-            Assert.NotNull(newCatalog);
-            Assert.True(newCatalog.Id >= 1, "newNote.Id >=1");
-            Assert.Equal("Test Catalog", newCatalog.Name);
+            Assert.True(newCatalogResult.Success);
+            Assert.NotNull(newCatalogResult.Value);
+            Assert.True(newCatalogResult.Value.Id >= 1, "newNote.Id >=1");
+            Assert.Equal("Test Catalog", newCatalogResult.Value.Name);
         }
 
         [Fact]
@@ -47,12 +47,12 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newCatalog = await _catalogManager.CreateAsync(catalog);
+            var newCatalogResult = await _catalogManager.CreateAsync(catalog);
 
             // Assert
-            Assert.False(_catalogManager.ProcessResult.Success);
-            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", _catalogManager.ProcessResult.MessageList.First().Message);
-            Assert.Null(newCatalog);
+            Assert.False(newCatalogResult.Success);
+            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", newCatalogResult.Messages.First().Message);
+            Assert.Null(newCatalogResult.Value);
         }
 
         [Fact]
@@ -65,17 +65,17 @@ namespace Hmm.Core.Tests
                 Schema = "test schema"
             };
             await _catalogManager.CreateAsync(catalog);
-            var savedCatalog = await _catalogManager.GetEntityByIdAsync(catalog.Id);
-            Assert.NotNull(savedCatalog);
+            var savedCatalogResult = await _catalogManager.GetEntityByIdAsync(catalog.Id);
+            Assert.NotNull(savedCatalogResult.Value);
 
             // Act
-            savedCatalog.Schema = "changed test schema";
-            var updatedCatalog = await _catalogManager.UpdateAsync(savedCatalog);
+            savedCatalogResult.Value.Schema = "changed test schema";
+            var updatedCatalogResult = await _catalogManager.UpdateAsync(savedCatalogResult.Value);
 
             // Assert
-            Assert.True(_catalogManager.ProcessResult.Success);
-            Assert.NotNull(updatedCatalog);
-            Assert.Equal("changed test schema", updatedCatalog.Schema);
+            Assert.True(updatedCatalogResult.Success);
+            Assert.NotNull(updatedCatalogResult.Value);
+            Assert.Equal("changed test schema", updatedCatalogResult.Value.Schema);
         }
 
         [Fact]
@@ -87,16 +87,16 @@ namespace Hmm.Core.Tests
                 Name = "Test Catalog",
                 Schema = "test schema"
             };
-            var savedCatalog = await _catalogManager.CreateAsync(catalog);
+            var savedCatalogResult = await _catalogManager.CreateAsync(catalog);
 
             // Act
-            savedCatalog.Name = GetRandomString(255);
-            var updatedCatalog = await _catalogManager.UpdateAsync(savedCatalog);
+            savedCatalogResult.Value.Name = GetRandomString(255);
+            var updatedCatalogResult = await _catalogManager.UpdateAsync(savedCatalogResult.Value);
 
             // Assert
-            Assert.False(_catalogManager.ProcessResult.Success);
-            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", _catalogManager.ProcessResult.MessageList.First().Message);
-            Assert.Null(updatedCatalog);
+            Assert.False(updatedCatalogResult.Success);
+            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", updatedCatalogResult.Messages.First().Message);
+            Assert.Null(updatedCatalogResult.Value);
         }
 
         [Fact]
@@ -110,14 +110,13 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var updatedCatalog = await _catalogManager.UpdateAsync(catalog);
+            var updatedCatalogResult = await _catalogManager.UpdateAsync(catalog);
 
             // Assert
-            Assert.False(_catalogManager.ProcessResult.Success);
-            Assert.Null(updatedCatalog);
+            Assert.False(updatedCatalogResult.Success);
+            Assert.Null(updatedCatalogResult.Value);
 
             // Arrange - id does not exists
-            _catalogManager.ProcessResult.Rest();
             catalog = new NoteCatalog
             {
                 Id = 1000,
@@ -126,11 +125,11 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            updatedCatalog = await _catalogManager.UpdateAsync(catalog);
+            updatedCatalogResult = await _catalogManager.UpdateAsync(catalog);
 
             // Assert
-            Assert.False(_catalogManager.ProcessResult.Success);
-            Assert.Null(updatedCatalog);
+            Assert.False(updatedCatalogResult.Success);
+            Assert.Null(updatedCatalogResult.Value);
         }
 
         [Fact]
@@ -142,15 +141,15 @@ namespace Hmm.Core.Tests
                 Name = "Test Catalog",
                 Schema = "test schema"
             };
-            var newCatalog = await _catalogManager.CreateAsync(catalog);
+            var newCatalogResult = await _catalogManager.CreateAsync(catalog);
 
             // Act
-            var savedNote = await _catalogManager.GetEntityByIdAsync(newCatalog.Id);
+            var savedNoteResult = await _catalogManager.GetEntityByIdAsync(newCatalogResult.Value.Id);
 
             // Assert
-            Assert.True(_catalogManager.ProcessResult.Success);
-            Assert.NotNull(savedNote);
-            Assert.Equal(savedNote.Name, catalog.Name);
+            Assert.True(savedNoteResult.Success);
+            Assert.NotNull(savedNoteResult.Value);
+            Assert.Equal(savedNoteResult.Value.Name, catalog.Name);
         }
     }
 }

@@ -1,13 +1,10 @@
-﻿using System;
+﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.DefaultManager.Validator;
-using Hmm.Utility.Misc;
-using Hmm.Utility.TestHelp;
-using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Threading.Tasks;
-using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.TestHelp;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Hmm.Core.Tests.ValidatorTests
@@ -35,15 +32,13 @@ namespace Hmm.Core.Tests.ValidatorTests
             };
 
             // Act
-
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(note, processResult);
+            var result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result.Success);
             if (!expected)
             {
-                Assert.NotEmpty(processResult.MessageList[0].Message);
+                Assert.NotEmpty(result.Messages[0].Message);
             }
         }
 
@@ -65,14 +60,13 @@ namespace Hmm.Core.Tests.ValidatorTests
             };
 
             // Act
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(note, processResult);
+            var result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result.Success);
             if (!expected)
             {
-                Assert.NotEmpty(processResult.MessageList[0].Message);
+                Assert.NotEmpty(result.Messages[0].Message);
             }
         }
 
@@ -90,11 +84,10 @@ namespace Hmm.Core.Tests.ValidatorTests
 
             // Act
 
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(note, processResult);
+            var result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
 
             // Arrange - author is null
             note = new HmmNote
@@ -106,11 +99,10 @@ namespace Hmm.Core.Tests.ValidatorTests
 
             // Act
 
-            processResult = new ProcessingResult();
-            result = await _validator.IsValidEntityAsync(note, processResult);
+            result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.Success);
 
             // Arrange - author does not exist
             var author = SampleDataGenerator.GetAuthor("NotExistsAccount");
@@ -124,11 +116,10 @@ namespace Hmm.Core.Tests.ValidatorTests
 
             // Act
 
-            processResult = new ProcessingResult();
-            result = await _validator.IsValidEntityAsync(note, processResult);
+            result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.Success);
         }
 
         [Fact]
@@ -145,11 +136,10 @@ namespace Hmm.Core.Tests.ValidatorTests
 
             // Act
 
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(note, processResult);
+            var result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result.Success);
 
             // Arrange - catalog is null
             note = new HmmNote
@@ -160,12 +150,10 @@ namespace Hmm.Core.Tests.ValidatorTests
             };
 
             // Act
-
-            processResult = new ProcessingResult();
-            result = await _validator.IsValidEntityAsync(note, processResult);
+            result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.Success);
 
             // Arrange - catalog does not exits
             var catalog = SampleDataGenerator.GetCatalog("NotExistsCatalog");
@@ -178,12 +166,10 @@ namespace Hmm.Core.Tests.ValidatorTests
             };
 
             // Act
-
-            processResult = new ProcessingResult();
-            result = await _validator.IsValidEntityAsync(note, processResult);
+            result = await _validator.ValidateEntityAsync(note);
 
             // Assert
-            Assert.False(result);
+            Assert.False(result.Success);
         }
 
         [Fact]
@@ -202,26 +188,23 @@ namespace Hmm.Core.Tests.ValidatorTests
             };
 
             CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
-            var newNote = await manager.CreateAsync(note);
+            var newNoteResult = await manager.CreateAsync(note);
 
-            Assert.True(manager.ProcessResult.Success);
-            var savedRec = await LookupRepository.GetEntityAsync<HmmNoteDao>(newNote.Id);
-            Assert.NotNull(savedRec);
-            Assert.Equal("fchy", savedRec.Author.AccountName);
+            Assert.True(newNoteResult.Success);
+            var savedRecResult = await LookupRepository.GetEntityAsync<HmmNoteDao>(newNoteResult.Value.Id);
+            Assert.NotNull(savedRecResult.Value);
+            Assert.Equal("fchy", savedRecResult.Value.Author.AccountName);
 
             // change the note author
             var newAuthor = await GetTestAuthor("amyWang");
             Assert.NotNull(newAuthor);
-            newNote.Author = newAuthor;
+            newNoteResult.Value.Author = newAuthor;
 
             // Act
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(note, processResult);
-
+            var result = await _validator.ValidateEntityAsync(newNoteResult.Value);
             // Assert
-            Assert.False(result);
+            Assert.False(result.Success);
         }
-
 
         public async Task InitializeAsync()
         {

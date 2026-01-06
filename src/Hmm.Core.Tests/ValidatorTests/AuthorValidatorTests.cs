@@ -1,127 +1,118 @@
-﻿//using Hmm.Core.DefaultManager;
-//using Hmm.Core.DefaultManager.Validator;
-//using Hmm.Core.DomainEntity;
-//using Hmm.Utility.Misc;
-//using Hmm.Utility.TestHelp;
-//using System.Linq;
-//using Xunit;
+﻿using Hmm.Core.DefaultManager;
+using Hmm.Core.DefaultManager.Validator;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.TestHelp;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 
-//namespace Hmm.Core.Tests
-//{
-//    public class AuthorValidatorTests : TestFixtureBase
-//    {
-//        private AuthorValidator _validator;
-//        private IAuthorManager _manager;
+namespace Hmm.Core.Tests
+{
+    public class AuthorValidatorTests : CoreTestFixtureBase
+    {
+        private AuthorValidator _validator;
 
-//        public AuthorValidatorTests()
-//        {
-//            SetupTestEnv();
-//        }
+        public AuthorValidatorTests()
+        {
+            SetupTestEnv();
+        }
 
-//        [Theory]
-//        [InlineData("jfang", false, "AccountName : Duplicated account name")]
-//        [InlineData("luck", true, "")]
-//        public void Cannot_Add_Duplicated_AccountName(string accountName, bool expectValid, string errorMessage)
-//        {
-//            // Arrange
-//            var author = new AuthorDb
-//            {
-//                AccountName = accountName,
-//                IsActivated = true,
-//            };
+        [Theory]
+        [InlineData("jfang", false, "AccountName : Duplicated account name")]
+        [InlineData("luck", true, "")]
+        public async Task Cannot_Add_Duplicated_AccountName(string accountName, bool expectValid, string errorMessage)
+        {
+            // Arrange
+            var author = new Author
+            {
+                AccountName = accountName,
+                IsActivated = true,
+            };
 
-//            // Act
+            // Act
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(author, processResult);
+            var result = await _validator.ValidateEntityAsync(author);
 
-//            // Assert
-//            Assert.Equal(result, expectValid);
-//            if (!expectValid)
-//            {
-//                Assert.Equal(processResult.MessageList[0].Message, errorMessage);
-//            }
-//        }
+            // Assert
+            Assert.Equal(result.Success, expectValid);
+            if (!expectValid)
+            {
+                Assert.Equal(result.Messages[0].Message, errorMessage);
+            }
+        }
 
-//        [Theory]
-//        [InlineData("awang", "jfang", false, "AccountName : Duplicated account name")]
-//        [InlineData("awang", "luck", true, "")]
-//        public void Cannot_Update_Current_Author_With_Duplicated_AccountName(string curAccName, string newAccName, bool expectValid, string errorMessage)
-//        {
-//            // Arrange
-//            var curAuthor = _manager.GetEntities(a => a.AccountName == curAccName).FirstOrDefault();
-//            Assert.NotNull(curAuthor);
+        //[Theory]
+        //[InlineData("awang", "jfang", false, "AccountName : Duplicated account name")]
+        //[InlineData("awang", "luck", true, "")]
+        //public async Task Cannot_Update_Current_Author_With_Duplicated_AccountName(string curAccName, string newAccName, bool expectValid, string errorMessage)
+        //{
+        //    // Arrange
+        //    var curAuthorResult = await _manager.GetEntitiesAsync(a => a.AccountName == curAccName);
+        //    var curAuthor = curAuthorResult.Value.FirstOrDefault();
+        //    Assert.True(curAuthorResult.Success);
+        //    Assert.NotNull(curAuthor);
 
-//            // Act
-//            curAuthor.AccountName = newAccName;
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(curAuthor, processResult);
+        //    // Act
+        //    curAuthor.AccountName = newAccName;
+        //    var result = await _validator.ValidateEntityAsync(curAuthor);
 
-//            // Assert
-//            Assert.Equal(result, expectValid);
-//            if (!expectValid)
-//            {
-//                Assert.Equal(processResult.MessageList[0].Message, errorMessage);
-//            }
-//        }
+        //    // Assert
+        //    Assert.Equal(result.Success, expectValid);
+        //    if (!expectValid)
+        //    {
+        //        Assert.Equal(result.Messages[0].Message, errorMessage);
+        //    }
+        //}
 
-//        [Fact]
-//        public void AuthorAccountNameMustHasValidContentLength()
-//        {
-//            // Arrange
-//            var author = new AuthorDb
-//            {
-//                AccountName = "",
-//                IsActivated = true,
-//            };
+        [Fact]
+        public async Task AuthorAccountNameMustHasValidContentLength()
+        {
+            // Arrange
+            var author = new  Author
+            {
+                AccountName = "",
+                IsActivated = true,
+            };
 
-//            // Act
+            // Act
+            var result = await _validator.ValidateEntityAsync(author);
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(author, processResult);
+            // Assert
+            Assert.False(result.Success);
+            Assert.NotEmpty(result.Messages[0].Message);
 
-//            // Assert
-//            Assert.False(result);
-//            Assert.NotEmpty(processResult.MessageList[0].Message);
+            // Arrange
+            author = new Author
+            {
+                AccountName = GetRandomString(154),
+                IsActivated = true,
+            };
 
-//            // Arrange
-//            author = new AuthorDb
-//            {
-//                AccountName = GetRandomString(154),
-//                IsActivated = true,
-//            };
+            // Act
+            result = await _validator.ValidateEntityAsync(author);
 
-//            // Act
+            // Assert
+            Assert.True(result.Success);
+            Assert.Empty(result.Messages);
 
-//            processResult = new ProcessingResult();
-//            result = _validator.IsValidEntity(author, processResult);
+            // Arrange
+            author = new Author
+            {
+                AccountName = GetRandomString(500),
+                IsActivated = true,
+            };
 
-//            // Assert
-//            Assert.True(result);
-//            Assert.Empty(processResult.MessageList);
+            // Act
+            result = await _validator.ValidateEntityAsync(author);
 
-//            // Arrange
-//            author = new AuthorDb
-//            {
-//                AccountName = GetRandomString(500),
-//                IsActivated = true,
-//            };
+            // Assert
+            Assert.False(result.Success);
+            Assert.NotEmpty(result.Messages[0].Message);
+        }
 
-//            // Act
-
-//            processResult = new ProcessingResult();
-//            result = _validator.IsValidEntity(author, processResult);
-
-//            // Assert
-//            Assert.False(result);
-//            Assert.NotEmpty(processResult.MessageList[0].Message);
-//        }
-
-//        private void SetupTestEnv()
-//        {
-//            InsertSeedRecords();
-//            _validator = new AuthorValidator(AuthorRepository);
-//            _manager = new AuthorManager(AuthorRepository, _validator);
-//        }
-//    }
-//}
+        private void SetupTestEnv()
+        {
+            _validator = new AuthorValidator(AuthorRepository);
+        }
+    }
+}

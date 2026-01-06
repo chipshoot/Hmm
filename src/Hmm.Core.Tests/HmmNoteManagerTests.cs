@@ -162,7 +162,7 @@ namespace Hmm.Core.Tests
 
             // Assert
             Assert.True(deleteNoteResult.Success);
-            Assert.True(result.Value);
+            Assert.True(result.Success);
             Assert.True(deleteNoteResult.Value.IsDeleted);
         }
 
@@ -198,7 +198,7 @@ namespace Hmm.Core.Tests
             var result = await _noteManager.DeleteAsync(-10);
 
             // Assert
-            Assert.False(_noteManager.ProcessResult.Success);
+            Assert.False(result.Success);
             Assert.False(result);
         }
 
@@ -212,8 +212,8 @@ namespace Hmm.Core.Tests
             var tagsToApply = new List<Tag>();
             foreach (var tagId in tagIds)
             {
-                var tagToApply = await _tagManager.GetTagByIdAsync(tagId);
-                tagsToApply.Add(tagToApply);
+                var tagToApplyResult = await _tagManager.GetTagByIdAsync(tagId);
+                tagsToApply.Add(tagToApplyResult.Value);
             }
 
             var note = new HmmNote
@@ -224,14 +224,15 @@ namespace Hmm.Core.Tests
                 Content = "Test content",
                 Description = "Test note with tag applied"
             };
-            var newNote = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNote);
+            var newNoteResult = await _noteManager.CreateAsync(note);
+            Assert.NotNull(newNoteResult);
 
             // Act
             var tags = new List<Tag>();
             foreach (var tag in tagsToApply)
             {
-                tags = await _noteManager.ApplyTag(note, tag);
+                var tagsResult = await _noteManager.ApplyTag(note, tag);
+                tags = tagsResult.Value;
             }
 
             // Assert
@@ -267,8 +268,8 @@ namespace Hmm.Core.Tests
         [Fact]
         public async Task Can_Apply_And_Create_New_Tag_To_Note()
         {
-            var tagList = await _tagManager.GetEntitiesAsync();
-            var tagNum = tagList.Count;
+            var tagListResult = await _tagManager.GetEntitiesAsync();
+            var tagNum = tagListResult.Value.Count;
             var tag = new Tag
             {
                 Name = "NonExistsTag"
@@ -281,19 +282,20 @@ namespace Hmm.Core.Tests
                 Content = "Test content",
                 Description = "Test note with tag applied"
             };
-            var newNote = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNote);
+            var newNoteResult = await _noteManager.CreateAsync(note);
+            Assert.NotNull(newNoteResult.Value);
 
             // Act
-            var tags = await _noteManager.ApplyTag(note, tag);
-            var savedTags = await _tagManager.GetEntitiesAsync(t => t.Name == "NonExistsTag");
-            var savedTag = savedTags.FirstOrDefault();
-            tagList = await _tagManager.GetEntitiesAsync();
+            var tagsResult = await _noteManager.ApplyTag(note, tag);
+            var tags = tagsResult.Value;
+            var savedTagsResult = await _tagManager.GetEntitiesAsync(t => t.Name == "NonExistsTag");
+            var savedTag = savedTagsResult.Value.FirstOrDefault();
+            tagListResult = await _tagManager.GetEntitiesAsync();
 
             // Assert
             Assert.Single(tags);
             Assert.NotNull(savedTag);
-            Assert.Equal(tagNum + 1, tagList.Count);
+            Assert.Equal(tagNum + 1, tagListResult.Value.Count);
         }
 
         [Theory]
@@ -307,8 +309,8 @@ namespace Hmm.Core.Tests
             var tagsToApply = new List<Tag>();
             foreach (var tagId in tagIds)
             {
-                var tagToApply = await _tagManager.GetTagByIdAsync(tagId);
-                tagsToApply.Add(tagToApply);
+                var tagToApplyResult = await _tagManager.GetTagByIdAsync(tagId);
+                tagsToApply.Add(tagToApplyResult.Value);
             }
             var note = new HmmNote
             {
@@ -318,23 +320,25 @@ namespace Hmm.Core.Tests
                 Content = "Test content",
                 Description = "Test note with tag applied"
             };
-            var newNote = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNote);
+            var newNoteResult = await _noteManager.CreateAsync(note);
+            Assert.NotNull(newNoteResult.Value);
 
-            var tagsResult = new List<ProcessingResult<Tag>>();
+            var tags = new List<Tag>();
             foreach (var tag in tagsToApply)
             {
-                tagsResult = await _noteManager.ApplyTag(note, tag);
+                var tagsResult = await _noteManager.ApplyTag(note, tag);
+                tags.AddRange(tagsResult.Value);
             }
 
             // Act
             foreach (var id in tagIdsToDelete)
             {
-                tagsResult = await _noteManager.RemoveTag(note, id);
+                var tagsResult = await _noteManager.RemoveTag(note, id);
+                tags = tagsResult.Value;
             }
 
             // Assert
-            Assert.Equal(expectTags, tagsResult.Count);
+            Assert.Equal(expectTags, tags.Count);
         }
 
         public async Task InitializeAsync()

@@ -26,21 +26,21 @@ namespace Hmm.Core.Tests
                 Description = "Testing tag",
                 IsActivated = true
             };
-            var newTag = await _tagManager.CreateAsync(tag);
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.NotNull(newTag);
-            Assert.True(newTag.Id >= 0, "newTag.Id is greater than or equal to 0");
+            var newTagResult = await _tagManager.CreateAsync(tag);
+            Assert.True(newTagResult.Success);
+            Assert.NotNull(newTagResult.Value);
+            Assert.True(newTagResult.Value.Id >= 0, "newTag.Id is greater than or equal to 0");
 
             // Act
-            var retrievedTag = await _tagManager.GetTagByIdAsync(newTag.Id);
+            var retrievedTagResult = await _tagManager.GetTagByIdAsync(newTagResult.Value.Id);
 
             // Assert
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.NotNull(retrievedTag);
-            Assert.Equal(newTag.Id, retrievedTag.Id);
-            Assert.Equal(tag.Name, retrievedTag.Name);
-            Assert.Equal(tag.Description, retrievedTag.Description);
-            Assert.Equal(tag.IsActivated, retrievedTag.IsActivated);
+            Assert.True(retrievedTagResult.Success);
+            Assert.NotNull(retrievedTagResult.Value);
+            Assert.Equal(newTagResult.Value.Id, retrievedTagResult.Value.Id);
+            Assert.Equal(tag.Name, retrievedTagResult.Value.Name);
+            Assert.Equal(tag.Description, retrievedTagResult.Value.Description);
+            Assert.Equal(tag.IsActivated, retrievedTagResult.Value.IsActivated);
         }
 
         [Fact]
@@ -53,90 +53,90 @@ namespace Hmm.Core.Tests
                 Description = "Testing tag",
                 IsActivated = true
             };
-            var newTag = await _tagManager.CreateAsync(tag);
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.NotNull(newTag);
-            Assert.True(newTag.Id >= 0, "newTag.Id is greater than or equal to 0");
+            var newTagResult = await _tagManager.CreateAsync(tag);
+            Assert.True(newTagResult.Success);
+            Assert.NotNull(newTagResult.Value);
+            Assert.True(newTagResult.Value.Id >= 0, "newTag.Id is greater than or equal to 0");
 
             // Act
-            var retrievedTag = await _tagManager.GetTagByNameAsync("tag1");
+            var retrievedTagResult = await _tagManager.GetTagByNameAsync("tag1");
 
             // Assert
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.NotNull(retrievedTag);
-            Assert.Equal(newTag.Id, retrievedTag.Id);
-            Assert.Equal(tag.Name, retrievedTag.Name);
-            Assert.Equal(tag.Description, retrievedTag.Description);
-            Assert.Equal(tag.IsActivated, retrievedTag.IsActivated);
+            Assert.True(retrievedTagResult.Success);
+            Assert.NotNull(retrievedTagResult.Value);
+            Assert.Equal(newTagResult.Value.Id, retrievedTagResult.Value.Id);
+            Assert.Equal(tag.Name, retrievedTagResult.Value.Name);
+            Assert.Equal(tag.Description, retrievedTagResult.Value.Description);
+            Assert.Equal(tag.IsActivated, retrievedTagResult.Value.IsActivated);
         }
 
         [Fact]
         public async Task Can_Get_Tags()
         {
             // Act
-            var tags = await _tagManager.GetEntitiesAsync();
+            var tagsResult = await _tagManager.GetEntitiesAsync();
 
             // Assert
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.True(tags.Count >= 1, "authors.Count >= 1");
+            Assert.True(tagsResult.Success);
+            Assert.True(tagsResult.Value.Count >= 1, "authors.Count >= 1");
         }
 
         [Fact]
         public async Task Can_Get_Tag_With_Query()
         {
             // Act
-            var tags = await _tagManager.GetEntitiesAsync(t => t.Name == "ComputerPeripheral");
+            var tagsResult = await _tagManager.GetEntitiesAsync(t => t.Name == "ComputerPeripheral");
 
             // Assert
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.Single(tags);
+            Assert.True(tagsResult.Success);
+            Assert.Single(tagsResult.Value);
         }
 
         [Fact]
         public async Task Cannot_Get_DeActivated_Tag()
         {
             // Arrange
-            var tag = await _tagManager.GetTagByIdAsync(100);
-            Assert.NotNull(tag);
+            var tagResult = await _tagManager.GetTagByIdAsync(100);
+            Assert.NotNull(tagResult.Value);
 
             // Act
             await _tagManager.DeActivateAsync(100);
-            tag = await _tagManager.GetTagByIdAsync(100);
+            tagResult = await _tagManager.GetTagByIdAsync(100);
 
             // Assert
-            Assert.Null(tag);
+            Assert.Null(tagResult.Value);
         }
 
         [Fact]
         public async Task Cannot_Get_DeActivated_Tag_ByQuery()
         {
             // Arrange
-            var tag = await _tagManager.GetTagByNameAsync("GasLog");
-            Assert.NotNull(tag);
+            var tagResult = await _tagManager.GetTagByNameAsync("GasLog");
+            Assert.NotNull(tagResult.Value);
 
             // Act
-            await _tagManager.DeActivateAsync(tag.Id);
-            tag = await _tagManager.GetTagByNameAsync("GasLog");
+            await _tagManager.DeActivateAsync(tagResult.Value.Id);
+            tagResult = await _tagManager.GetTagByNameAsync("GasLog");
 
             // Assert
-            Assert.Null(tag);
+            Assert.Null(tagResult.Value);
         }
 
         [Fact]
         public async Task Get_TagList_Does_Not_Contain_Deactivated_Tag()
         {
             // Arrange
-            var tags = await _tagManager.GetEntitiesAsync();
-            var tagNumber = tags.Count;
-            var tag = await _tagManager.GetTagByIdAsync(100);
-            Assert.NotNull(tag);
+            var tagsResult = await _tagManager.GetEntitiesAsync();
+            var tagNumber = tagsResult.Value.Count;
+            var tagResult = await _tagManager.GetTagByIdAsync(100);
+            Assert.NotNull(tagResult.Value);
             await _tagManager.DeActivateAsync(100);
 
             // Act
-            tags = await _tagManager.GetEntitiesAsync();
+            tagsResult = await _tagManager.GetEntitiesAsync();
 
             // Assert
-            Assert.Equal(tagNumber - 1, tags.Count);
+            Assert.Equal(tagNumber - 1, tagsResult.Value.Count);
         }
 
         [Fact]
@@ -151,12 +151,12 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newTag = await _tagManager.CreateAsync(tag);
+            var newTagResult = await _tagManager.CreateAsync(tag);
 
             // Assert
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.NotNull(newTag);
-            Assert.True(newTag.Id >= 0, "newTag.Id is greater to 0");
+            Assert.True(newTagResult.Success);
+            Assert.NotNull(newTagResult.Value);
+            Assert.True(newTagResult.Value.Id >= 0, "newTag.Id is greater to 0");
         }
 
         [Fact]
@@ -172,12 +172,12 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newTag = await _tagManager.CreateAsync(tag);
+            var newTagResult = await _tagManager.CreateAsync(tag);
 
             // Assert
-            Assert.False(_tagManager.ProcessResult.Success);
-            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", _tagManager.ProcessResult.MessageList.First()?.Message);
-            Assert.Null(newTag);
+            Assert.False(newTagResult.Success);
+            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", newTagResult.Messages.First()?.Message);
+            Assert.Null(newTagResult.Value);
         }
 
         [Fact]
@@ -191,19 +191,19 @@ namespace Hmm.Core.Tests
                 Description = "Test update tag"
             };
             var result = await _tagManager.CreateAsync(tag);
-            Assert.True(result.Id > 0, "tag.Id is greater then 0");
+            Assert.True(result.Value.Id > 0, "tag.Id is greater then 0");
 
             //   Act
-            var savedTags = await _tagManager.GetEntitiesAsync();
-            var savedTag = savedTags.FirstOrDefault(a => a.Id == result.Id);
+            var savedTagsResult = await _tagManager.GetEntitiesAsync();
+            var savedTag = savedTagsResult.Value.FirstOrDefault(a => a.Id == result.Value.Id);
             Assert.NotNull(savedTag);
             savedTag.Description = "Updated tag";
-            var updatedTag = await _tagManager.UpdateAsync(savedTag);
+            var updatedTagResult = await _tagManager.UpdateAsync(savedTag);
 
             //  Assert
-            Assert.NotNull(updatedTag);
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.Empty(_tagManager.ProcessResult.MessageList);
+            Assert.NotNull(updatedTagResult.Value);
+            Assert.True(updatedTagResult.Success);
+            Assert.Empty(updatedTagResult.Messages);
         }
 
         [Fact]
@@ -221,12 +221,11 @@ namespace Hmm.Core.Tests
 
             //   Act
             tag.Name = GetRandomString(255);
-            var newTag = await _tagManager.UpdateAsync(tag);
+            var newTagResult = await _tagManager.UpdateAsync(tag);
 
             //  Assert
-            Assert.False(_tagManager.ProcessResult.Success);
-            //Assert.True(_tagManager.ProcessResult.MessageList.FirstOrDefault()?.Message.Contains("Tag is invalid"));
-            Assert.Null(newTag);
+            Assert.False(newTagResult.Success);
+            Assert.Null(newTagResult.Value);
         }
 
         [Fact]
@@ -241,14 +240,13 @@ namespace Hmm.Core.Tests
             };
 
             //   Act
-            var newTag = await _tagManager.UpdateAsync(tag);
+            var newTagResult = await _tagManager.UpdateAsync(tag);
 
             //  Assert
-            Assert.False(_tagManager.ProcessResult.Success);
-            Assert.Null(newTag);
+            Assert.False(newTagResult.Success);
+            Assert.Null(newTagResult.Value);
 
             // Arrange - id not exist
-            _tagManager.ProcessResult.Rest();
             tag = new Tag
             {
                 Id = 20000,
@@ -258,60 +256,61 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            newTag = await _tagManager.UpdateAsync(tag);
+            newTagResult = await _tagManager.UpdateAsync(tag);
 
             //  Assert
-            Assert.False(_tagManager.ProcessResult.Success);
-            Assert.Null(newTag);
+            Assert.False(newTagResult.Success);
+            Assert.Null(newTagResult.Value);
         }
 
         [Fact]
         public async Task Can_Deactivate_Tag()
         {
             // Arrange
-            var tags = await _tagManager.GetEntitiesAsync();
-            var tag = tags.FirstOrDefault();
+            var tagsResult = await _tagManager.GetEntitiesAsync();
+            var tag = tagsResult.Value.FirstOrDefault();
             Assert.NotNull(tag);
             Assert.True(tag.IsActivated);
 
             // Act
             await _tagManager.DeActivateAsync(tag.Id);
-            var updatedTag = await _tagManager.GetTagByIdAsync(tag.Id);
+            var updatedTagResult = await _tagManager.GetTagByIdAsync(tag.Id);
 
             // Assert
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.Empty(_tagManager.ProcessResult.MessageList);
-            Assert.Null(updatedTag);
+            Assert.True(updatedTagResult.Success);
+            Assert.Empty(updatedTagResult.Messages);
+            Assert.Null(updatedTagResult.Value);
         }
 
         [Fact]
         public async Task Cannot_Get_Deactivated_Tag()
         {
             // Arrange
-            var tags = await _tagManager.GetEntitiesAsync();
-            var tagNum = tags.Count;
-            var tag = tags.FirstOrDefault();
+            var tagsResult = await _tagManager.GetEntitiesAsync();
+            var tagNum = tagsResult.Value.Count;
+            var tag = tagsResult.Value.FirstOrDefault();
             Assert.NotNull(tag);
             Assert.True(tag.IsActivated);
 
             // Act
             await _tagManager.DeActivateAsync(tag.Id);
-            var updatedTag = await _tagManager.GetTagByIdAsync(tag.Id);
-            tags = await _tagManager.GetEntitiesAsync();
+            var updatedTagResult = await _tagManager.GetTagByIdAsync(tag.Id);
+            tagsResult = await _tagManager.GetEntitiesAsync();
 
             // Assert
-            Assert.True(_tagManager.ProcessResult.Success);
-            Assert.Empty(_tagManager.ProcessResult.MessageList);
-            Assert.Null(updatedTag);
-            Assert.Equal(tagNum - 1, tags.Count);
+            Assert.True(updatedTagResult.Success);
+            Assert.Empty(updatedTagResult.Messages);
+            Assert.Null(updatedTagResult.Value);
+            Assert.Equal(tagNum - 1, tagsResult.Value.Count);
         }
 
         [Fact]
         public async Task Can_Check_Tag_Exists()
         {
             // Arrange
-            var tags = await _tagManager.GetEntitiesAsync();
-            var tag = tags.FirstOrDefault();
+            var tagsResult = await _tagManager.GetEntitiesAsync();
+            var tag = tagsResult.Value.FirstOrDefault();
+
             Assert.NotNull(tag);
 
             // Act

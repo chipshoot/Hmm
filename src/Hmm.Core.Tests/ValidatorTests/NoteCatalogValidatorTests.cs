@@ -22,7 +22,7 @@ namespace Hmm.Core.Tests.ValidatorTests
             });
             var mapper = config.CreateMapper();
             var catalogManager = new NoteCatalogManager(CatalogRepository, mapper, LookupRepository);
-            _validator = new NoteCatalogValidator(catalogManager);
+            _validator = new NoteCatalogValidator(CatalogRepository);
         }
 
         [Theory]
@@ -40,14 +40,13 @@ namespace Hmm.Core.Tests.ValidatorTests
 
             // Act
 
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(catalog, processResult);
+            var result = await _validator.ValidateEntityAsync(catalog);
 
             // Assert
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result.Success);
             if (!expected)
             {
-                Assert.NotEmpty(processResult.MessageList[0].Message);
+                Assert.NotEmpty(result.Messages[0].Message);
             }
         }
 
@@ -65,14 +64,13 @@ namespace Hmm.Core.Tests.ValidatorTests
 
             // Act
 
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(catalog, processResult);
+            var result = await _validator.ValidateEntityAsync(catalog);
 
             // Assert
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result.Success);
             if (!expected)
             {
-                Assert.NotEmpty(processResult.MessageList[0].Message);
+                Assert.NotEmpty(result.Messages[0].Message);
             }
         }
 
@@ -93,14 +91,13 @@ namespace Hmm.Core.Tests.ValidatorTests
 
             // Act
 
-            var processResult = new ProcessingResult();
-            var result = await _validator.IsValidEntityAsync(catalog, processResult);
+            var result = await _validator.ValidateEntityAsync(catalog);
 
             // Assert
-            Assert.Equal(expected, result);
+            Assert.Equal(expected, result.Success);
             if (!expected)
             {
-                Assert.NotEmpty(processResult.MessageList[0].Message);
+                Assert.NotEmpty(result.Messages[0].Message);
             }
         }
     }
