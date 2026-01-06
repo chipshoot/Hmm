@@ -1,13 +1,11 @@
 ﻿using Hmm.Core.Map.DbEntity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Npgsql;
 using System;
 using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
 {
-    public class HmmDataContext(DbContextOptions options, IConfiguration config) : DbContext(options), IHmmDataContext
+    public class HmmDataContext(DbContextOptions options) : DbContext(options), IHmmDataContext
     {
         public DbSet<HmmNoteDao> Notes { get; set; }
 
@@ -89,17 +87,6 @@ namespace Hmm.Core.Dal.EF
                 .HasOne(nt => nt.Tag)
                 .WithMany(t => t.Notes)
                 .HasForeignKey(nt => nt.TagId);
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            var connectionString = config.GetConnectionString("DefaultConnection");
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-            dataSourceBuilder.MapEnum<NoteContentFormatType>();
-
-            optionsBuilder
-                .UseNpgsql(dataSourceBuilder.Build())
-                .EnableSensitiveDataLogging();
         }
     }
 }

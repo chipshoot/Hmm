@@ -115,7 +115,8 @@ namespace Hmm.Utility.TestHelp
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
-            DbContext = new HmmDataContext(_dbContextOptions, config);
+
+            DbContext = new HmmDataContext(_dbContextOptions);
 
             LookupRepository = new EfEntityLookup(DbContext);
             var dateProvider = new DateTimeAdapter();

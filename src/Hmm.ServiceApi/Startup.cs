@@ -40,7 +40,7 @@ namespace Hmm.ServiceApi
         private IConfiguration Configuration { get; } = configuration;
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services, IWebHostEnvironment env)
         {
             var configSection = SetupConfiguration(services);
             var appSetting = configSection.Get<AppSettings>();
@@ -104,8 +104,22 @@ namespace Hmm.ServiceApi
                     builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
                 });
             });
+
+            // Configure NpgsqlDataSource with enum mapping
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+            dataSourceBuilder.MapEnum<Hmm.Core.Map.DbEntity.NoteContentFormatType>();
+            var dataSource = dataSourceBuilder.Build();
+
             services
-                .AddDbContext<HmmDataContext>(opt => opt.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")))
+                .AddDbContext<HmmDataContext>(opt =>
+                {
+                    opt.UseNpgsql(dataSource);
+                    if (env.IsDevelopment())
+                    {
+                        opt.EnableSensitiveDataLogging();
+                    }
+                })
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
                 .AddScoped<IHmmDataContext, HmmDataContext>()
                 .AddScoped<IVersionRepository<HmmNoteDao>, NoteEfRepository>()
