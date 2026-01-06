@@ -1,4 +1,4 @@
-﻿//using Hmm.Core;
+//using Hmm.Core;
 //using Hmm.Core.DomainEntity;
 //using Hmm.Utility.Dal.Query;
 //using Hmm.Utility.Validation;
@@ -108,7 +108,7 @@
 
 //        public static HmmNote GetNote(this AutomobileInfo automobile, INoteSerializer<AutomobileInfo> serializer, AuthorDb author)
 //        {
-//            Guard.Against<ArgumentNullException>(author == null, nameof(author));
+//            ArgumentNullException.ThrowIfNull(author);
 //            if (automobile == null)
 //            {
 //                return null;
@@ -121,7 +121,7 @@
 
 //        public static HmmNote GetNote(this GasDiscount discount, INoteSerializer<GasDiscount> serializer, AuthorDb author)
 //        {
-//            Guard.Against<ArgumentNullException>(author == null, nameof(author));
+//            ArgumentNullException.ThrowIfNull(author);
 //            if (discount == null)
 //            {
 //                return null;
@@ -134,7 +134,7 @@
 
 //        public static HmmNote GetNote(this GasLog log, INoteSerializer<GasLog> serializer, AuthorDb author)
 //        {
-//            Guard.Against<ArgumentNullException>(author == null, nameof(author));
+//            ArgumentNullException.ThrowIfNull(author);
 //            if (log == null)
 //            {
 //                return null;

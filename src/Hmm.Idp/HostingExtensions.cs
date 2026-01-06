@@ -1,7 +1,11 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
+using Hmm.Idp.Data;
+using Hmm.Idp.Pages.Admin.User;
 using Hmm.Idp.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 using IServiceScopeFactory = Microsoft.Extensions.DependencyInjection.IServiceScopeFactory;
 
@@ -18,6 +22,42 @@ internal static class HostingExtensions
 
         var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
 
+        // Add ASP.NET Identity
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString));
+
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
+
+        // Configure Identity options
+        builder.Services.Configure<IdentityOptions>(options =>
+        {
+            // Password settings
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequiredLength = 12;
+            options.Password.RequiredUniqueChars = 6;
+
+            // Lockout settings
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
+
+            // User settings
+            options.User.RequireUniqueEmail = true;
+            options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+
+            // Sign-in settings
+            options.SignIn.RequireConfirmedEmail = true;
+            options.SignIn.RequireConfirmedAccount = true;
+        });
+
+        // Configure email settings
+        builder.Services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
+
         builder.Services.AddIdentityServer()
             .AddConfigurationStore(options =>
             {
@@ -27,10 +67,20 @@ internal static class HostingExtensions
             {
                 options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
             })
-            .AddTestUsers(TestUsers.Users);
+            .AddAspNetIdentity<ApplicationUser>();
+
+        // Register credential management services
+        builder.Services.AddScoped<PasswordPolicyService>();
+        builder.Services.AddScoped<AccountLockoutService>();
+        builder.Services.AddScoped<TwoFactorAuthService>();
+        builder.Services.AddScoped<PasswordResetService>();
+        builder.Services.AddScoped<IEmailService, EmailService>();
 
         // Add this to ConfigureServices method in HostingExtensions.cs
         builder.Services.AddScoped<ApiResourceService>();
+
+        // Add the user management service
+        builder.Services.AddScoped<UserManagementService>();
 
         return builder.Build();
     }
@@ -68,6 +118,10 @@ internal static class HostingExtensions
 
         try
         {
+            // Migrate ASP.NET Identity Database
+            var applicationDbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            applicationDbContext.Database.Migrate();
+
             var persistedGrantDbContext = serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>();
             persistedGrantDbContext.Database.Migrate();
 

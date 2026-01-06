@@ -10,6 +10,8 @@ using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.ServiceApi.DtoEntity.Services;
+using Hmm.ServiceApi.Middleware;
+
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -125,6 +127,7 @@ namespace Hmm.ServiceApi
                 .AddAutoMapper(typeof(ApiMappingProfile))
                 .AddAutoMapper(typeof(HmmMappingProfile))
                 .AddSwaggerGen();
+            services.AddExceptionHandler<GlobalExceptionHandler>();
 
             //var automobileStartup = new AutomobileInfoServiceStartup(services);
             //automobileStartup.ConfigureServices();
@@ -134,9 +137,10 @@ namespace Hmm.ServiceApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseExceptionHandler(_ => { });
+
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hmm.ServiceApi v1"));
             }

@@ -1,4 +1,4 @@
-﻿using Hmm.Automobile.DomainEntity;
+using Hmm.Automobile.DomainEntity;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.MeasureUnit;
@@ -28,10 +28,10 @@ namespace Hmm.Automobile.NoteSerialize
             IEntityLookup lookupRepo)
             : base(logger)
         {
-            Guard.Against<ArgumentNullException>(app == null, nameof(app));
-            Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
-            Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            ArgumentNullException.ThrowIfNull(app);
+            ArgumentNullException.ThrowIfNull(autoManager);
+            ArgumentNullException.ThrowIfNull(discountManager);
+            ArgumentNullException.ThrowIfNull(lookupRepo);
 
             _app = app;
             _autoManager = autoManager;

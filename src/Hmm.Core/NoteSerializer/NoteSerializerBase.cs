@@ -1,4 +1,4 @@
-﻿using Hmm.Core.Map.DomainEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
@@ -10,7 +10,7 @@ namespace Hmm.Core.NoteSerializer
     {
         protected NoteSerializerBase(ILogger<T> logger)
         {
-            Guard.Against<ArgumentNullException>(logger == null, nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
             ProcessResult = new ProcessingResult(logger);
         }
 

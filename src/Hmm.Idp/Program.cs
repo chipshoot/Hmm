@@ -1,33 +1,37 @@
 ﻿using Hmm.Idp;
+using Hmm.Idp.Data;
+using Hmm.Idp.Pages.Admin.User;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .CreateBootstrapLogger();
-
-Log.Information("Starting up");
+    .CreateLogger();
 
 try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((ctx, lc) => lc
-        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
-        .Enrich.FromLogContext()
-        .ReadFrom.Configuration(ctx.Configuration));
+    // For migrations only - simplified configuration
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(connectionString));
 
-    var app = builder
-        .ConfigureServices()
-        .ConfigurePipeline();
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddDefaultTokenProviders();
 
+    builder.Host.UseSerilog();
+
+    var app = builder.Build();
+
+    Log.Information("Starting up");
     app.Run();
 }
 catch (Exception ex)
 {
-    if (ex.GetType().Name != "StopTheHostException")
-    {
-        Log.Fatal(ex, "Unhandled exception");
-    }
+    Log.Fatal(ex, "Unhandled exception");
 }
 finally
 {

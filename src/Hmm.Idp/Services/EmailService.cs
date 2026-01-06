@@ -1,0 +1,193 @@
+using System.Net;
+using System.Net.Mail;
+using Microsoft.Extensions.Options;
+
+namespace Hmm.Idp.Services
+{
+    public class EmailService : IEmailService
+    {
+        private readonly EmailSettings _emailSettings;
+        private readonly ILogger<EmailService> _logger;
+
+        public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger)
+        {
+            _emailSettings = emailSettings.Value;
+            _logger = logger;
+        }
+
+        public async Task<bool> SendEmailAsync(string to, string subject, string htmlMessage)
+        {
+            try
+            {
+                var message = new MailMessage
+                {
+                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
+                    Subject = subject,
+                    Body = htmlMessage,
+                    IsBodyHtml = true
+                };
+
+                message.To.Add(new MailAddress(to));
+
+                using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
+                {
+                    EnableSsl = _emailSettings.UseSsl,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password)
+                };
+
+                await client.SendMailAsync(message);
+                _logger.LogInformation("Email sent successfully to {EmailAddress}", to);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send email to {EmailAddress}", to);
+                return false;
+            }
+        }
+
+        public async Task<bool> SendVerificationEmailAsync(string email, string userId, string verificationToken)
+        {
+            var callbackUrl = $"{_emailSettings.ApplicationUrl}/Account/ConfirmEmail?userId={WebUtility.UrlEncode(userId)}&token={WebUtility.UrlEncode(verificationToken)}";
+
+            var subject = "Confirm Your Email";
+            var message = $@"
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .header {{ background-color: #f8f9fa; padding: 20px; text-align: center; }}
+                        .content {{ padding: 20px; }}
+                        .button {{ display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }}
+                        .footer {{ margin-top: 20px; font-size: 12px; color: #6c757d; }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h2>Confirm Your Email Address</h2>
+                        </div>
+                        <div class='content'>
+                            <p>Thank you for registering with us. Please confirm your email address by clicking the button below:</p>
+                            <p style='text-align: center;'>
+                                <a href='{callbackUrl}' class='button'>Confirm Email</a>
+                            </p>
+                            <p>If you didn't request this confirmation, you can safely ignore this email.</p>
+                            <p>If the button doesn't work, copy and paste the following link into your browser:</p>
+                            <p>{callbackUrl}</p>
+                        </div>
+                        <div class='footer'>
+                            <p>This is an automated message. Please do not reply to this email.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+            return await SendEmailAsync(email, subject, message);
+        }
+
+        public async Task<bool> SendPasswordResetEmailAsync(string email, string userId, string resetToken)
+        {
+            var callbackUrl = $"{_emailSettings.ApplicationUrl}/Account/ResetPassword?userId={WebUtility.UrlEncode(userId)}&token={WebUtility.UrlEncode(resetToken)}";
+
+            var subject = "Reset Your Password";
+            var message = $@"
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .header {{ background-color: #f8f9fa; padding: 20px; text-align: center; }}
+                        .content {{ padding: 20px; }}
+                        .button {{ display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }}
+                        .footer {{ margin-top: 20px; font-size: 12px; color: #6c757d; }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h2>Reset Your Password</h2>
+                        </div>
+                        <div class='content'>
+                            <p>You recently requested to reset your password. Click the button below to continue:</p>
+                            <p style='text-align: center;'>
+                                <a href='{callbackUrl}' class='button'>Reset Password</a>
+                            </p>
+                            <p>If you didn't request a password reset, you can safely ignore this email.</p>
+                            <p>This password reset link will expire in 24 hours.</p>
+                            <p>If the button doesn't work, copy and paste the following link into your browser:</p>
+                            <p>{callbackUrl}</p>
+                        </div>
+                        <div class='footer'>
+                            <p>This is an automated message. Please do not reply to this email.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+            return await SendEmailAsync(email, subject, message);
+        }
+
+        public async Task<bool> SendAccountLockedEmailAsync(string email, string username)
+        {
+            var subject = "Account Locked - Multiple Failed Login Attempts";
+            var message = $@"
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .header {{ background-color: #f8f9fa; padding: 20px; text-align: center; }}
+                        .content {{ padding: 20px; }}
+                        .button {{ display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }}
+                        .footer {{ margin-top: 20px; font-size: 12px; color: #6c757d; }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h2>Account Security Alert</h2>
+                        </div>
+                        <div class='content'>
+                            <p>Your account with username <strong>{username}</strong> has been temporarily locked due to multiple failed login attempts.</p>
+                            <p>If this was you, you can reset your password using the forgot password function:</p>
+                            <p style='text-align: center;'>
+                                <a href='{_emailSettings.ApplicationUrl}/Account/ForgotPassword' class='button'>Reset Password</a>
+                            </p>
+                            <p>If you didn't attempt to log in, your account may have been targeted in a brute force attack. Your account has been locked to protect your security.</p>
+                            <p>If you need immediate assistance, please contact our support team.</p>
+                        </div>
+                        <div class='footer'>
+                            <p>This is an automated message. Please do not reply to this email.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+            return await SendEmailAsync(email, subject, message);
+        }
+    }
+
+    public interface IEmailService
+    {
+        Task<bool> SendEmailAsync(string to, string subject, string htmlMessage);
+        Task<bool> SendVerificationEmailAsync(string email, string userId, string verificationToken);
+        Task<bool> SendPasswordResetEmailAsync(string email, string userId, string resetToken);
+        Task<bool> SendAccountLockedEmailAsync(string email, string username);
+    }
+
+    public class EmailSettings
+    {
+        public string SenderEmail { get; set; }
+        public string SenderName { get; set; }
+        public string SmtpServer { get; set; }
+        public int SmtpPort { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public bool UseSsl { get; set; }
+        public string ApplicationUrl { get; set; }
+    }
+}

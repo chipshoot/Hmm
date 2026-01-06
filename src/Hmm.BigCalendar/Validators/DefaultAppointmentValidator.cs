@@ -1,4 +1,4 @@
-﻿//using Hmm.BigCalendar.DomainEntity;
+//using Hmm.BigCalendar.DomainEntity;
 //using Hmm.Utility.Misc;
 //using Hmm.Utility.Validation;
 //using System;
@@ -11,7 +11,7 @@
 
 //    public DefaultAppointmentValidator(IDateTimeProvider dateTimeProvider)
 //    {
-//        Guard.Against<ArgumentNullException>(dateTimeProvider == null, nameof(dateTimeProvider));
+//        ArgumentNullException.ThrowIfNull(dateTimeProvider);
 //        _dateTimeProvider = dateTimeProvider;
 //    }
 

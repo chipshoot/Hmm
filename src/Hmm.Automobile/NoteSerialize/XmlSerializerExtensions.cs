@@ -1,4 +1,4 @@
-﻿using Hmm.Utility.Currency;
+using Hmm.Utility.Currency;
 using Hmm.Utility.MeasureUnit;
 using Hmm.Utility.Validation;
 using System;
@@ -10,7 +10,7 @@ namespace Hmm.Automobile.NoteSerialize
     {
         public static Money GetMoney(this XElement xml)
         {
-            Guard.Against<ArgumentNullException>(xml == null, nameof(xml));
+            ArgumentNullException.ThrowIfNull(xml);
 
             // ReSharper disable once PossibleNullReferenceException
             var ns = xml.GetDefaultNamespace();

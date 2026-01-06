@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Hmm.Automobile.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
@@ -14,7 +14,7 @@ namespace Hmm.Automobile.Validator
 
         public GasLogValidator(IEntityLookup lookupRepo, IDateTimeProvider dateTimeProvider) : base(lookupRepo)
         {
-            Guard.Against<ArgumentNullException>(dateTimeProvider == null, nameof(dateTimeProvider));
+            ArgumentNullException.ThrowIfNull(dateTimeProvider);
             _dateTimeProvider = dateTimeProvider;
 
             RuleFor(l => l.AuthorId).Must(HasValidAuthor).WithMessage("Has valid author for GasLog");

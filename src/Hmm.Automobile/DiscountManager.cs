@@ -1,4 +1,4 @@
-﻿using Hmm.Automobile.DomainEntity;
+using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
@@ -13,7 +13,7 @@ namespace Hmm.Automobile
         public DiscountManager(INoteSerializer<GasDiscount> noteSerializer, IHmmValidator<GasDiscount> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
             : base(validator, noteManager, lookupRepo)
         {
-            Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
+            ArgumentNullException.ThrowIfNull(noteSerializer);
             NoteSerializer = noteSerializer;
         }
 
@@ -71,7 +71,7 @@ namespace Hmm.Automobile
 
         public override GasDiscount Create(GasDiscount entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             entity.AuthorId = DefaultAuthor.Id;
@@ -94,7 +94,7 @@ namespace Hmm.Automobile
 
         public override async Task<GasDiscount> CreateAsync(GasDiscount entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             entity.AuthorId = DefaultAuthor.Id;
@@ -118,7 +118,7 @@ namespace Hmm.Automobile
 
         public override GasDiscount Update(GasDiscount entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             var curDiscount = GetEntityById(entity.Id);
@@ -150,7 +150,7 @@ namespace Hmm.Automobile
 
         public override async Task<GasDiscount> UpdateAsync(GasDiscount entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             var curDiscount = await GetEntityByIdAsync(entity.Id);

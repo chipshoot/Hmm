@@ -1,4 +1,4 @@
-﻿// Ignore Spelling: Repo
+// Ignore Spelling: Repo
 
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
@@ -26,7 +26,7 @@ namespace Hmm.Automobile
 
         public ApplicationRegister(IConfiguration configuration)
         {
-            Guard.Against<ArgumentNullException>(configuration == null, nameof(configuration));
+            ArgumentNullException.ThrowIfNull(configuration);
             _configuration = configuration;
         }
 
@@ -50,9 +50,9 @@ namespace Hmm.Automobile
             IAutoEntityManager<GasDiscount> discountMan,
             IEntityLookup lookupRepo)
         {
-            Guard.Against<ArgumentNullException>(automobileMan == null, nameof(automobileMan));
-            Guard.Against<ArgumentNullException>(discountMan == null, nameof(discountMan));
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            ArgumentNullException.ThrowIfNull(automobileMan);
+            ArgumentNullException.ThrowIfNull(discountMan);
+            ArgumentNullException.ThrowIfNull(lookupRepo);
 
             string application = null;// GetApplication(lookupRepo);
             var success = false;
@@ -133,7 +133,7 @@ namespace Hmm.Automobile
 
         public NoteCatalog GetCatalog(NoteCatalogType entityType, IEntityLookup lookupRepo)
         {
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            ArgumentNullException.ThrowIfNull(lookupRepo);
 
             // ReSharper disable PossibleNullReferenceException
             NoteCatalog catalog;

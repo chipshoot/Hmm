@@ -1,0 +1,113 @@
+﻿@* Pages/UserManagement/Create.cshtml *@
+@page
+@model Hmm.Idp.Pages.Admin.User.CreateModel
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="create-user-page">
+    <h1>Create User</h1>
+    <p>Create a new user in the system with secure credential management.</p>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>User Details</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <partial name="_ValidationSummary" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.Username"></label>
+                            <input asp-for="Input.Username" class="form-control" autocomplete="username" />
+                            <span asp-validation-for="Input.Username" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.Password"></label>
+                            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Password must be at least 12 characters and include uppercase, lowercase, numbers, and
+                                special characters.
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.ConfirmPassword"></label>
+                            <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.FirstName"></label>
+                            <input asp-for="Input.FirstName" class="form-control" />
+                            <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.LastName"></label>
+                            <input asp-for="Input.LastName" class="form-control" />
+                            <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.Email"></label>
+                            <input asp-for="Input.Email" class="form-control" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                The user will need to verify this email address.
+                            </small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input asp-for="Input.EnableTwoFactorAuth" class="form-check-input" />
+                            <label asp-for="Input.EnableTwoFactorAuth" class="form-check-label"></label>
+                            <small class="form-text text-muted d-block">
+                                Recommended for increased account security.
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                            <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Secure Password Guidelines</h2>
+                </div>
+                <div class="card-body">
+                    <p>A strong password is essential for account security. Good passwords:</p>
+                    <ul>
+                        <li>Are at least 12 characters long</li>
+                        <li>Contain uppercase and lowercase letters</li>
+                        <li>Include numbers</li>
+                        <li>Have special characters (e.g., !@@#$%^&amp;*)</li>
+                        <li>Are not used on other websites</li>
+                        <li>Don't contain personal information</li>
+                        <li>Are not common words or phrases</li>
+                    </ul>
+                    <p>Consider using a password manager to generate and store strong, unique passwords.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,4 +1,4 @@
-﻿using Hmm.Core.DomainEntity;
+using Hmm.Core.DomainEntity;
 using Hmm.Utility.Currency;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.MeasureUnit;
@@ -13,7 +13,7 @@ namespace Hmm.Automobile.Validator
 
         protected EntityValidatorBase(IEntityLookup lookupRepo)
         {
-            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+            ArgumentNullException.ThrowIfNull(lookupRepo);
             _lookupRepo = lookupRepo;
         }
 

@@ -1,4 +1,4 @@
-﻿//using AutoMapper;
+//using AutoMapper;
 //using Hmm.Automobile;
 //using Hmm.Automobile.DomainEntity;
 //using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
@@ -25,8 +25,8 @@
 
 //        public GasDiscountController(IAutoEntityManager<GasDiscount> discountManager, IMapper mapper)
 //        {
-//            Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
-//            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
+//            ArgumentNullException.ThrowIfNull(discountManager);
+//            ArgumentNullException.ThrowIfNull(mapper);
 
 //            _discountManager = discountManager;
 //            _mapper = mapper;

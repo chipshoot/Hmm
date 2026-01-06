@@ -36,15 +36,15 @@ namespace Hmm.Core.Tests
 
             // Act
             CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
-            var newNote = await _noteManager.CreateAsync(note);
+            var newNoteResult = await _noteManager.CreateAsync(note);
 
             // Assert
-            Assert.True(_noteManager.ProcessResult.Success);
-            Assert.NotNull(newNote);
-            Assert.True(newNote.Id >= 1, "newNote.Id >=1");
-            Assert.Equal("Testing note", newNote.Subject);
-            Assert.Equal(newNote.CreateDate, newNote.LastModifiedDate);
-            Assert.Equal(newNote.CreateDate, CurrentTime);
+            Assert.True(newNoteResult.Success);
+            Assert.NotNull(newNoteResult.Value);
+            Assert.True(newNoteResult.Value.Id >= 1, "newNote.Id >=1");
+            Assert.Equal("Testing note", newNoteResult.Value.Subject);
+            Assert.Equal(newNoteResult.Value.CreateDate, newNoteResult.Value.LastModifiedDate);
+            Assert.Equal(newNoteResult.Value.CreateDate, CurrentTime);
             Assert.False(note.IsDeleted);
         }
 
@@ -64,22 +64,22 @@ namespace Hmm.Core.Tests
             var mdfTime = new DateTime(2021, 4, 4, 8, 30, 0);
             CurrentTime = crtTime;
             await _noteManager.CreateAsync(note);
-            var savedNote = await _noteManager.GetNoteByIdAsync(note.Id);
-            Assert.Equal(savedNote.Version, note.Version);
+            var savedNoteResult = await _noteManager.GetNoteByIdAsync(note.Id);
+            Assert.Equal(savedNoteResult.Value.Version, note.Version);
 
             // Act
             CurrentTime = mdfTime;
-            savedNote.Subject = "new note subject";
-            savedNote.Content = "This is new note content";
-            var updatedNote = await _noteManager.UpdateAsync(savedNote);
+            savedNoteResult.Value.Subject = "new note subject";
+            savedNoteResult.Value.Content = "This is new note content";
+            var updatedNoteResult = await _noteManager.UpdateAsync(savedNoteResult.Value);
 
             // Assert
-            Assert.True(_noteManager.ProcessResult.Success);
-            Assert.NotNull(updatedNote);
-            Assert.Equal("new note subject", updatedNote.Subject);
-            Assert.Equal(updatedNote.CreateDate, crtTime);
-            Assert.Equal(updatedNote.LastModifiedDate, mdfTime);
-            Assert.NotEqual(updatedNote.Version, note.Version);
+            Assert.True(updatedNoteResult.Success);
+            Assert.NotNull(updatedNoteResult.Value);
+            Assert.Equal("new note subject", updatedNoteResult.Value.Subject);
+            Assert.Equal(updatedNoteResult.Value.CreateDate, crtTime);
+            Assert.Equal(updatedNoteResult.Value.LastModifiedDate, mdfTime);
+            Assert.NotEqual(updatedNoteResult.Value.Version, note.Version);
             Assert.False(note.IsDeleted);
         }
 
@@ -96,11 +96,11 @@ namespace Hmm.Core.Tests
                 Content = "<root><time>2017-08-01</time></root>"
             };
             CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
-            await _noteManager.CreateAsync(note);
+            var result = await _noteManager.CreateAsync(note);
 
-            Assert.True(_noteManager.ProcessResult.Success);
-            var savedDaos = await NoteRepository.GetEntitiesAsync();
-            var savedDao = savedDaos.FirstOrDefault();
+            Assert.True(result.Success);
+            var savedDaosResult = await NoteRepository.GetEntitiesAsync();
+            var savedDao = savedDaosResult.Value.FirstOrDefault();
             Assert.NotNull(savedDao);
             Assert.Equal("fchy", savedDao.Author.AccountName);
 
@@ -110,12 +110,12 @@ namespace Hmm.Core.Tests
             note.Author = newUser;
 
             // Act
-            var savedNote = await _noteManager.UpdateAsync(note);
+            var savedNoteResult = await _noteManager.UpdateAsync(note);
 
             // Assert
-            Assert.False(_noteManager.ProcessResult.Success);
-            Assert.Null(savedNote);
-            Assert.Equal("Author : Cannot update note's author", _noteManager.ProcessResult.MessageList.First().Message);
+            Assert.False(savedNoteResult.Success);
+            Assert.Null(savedNoteResult.Value);
+            Assert.Equal("Author : Cannot update note's author", savedNoteResult.Messages.First().Message);
         }
 
         [Fact]
@@ -130,15 +130,15 @@ namespace Hmm.Core.Tests
                 Content = "Test content"
             };
             CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
-            var newNote = await _noteManager.CreateAsync(note);
+            var newNoteResult = await _noteManager.CreateAsync(note);
 
             // Act
-            var savedNote = await _noteManager.GetNoteByIdAsync(newNote.Id);
+            var savedNoteResult = await _noteManager.GetNoteByIdAsync(newNoteResult.Value.Id);
 
             // Assert
-            Assert.True(_noteManager.ProcessResult.Success);
-            Assert.NotNull(savedNote);
-            Assert.Equal(savedNote.Subject, note.Subject);
+            Assert.True(savedNoteResult.Success);
+            Assert.NotNull(savedNoteResult.Value);
+            Assert.Equal(savedNoteResult.Value.Subject, note.Subject);
             Assert.False(note.IsDeleted);
         }
 
@@ -154,16 +154,16 @@ namespace Hmm.Core.Tests
                 Content = "Test content"
             };
             CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
-            var newNote = await _noteManager.CreateAsync(note);
+            var newNoteResult = await _noteManager.CreateAsync(note);
 
             // Act
-            var result = await _noteManager.DeleteAsync(newNote.Id);
-            var deleteNote = await _noteManager.GetNoteByIdAsync(newNote.Id, true);
+            var result = await _noteManager.DeleteAsync(newNoteResult.Value.Id);
+            var deleteNoteResult = await _noteManager.GetNoteByIdAsync(newNoteResult.Value.Id, true);
 
             // Assert
-            Assert.True(_noteManager.ProcessResult.Success);
-            Assert.True(result);
-            Assert.True(deleteNote.IsDeleted);
+            Assert.True(deleteNoteResult.Success);
+            Assert.True(result.Value);
+            Assert.True(deleteNoteResult.Value.IsDeleted);
         }
 
         [Fact]
@@ -178,16 +178,16 @@ namespace Hmm.Core.Tests
                 Content = "Test content"
             };
             CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
-            var newNote = await _noteManager.CreateAsync(note);
+            var newNoteResult = await _noteManager.CreateAsync(note);
 
             // Act
-            var result = await _noteManager.DeleteAsync(newNote.Id);
-            var deleteNote = await _noteManager.GetNoteByIdAsync(newNote.Id);
+            var result = await _noteManager.DeleteAsync(newNoteResult.Value.Id);
+            var deleteNoteResult = await _noteManager.GetNoteByIdAsync(newNoteResult.Value.Id);
 
             // Assert
             Assert.True(result);
-            Assert.True(_noteManager.ProcessResult.Success);
-            Assert.Null(deleteNote);
+            Assert.True(deleteNoteResult.Success);
+            Assert.Null(deleteNoteResult.Value);
         }
 
         [Fact]
@@ -241,8 +241,8 @@ namespace Hmm.Core.Tests
         [Fact]
         public async Task Cannot_Apply_Deactivated_Tag_To_Note()
         {
-            var tagList = await _tagManager.GetEntitiesAsync();
-            var tag = tagList.FirstOrDefault();
+            var tagListResult = await _tagManager.GetEntitiesAsync();
+            var tag = tagListResult.Value.FirstOrDefault();
             Assert.NotNull(tag);
             await _tagManager.DeActivateAsync(tag.Id);
             var note = new HmmNote
@@ -253,15 +253,15 @@ namespace Hmm.Core.Tests
                 Content = "Test content",
                 Description = "Test note with tag applied"
             };
-            var newNote = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNote);
+            var newNoteResult = await _noteManager.CreateAsync(note);
+            Assert.NotNull(newNoteResult.Value);
 
             // Act
-            var tags = await _noteManager.ApplyTag(note, tag);
+            var tagsResult = await _noteManager.ApplyTag(note, tag);
 
             // Assert
-            Assert.Null(tags);
-            Assert.False(_noteManager.ProcessResult.Success);
+            Assert.Null(tagsResult.Value);
+            Assert.False(tagsResult.Success);
         }
 
         [Fact]
@@ -321,20 +321,20 @@ namespace Hmm.Core.Tests
             var newNote = await _noteManager.CreateAsync(note);
             Assert.NotNull(newNote);
 
-            var tags = new List<Tag>();
+            var tagsResult = new List<ProcessingResult<Tag>>();
             foreach (var tag in tagsToApply)
             {
-                tags = await _noteManager.ApplyTag(note, tag);
+                tagsResult = await _noteManager.ApplyTag(note, tag);
             }
 
             // Act
             foreach (var id in tagIdsToDelete)
             {
-                tags = await _noteManager.RemoveTag(note, id);
+                tagsResult = await _noteManager.RemoveTag(note, id);
             }
 
             // Assert
-            Assert.Equal(expectTags, tags.Count);
+            Assert.Equal(expectTags, tagsResult.Count);
         }
 
         public async Task InitializeAsync()

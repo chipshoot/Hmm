@@ -1,4 +1,4 @@
-﻿//using Hmm.Automobile.DomainEntity;
+//using Hmm.Automobile.DomainEntity;
 //using Hmm.Core;
 //using Hmm.Core.DomainEntity;
 //using Hmm.Utility.Dal.Query;
@@ -20,9 +20,9 @@
 //        public GasLogManager(INoteSerializer<GasLog> noteSerializer, IHmmValidator<GasLog> validator, IHmmNoteManager noteManager, IAutoEntityManager<AutomobileInfo> autoManager, IEntityLookup lookupRepo, IDateTimeProvider dateProvider)
 //            : base(validator, noteManager, lookupRepo)
 //        {
-//            Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
-//            Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
-//            Guard.Against<ArgumentNullException>(dateProvider == null, nameof(dateProvider));
+//            ArgumentNullException.ThrowIfNull(autoManager);
+//            ArgumentNullException.ThrowIfNull(noteSerializer);
+//            ArgumentNullException.ThrowIfNull(dateProvider);
 //            _autoManager = autoManager;
 //            NoteSerializer = noteSerializer;
 //            _dateProvider = dateProvider;
@@ -101,7 +101,7 @@
 
 //        public GasLog LogHistory(GasLog entity)
 //        {
-//            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+//            ArgumentNullException.ThrowIfNull(entity);
 
 //            // ReSharper disable once PossibleNullReferenceException
 //            entity.AuthorId = DefaultAuthor.Id;
@@ -129,7 +129,7 @@
 
 //        public async Task<GasLog> LogHistoryAsync(GasLog entity)
 //        {
-//            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+//            ArgumentNullException.ThrowIfNull(entity);
 
 //            // ReSharper disable once PossibleNullReferenceException
 //            entity.AuthorId = DefaultAuthor.Id;
@@ -158,7 +158,7 @@
 
 //        public override GasLog Create(GasLog entity)
 //        {
-//            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+//            ArgumentNullException.ThrowIfNull(entity);
 
 //            // ReSharper disable once PossibleNullReferenceException
 //            entity.AuthorId = DefaultAuthor.Id;
@@ -216,7 +216,7 @@
 
 //        public override async Task<GasLog> CreateAsync(GasLog entity)
 //        {
-//            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+//            ArgumentNullException.ThrowIfNull(entity);
 
 //            // ReSharper disable once PossibleNullReferenceException
 //            entity.AuthorId = DefaultAuthor.Id;
@@ -274,7 +274,7 @@
 
 //        public override GasLog Update(GasLog entity)
 //        {
-//            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+//            ArgumentNullException.ThrowIfNull(entity);
 
 //            // ReSharper disable once PossibleNullReferenceException
 //            var curLog = GetEntityById(entity.Id);
@@ -301,7 +301,7 @@
 
 //        public override async Task<GasLog> UpdateAsync(GasLog entity)
 //        {
-//            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+//            ArgumentNullException.ThrowIfNull(entity);
 
 //            // ReSharper disable once PossibleNullReferenceException
 //            var curLog = await GetEntityByIdAsync(entity.Id);

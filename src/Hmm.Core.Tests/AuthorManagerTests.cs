@@ -20,22 +20,22 @@ namespace Hmm.Core.Tests
         public async Task Can_Get_Author()
         {
             // Act
-            var authors = await _authorManager.GetEntitiesAsync();
+            var authorsResult = await _authorManager.GetEntitiesAsync();
 
             // Assert
-            Assert.True(_authorManager.ProcessResult.Success);
-            Assert.True(authors.Count >= 1, "authors.Count >= 1");
+            Assert.True(authorsResult.Success);
+            Assert.True(authorsResult.Value.Count >= 1, "authors.Count >= 1");
         }
 
         [Fact]
         public async Task Can_Get_Author_With_Query()
         {
             // Act
-            var authors = await _authorManager.GetEntitiesAsync(a => a.AccountName == "fchy");
+            var authorsResult = await _authorManager.GetEntitiesAsync(a => a.AccountName == "fchy");
 
             // Assert
-            Assert.True(_authorManager.ProcessResult.Success);
-            Assert.Single(authors);
+            Assert.True(authorsResult.Success);
+            Assert.Single(authorsResult.Value);
         }
 
         [Fact]
@@ -49,28 +49,28 @@ namespace Hmm.Core.Tests
                 Description = "Testing author",
                 IsActivated = true
             };
-            var contacts = await ContactRepository.GetEntitiesAsync();
-            var contactCount = contacts.Count;
+            var contactsResult = await ContactRepository.GetEntitiesAsync();
+            var contactCount = contactsResult.Value.Count;
 
             // Act
-            var newAuthor = await _authorManager.CreateAsync(author);
-            contacts = await ContactRepository.GetEntitiesAsync();
-            var contactCount2 = contacts.Count;
+            var newAuthorResult = await _authorManager.CreateAsync(author);
+            contactsResult = await ContactRepository.GetEntitiesAsync();
+            var contactCount2 = contactsResult.Value.Count;
 
             // Assert
-            Assert.True(_authorManager.ProcessResult.Success);
-            Assert.NotNull(newAuthor);
-            Assert.True(newAuthor.Id > 0, "newAuthor.Id is greater to 0");
+            Assert.True(newAuthorResult.Success);
+            Assert.NotNull(newAuthorResult.Value);
+            Assert.True(newAuthorResult.Value.Id > 0, "newAuthor.Id is greater to 0");
             Assert.Equal(contactCount + 1, contactCount2);
-            Assert.True(newAuthor.ContactInfo.Id > 0, "newAuthor's contact Id is greater to 0");
+            Assert.True(newAuthorResult.Value.ContactInfo.Id > 0, "newAuthor's contact Id is greater to 0");
         }
 
         [Fact]
         public async Task Can_Add_Valid_Author_With_Exits_Contact()
         {
             // Arrange
-            var contactDaos = await ContactRepository.GetEntitiesAsync();
-            var contact = Mapper.Map<Contact>(contactDaos.FirstOrDefault());
+            var contactDaosResult = await ContactRepository.GetEntitiesAsync();
+            var contact = Mapper.Map<Contact>(contactDaosResult.Value.FirstOrDefault());
             var author = new Author
             {
                 AccountName = "jfang2",
@@ -78,20 +78,20 @@ namespace Hmm.Core.Tests
                 Description = "Testing author",
                 IsActivated = true
             };
-            var contacts = await ContactRepository.GetEntitiesAsync();
-            var contactCount = contacts.Count;
+            var contactsResult = await ContactRepository.GetEntitiesAsync();
+            var contactCount = contactsResult.Value.Count;
 
             // Act
-            var newAuthor = await _authorManager.CreateAsync(author);
-            contacts = await ContactRepository.GetEntitiesAsync();
-            var contactCount2 = contacts.Count;
+            var newAuthorResult = await _authorManager.CreateAsync(author);
+            contactsResult = await ContactRepository.GetEntitiesAsync();
+            var contactCount2 = contactsResult.Value.Count;
 
             // Assert
-            Assert.True(_authorManager.ProcessResult.Success);
-            Assert.NotNull(newAuthor);
-            Assert.True(newAuthor.Id > 0, "newAuthor.Id is greater to 0");
+            Assert.True(newAuthorResult.Success);
+            Assert.NotNull(newAuthorResult.Value);
+            Assert.True(newAuthorResult.Value.Id > 0, "newAuthor.Id is greater to 0");
             Assert.Equal(contactCount, contactCount2);
-            Assert.True(newAuthor.ContactInfo.Id > 0, "newAuthor's contact Id is greater to 0");
+            Assert.True(newAuthorResult.Value.ContactInfo.Id > 0, "newAuthor's contact Id is greater to 0");
         }
 
         [Fact]
@@ -106,12 +106,12 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newAuthor = await _authorManager.CreateAsync(author);
+            var newAuthorResult = await _authorManager.CreateAsync(author);
 
             // Assert
-            Assert.True(_authorManager.ProcessResult.Success);
-            Assert.NotNull(newAuthor);
-            Assert.True(newAuthor.Id >= 0, "newAuthor.Id is greater to 0");
+            Assert.True(newAuthorResult.Success);
+            Assert.NotNull(newAuthorResult.Value);
+            Assert.True(newAuthorResult.Value.Id >= 0, "newAuthor.Id is greater to 0");
         }
 
         [Fact]
@@ -128,12 +128,12 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newAuthor = await _authorManager.CreateAsync(author);
+            var newAuthorResult = await _authorManager.CreateAsync(author);
 
             // Assert
-            Assert.False(_authorManager.ProcessResult.Success);
-            Assert.True(_authorManager.ProcessResult.MessageList.FirstOrDefault()?.Message.Contains("AccountName is longer then 256 characters"));
-            Assert.Null(newAuthor);
+            Assert.False(newAuthorResult.Success);
+            Assert.True(newAuthorResult.Messages.FirstOrDefault()?.Message.Contains("AccountName is longer then 256 characters"));
+            Assert.Null(newAuthorResult.Value);
         }
 
         [Fact]
@@ -149,20 +149,20 @@ namespace Hmm.Core.Tests
                 Description = "Test update author"
             };
             var result = await _authorManager.CreateAsync(author);
-            Assert.True(result.Id > 0, "user.Id is greater then 0");
+            Assert.True(result.Value.Id > 0, "user.Id is greater then 0");
 
             //   Act
-            var savedAuthors = await _authorManager.GetEntitiesAsync();
-            var savedAuthor = savedAuthors.FirstOrDefault(a => a.Id == result.Id);
+            var savedAuthorsResult = await _authorManager.GetEntitiesAsync();
+            var savedAuthor = savedAuthorsResult.Value.FirstOrDefault(a => a.Id == result.Value.Id);
             Assert.NotNull(savedAuthor);
             savedAuthor.Role = AuthorRoleType.Guest;
-            var updatedAuthor = await _authorManager.UpdateAsync(savedAuthor);
+            var updatedAuthorResult = await _authorManager.UpdateAsync(savedAuthor);
 
             //  Assert
-            Assert.NotNull(updatedAuthor);
-            Assert.Equal(AuthorRoleType.Guest, updatedAuthor.Role);
-            Assert.True(_authorManager.ProcessResult.Success);
-            Assert.Empty(_authorManager.ProcessResult.MessageList);
+            Assert.NotNull(updatedAuthorResult.Value);
+            Assert.Equal(AuthorRoleType.Guest, updatedAuthorResult.Value.Role);
+            Assert.True(updatedAuthorResult.Success);
+            Assert.Empty(updatedAuthorResult.Messages);
         }
 
         [Fact]
@@ -177,16 +177,16 @@ namespace Hmm.Core.Tests
                 Description = "Sample author"
             };
             var result = await _authorManager.CreateAsync(author);
-            Assert.True(result.Id > 0, "newAuthor.Id is greater then 0");
+            Assert.True(result.Value.Id > 0, "newAuthor.Id is greater then 0");
 
             //   Act
             author.AccountName = "fchy";
-            var newAuthor = await _authorManager.UpdateAsync(author);
+            var newAuthorResult = await _authorManager.UpdateAsync(author);
 
             //  Assert
-            Assert.False(_authorManager.ProcessResult.Success);
-            Assert.True(_authorManager.ProcessResult.MessageList.FirstOrDefault()?.Message.Contains("AccountName : Duplicated account name"));
-            Assert.Null(newAuthor);
+            Assert.False(newAuthorResult.Success);
+            Assert.True(newAuthorResult.Messages.FirstOrDefault()?.Message.Contains("AccountName : Duplicated account name"));
+            Assert.Null(newAuthorResult.Value);
         }
 
         [Fact]
@@ -202,14 +202,13 @@ namespace Hmm.Core.Tests
             };
 
             //   Act
-            var newAuthor = await _authorManager.UpdateAsync(author);
+            var newAuthorResult = await _authorManager.UpdateAsync(author);
 
             //  Assert
-            Assert.False(_authorManager.ProcessResult.Success);
-            Assert.Null(newAuthor);
+            Assert.False(newAuthorResult.Success);
+            Assert.Null(newAuthorResult.Value);
 
             // Arrange - id not exist
-            _authorManager.ProcessResult.Rest();
             author = new Author
             {
                 Id = 20000,
@@ -220,38 +219,38 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            newAuthor = await _authorManager.UpdateAsync(author);
+            newAuthorResult = await _authorManager.UpdateAsync(author);
 
             //  Assert
-            Assert.False(_authorManager.ProcessResult.Success);
-            Assert.Null(newAuthor);
+            Assert.False(newAuthorResult.Success);
+            Assert.Null(newAuthorResult.Value);
         }
 
         [Fact]
         public async Task Can_Deactivate_Author()
         {
             // Arrange
-            var authors = await _authorManager.GetEntitiesAsync();
-            var author = authors.FirstOrDefault();
+            var authorsResult = await _authorManager.GetEntitiesAsync();
+            var author = authorsResult.Value.FirstOrDefault();
             Assert.NotNull(author);
             Assert.True(author.IsActivated);
 
             // Act
             await _authorManager.DeActivateAsync(author.Id);
-            var updatedAuthor = await _authorManager.GetAuthorByIdAsync(author.Id);
+            var updatedAuthorResult = await _authorManager.GetAuthorByIdAsync(author.Id);
 
             // Assert
-            Assert.True(_authorManager.ProcessResult.Success);
-            Assert.Empty(_authorManager.ProcessResult.MessageList);
-            Assert.Null(updatedAuthor);
+            Assert.True(updatedAuthorResult.Success);
+            Assert.Empty(updatedAuthorResult.Messages);
+            Assert.Null(updatedAuthorResult.Value);
         }
 
         [Fact]
         public async Task Can_Check_Author_Exists()
         {
             // Arrange
-            var authors = await _authorManager.GetEntitiesAsync();
-            var author = authors.FirstOrDefault();
+            var authorsResult = await _authorManager.GetEntitiesAsync();
+            var author = authorsResult.Value.FirstOrDefault();
             Assert.NotNull(author);
 
             // Act

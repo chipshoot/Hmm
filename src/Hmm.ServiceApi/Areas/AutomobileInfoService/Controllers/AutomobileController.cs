@@ -1,4 +1,4 @@
-﻿//using AutoMapper;
+//using AutoMapper;
 //using Hmm.Automobile;
 //using Hmm.Automobile.DomainEntity;
 //using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
@@ -28,9 +28,9 @@
 
 //        public AutomobileController(IAutoEntityManager<AutomobileInfo> automobileManager, IMapper mapper, ILogger<AutomobileController> logger)
 //        {
-//            Guard.Against<ArgumentNullException>(automobileManager == null, nameof(automobileManager));
-//            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-//            Guard.Against<ArgumentNullException>(logger == null, nameof(logger));
+//            ArgumentNullException.ThrowIfNull(automobileManager);
+//            ArgumentNullException.ThrowIfNull(mapper);
+//            ArgumentNullException.ThrowIfNull(logger);
 
 //            _automobileManager = automobileManager;
 //            _mapper = mapper;

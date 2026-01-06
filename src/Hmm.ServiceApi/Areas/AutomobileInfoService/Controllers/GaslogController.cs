@@ -1,4 +1,4 @@
-﻿//using AutoMapper;
+//using AutoMapper;
 //using Hmm.Automobile;
 //using Hmm.Automobile.DomainEntity;
 //using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
@@ -41,12 +41,12 @@
 //            IPropertyMappingService propertyMappingService,
 //            IPropertyCheckService propertyCheckService)
 //        {
-//            Guard.Against<ArgumentNullException>(gasLogManager == null, nameof(gasLogManager));
-//            Guard.Against<ArgumentNullException>(mapper == null, nameof(mapper));
-//            Guard.Against<ArgumentNullException>(autoManager == null, nameof(autoManager));
-//            Guard.Against<ArgumentNullException>(discountManager == null, nameof(discountManager));
-//            Guard.Against<ArgumentNullException>(propertyMappingService == null, nameof(propertyMappingService));
-//            Guard.Against<ArgumentNullException>(propertyCheckService == null, nameof(propertyCheckService));
+//            ArgumentNullException.ThrowIfNull(gasLogManager);
+//            ArgumentNullException.ThrowIfNull(mapper);
+//            ArgumentNullException.ThrowIfNull(autoManager);
+//            ArgumentNullException.ThrowIfNull(discountManager);
+//            ArgumentNullException.ThrowIfNull(propertyMappingService);
+//            ArgumentNullException.ThrowIfNull(propertyCheckService);
 
 //            _gasLogManager = gasLogManager;
 //            _mapper = mapper;

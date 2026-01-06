@@ -1,4 +1,4 @@
-﻿using Hmm.Automobile.DomainEntity;
+using Hmm.Automobile.DomainEntity;
 using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Validation;
@@ -15,8 +15,8 @@ namespace Hmm.Automobile.NoteSerialize
 
         public AutomobileXmlNoteSerialize(IApplication application, ILogger<AutomobileInfo> logger, IEntityLookup lookup) : base(logger)
         {
-            Guard.Against<ArgumentNullException>(application == null, nameof(application));
-            Guard.Against<ArgumentNullException>(lookup == null, nameof(lookup));
+            ArgumentNullException.ThrowIfNull(application);
+            ArgumentNullException.ThrowIfNull(lookup);
             _application = application;
             _lookup = lookup;
         }

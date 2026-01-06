@@ -1,4 +1,4 @@
-﻿using Hmm.Automobile.DomainEntity;
+using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
@@ -14,7 +14,7 @@ namespace Hmm.Automobile
         public AutomobileManager(INoteSerializer<AutomobileInfo> noteSerializer, IHmmValidator<AutomobileInfo> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
             : base(validator, noteManager, lookupRepo)
         {
-            Guard.Against<ArgumentNullException>(noteSerializer == null, nameof(noteSerializer));
+            ArgumentNullException.ThrowIfNull(noteSerializer);
             NoteSerializer = noteSerializer;
         }
 
@@ -85,7 +85,7 @@ namespace Hmm.Automobile
 
         public override AutomobileInfo Create(AutomobileInfo entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             entity.AuthorId = DefaultAuthor.Id;
@@ -110,7 +110,7 @@ namespace Hmm.Automobile
 
         public override async Task<AutomobileInfo> CreateAsync(AutomobileInfo entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             entity.AuthorId = DefaultAuthor.Id;
@@ -137,7 +137,7 @@ namespace Hmm.Automobile
 
         public override AutomobileInfo Update(AutomobileInfo entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             var curAuto = GetEntityById(entity.Id);
@@ -170,7 +170,7 @@ namespace Hmm.Automobile
 
         public override async Task<AutomobileInfo> UpdateAsync(AutomobileInfo entity)
         {
-            Guard.Against<ArgumentNullException>(entity == null, nameof(entity));
+            ArgumentNullException.ThrowIfNull(entity);
 
             // ReSharper disable once PossibleNullReferenceException
             var curAuto = await GetEntityByIdAsync(entity.Id);

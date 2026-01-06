@@ -1,4 +1,4 @@
-﻿//using Hmm.Automobile.DomainEntity;
+//using Hmm.Automobile.DomainEntity;
 //using Hmm.Core;
 //using Hmm.Core.DomainEntity;
 //using Hmm.Utility.Dal.Query;
@@ -14,9 +14,9 @@
 //    {
 //        protected EntityManagerBase(IHmmValidator<T> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
 //        {
-//            Guard.Against<ArgumentNullException>(validator == null, nameof(validator));
-//            Guard.Against<ArgumentNullException>(noteManager == null, nameof(noteManager));
-//            Guard.Against<ArgumentNullException>(lookupRepo == null, nameof(lookupRepo));
+//            ArgumentNullException.ThrowIfNull(validator);
+//            ArgumentNullException.ThrowIfNull(noteManager);
+//            ArgumentNullException.ThrowIfNull(lookupRepo);
 
 //            Validator = validator;
 //            NoteManager = noteManager;

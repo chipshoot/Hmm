@@ -22,12 +22,12 @@ namespace Hmm.Core.Tests
         public async Task Can_Get_Contact()
         {
             // Act
-            var contacts = await _contactManager.GetContactsAsync();
+            var contactsResult = await _contactManager.GetContactsAsync();
 
             // Assert
-            Assert.True(_contactManager.ProcessResult.Success);
-            Assert.NotNull(contacts);
-            Assert.True(contacts.Count >= 1);
+            Assert.True(contactsResult.Success);
+            Assert.NotNull(contactsResult.Value);
+            Assert.True(contactsResult.Value.Count >= 1);
         }
 
         [Fact]
@@ -39,12 +39,12 @@ namespace Hmm.Core.Tests
             contact.LastName = "Test Last Name";
 
             // Act
-            var newContact = await _contactManager.CreateAsync(contact);
+            var newContactResult = await _contactManager.CreateAsync(contact);
 
             // Assert
-            Assert.True(_contactManager.ProcessResult.Success);
-            Assert.NotNull(newContact);
-            Assert.True(newContact.Id >= 0, "newContact.Id is greater to 0");
+            Assert.True(newContactResult.Success);
+            Assert.NotNull(newContactResult.Value);
+            Assert.True(newContactResult.Value.Id >= 0, "newContact.Id is greater to 0");
         }
 
         [Fact]
@@ -56,34 +56,34 @@ namespace Hmm.Core.Tests
             contact.LastName = "Test Last Name";
 
             // Act
-            var newContact = await _contactManager.CreateAsync(contact);
+            var newContactResult = await _contactManager.CreateAsync(contact);
 
             // Assert
-            Assert.Null(newContact);
-            Assert.False(_contactManager.ProcessResult.Success);
+            Assert.Null(newContactResult.Value);
+            Assert.False(newContactResult.Success);
             Assert.Equal("FirstName : 'First Name' must be between 1 and 200 characters. You entered 255 characters.",
-                _contactManager.ProcessResult.MessageList.First().Message);
+                newContactResult.Messages.First().Message);
         }
 
         [Fact]
         public async Task Can_Update_Valid_Contact()
         {
             // Arrange
-            var contacts = await _contactManager.GetContactsAsync();
-            var contact = contacts.FirstOrDefault();
+            var contactsResult = await _contactManager.GetContactsAsync();
+            var contact = contactsResult.Value.FirstOrDefault();
             Assert.NotNull(contact);
             Assert.True(contact.Id > 0, "contact.Id is greater then 0");
             Assert.True(contact.IsActivated);
 
             // Act
             contact.FirstName = "Updated FirstName";
-            var updatedContact = await _contactManager.UpdateAsync(contact);
+            var updatedContactResult = await _contactManager.UpdateAsync(contact);
 
             // Assert
-            Assert.NotNull(updatedContact);
-            Assert.Equal("Updated FirstName", updatedContact.FirstName);
-            Assert.True(_contactManager.ProcessResult.Success);
-            Assert.Empty(_contactManager.ProcessResult.MessageList);
+            Assert.NotNull(updatedContactResult.Value);
+            Assert.Equal("Updated FirstName", updatedContactResult.Value.FirstName);
+            Assert.True(updatedContactResult.Success);
+            Assert.Empty(updatedContactResult.Messages);
         }
 
         [Fact]
@@ -96,12 +96,12 @@ namespace Hmm.Core.Tests
 
             //   Act
             contact.LastName = GetRandomString(255);
-            var newContact = await _contactManager.UpdateAsync(contact);
+            var newContactResult = await _contactManager.UpdateAsync(contact);
 
             //  Assert
-            Assert.False(_contactManager.ProcessResult.Success);
-            Assert.True(_contactManager.ProcessResult.MessageList.FirstOrDefault()?.Message.Contains("LastName : 'Last Name' must be between 1 and 200 characters. You entered 255 characters"));
-            Assert.Null(newContact);
+            Assert.False(newContactResult.Success);
+            Assert.True(newContactResult.Messages.FirstOrDefault()?.Message.Contains("LastName : 'Last Name' must be between 1 and 200 characters. You entered 255 characters"));
+            Assert.Null(newContactResult.Value);
         }
 
         [Fact]
@@ -112,11 +112,11 @@ namespace Hmm.Core.Tests
             contact.Id = 0;
 
             //   Act
-            var newContact = await _contactManager.UpdateAsync(contact);
+            var newContactResult = await _contactManager.UpdateAsync(contact);
 
             //  Assert
-            Assert.False(_contactManager.ProcessResult.Success);
-            Assert.Null(newContact);
+            Assert.False(newContactResult.Success);
+            Assert.Null(newContactResult.Value);
 
             // Arrange - id not exist
             contact = new Contact
@@ -126,30 +126,30 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            newContact = await _contactManager.UpdateAsync(contact);
+            newContactResult = await _contactManager.UpdateAsync(contact);
 
             //  Assert
-            Assert.False(_contactManager.ProcessResult.Success);
-            Assert.Null(newContact);
+            Assert.False(newContactResult.Success);
+            Assert.Null(newContactResult.Value);
         }
 
         [Fact]
         public async Task Can_Deactivate_Contact()
         {
             // Arrange
-            var contacts = await _contactManager.GetContactsAsync();
-            var contact = contacts.FirstOrDefault();
+            var contactsResult = await _contactManager.GetContactsAsync();
+            var contact = contactsResult.Value.FirstOrDefault();
             Assert.NotNull(contact);
             Assert.True(contact.IsActivated);
 
             // Act
             await _contactManager.DeActivateAsync(contact.Id);
-            var updatedContact = await _contactManager.GetContactByIdAsync(contact.Id);
+            var updatedContactResult = await _contactManager.GetContactByIdAsync(contact.Id);
 
             // Assert
-            Assert.True(_contactManager.ProcessResult.Success);
-            Assert.Empty(_contactManager.ProcessResult.MessageList);
-            Assert.Null(updatedContact);
+            Assert.True(updatedContactResult.Success);
+            Assert.Empty(updatedContactResult.Messages);
+            Assert.Null(updatedContactResult.Value);
         }
 
         [Theory]
