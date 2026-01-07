@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
@@ -8,8 +7,6 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -23,23 +20,20 @@ namespace Hmm.Core.DefaultManager
         private readonly IMapper _mapper;
         private readonly IHmmValidator<HmmNote> _validator;
         private readonly IDateTimeProvider _dateProvider;
-        private readonly ITagManager _tagManager;
         private readonly IEntityLookup _lookup;
 
         #endregion private fields
 
-        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, ITagManager tagManager, IEntityLookup lookup, IDateTimeProvider dateProvider, IHmmValidator<HmmNote> validator)
+        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, IEntityLookup lookup, IDateTimeProvider dateProvider, IHmmValidator<HmmNote> validator)
         {
             ArgumentNullException.ThrowIfNull(noteRepository);
             ArgumentNullException.ThrowIfNull(mapper);
-            ArgumentNullException.ThrowIfNull(tagManager);
             ArgumentNullException.ThrowIfNull(dateProvider);
             ArgumentNullException.ThrowIfNull(validator);
 
             _noteRepository = noteRepository;
             _mapper = mapper;
             _dateProvider = dateProvider;
-            _tagManager = tagManager;
             _lookup = lookup;
             _validator = validator;
         }
@@ -169,124 +163,6 @@ namespace Hmm.Core.DefaultManager
             catch (Exception ex)
             {
                 return ProcessingResult<HmmNote>.FromException(ex);
-            }
-        }
-
-        public async Task<ProcessingResult<List<Tag>>> ApplyTag(HmmNote note, Tag tag)
-        {
-            try
-            {
-                // Retrieve the HmmNote entity
-                var hmmNoteResult = await GetNoteByIdAsync(note.Id);
-                if (!hmmNoteResult.Success)
-                {
-                    return ProcessingResult<List<Tag>>.Fail($"Cannot find note {note.Id}: {hmmNoteResult.ErrorMessage}", hmmNoteResult.ErrorType);
-                }
-                var hmmNote = hmmNoteResult.Value;
-
-                // Check if the tag exists in system
-                Tag retrievedTag = null;
-                if (tag.Id > 0)
-                {
-                    var tagResult = await _tagManager.GetTagByIdAsync(tag.Id);
-                    if (tagResult.Success)
-                    {
-                        retrievedTag = tagResult.Value;
-                    }
-                }
-                else
-                {
-                    var tagByNameResult = await _tagManager.GetTagByNameAsync(tag.Name);
-                    if (tagByNameResult.Success)
-                    {
-                        retrievedTag = tagByNameResult.Value;
-                    }
-                    else
-                    {
-                        var createdTagResult = await _tagManager.CreateAsync(tag);
-                        if (createdTagResult.Success)
-                        {
-                            retrievedTag = createdTagResult.Value;
-                        }
-                    }
-                }
-
-                if (retrievedTag == null)
-                {
-                    return ProcessingResult<List<Tag>>.Fail($"Cannot create or find tag {tag.Name}");
-                }
-
-                if (!retrievedTag.IsActivated)
-                {
-                    return ProcessingResult<List<Tag>>.Invalid($"Cannot apply deactivated tag {tag.Name}");
-                }
-
-                // Check if the tag is already associated with the HmmNote entity
-                if (hmmNote.Tags.Any(t => t.Id == retrievedTag.Id))
-                {
-                    return ProcessingResult<List<Tag>>.Ok(hmmNote.Tags, $"Tag {tag.Name} is already associated with note {note.Id}");
-                }
-
-                // Apply the tag to the HmmNote entity
-                hmmNote.Tags.Add(retrievedTag);
-
-                // Update the HmmNote entity in the repository
-                var updatedHmmNoteResult = await UpdateAsync(hmmNote);
-                if (!updatedHmmNoteResult.Success)
-                {
-                    return ProcessingResult<List<Tag>>.Fail(updatedHmmNoteResult.ErrorMessage, updatedHmmNoteResult.ErrorType);
-                }
-
-                var updatedHmmNote = updatedHmmNoteResult.Value;
-                note.Tags = updatedHmmNote.Tags;
-
-                // Return the list of tags associated with the HmmNote entity
-                return ProcessingResult<List<Tag>>.Ok(updatedHmmNote.Tags);
-            }
-            catch (Exception ex)
-            {
-                return ProcessingResult<List<Tag>>.FromException(ex);
-            }
-        }
-
-        public async Task<ProcessingResult<List<Tag>>> RemoveTag(HmmNote note, int tagId)
-        {
-            try
-            {
-                // Retrieve the HmmNote entity
-                var hmmNoteResult = await GetNoteByIdAsync(note.Id);
-                if (!hmmNoteResult.Success)
-                {
-                    return ProcessingResult<List<Tag>>.Fail($"Cannot find note {note.Id}: {hmmNoteResult.ErrorMessage}", hmmNoteResult.ErrorType);
-                }
-                var hmmNote = hmmNoteResult.Value;
-
-                // Check if the tag is associated with the HmmNote entity
-                var tag = hmmNote.Tags.FirstOrDefault(t => t.Id == tagId);
-                if (tag == null)
-                {
-                    return ProcessingResult<List<Tag>>.Ok(hmmNote.Tags, $"Tag {tagId} is not associated with note {note.Id}");
-                }
-
-                // Remove the tag from the HmmNote entity
-                hmmNote.Tags.Remove(tag);
-
-                // Update the HmmNote entity in the repository
-                var updatedHmmNoteResult = await UpdateAsync(hmmNote);
-                if (!updatedHmmNoteResult.Success)
-                {
-                    return ProcessingResult<List<Tag>>.Fail(updatedHmmNoteResult.ErrorMessage, updatedHmmNoteResult.ErrorType);
-                }
-
-                var updatedHmmNote = updatedHmmNoteResult.Value;
-                note.Tags = updatedHmmNote.Tags;
-
-                // Return the list of tags associated with the HmmNote entity
-                return ProcessingResult<List<Tag>>.Ok(updatedHmmNote.Tags);
-            }
-            catch (Exception ex)
-            {
-                return ProcessingResult<List<Tag>>.FromException(ex);
             }
         }
 

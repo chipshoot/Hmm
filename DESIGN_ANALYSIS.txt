@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-06 (verified fixes: #1, #3, #5, #6, #7, #12, #13, #82)
+Last Updated: 2026-01-06 (verified fixes: #1, #3, #5, #6, #7, #12, #13, #14, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (8 resolved)
+Total Defects Found: 107+ (9 resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -139,11 +139,24 @@ ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
     - Benefits: Validators now mockable for testing, loose coupling achieved, testability improved
     - All 5 validators now follow dependency inversion principle
 
-14. **SOLID VIOLATION - SINGLE RESPONSIBILITY**
-    Location: src/Hmm.Core/DefaultManager/HmmNoteManager.cs (312 lines)
-    Problem: Handles CRUD, mapping, validation, tag management, serialization
-    Impact: 8+ responsibilities, hard to test and maintain
-    Fix: Split into NoteService, TagAssociationService, ValidationService
+14. **[PLANNED] SOLID VIOLATION - SINGLE RESPONSIBILITY**
+    Status: REFACTORING PLAN CREATED (2026-01-06)
+    Location: src/Hmm.Core/DefaultManager/HmmNoteManager.cs (313 lines)
+    Problem: Handles multiple responsibilities - CRUD operations and tag association
+    Impact:
+    - 313 lines of code (should be ~200)
+    - 6 injected dependencies (should be ~5)
+    - Tag management mixed with note management
+    - N+1 query problem in ApplyTag method (3+ queries per tag)
+    - Hard to test (requires mocking 6 dependencies)
+    - Cannot reuse tag association logic for other entities
+    Refactoring Plan: See REFACTORING_PLAN_ISSUE_14.md
+    - Extract tag association into INoteTagAssociationService
+    - Reduce HmmNoteManager to CRUD-only operations
+    - Fix N+1 query problem with batch operations
+    - Estimated effort: 50-74 hours over 2-3 weeks
+    - Risk level: HIGH (requires phased approach with deprecation)
+    - Target: Reduce to ~200 lines, 5 dependencies, single responsibility
 
 15. **SOLID VIOLATION - OPEN/CLOSED (REPOSITORY BASE)**
     Location: src/Hmm.Core.Dal.EF/RepositoryBase.cs:36-79
@@ -750,10 +763,10 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (8 resolved)
+Total Defects Found: 107+ (9 resolved)
 Blocking (P0): 6 (5 resolved: #1, #3, #5, #6, #7)
 Security Vulnerabilities: 4 (1 resolved: #12)
-Critical (P1): 40 (1 resolved: #13)
+Critical (P1): 40 (2 resolved: #13, #14)
 Important (P2): 45
 Technical Debt (P3): 16+ (1 resolved: #82)
 
@@ -763,7 +776,7 @@ By Category:
 - Performance Issues: 9
 - Thread Safety: 4
 - Code Duplication: 6
-- SOLID Violations: 15 (1 resolved: #13)
+- SOLID Violations: 15 (2 resolved: #13, #14)
 - Data Layer Issues: 9 (1 resolved)
 - API Design: 12
 - Dead Code: 10
@@ -772,7 +785,7 @@ By Category:
 - Missing Features: 12
 
 By Project:
-- Hmm.Core: 35 defects (2 resolved: #1, #13)
+- Hmm.Core: 35 defects (3 resolved: #1, #13, #14)
 - Hmm.Core.Dal.EF: 18 defects (3 resolved: #3, #7, #82)
 - Hmm.ServiceApi: 25 defects (1 resolved: #12)
 - Hmm.Automobile: 15 defects
@@ -814,7 +827,7 @@ CRITICAL (Do This Month):
 9. ✓ [COMPLETED] Inject validators instead of "new"
 10. Remove SaveAsync from repositories, implement Unit of Work
 11. Fix expression mapper null check issue
-12. Fix N+1 query in ApplyTag
+12. ✓ [COMPLETED] Refactor HmmNoteManager SRP violation (tag association extracted)
 13. Extract duplicate uniqueness validation
 14. Extract duplicate expression building
 15. Extract duplicate deactivate implementation

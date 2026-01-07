@@ -133,6 +133,7 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmNoteManager, HmmNoteManager>()
                 .AddScoped<INoteCatalogManager, NoteCatalogManager>()
                 .AddScoped<ITagManager, TagManager>()
+                .AddScoped<INoteTagAssociationManager, NoteTagAssociationManager>()
                 .AddScoped<IHmmValidator<Author>, AuthorValidator>()
                 .AddScoped<IHmmValidator<NoteCatalog>, NoteCatalogValidator>()
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()

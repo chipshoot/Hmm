@@ -16,12 +16,10 @@ namespace Hmm.Core.Tests
         private readonly HmmNoteManager _noteManager;
         private Author _author;
         private NoteCatalog _catalog;
-        private readonly TagManager _tagManager;
 
         public HmmNoteManagerTests()
         {
-            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Tag>>());
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, _tagManager, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
+            _noteManager = new HmmNoteManager(NoteRepository, Mapper, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
         }
 
         [Fact]
@@ -204,144 +202,31 @@ namespace Hmm.Core.Tests
             Assert.False(result);
         }
 
-        [Theory]
-        [InlineData(new[] { 101 }, 1)]
-        [InlineData(new[] { 100, 102 }, 2)]
-        [InlineData(new[] { 100, 100 }, 1)]
-        public async Task Can_Add_Tag_To_Note(int[] tagIds, int expectTags)
-        {
-            // Arrange
-            var tagsToApply = new List<Tag>();
-            foreach (var tagId in tagIds)
-            {
-                var tagToApplyResult = await _tagManager.GetTagByIdAsync(tagId);
-                tagsToApply.Add(tagToApplyResult.Value);
-            }
+        // NOTE: Tag-related tests have been moved to NoteTagAssociationManagerTests
+        // The ApplyTag and RemoveTag methods are now part of INoteTagAssociationManager
 
-            var note = new HmmNote
-            {
-                Author = _author,
-                Catalog = _catalog,
-                Subject = "Testing note",
-                Content = "Test content",
-                Description = "Test note with tag applied"
-            };
-            var newNoteResult = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNoteResult);
+        // [Theory]
+        // [InlineData(new[] { 101 }, 1)]
+        // [InlineData(new[] { 100, 102 }, 2)]
+        // [InlineData(new[] { 100, 100 }, 1)]
+        // public async Task Can_Add_Tag_To_Note(int[] tagIds, int expectTags)
+        // - Moved to NoteTagAssociationManagerTests
 
-            // Act
-            var tags = new List<Tag>();
-            foreach (var tag in tagsToApply)
-            {
-                var tagsResult = await _noteManager.ApplyTag(note, tag);
-                tags = tagsResult.Value;
-            }
+        // [Fact]
+        // public async Task Cannot_Apply_Deactivated_Tag_To_Note()
+        // - Moved to NoteTagAssociationManagerTests
 
-            // Assert
-            Assert.Equal(expectTags, tags.Count);
-        }
+        // [Fact]
+        // public async Task Can_Apply_And_Create_New_Tag_To_Note()
+        // - Moved to NoteTagAssociationManagerTests
 
-        [Fact]
-        public async Task Cannot_Apply_Deactivated_Tag_To_Note()
-        {
-            var tagListResult = await _tagManager.GetEntitiesAsync();
-            var tag = tagListResult.Value.FirstOrDefault();
-            Assert.NotNull(tag);
-            await _tagManager.DeActivateAsync(tag.Id);
-            var note = new HmmNote
-            {
-                Author = _author,
-                Catalog = _catalog,
-                Subject = "Testing note",
-                Content = "Test content",
-                Description = "Test note with tag applied"
-            };
-            var newNoteResult = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNoteResult.Value);
-
-            // Act
-            var tagsResult = await _noteManager.ApplyTag(note, tag);
-
-            // Assert
-            Assert.Null(tagsResult.Value);
-            Assert.False(tagsResult.Success);
-        }
-
-        [Fact]
-        public async Task Can_Apply_And_Create_New_Tag_To_Note()
-        {
-            var tagListResult = await _tagManager.GetEntitiesAsync();
-            var tagNum = tagListResult.Value.Count;
-            var tag = new Tag
-            {
-                Name = "NonExistsTag"
-            };
-            var note = new HmmNote
-            {
-                Author = _author,
-                Catalog = _catalog,
-                Subject = "Testing note",
-                Content = "Test content",
-                Description = "Test note with tag applied"
-            };
-            var newNoteResult = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNoteResult.Value);
-
-            // Act
-            var tagsResult = await _noteManager.ApplyTag(note, tag);
-            var tags = tagsResult.Value;
-            var savedTagsResult = await _tagManager.GetEntitiesAsync(t => t.Name == "NonExistsTag");
-            var savedTag = savedTagsResult.Value.FirstOrDefault();
-            tagListResult = await _tagManager.GetEntitiesAsync();
-
-            // Assert
-            Assert.Single(tags);
-            Assert.NotNull(savedTag);
-            Assert.Equal(tagNum + 1, tagListResult.Value.Count);
-        }
-
-        [Theory]
-        [InlineData(new[] { 101 }, new[] { 101 }, 0)]
-        [InlineData(new[] { 100, 102 }, new[] { 102 }, 1)]
-        [InlineData(new[] { 100, 100 }, new[] { 100 }, 0)]
-        [InlineData(new[] { 100 }, new[] { 102 }, 1)]
-        public async Task Can_Remove_Tag_From_Note(int[] tagIds, int[] tagIdsToDelete, int expectTags)
-        {
-            // Arrange
-            var tagsToApply = new List<Tag>();
-            foreach (var tagId in tagIds)
-            {
-                var tagToApplyResult = await _tagManager.GetTagByIdAsync(tagId);
-                tagsToApply.Add(tagToApplyResult.Value);
-            }
-            var note = new HmmNote
-            {
-                Author = _author,
-                Catalog = _catalog,
-                Subject = "Testing note",
-                Content = "Test content",
-                Description = "Test note with tag applied"
-            };
-            var newNoteResult = await _noteManager.CreateAsync(note);
-            Assert.NotNull(newNoteResult.Value);
-
-            var tags = new List<Tag>();
-            foreach (var tag in tagsToApply)
-            {
-                var tagsResult = await _noteManager.ApplyTag(note, tag);
-                tags.AddRange(tagsResult.Value);
-            }
-
-            // Act
-            foreach (var id in tagIdsToDelete)
-            {
-                var tagsResult = await _noteManager.RemoveTag(note, id);
-                tags = tagsResult.Value;
-            }
-
-            // Assert
-            Assert.Equal(expectTags, tags.Count);
-        }
+        // [Theory]
+        // [InlineData(new[] { 101 }, new[] { 101 }, 0)]
+        // [InlineData(new[] { 100, 102 }, new[] { 102 }, 1)]
+        // [InlineData(new[] { 100, 100 }, new[] { 100 }, 0)]
+        // [InlineData(new[] { 100 }, new[] { 102 }, 1)]
+        // public async Task Can_Remove_Tag_From_Note(int[] tagIds, int[] tagIdsToDelete, int expectTags)
+        // - Moved to NoteTagAssociationManagerTests
 
         public async Task InitializeAsync()
         {

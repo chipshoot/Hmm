@@ -21,16 +21,19 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     public class HmmNoteController : Controller
     {
         private readonly IHmmNoteManager _noteManager;
+        private readonly INoteTagAssociationManager _noteTagAssociationManager;
         private readonly IMapper _mapper;
         private readonly ILogger<HmmNoteController> _logger;
 
-        public HmmNoteController(IHmmNoteManager noteManager, IMapper mapper, ILogger<HmmNoteController> logger)
+        public HmmNoteController(IHmmNoteManager noteManager, INoteTagAssociationManager noteTagAssociationManager, IMapper mapper, ILogger<HmmNoteController> logger)
         {
             ArgumentNullException.ThrowIfNull(noteManager);
+            ArgumentNullException.ThrowIfNull(noteTagAssociationManager);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(logger);
 
             _noteManager = noteManager;
+            _noteTagAssociationManager = noteTagAssociationManager;
             _mapper = mapper;
             _logger = logger;
         }
@@ -166,20 +169,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             try
             {
-                var curNoteResult = await _noteManager.GetNoteByIdAsync(id);
-                if (!curNoteResult.Success)
-                {
-                    if (curNoteResult.IsNotFound)
-                    {
-                        return NotFound($"The note {id} cannot be found.");
-                    }
-                    _logger.LogError("Failed to retrieve note {NoteId} for tag application. Error: {ErrorMessage}, TraceId: {TraceId}",
-                        id, curNoteResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note.");
-                }
-
                 var tagToApply = _mapper.Map<Tag>(tag);
-                var tagListResult = await _noteManager.ApplyTag(curNoteResult.Value, tagToApply);
+                var tagListResult = await _noteTagAssociationManager.ApplyTagToNoteAsync(id, tagToApply);
 
                 if (!tagListResult.Success)
                 {
