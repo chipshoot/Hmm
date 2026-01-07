@@ -1,6 +1,8 @@
 ﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
+using Moq;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -13,7 +15,7 @@ namespace Hmm.Core.Tests
 
         public AuthorManagerTests()
         {
-            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository);
+            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Author>>());
         }
 
         [Fact]

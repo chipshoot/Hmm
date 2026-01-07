@@ -21,14 +21,15 @@ public class ContactManager : IContactManager
     private readonly IHmmValidator<Contact> _validator;
     private readonly IEntityLookup _lookup;
 
-    public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper, IEntityLookup lookup)
+    public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper, IEntityLookup lookup, IHmmValidator<Contact> validator)
     {
         ArgumentNullException.ThrowIfNull(contactRepository);
         ArgumentNullException.ThrowIfNull(mapper);
         ArgumentNullException.ThrowIfNull(lookup);
+        ArgumentNullException.ThrowIfNull(validator);
         _contactDaoRepository = contactRepository;
         _mapper = mapper;
-        _validator = new ContactValidator();
+        _validator = validator;
         _lookup = lookup;
     }
 

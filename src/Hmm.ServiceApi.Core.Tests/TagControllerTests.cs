@@ -7,6 +7,7 @@ using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public TagControllerTests()
         {
-            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
+            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Tag>>());
             _controller = new TagController(_tagManager, ApiMapper, new Mock<ILogger<TagController>>().Object);
         }
 

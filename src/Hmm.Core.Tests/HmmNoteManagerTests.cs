@@ -1,6 +1,8 @@
 using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +20,8 @@ namespace Hmm.Core.Tests
 
         public HmmNoteManagerTests()
         {
-            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, _tagManager, LookupRepository, DateProvider);
+            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Tag>>());
+            _noteManager = new HmmNoteManager(NoteRepository, Mapper, _tagManager, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
         }
 
         [Fact]

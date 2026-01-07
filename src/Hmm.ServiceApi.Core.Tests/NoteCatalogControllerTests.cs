@@ -7,6 +7,7 @@ using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public NoteCatalogControllerTests()
         {
-            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository);
+            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<NoteCatalog>>());
             _controller = new NoteCatalogController(_catalogManager, ApiMapper, new Mock<ILogger<NoteCatalogController>>().Object);
         }
 

@@ -7,6 +7,7 @@ using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -22,8 +23,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public NoteControllerTests()
         {
-            var tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, tagManager, LookupRepository, DateProvider);
+            var tagManager = new TagManager(TagRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Tag>>());
+            _noteManager = new HmmNoteManager(NoteRepository, Mapper, tagManager, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
             _controller = new HmmNoteController(_noteManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
         }
 

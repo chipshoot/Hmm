@@ -1,6 +1,8 @@
 ﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
+using Moq;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -13,7 +15,7 @@ namespace Hmm.Core.Tests
 
         public TagManagerTests()
         {
-            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository);
+            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Tag>>());
         }
 
         [Fact]

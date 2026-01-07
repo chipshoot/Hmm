@@ -7,6 +7,7 @@ using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public AuthorControllerTests()
         {
-            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository);
+            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Author>>());
             _controller = new AuthorController(_authorManager, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
         }
 

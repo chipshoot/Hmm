@@ -21,13 +21,14 @@ namespace Hmm.Core.DefaultManager
         private readonly IHmmValidator<Tag> _validator;
         private readonly IEntityLookup _lookup;
 
-        public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IMapper mapper, IEntityLookup lookup)
+        public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IMapper mapper, IEntityLookup lookup, IHmmValidator<Tag> validator)
         {
             ArgumentNullException.ThrowIfNull(tagRepository);
             ArgumentNullException.ThrowIfNull(mapper);
+            ArgumentNullException.ThrowIfNull(validator);
             _tagRepository = tagRepository;
             _mapper = mapper;
-            _validator = new TagValidator(tagRepository);
+            _validator = validator;
             _lookup = lookup;
         }
 

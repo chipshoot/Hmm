@@ -20,15 +20,16 @@ namespace Hmm.Core.DefaultManager
         private readonly IMapper _mapper;
         private readonly IEntityLookup _lookup;
 
-        public AuthorManager(IRepository<AuthorDao> authorRepository, IMapper mapper, IEntityLookup lookup)
+        public AuthorManager(IRepository<AuthorDao> authorRepository, IMapper mapper, IEntityLookup lookup, IHmmValidator<Author> validator)
         {
             ArgumentNullException.ThrowIfNull(authorRepository);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(lookup);
+            ArgumentNullException.ThrowIfNull(validator);
 
             _authorRepository = authorRepository;
             _mapper = mapper;
-            _validator = new AuthorValidator(authorRepository);
+            _validator = validator;
             _lookup = lookup;
         }
 

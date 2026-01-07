@@ -20,15 +20,16 @@ namespace Hmm.Core.DefaultManager
         private readonly IHmmValidator<NoteCatalog> _validator;
         private readonly IEntityLookup _lookup;
 
-        public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper, IEntityLookup lookup)
+        public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper, IEntityLookup lookup, IHmmValidator<NoteCatalog> validator)
         {
             ArgumentNullException.ThrowIfNull(dataSource);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(lookup);
+            ArgumentNullException.ThrowIfNull(validator);
 
             _mapper = mapper;
             _catalogRepository = dataSource;
-            _validator = new NoteCatalogValidator(dataSource);
+            _validator = validator;
             _lookup = lookup;
         }
 

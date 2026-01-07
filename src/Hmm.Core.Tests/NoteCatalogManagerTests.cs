@@ -2,6 +2,8 @@ using System.Linq;
 using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
+using Moq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -13,7 +15,7 @@ namespace Hmm.Core.Tests
 
         public NoteCatalogManagerTests()
         {
-            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository);
+            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<NoteCatalog>>());
         }
 
         [Fact]

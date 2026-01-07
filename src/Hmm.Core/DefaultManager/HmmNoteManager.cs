@@ -28,19 +28,20 @@ namespace Hmm.Core.DefaultManager
 
         #endregion private fields
 
-        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, ITagManager tagManager, IEntityLookup lookup, IDateTimeProvider dateProvider)
+        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, ITagManager tagManager, IEntityLookup lookup, IDateTimeProvider dateProvider, IHmmValidator<HmmNote> validator)
         {
             ArgumentNullException.ThrowIfNull(noteRepository);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(tagManager);
             ArgumentNullException.ThrowIfNull(dateProvider);
+            ArgumentNullException.ThrowIfNull(validator);
 
             _noteRepository = noteRepository;
             _mapper = mapper;
             _dateProvider = dateProvider;
             _tagManager = tagManager;
             _lookup = lookup;
-            _validator = new NoteValidator(_lookup);
+            _validator = validator;
         }
 
         public async Task<ProcessingResult<PageList<HmmNote>>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null)

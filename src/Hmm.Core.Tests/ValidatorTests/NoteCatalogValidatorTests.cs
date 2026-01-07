@@ -5,6 +5,8 @@ using Hmm.Core.Map;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
+using Moq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -21,7 +23,7 @@ namespace Hmm.Core.Tests.ValidatorTests
                 cfg.AddProfile<HmmMappingProfile>();
             });
             var mapper = config.CreateMapper();
-            var catalogManager = new NoteCatalogManager(CatalogRepository, mapper, LookupRepository);
+            var catalogManager = new NoteCatalogManager(CatalogRepository, mapper, LookupRepository, Mock.Of<IHmmValidator<NoteCatalog>>());
             _validator = new NoteCatalogValidator(CatalogRepository);
         }
 

@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-06 (verified fixes: #1, #3, #5, #6, #7, #12, #82)
+Last Updated: 2026-01-06 (verified fixes: #1, #3, #5, #6, #7, #12, #13, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (7 resolved)
+Total Defects Found: 107+ (8 resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -124,12 +124,20 @@ SECURITY VULNERABILITIES (P0 - FIX IMMEDIATELY)
 ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
 ================================================================================
 
-13. **SOLID VIOLATION - DEPENDENCY INVERSION**
+13. **[RESOLVED] SOLID VIOLATION - DEPENDENCY INVERSION**
+    Status: ✓ FIXED (Verified 2026-01-06)
     Location: All managers in src/Hmm.Core/DefaultManager/
-    Problem: Managers instantiate validators with "new" instead of injection
-    Examples: HmmNoteManager.cs:43, AuthorManager.cs:31, TagManager.cs:30
-    Impact: Cannot mock, tight coupling, hard to test
-    Fix: Inject IValidator<T> dependencies
+    Problem: Managers were instantiating validators with "new" instead of dependency injection
+    Resolution: Implemented proper dependency injection for all validators
+    - Registered TagValidator and ContactValidator in Startup.cs DI container
+    - Updated HmmNoteManager constructor to inject IHmmValidator<HmmNote>
+    - Updated AuthorManager constructor to inject IHmmValidator<Author>
+    - Updated TagManager constructor to inject IHmmValidator<Tag>
+    - Updated NoteCatalogManager constructor to inject IHmmValidator<NoteCatalog>
+    - Updated ContactManager constructor to inject IHmmValidator<Contact>
+    - Updated all test files (12 files) to pass mock validators to manager constructors
+    - Benefits: Validators now mockable for testing, loose coupling achieved, testability improved
+    - All 5 validators now follow dependency inversion principle
 
 14. **SOLID VIOLATION - SINGLE RESPONSIBILITY**
     Location: src/Hmm.Core/DefaultManager/HmmNoteManager.cs (312 lines)
@@ -742,10 +750,10 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (7 resolved)
+Total Defects Found: 107+ (8 resolved)
 Blocking (P0): 6 (5 resolved: #1, #3, #5, #6, #7)
 Security Vulnerabilities: 4 (1 resolved: #12)
-Critical (P1): 40
+Critical (P1): 40 (1 resolved: #13)
 Important (P2): 45
 Technical Debt (P3): 16+ (1 resolved: #82)
 
@@ -755,7 +763,7 @@ By Category:
 - Performance Issues: 9
 - Thread Safety: 4
 - Code Duplication: 6
-- SOLID Violations: 15
+- SOLID Violations: 15 (1 resolved: #13)
 - Data Layer Issues: 9 (1 resolved)
 - API Design: 12
 - Dead Code: 10
@@ -764,7 +772,7 @@ By Category:
 - Missing Features: 12
 
 By Project:
-- Hmm.Core: 35 defects (1 resolved: #1)
+- Hmm.Core: 35 defects (2 resolved: #1, #13)
 - Hmm.Core.Dal.EF: 18 defects (3 resolved: #3, #7, #82)
 - Hmm.ServiceApi: 25 defects (1 resolved: #12)
 - Hmm.Automobile: 15 defects
@@ -803,7 +811,7 @@ IMMEDIATE (Do This Week):
 8. Fix Automobile update missing Color/Plate properties
 
 CRITICAL (Do This Month):
-9. Inject validators instead of "new"
+9. ✓ [COMPLETED] Inject validators instead of "new"
 10. Remove SaveAsync from repositories, implement Unit of Work
 11. Fix expression mapper null check issue
 12. Fix N+1 query in ApplyTag

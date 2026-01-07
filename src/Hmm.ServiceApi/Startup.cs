@@ -136,6 +136,8 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmValidator<Author>, AuthorValidator>()
                 .AddScoped<IHmmValidator<NoteCatalog>, NoteCatalogValidator>()
                 .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
+                .AddScoped<IHmmValidator<Tag>, TagValidator>()
+                .AddScoped<IHmmValidator<Contact>, ContactValidator>()
                 //.AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
                 .AddAutoMapper(typeof(ApiMappingProfile))

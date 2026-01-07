@@ -5,6 +5,8 @@ using Hmm.Core.DefaultManager;
 using Hmm.Core.Map;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
+using Moq;
 using Xunit;
 
 namespace Hmm.Core.Tests
@@ -15,7 +17,7 @@ namespace Hmm.Core.Tests
 
         public ContactManagerTests()
         {
-            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository);
+            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Contact>>());
         }
 
         [Fact]

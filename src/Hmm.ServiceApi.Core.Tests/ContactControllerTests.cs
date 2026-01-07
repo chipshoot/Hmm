@@ -7,6 +7,7 @@ using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
+using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
         public ContactControllerTests()
         {
-            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository);
+            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Contact>>());
             _controller = new ContactController(_contactManager, ApiMapper, new Mock<ILogger<ContactController>>().Object);
         }
 
