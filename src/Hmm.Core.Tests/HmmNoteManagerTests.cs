@@ -115,7 +115,7 @@ namespace Hmm.Core.Tests
             // Assert
             Assert.False(savedNoteResult.Success);
             Assert.Null(savedNoteResult.Value);
-            Assert.Equal("Author : Cannot update note's author", savedNoteResult.Messages.First().Message);
+            Assert.Equal("Author : Cannot update note's author", savedNoteResult.Messages[0].Message);
         }
 
         [Fact]

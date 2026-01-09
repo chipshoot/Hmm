@@ -64,7 +64,7 @@ namespace Hmm.Core.Tests
             Assert.Null(newContactResult.Value);
             Assert.False(newContactResult.Success);
             Assert.Equal("FirstName : 'First Name' must be between 1 and 200 characters. You entered 255 characters.",
-                newContactResult.Messages.First().Message);
+                newContactResult.Messages[0].Message);
         }
 
         [Fact]
@@ -102,7 +102,7 @@ namespace Hmm.Core.Tests
 
             //  Assert
             Assert.False(newContactResult.Success);
-            Assert.True(newContactResult.Messages.FirstOrDefault()?.Message.Contains("LastName : 'Last Name' must be between 1 and 200 characters. You entered 255 characters"));
+            Assert.Contains("LastName : 'Last Name' must be between 1 and 200 characters. You entered 255 characters", newContactResult.Messages[0].Message);
             Assert.Null(newContactResult.Value);
         }
 

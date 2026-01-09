@@ -297,21 +297,21 @@ namespace Hmm.Utility.TestHelp
                         var rec = _noteDaos.FirstOrDefault(n => n.Id == id);
                         if (rec == null)
                         {
-                            return ProcessingResult<HmmNoteDao>.NotFound($"Note with ID {id} not found");
+                            return ProcessingResult<HmmNoteDao>.EmptyOk($"Note with ID {id} not found");
                         }
 
                         switch (rec)
                         {
                             case { Tags: not null }:
-                            {
-                                foreach (var tag in rec.Tags)
                                 {
-                                    tag.Tag = _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
-                                    tag.Note = _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
-                                }
+                                    foreach (var tag in rec.Tags)
+                                    {
+                                        tag.Tag = _tagDaos.FirstOrDefault(t => t.Id == tag.TagId);
+                                        tag.Note = _noteDaos.FirstOrDefault(n => n.Id == tag.NoteId);
+                                    }
 
-                                break;
-                            }
+                                    break;
+                                }
                         }
 
                         return ProcessingResult<HmmNoteDao>.Ok(rec);
@@ -327,8 +327,18 @@ namespace Hmm.Utility.TestHelp
                         lk.GetEntitiesAsync(It.IsAny<Expression<Func<TagDao, bool>>>(),
                             It.IsAny<ResourceCollectionParameters>()))
                     .ReturnsAsync((Expression<Func<TagDao, bool>> query, ResourceCollectionParameters para) =>
-                        ProcessingResult<PageList<TagDao>>.Ok(
-                            PageList<TagDao>.Create(_tagDaos.AsQueryable().Where(query).Select(t => t), PageIdx, PageSize)));
+                    {
+                        var filteredTags = _tagDaos.AsQueryable().Where(query).Select(t => t);
+                        if (filteredTags.Any())
+                        {
+                            return ProcessingResult<PageList<TagDao>>.Ok(
+                                PageList<TagDao>.Create(filteredTags, PageIdx, PageSize));
+                        }
+                        else
+                        {
+                            return ProcessingResult<PageList<TagDao>>.EmptyOk("No tags found matching the criteria");
+                        }
+                    });
                 return lookupMoc.Object;
             }
             catch (Exception e)

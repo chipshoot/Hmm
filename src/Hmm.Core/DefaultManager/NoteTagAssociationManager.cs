@@ -1,16 +1,8 @@
-﻿using AutoMapper;
-using Hmm.Core.DefaultManager.Validator;
-using Hmm.Core.Map;
-using Hmm.Core.Map.DbEntity;
-using Hmm.Core.Map.DomainEntity;
-using Hmm.Utility.Dal.Query;
-using Hmm.Utility.Dal.Repository;
+﻿using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Hmm.Core.DefaultManager
@@ -67,9 +59,10 @@ namespace Hmm.Core.DefaultManager
 
                 // Check if the tag exists in system
                 Tag retrievedTag = null;
+                ProcessingResult<Tag> tagResult = null;
                 if (tag.Id > 0)
                 {
-                    var tagResult = await _tagManager.GetTagByIdAsync(tag.Id);
+                    tagResult = await _tagManager.GetTagByIdAsync(tag.Id);
                     if (tagResult.Success)
                     {
                         retrievedTag = tagResult.Value;
@@ -77,10 +70,10 @@ namespace Hmm.Core.DefaultManager
                 }
                 else
                 {
-                    var tagByNameResult = await _tagManager.GetTagByNameAsync(tag.Name);
-                    if (tagByNameResult.Success)
+                    tagResult = await _tagManager.GetTagByNameAsync(tag.Name);
+                    if (tagResult.Success && !tagResult.IsNotFound)
                     {
-                        retrievedTag = tagByNameResult.Value;
+                        retrievedTag = tagResult.Value;
                     }
                     else
                     {
@@ -94,6 +87,11 @@ namespace Hmm.Core.DefaultManager
 
                 if (retrievedTag == null)
                 {
+                    if (tagResult.ErrorType == ErrorCategory.Deleted)
+                    {
+                        return ProcessingResult<List<Tag>>.Deleted($"Cannot apply deactivated tag {tag.Name}");
+                    }
+
                     return ProcessingResult<List<Tag>>.Fail($"Cannot create or find tag {tag.Name}");
                 }
 
@@ -195,46 +193,67 @@ namespace Hmm.Core.DefaultManager
                 foreach (var tag in tags)
                 {
                     Tag retrievedTag = null;
+                    ProcessingResult<Tag> tagResult = null;
 
                     if (tag.Id > 0)
                     {
-                        var tagResult = await _tagManager.GetTagByIdAsync(tag.Id);
+                        tagResult = await _tagManager.GetTagByIdAsync(tag.Id);
                         if (tagResult.Success)
                         {
-                            retrievedTag = tagResult.Value;
+                            if (tagResult.IsNotFound)
+                            {
+                                errors.AddRange(tagResult.Messages.Select(m => m.Message));
+                                continue;
+                            }
+                            else
+                            {
+                                retrievedTag = tagResult.Value;
+                            }
+                        }
+                        else
+                        {
+                            errors.AddRange(tagResult.Messages.Select(m => m.Message));
+                            continue;
                         }
                     }
                     else
                     {
-                        var tagByNameResult = await _tagManager.GetTagByNameAsync(tag.Name);
-                        if (tagByNameResult.Success)
+                        tagResult = await _tagManager.GetTagByNameAsync(tag.Name);
+                        if (tagResult.Success)
                         {
-                            retrievedTag = tagByNameResult.Value;
+                            if (tagResult.IsNotFound)
+                            {
+                                var createdTagResult = await _tagManager.CreateAsync(tag);
+                                if (createdTagResult.Success)
+                                {
+                                    retrievedTag = createdTagResult.Value;
+                                }
+                            }
+                            else
+                            {
+                                retrievedTag = tagResult.Value;
+                            }
                         }
                         else
                         {
-                            var createdTagResult = await _tagManager.CreateAsync(tag);
-                            if (createdTagResult.Success)
-                            {
-                            retrievedTag = createdTagResult.Value;
-                            }
+                            errors.AddRange(tagResult.Messages.Select(m => m.Message));
+                            continue;
                         }
                     }
 
                     if (retrievedTag == null)
                     {
-                        errors.Add($"Cannot create or find tag {tag.Name}");
-                        continue;
-                    }
-
-                    if (!retrievedTag.IsActivated)
-                    {
-                        errors.Add($"Tag {tag.Name} is deactivated");
                         continue;
                     }
 
                     // Check if tag is already associated
                     if (hmmNote.Tags.Any(t => t.Id == retrievedTag.Id))
+                    {
+                        continue; // Skip duplicates silently
+                    }
+
+                    // Check if tag is already added
+                    if (tagsToApply.Any(t => t.Id == retrievedTag.Id))
                     {
                         continue; // Skip duplicates silently
                     }

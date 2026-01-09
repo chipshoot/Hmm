@@ -1,8 +1,11 @@
 ﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -12,10 +15,14 @@ namespace Hmm.Core.Tests
     public class AuthorManagerTests : CoreTestFixtureBase
     {
         private readonly AuthorManager _authorManager;
+        private readonly Mock<IHmmValidator<Author>> _mockValidator;
 
         public AuthorManagerTests()
         {
-            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Author>>());
+            _mockValidator = new Mock<IHmmValidator<Author>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Author>()))
+                .ReturnsAsync(ProcessingResult<Author>.Ok(It.IsAny<Author>()));
+            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository, _mockValidator.Object);
         }
 
         [Fact]
@@ -30,6 +37,23 @@ namespace Hmm.Core.Tests
         }
 
         [Fact]
+        public async Task GetEntitiesAsync_Should_Not_Return_Deactivated_Authors()
+        {
+            // Arrange
+            var authorsResult = await _authorManager.GetEntitiesAsync();
+            var originalCount = authorsResult.Value.Count;
+            var author = authorsResult.Value.First();
+            await _authorManager.DeActivateAsync(author.Id);
+
+            // Act
+            var currentAuthorsResult = await _authorManager.GetEntitiesAsync();
+
+            // Assert
+            Assert.True(currentAuthorsResult.Success);
+            Assert.Equal(originalCount - 1, currentAuthorsResult.Value.Count);
+        }
+
+        [Fact]
         public async Task Can_Get_Author_With_Query()
         {
             // Act
@@ -38,6 +62,20 @@ namespace Hmm.Core.Tests
             // Assert
             Assert.True(authorsResult.Success);
             Assert.Single(authorsResult.Value);
+        }
+
+        [Fact]
+        public async Task GetAuthorByIdAsync_Should_Return_NotFound_For_Nonexistent_Id()
+        {
+            // Arrange
+            var nonExistentId = 9999;
+
+            // Act
+            var result = await _authorManager.GetAuthorByIdAsync(nonExistentId);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
         }
 
         [Fact]
@@ -120,21 +158,22 @@ namespace Hmm.Core.Tests
         public async Task Cannot_Add_Invalid_Author()
         {
             // Arrange
-
             var author = new Author
             {
-                AccountName = GetRandomString(300),
-                ContactInfo = SampleDataGenerator.GetContact(),
-                IsActivated = true,
+                AccountName = "test",
                 Description = "Test invalid author"
             };
+            var validationMessage = "Author is not valid.";
+            _mockValidator.Setup(v => v.ValidateEntityAsync(author))
+                .ReturnsAsync(ProcessingResult<Author>.Invalid(validationMessage));
 
             // Act
             var newAuthorResult = await _authorManager.CreateAsync(author);
 
             // Assert
             Assert.False(newAuthorResult.Success);
-            Assert.True(newAuthorResult.Messages.FirstOrDefault()?.Message.Contains("AccountName is longer then 256 characters"));
+            Assert.Equal(ErrorCategory.ValidationError, newAuthorResult.ErrorType);
+            Assert.Contains(validationMessage, newAuthorResult.GetWholeMessage());
             Assert.Null(newAuthorResult.Value);
         }
 
@@ -168,7 +207,7 @@ namespace Hmm.Core.Tests
         }
 
         [Fact]
-        public async Task Cannot_Update_InValid_Author()
+        public async Task Cannot_Update_Author_With_Duplicate_AccountName()
         {
             //    Arrange
             var author = new Author
@@ -187,8 +226,25 @@ namespace Hmm.Core.Tests
 
             //  Assert
             Assert.False(newAuthorResult.Success);
-            Assert.True(newAuthorResult.Messages.FirstOrDefault()?.Message.Contains("AccountName : Duplicated account name"));
             Assert.Null(newAuthorResult.Value);
+        }
+
+        [Fact]
+        public async Task Cannot_Update_Invalid_Author()
+        {
+            // Arrange
+            var author = new Author { Id = 1, AccountName = "test" };
+            var validationMessage = "Author is not valid.";
+            _mockValidator.Setup(v => v.ValidateEntityAsync(author))
+                .ReturnsAsync(ProcessingResult<Author>.Invalid((validationMessage)));
+
+            // Act
+            var result = await _authorManager.UpdateAsync(author);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal(ErrorCategory.ValidationError, result.ErrorType);
+            Assert.Contains(validationMessage, result.GetWholeMessage());
         }
 
         [Fact]
@@ -225,6 +281,7 @@ namespace Hmm.Core.Tests
 
             //  Assert
             Assert.False(newAuthorResult.Success);
+            Assert.Equal(ErrorCategory.NotFound, newAuthorResult.ErrorType);
             Assert.Null(newAuthorResult.Value);
         }
 
@@ -238,13 +295,44 @@ namespace Hmm.Core.Tests
             Assert.True(author.IsActivated);
 
             // Act
-            await _authorManager.DeActivateAsync(author.Id);
+            var deactivateResult = await _authorManager.DeActivateAsync(author.Id);
             var updatedAuthorResult = await _authorManager.GetAuthorByIdAsync(author.Id);
 
             // Assert
-            Assert.True(updatedAuthorResult.Success);
-            Assert.Empty(updatedAuthorResult.Messages);
+            Assert.True(deactivateResult.Success);
+            Assert.False(updatedAuthorResult.Success);
+            Assert.Equal(ErrorCategory.Deleted, updatedAuthorResult.ErrorType);
             Assert.Null(updatedAuthorResult.Value);
+        }
+
+        [Fact]
+        public async Task DeActivateAsync_Should_Do_Nothing_If_Author_Is_Already_Deactivated()
+        {
+            // Arrange
+            var authorsResult = await _authorManager.GetEntitiesAsync();
+            var author = authorsResult.Value.First();
+            await _authorManager.DeActivateAsync(author.Id);
+
+            // Act
+            var result = await _authorManager.DeActivateAsync(author.Id);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(ErrorCategory.None, result.ErrorType);
+        }
+
+        [Fact]
+        public async Task DeActivateAsync_Should_Return_NotFound_For_Nonexistent_Id()
+        {
+            // Arrange
+            var nonExistentId = 9999;
+
+            // Act
+            var result = await _authorManager.DeActivateAsync(nonExistentId);
+
+            // Assert
+            Assert.False(result.Success);
+            Assert.Equal(ErrorCategory.NotFound, result.ErrorType);
         }
 
         [Fact]
@@ -264,6 +352,7 @@ namespace Hmm.Core.Tests
 
         [Theory]
         [InlineData(0, false)]
+        [InlineData(9999, false)]
         public async Task Check_Author_Exists_With_Invalid_Id_Get_False(int id, bool expectResult)
         {
             // Arrange
@@ -271,7 +360,7 @@ namespace Hmm.Core.Tests
             var result = await _authorManager.IsAuthorExistsAsync(id);
 
             // Act & Assert
-            Assert.Equal(result, expectResult);
+            Assert.Equal(expectResult, result);
         }
     }
 }

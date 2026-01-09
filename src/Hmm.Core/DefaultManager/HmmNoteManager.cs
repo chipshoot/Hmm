@@ -69,7 +69,7 @@ namespace Hmm.Core.DefaultManager
         {
             var noteDaoResult = await _lookup.GetEntityAsync<HmmNoteDao>(id);
 
-            if (!noteDaoResult.Success)
+            if (!noteDaoResult.Success || noteDaoResult.IsNotFound)
             {
                 return ProcessingResult<HmmNote>.Fail(noteDaoResult.ErrorMessage, noteDaoResult.ErrorType);
             }

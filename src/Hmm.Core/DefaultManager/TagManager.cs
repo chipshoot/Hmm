@@ -74,6 +74,12 @@ namespace Hmm.Core.DefaultManager
                 return ProcessingResult<Tag>.Fail(tagDaoResult.ErrorMessage, tagDaoResult.ErrorType);
             }
 
+            if (tagDaoResult.IsNotFound)
+            {
+                return ProcessingResult<Tag>.EmptyOk($"Tag with ID {id} not found");
+
+            }
+
             var tagDao = tagDaoResult.Value;
             if (!tagDao.IsActivated)
             {
@@ -104,10 +110,15 @@ namespace Hmm.Core.DefaultManager
                 return ProcessingResult<Tag>.Fail(tagDaosResult.ErrorMessage, tagDaosResult.ErrorType);
             }
 
+            if(tagDaosResult.IsNotFound)
+            {
+                return ProcessingResult<Tag>.EmptyOk($"Tag with name '{name}' not found");
+            }
+
             var tagDao = tagDaosResult.Value.FirstOrDefault();
             if (tagDao == null)
             {
-                return ProcessingResult<Tag>.NotFound($"Tag with name '{name}' not found");
+                return ProcessingResult<Tag>.EmptyOk($"Tag with name '{name}' not found");
             }
 
             if (!tagDao.IsActivated)
