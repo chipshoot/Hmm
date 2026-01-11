@@ -33,14 +33,24 @@ namespace Hmm.Utility.MeasureUnit
     /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public struct Volume : IComparable<Volume>
+    public readonly struct Volume : IComparable<Volume>, IEquatable<Volume>
     {
         private const string ErrorMsg = "No volume object found";
 
-        // The value which is 1/1000 milliliter
-        private readonly long _value;
+        // Internal representation: microliters (1/1000 of a milliliter)
+        private const long MicrolitersPerMilliliter = 1000;
+        private const long MicrolitersPerCentiliter = 10000;
+        private const long MicrolitersPerDeciliter = 100000;
+        private const long MicrolitersPerLiter = 1000000;
+        private const long MicrolitersPerCubicMeter = 1000000000;
+        private const long MicrolitersPerOunce = 29573;      // US fluid ounce = 29.573 ml
+        private const long MicrolitersPerPint = 473176;      // US pint = 473.176 ml
+        private const long MicrolitersPerQuart = 946353;     // US quart = 946.353 ml
+        private const long MicrolitersPerGallon = 3785410;   // US gallon = 3785.41 ml
+        private const long MicrolitersPerBushel = 35239100;  // US bushel = 35239.1 ml
 
-        private int _fractional;
+        private readonly long _value;
+        private readonly int _fractional;
 
         #region constructor
 
@@ -49,9 +59,20 @@ namespace Hmm.Utility.MeasureUnit
         /// </summary>
         /// <param name="value">The value of volume, this will be adjusted to convert internal value based on unit.</param>
         /// <param name="unit">The unit of volume.</param>
-        /// <param name="fractional">The fractional.</param>
+        /// <param name="fractional">The fractional digits for rounding (must be non-negative).</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when fractional is negative or unit is invalid.</exception>
         public Volume(double value, VolumeUnit unit = VolumeUnit.Liter, int fractional = 3)
         {
+            if (fractional < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(fractional), "Fractional digits must be non-negative");
+            }
+
+            if (!Enum.IsDefined(typeof(VolumeUnit), unit))
+            {
+                throw new ArgumentOutOfRangeException(nameof(unit), $"Invalid volume unit: {unit}");
+            }
+
             _value = InternalValue(value, unit);
             _fractional = fractional;
             Unit = unit;
@@ -128,40 +149,29 @@ namespace Hmm.Utility.MeasureUnit
         }
 
         [NoteContent]
-        public VolumeUnit Unit { get; set; }
+        public VolumeUnit Unit { get; }
 
-        public int Fractional
-        {
-            get => _fractional;
+        public int Fractional => _fractional;
 
-            set
-            {
-                if (value >= 0)
-                {
-                    _fractional = value;
-                }
-            }
-        }
+        public double TotalMilliliter => Math.Round(_value / (double)MicrolitersPerMilliliter, Fractional);
 
-        public double TotalMilliliter => Math.Round(_value / 1000.0, Fractional);
+        public double TotalCentiliter => Math.Round(_value / (double)MicrolitersPerCentiliter, Fractional);
 
-        public double TotalCentiliter => Math.Round(_value / 10000.0, Fractional);
+        public double TotalDeciliter => Math.Round(_value / (double)MicrolitersPerDeciliter, Fractional);
 
-        public double TotalDeciliter => Math.Round(_value / 100000.0, Fractional);
+        public double TotalLiter => Math.Round(_value / (double)MicrolitersPerLiter, Fractional);
 
-        public double TotalLiter => Math.Round(_value / 1000000.0, Fractional);
+        public double TotalCubicMeter => Math.Round(_value / (double)MicrolitersPerCubicMeter, Fractional);
 
-        public double TotalCubicMeter => Math.Round(_value / 1000000000.0, Fractional);
+        public double TotalOunce => Math.Round(_value / (double)MicrolitersPerOunce, Fractional);
 
-        public double TotalOunce => Math.Round(_value / 29573.5, Fractional);
+        public double TotalPint => Math.Round(_value / (double)MicrolitersPerPint, Fractional);
 
-        public double TotalPint => Math.Round(_value / 473176.0, Fractional);
+        public double TotalQuart => Math.Round(_value / (double)MicrolitersPerQuart, Fractional);
 
-        public double TotalQuart => Math.Round(_value / 946353.0, Fractional);
+        public double TotalGallon => Math.Round(_value / (double)MicrolitersPerGallon, Fractional);
 
-        public double TotalGallon => Math.Round(_value / 3785410.0, Fractional);
-
-        public double TotalBushel => Math.Round(_value / 35239100.0, Fractional);
+        public double TotalBushel => Math.Round(_value / (double)MicrolitersPerBushel, Fractional);
 
         public static Volume Max(params Volume[] items)
         {
@@ -189,7 +199,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public static Volume Abs(Volume x)
         {
-            return new Volume(Math.Abs(x.Value), x.Unit, x.Fractional);
+            return new Volume(Math.Abs(x._value), x.Unit, x.Fractional);
         }
 
         #endregion public properties
@@ -205,7 +215,7 @@ namespace Hmm.Utility.MeasureUnit
         public static Volume operator -(Volume x, Volume y)
         {
             var newValue = x._value - y._value;
-            return new Volume(newValue, x.Unit);
+            return new Volume(newValue, x.Unit, x.Fractional);
         }
 
         public static Volume operator *(Volume x, int y)
@@ -263,7 +273,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public static bool operator ==(Volume x, int y)
         {
-            return x == new Volume(y, x.Unit);
+            return x.Equals(new Volume(y, x.Unit));
         }
 
         public static bool operator >(Volume x, Volume y)
@@ -306,7 +316,12 @@ namespace Hmm.Utility.MeasureUnit
             return x == y || x < y;
         }
 
-        public string ToString(string format = null)
+        public override string ToString()
+        {
+            return ToString(null);
+        }
+
+        public string ToString(string format)
         {
             if (string.IsNullOrEmpty(format))
             {
@@ -351,8 +366,8 @@ namespace Hmm.Utility.MeasureUnit
                     result = $"{TotalQuart} qt";
                     break;
 
-                case "qal":
-                    result = $"{TotalGallon} qal";
+                case "gal":
+                    result = $"{TotalGallon} gal";
                     break;
 
                 case "bu":
@@ -397,12 +412,12 @@ namespace Hmm.Utility.MeasureUnit
             return new Volume(value, VolumeUnit.CubicMeter);
         }
 
-        public static Volume FromCubicOunce(double value)
+        public static Volume FromOunce(double value)
         {
             return new Volume(value, VolumeUnit.Ounce);
         }
 
-        public static Volume FromCubicPint(double value)
+        public static Volume FromPint(double value)
         {
             return new Volume(value, VolumeUnit.Pint);
         }
@@ -434,16 +449,25 @@ namespace Hmm.Utility.MeasureUnit
 
         #endregion implementation of interface IComparable
 
+        #region implementation of interface IEquatable
+
+        public bool Equals(Volume other)
+        {
+            return _value == other._value && Unit == other.Unit && Fractional == other.Fractional;
+        }
+
+        #endregion implementation of interface IEquatable
+
         #region override public methods of System.ValueType
 
         public override bool Equals(object obj)
         {
-            return obj is Volume && Equals((Volume)obj);
+            return obj is Volume volume && Equals(volume);
         }
 
         public override int GetHashCode()
         {
-            return _value.GetHashCode();
+            return HashCode.Combine(_value, Unit, Fractional);
         }
 
         #endregion override public methods of System.ValueType
@@ -455,37 +479,37 @@ namespace Hmm.Utility.MeasureUnit
             switch (unit)
             {
                 case VolumeUnit.Milliliter:
-                    return (long)Math.Round(value * 1000, 0);
+                    return (long)Math.Round(value * MicrolitersPerMilliliter, 0);
 
                 case VolumeUnit.Centiliter:
-                    return (long)Math.Round(value * 10000.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerCentiliter, 0);
 
                 case VolumeUnit.Deciliter:
-                    return (long)Math.Round(value * 100000.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerDeciliter, 0);
 
                 case VolumeUnit.Liter:
-                    return (long)Math.Round(value * 1000000.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerLiter, 0);
 
                 case VolumeUnit.CubicMeter:
-                    return (long)Math.Round(value * 1000000000.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerCubicMeter, 0);
 
                 case VolumeUnit.Ounce:
-                    return (long)Math.Round(value * 29573.5, 0);
+                    return (long)Math.Round(value * MicrolitersPerOunce, 0);
 
                 case VolumeUnit.Pint:
-                    return (long)Math.Round(value * 473176.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerPint, 0);
 
                 case VolumeUnit.Quart:
-                    return (long)Math.Round(value * 946353.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerQuart, 0);
 
                 case VolumeUnit.Gallon:
-                    return (long)Math.Round(value * 3785410.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerGallon, 0);
 
                 case VolumeUnit.Bushel:
-                    return (long)Math.Round(value * 35239100.0, 0);
+                    return (long)Math.Round(value * MicrolitersPerBushel, 0);
 
                 default:
-                    throw new InvalidEnumArgumentException(nameof(VolumeUnit));
+                    throw new ArgumentOutOfRangeException(nameof(unit), unit, "Invalid volume unit");
             }
         }
 

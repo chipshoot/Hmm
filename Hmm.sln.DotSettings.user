@@ -7,69 +7,6 @@
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Abootstrap_002Fd_003Adist_002Fd_003Ajs_002Ff_003Abootstrap_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Eslim_002Ejs/@EntryIndexedValue">True</s:Boolean>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=0aa6e718_002D9389_002D4e54_002Da25f_002D6a243ef6771e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AddTag_ReturnsBadRequest_WhenCreationFails" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=269da746_002D58c2_002D4772_002Db063_002De817c83bd9ee/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Add_Note_To_DataSource" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Add_Note_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=2fb99d4c_002D799d_002D4d09_002Da7f5_002D14e5cfb15d53/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Apply_One_TagTo_Multiple_Notes" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Add_Note_With_NonExist_Catalog_Default_Catalog_Applied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Catalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Catalog_To_Null_Catalog_Default_Catalog_Applied&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5925bbf8_002D7bed_002D4b02_002D928b_002D6aeebdf79c7e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Can_Add_Note_To_DataSource #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Add_Note_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Catalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_NoteCatalog_To_Non_Exists_Catalog_Default_Catalog_Applied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests.Cannot_Delete_Author_With_Note_Associated&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e2beece8_002Df8f2_002D4d06_002Db056_002D96b8d6195e08/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Can_Apply_One_TagTo_Multiple_Notes #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Can_Apply_One_TagTo_Multiple_Notes&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_NoteCatalog_To_Non_Exists_Catalog_Default_Catalog_Applied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_NoteCatalog_To_Catalog_With_Invalid_Id_DefaultCatalog_Applied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Delete_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.AuthorMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::B56C30D9-017E-4E0C-BAE2-7A50CA82B484::net8.0::Hmm.Utility.Tests.ProcessingResultTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
 	
 	
 	
@@ -82,7 +19,12 @@
 	
 	
 	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	
+	
+	
+	
+	
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Can_Add_Contact_To_DataSource&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Can_Delete_Author_From_DataSource&lt;/TestId&gt;&#xD;

@@ -1,41 +1,86 @@
-﻿using Hmm.Utility.HmmNoteContentMap;
+using Hmm.Utility.HmmNoteContentMap;
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 
 namespace Hmm.Utility.MeasureUnit
 {
-    ///  <summary>
-    ///  Help class to help convert between lb and kg
-    ///  <remarks>
-    ///  The value of weight internally saved as grams and can be convert to kg and lb
-    ///  The only way to get <see cref="T:Hmm.Utility.MeasureUnit.Weight" /> object if from four static method, e.g.
-    ///   <code>
-    ///      var weight1 = Weight.FromGrams(35.0);
-    ///      var weight2 = Weight.FromKilograms(0.035);
-    ///      var weight3 = Weight.FromPonds(34.0);
-    ///   </code>
-    ///  </remarks>
-    ///  </summary>
+    /// <summary>
+    /// Help class to help convert between lb and kg
+    /// <remarks>
+    /// The value of weight internally saved as milligrams and can be convert to g, kg and lb
+    /// The default weight unit is <see cref="WeightUnit.Kilogram" /> so when we new a
+    /// weight object then we are setting the internal unit to milligrams and the value will be adjusted
+    /// by unit parameter of constructor.
+    /// You can also get a <see cref="Weight" /> object from static factory methods, e.g.
+    /// <code>
+    /// var weight1 = Weight.FromGrams(35.0);
+    /// var weight2 = Weight.FromKilograms(0.035);
+    /// var weight3 = Weight.FromPounds(34.0);
+    /// </code>
+    /// This can setup a weight without manually indicating weight's unit.
+    /// You can also get the converted weight value from properties, e.g.
+    /// <code>
+    /// var w1 = weight.TotalGrams;
+    /// var w2 = weight.TotalKilograms;
+    /// var w3 = weight.TotalPounds;
+    /// </code>
+    /// This can get the right value without adjusting weight's unit.
+    /// </remarks>
+    /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public struct Weight : IEquatable<Weight>, IComparable<Weight>
+    public readonly struct Weight : IEquatable<Weight>, IComparable<Weight>
     {
-        #region private fields
+        private const string ErrorMsg = "No weight object found";
 
-        private const double GramsPerPound = 453.59237038037829803270366517422;
+        // Internal representation: milligrams (for better precision with decimal weights)
+        private const long MilligramsPerGram = 1000;
+        private const long MilligramsPerKilogram = 1000000;
+        private const double MilligramsPerPound = 453592.37;  // 1 lb = 453.59237 g
 
-        private readonly long _valueInG;
-
-        private int _fractional;
-
-        #endregion private fields
+        private readonly long _value;
+        private readonly int _fractional;
 
         #region constructor
 
-        private Weight(long valueInG, WeightUnit unit = WeightUnit.Kilogram, int fractional = 3)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Weight"/> structure.
+        /// </summary>
+        /// <param name="value">The value of weight, this will be adjusted to convert internal value based on unit.</param>
+        /// <param name="unit">The unit of weight.</param>
+        /// <param name="fractional">The fractional digits for rounding (must be non-negative).</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when fractional is negative or unit is invalid.</exception>
+        public Weight(double value, WeightUnit unit = WeightUnit.Kilogram, int fractional = 3)
         {
-            _valueInG = valueInG;
+            if (fractional < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(fractional), "Fractional digits must be non-negative");
+            }
+
+            if (!Enum.IsDefined(typeof(WeightUnit), unit))
+            {
+                throw new ArgumentOutOfRangeException(nameof(unit), $"Invalid weight unit: {unit}");
+            }
+
+            _value = InternalValue(value, unit);
+            _fractional = fractional;
+            Unit = unit;
+        }
+
+        /// <summary>
+        /// Prevents a default instance of the <see cref="Weight"/> structure from being created.
+        /// <remarks>
+        /// The constructor is only used by override operators
+        /// </remarks>
+        /// </summary>
+        /// <param name="value">The value in milligrams.</param>
+        /// <param name="unit">The unit.</param>
+        /// <param name="fractional">The fractional.</param>
+        private Weight(long value, WeightUnit unit, int fractional)
+        {
+            _value = value;
             Unit = unit;
             _fractional = fractional;
         }
@@ -44,12 +89,13 @@ namespace Hmm.Utility.MeasureUnit
 
         #region public properties
 
-        public double TotalGrams => Math.Round((double)_valueInG, Fractional);
-
-        public double TotalKilograms => Math.Round(_valueInG / 1000.0, Fractional);
-
-        public double TotalPounds => Math.Round(_valueInG / GramsPerPound, Fractional);
-
+        /// <summary>
+        /// Gets the actual amount of the weight.
+        /// </summary>
+        /// <value>
+        /// The weight.
+        /// </value>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         [NoteContent]
         public double Value
         {
@@ -67,73 +113,103 @@ namespace Hmm.Utility.MeasureUnit
                         return TotalPounds;
 
                     default:
-                        return TotalKilograms;
+                        throw new ArgumentOutOfRangeException();
                 }
             }
         }
 
         [NoteContent]
-        public WeightUnit Unit { get; set; }
+        public WeightUnit Unit { get; }
 
-        public int Fractional
+        public int Fractional => _fractional;
+
+        public double TotalGrams => Math.Round(_value / (double)MilligramsPerGram, Fractional);
+
+        public double TotalKilograms => Math.Round(_value / (double)MilligramsPerKilogram, Fractional);
+
+        public double TotalPounds => Math.Round(_value / MilligramsPerPound, Fractional);
+
+        public static Weight Max(params Weight[] items)
         {
-            get => _fractional;
-
-            set
+            if (items.Length == 0)
             {
-                if (value > 0)
-                {
-                    _fractional = value;
-                }
+                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
             }
+
+            var max = items.Aggregate((i1, i2) => i1 > i2 ? i1 : i2);
+
+            return max;
+        }
+
+        public static Weight Min(params Weight[] items)
+        {
+            if (items.Length == 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
+            }
+
+            var min = items.Aggregate((i1, i2) => i1 < i2 ? i1 : i2);
+
+            return min;
+        }
+
+        public static Weight Abs(Weight x)
+        {
+            return new Weight(Math.Abs(x._value), x.Unit, x.Fractional);
         }
 
         #endregion public properties
 
-        #region public methods
-
-        public static Weight FromGrams(double value)
-        {
-            var g = (long)value;
-
-            return new Weight(g, WeightUnit.Gram);
-        }
-
-        public static Weight FromKilograms(int value)
-        {
-            var g = (long)Math.Round(value * 1000.0, 0);
-            return new Weight(g);
-        }
-
-        public static Weight FromKilograms(long value)
-        {
-            var g = (long)Math.Round(value * 1000.0, 0);
-            return new Weight(g);
-        }
-
-        public static Weight FromKilograms(double value)
-        {
-            var g = (long)Math.Round(value * 1000.0, 0);
-            return new Weight(g);
-        }
-
-        public static Weight FromPounds(double value)
-        {
-            var grams = value * GramsPerPound;
-
-            var g = (long)Math.Round(grams, 0);
-
-            return new Weight(g, WeightUnit.Pound);
-        }
-
-        #endregion public methods
-
         #region override operators
+
+        public static Weight operator +(Weight x, Weight y)
+        {
+            var newValue = x._value + y._value;
+            return new Weight(newValue, x.Unit, x.Fractional);
+        }
 
         public static Weight operator -(Weight x, Weight y)
         {
-            var newValue = x._valueInG - y._valueInG;
-            return new Weight(newValue);
+            var newValue = x._value - y._value;
+            return new Weight(newValue, x.Unit, x.Fractional);
+        }
+
+        public static Weight operator *(Weight x, int y)
+        {
+            var newValue = x._value * y;
+            return new Weight(newValue, x.Unit, x.Fractional);
+        }
+
+        public static Weight operator *(Weight x, double y)
+        {
+            var newValue = x._value * y;
+            var newValueAsLong = (long)Math.Round(newValue, 0);
+
+            return new Weight(newValueAsLong, x.Unit, x.Fractional);
+        }
+
+        public static Weight operator /(Weight x, int y)
+        {
+            var newValue = (double)x._value / y;
+            var newValueAsLong = (long)Math.Round(newValue, 0);
+
+            return new Weight(newValueAsLong, x.Unit, x.Fractional);
+        }
+
+        public static Weight operator /(Weight x, double y)
+        {
+            var newValue = x._value / y;
+            var newValueAsLong = (long)Math.Round(newValue, 0);
+
+            return new Weight(newValueAsLong, x.Unit, x.Fractional);
+        }
+
+        public static Weight operator %(Weight x, Weight y)
+        {
+            var newValue = (double)x._value % y._value;
+            var newValueAsLong = (long)Math.Round(newValue, 0);
+
+            return new Weight(newValueAsLong, x.Unit, x.Fractional);
         }
 
         public static bool operator !=(Weight x, Weight y)
@@ -141,40 +217,9 @@ namespace Hmm.Utility.MeasureUnit
             return !x.Equals(y);
         }
 
-        public static Weight operator *(Weight x, int y)
+        public static bool operator !=(Weight x, int y)
         {
-            var newValue = x._valueInG * y;
-            return new Weight(newValue);
-        }
-
-        public static Weight operator *(Weight x, double y)
-        {
-            var newValue = x._valueInG * y;
-            var newValueAsLong = (long)Math.Round(newValue, 0);
-
-            return new Weight(newValueAsLong);
-        }
-
-        public static Weight operator /(Weight x, int y)
-        {
-            var newValue = (double)x._valueInG / y;
-            var newValueAsLong = (long)Math.Round(newValue, 0);
-
-            return new Weight(newValueAsLong);
-        }
-
-        public static Weight operator /(Weight x, double y)
-        {
-            var newValue = x._valueInG / y;
-            var newValueAsLong = (long)Math.Round(newValue, 0);
-
-            return new Weight(newValueAsLong);
-        }
-
-        public static Weight operator +(Weight x, Weight y)
-        {
-            var newValue = x._valueInG + y._valueInG;
-            return new Weight(newValue);
+            return !x.Equals(new Weight(y, x.Unit));
         }
 
         public static bool operator ==(Weight x, Weight y)
@@ -182,9 +227,14 @@ namespace Hmm.Utility.MeasureUnit
             return x.Equals(y);
         }
 
+        public static bool operator ==(Weight x, int y)
+        {
+            return x.Equals(new Weight(y, x.Unit));
+        }
+
         public static bool operator >(Weight x, Weight y)
         {
-            return x._valueInG > y._valueInG;
+            return x._value > y._value;
         }
 
         public static bool operator >(Weight x, int y)
@@ -194,7 +244,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public static bool operator <(Weight x, Weight y)
         {
-            return x._valueInG < y._valueInG;
+            return x._value < y._value;
         }
 
         public static bool operator <(Weight x, int y)
@@ -202,22 +252,44 @@ namespace Hmm.Utility.MeasureUnit
             return x < new Weight(y, x.Unit);
         }
 
-        public string ToString(string format = null)
+        public static bool operator >=(Weight x, Weight y)
+        {
+            return x == y || x > y;
+        }
+
+        public static bool operator >=(Weight x, int y)
+        {
+            return x == y || x > y;
+        }
+
+        public static bool operator <=(Weight x, Weight y)
+        {
+            return x == y || x < y;
+        }
+
+        public static bool operator <=(Weight x, int y)
+        {
+            return x == y || x < y;
+        }
+
+        public override string ToString()
+        {
+            return ToString(null);
+        }
+
+        public string ToString(string format)
         {
             if (string.IsNullOrEmpty(format))
             {
-                var localValue = _valueInG;
-                return localValue.ToString(CultureInfo.InvariantCulture);
+                var localvalue = _value;
+                return localvalue.ToString(CultureInfo.InvariantCulture);
             }
 
             var fmt = format.Trim().ToLower(CultureInfo.InvariantCulture);
+
             string result;
             switch (fmt)
             {
-                case "lb":
-                    result = $"{TotalPounds} lb";
-                    break;
-
                 case "g":
                     result = $"{TotalGrams} g";
                     break;
@@ -226,13 +298,17 @@ namespace Hmm.Utility.MeasureUnit
                     result = $"{TotalKilograms} kg";
                     break;
 
+                case "lb":
+                    result = $"{TotalPounds} lb";
+                    break;
+
                 case "all":
-                    result = $"{TotalPounds} lbs / {TotalPounds} kg";
+                    result = $"{TotalPounds} lb / {TotalKilograms} kg";
                     break;
 
                 default:
-                    var localValue = _valueInG;
-                    result = localValue.ToString(CultureInfo.InvariantCulture);
+                    var pSpecifier = $"F{Fractional}";
+                    result = Value.ToString(pSpecifier, CultureInfo.InvariantCulture);
                     break;
             }
 
@@ -241,12 +317,31 @@ namespace Hmm.Utility.MeasureUnit
 
         #endregion override operators
 
+        #region public methods
+
+        public static Weight FromGrams(double value)
+        {
+            return new Weight(value, WeightUnit.Gram);
+        }
+
+        public static Weight FromKilograms(double value)
+        {
+            return new Weight(value, WeightUnit.Kilogram);
+        }
+
+        public static Weight FromPounds(double value)
+        {
+            return new Weight(value, WeightUnit.Pound);
+        }
+
+        #endregion public methods
+
         #region implementation of interface IComparable
 
         public int CompareTo(Weight other)
         {
-            var localValue = _valueInG;
-            return localValue.CompareTo(other._valueInG);
+            var localValue = _value;
+            return localValue.CompareTo(other._value);
         }
 
         #endregion implementation of interface IComparable
@@ -255,7 +350,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public bool Equals(Weight other)
         {
-            return _valueInG == other._valueInG;
+            return _value == other._value && Unit == other.Unit && Fractional == other.Fractional;
         }
 
         #endregion implementation of interface IEquatable
@@ -269,9 +364,31 @@ namespace Hmm.Utility.MeasureUnit
 
         public override int GetHashCode()
         {
-            return _valueInG.GetHashCode();
+            return HashCode.Combine(_value, Unit, Fractional);
         }
 
         #endregion override public methods of System.ValueType
+
+        #region private methods
+
+        private static long InternalValue(double value, WeightUnit unit)
+        {
+            switch (unit)
+            {
+                case WeightUnit.Gram:
+                    return (long)Math.Round(value * MilligramsPerGram, 0);
+
+                case WeightUnit.Kilogram:
+                    return (long)Math.Round(value * MilligramsPerKilogram, 0);
+
+                case WeightUnit.Pound:
+                    return (long)Math.Round(value * MilligramsPerPound, 0);
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(unit), unit, "Invalid weight unit");
+            }
+        }
+
+        #endregion private methods
     }
 }

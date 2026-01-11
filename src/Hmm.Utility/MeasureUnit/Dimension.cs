@@ -34,14 +34,22 @@ namespace Hmm.Utility.MeasureUnit
     /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public struct Dimension : IComparable<Dimension>
+    public readonly struct Dimension : IComparable<Dimension>, IEquatable<Dimension>
     {
         #region private fields
 
         private const string ErrorMsg = "No dimension object found";
-        private const double InternalUnitPerInch = 25400;
+
+        // Internal representation: microns (1/1000 of a millimeter)
+        private const long MicronsPerMillimetre = 1000;
+        private const long MicronsPerCentimetre = 10000;
+        private const long MicronsPerMetre = 1000000;
+        private const long MicronsPerKilometre = 1000000000;
+        private const long MicronsPerInch = 25400;
+        private const long MicronsPerFoot = MicronsPerInch * 12;
+
         private readonly long _value;
-        private int _fractional;
+        private readonly int _fractional;
 
         #endregion private fields
 
@@ -52,9 +60,20 @@ namespace Hmm.Utility.MeasureUnit
         /// </summary>
         /// <param name="value">The value of dimension, this will be adjusted to convert internal value based on unit.</param>
         /// <param name="unit">The unit of dimension.</param>
-        /// <param name="fractional">The fractional.</param>
+        /// <param name="fractional">The fractional digits for rounding (must be non-negative).</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when fractional is negative or unit is invalid.</exception>
         public Dimension(double value, DimensionUnit unit = DimensionUnit.Millimetre, int fractional = 3)
         {
+            if (fractional < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(fractional), "Fractional digits must be non-negative");
+            }
+
+            if (!Enum.IsDefined(typeof(DimensionUnit), unit))
+            {
+                throw new ArgumentOutOfRangeException(nameof(unit), $"Invalid dimension unit: {unit}");
+            }
+
             _value = InternalValue(value, unit);
             _fractional = fractional;
             Unit = unit;
@@ -118,32 +137,21 @@ namespace Hmm.Utility.MeasureUnit
         }
 
         [NoteContent]
-        public DimensionUnit Unit { get; set; }
+        public DimensionUnit Unit { get; }
 
-        public int Fractional
-        {
-            get => _fractional;
+        public int Fractional => _fractional;
 
-            set
-            {
-                if (value >= 0)
-                {
-                    _fractional = value;
-                }
-            }
-        }
+        public double TotalMillimetre => Math.Round(_value / (double)MicronsPerMillimetre, Fractional);
 
-        public double TotalMillimetre => Math.Round(_value / 1000.0, Fractional);
+        public double TotalCentimetre => Math.Round(_value / (double)MicronsPerCentimetre, Fractional);
 
-        public double TotalCentimetre => Math.Round(_value / 10000.0, Fractional);
+        public double TotalMetre => Math.Round(_value / (double)MicronsPerMetre, Fractional);
 
-        public double TotalMetre => Math.Round(_value / 100000.0, Fractional);
+        public double TotalKilometre => Math.Round(_value / (double)MicronsPerKilometre, Fractional);
 
-        public double TotalKilometre => Math.Round(_value / 100000000.0, Fractional);
+        public double TotalInch => Math.Round(_value / (double)MicronsPerInch, Fractional);
 
-        public double TotalInch => Math.Round(_value / InternalUnitPerInch, Fractional);
-
-        public double TotalFeet => Math.Round((_value / InternalUnitPerInch) / 12.0, Fractional);
+        public double TotalFeet => Math.Round(_value / (double)MicronsPerFoot, Fractional);
 
         #endregion public properties
 
@@ -193,7 +201,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public static Dimension Min(params Dimension[] items)
         {
-            if (!items.Any())
+            if (items.Length == 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
             }
@@ -205,7 +213,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public static Dimension Abs(Dimension x)
         {
-            return new Dimension(Math.Abs(x.Value), x.Unit, x.Fractional);
+            return new Dimension(Math.Abs(x._value), x.Unit, x.Fractional);
         }
 
         #endregion public methods
@@ -279,7 +287,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public static bool operator ==(Dimension x, int y)
         {
-            return x == new Dimension(y, x.Unit);
+            return x.Equals(new Dimension(y, x.Unit));
         }
 
         public static bool operator >(Dimension x, Dimension y)
@@ -322,7 +330,12 @@ namespace Hmm.Utility.MeasureUnit
             return x == y || x < y;
         }
 
-        public string ToString(string format = null)
+        public override string ToString()
+        {
+            return ToString(null);
+        }
+
+        public string ToString(string format)
         {
             if (string.IsNullOrEmpty(format))
             {
@@ -384,7 +397,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public bool Equals(Dimension other)
         {
-            return _value == other._value;
+            return _value == other._value && Unit == other.Unit && Fractional == other.Fractional;
         }
 
         #endregion implementation of interface IEquatable
@@ -398,7 +411,7 @@ namespace Hmm.Utility.MeasureUnit
 
         public override int GetHashCode()
         {
-            return _value.GetHashCode();
+            return HashCode.Combine(_value, Unit, Fractional);
         }
 
         #endregion override public methods of System.ValueType
@@ -410,25 +423,25 @@ namespace Hmm.Utility.MeasureUnit
             switch (unit)
             {
                 case DimensionUnit.Millimetre:
-                    return (long)Math.Round(value * 1000.0, 0);
+                    return (long)Math.Round(value * MicronsPerMillimetre, 0);
 
                 case DimensionUnit.Centimetre:
-                    return (long)Math.Round(value * 10000.0, 0);
+                    return (long)Math.Round(value * MicronsPerCentimetre, 0);
 
                 case DimensionUnit.Metre:
-                    return (long)Math.Round(value * 100000.0, 0);
+                    return (long)Math.Round(value * MicronsPerMetre, 0);
 
                 case DimensionUnit.Kilometre:
-                    return (long)Math.Round(value * 100000000.0, 0);
+                    return (long)Math.Round(value * MicronsPerKilometre, 0);
 
                 case DimensionUnit.Inch:
-                    return (long)Math.Round(value * InternalUnitPerInch, 0);
+                    return (long)Math.Round(value * MicronsPerInch, 0);
 
                 case DimensionUnit.Feet:
-                    return (long)Math.Round(value * InternalUnitPerInch * 12, 0);
+                    return (long)Math.Round(value * MicronsPerFoot, 0);
 
                 default:
-                    return (long)Math.Round(value * 10.0, 0);
+                    throw new ArgumentOutOfRangeException(nameof(unit), unit, "Invalid dimension unit");
             }
         }
 

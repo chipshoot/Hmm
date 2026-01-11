@@ -6,20 +6,10 @@ namespace Hmm.Utility.MeasureUnit
     public enum DimensionUnit
     {
         /// <summary>
-        /// The inch unit
+        /// The millimeter unit, this is the
+        /// default unit in the system
         /// </summary>
-        Inch = 0,
-
-        /// <summary>
-        /// The feet unit
-        /// </summary>
-        Feet,
-
-        /// <summary>
-        /// The millimeter unit, this should be
-        /// the default of the unit in the system
-        /// </summary>
-        Millimetre,
+        Millimetre = 0,
 
         /// <summary>
         /// The centimeter unit
@@ -34,6 +24,16 @@ namespace Hmm.Utility.MeasureUnit
         /// <summary>
         /// The kilometer unit
         /// </summary>
-        Kilometre
+        Kilometre,
+
+        /// <summary>
+        /// The inch unit
+        /// </summary>
+        Inch,
+
+        /// <summary>
+        /// The feet unit
+        /// </summary>
+        Feet
     }
 }
