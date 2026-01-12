@@ -13,15 +13,17 @@ namespace Hmm.Automobile.DomainEntity
 
         public Dimension Distance { get; set; }
 
-        public Dimension CurrentMeterReading { get; set; }
+        public Dimension Odometer { get; set; }
 
-        public Volume Gas { get; set; }
+        public Volume Fuel { get; set; }
 
         public Money Price { get; set; }
 
         public List<GasDiscountInfo> Discounts { get; set; }
 
-        public string Station { get; set; }
+        public GasStation Station { get; set; }
+
+        public DateTime LogTime { get; set; }
 
         public DateTime CreateDate { get; set; }
 

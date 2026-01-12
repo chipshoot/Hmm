@@ -5,7 +5,6 @@ using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 

@@ -20,9 +20,9 @@ namespace Hmm.Automobile.Validator
             RuleFor(l => l.AuthorId).Must(HasValidAuthor).WithMessage("Has valid author for GasLog");
             RuleFor(l => l.Date).NotNull().Must(HasValidDate).WithMessage("Gas log does not has valid date");
             RuleFor(l => l.Car).NotNull().WithMessage("Gas log must belongs to an automobile");
-            RuleFor(l => l.Distance).Must((o, distance)=>HasValidDistance2(distance, o.CurrentMeterReading)).WithMessage("Need has valid distance");
-            RuleFor(l => l.CurrentMeterReading).Must((o, meter)=> HasValidDistance2(o.Distance, meter)).WithMessage("Need has valid meter reading");
-            RuleFor(l => l.Gas).Must(HasValidVolume).WithMessage("Need has valid gas volume");
+            RuleFor(l => l.Distance).Must((o, distance)=>HasValidDistance2(distance, o.Odometer)).WithMessage("Need has valid distance");
+            RuleFor(l => l.Odometer).Must((o, meter)=> HasValidDistance2(o.Distance, meter)).WithMessage("Need has valid meter reading");
+            RuleFor(l => l.Fuel).Must(HasValidVolume).WithMessage("Need has valid gas volume");
             RuleFor(l => l.Price).Must(HasValidMoney).WithMessage("Need has valid Price");
             RuleFor(l => l.Station).Length(1, 1000).WithMessage("Need has gas station");
             RuleFor(l => l.CreateDate).Must(HasValidEarlyDate).WithMessage("Create date should not earlier then today");

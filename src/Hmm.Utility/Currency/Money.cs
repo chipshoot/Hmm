@@ -1,4 +1,5 @@
-﻿using Hmm.Utility.HmmNoteContentMap;
+﻿using Hmm.Utility.Extensions;
+using Hmm.Utility.HmmNoteContentMap;
 using System;
 using System.ComponentModel;
 using System.Globalization;
@@ -67,13 +68,11 @@ namespace Hmm.Utility.Currency
 
         #region public properties
 
-        public static bool AllowImplicitConversion { get; set; }
-
         /// <summary>
         /// Gets the CurrentCulture from the CultureInfo object and creates a CurrencyCodes enum object.
         /// </summary>
         /// <returns>The CurrencyCodes enum of the current locale.</returns>
-        public static CurrencyCodeType LocalCurrencyCode => (CurrencyCodeType)Enum.Parse(typeof(CurrencyCodeType), new RegionInfo(CultureInfo.CurrentCulture.LCID).ISOCurrencySymbol);
+        public static CurrencyCodeType LocalCurrencyCode => (CurrencyCodeType)Enum.Parse(typeof(CurrencyCodeType), new RegionInfo(CultureInfo.CurrentCulture.LCID).ISOCurrencySymbol, ignoreCase: true);
 
         /// <summary>
         /// Rounds the _amount to the number of significant decimal digits
@@ -82,17 +81,17 @@ namespace Hmm.Utility.Currency
         /// <returns>A decimal with the _amount rounded to the significant number of decimal digits.</returns>
         public decimal Amount => decimal.Round((decimal)InternalAmount, DecimalDigits, MidpointRounding.AwayFromZero);
 
-        public string CurrencyCode => "CAD";
+        public string CurrencyCode => _currencyCode.ToString().ToUpper();
 
-        public string CurrencyName => "CAD";
+        public string CurrencyName => GetCurrencyName(_currencyCode);
 
-        public string CurrencySymbol => "$";
+        public string CurrencySymbol => GetCurrencySymbol(_currencyCode);
 
         /// <summary>
         /// Accesses the internal representation of the value of the Money
         /// </summary>
         /// <returns>A decimal with the internal _amount stored for this Money.</returns>
-        public double InternalAmount { get; set; }
+        public double InternalAmount { get; }
 
         /// <summary>
         /// Represents the ISO code for the currency
@@ -121,21 +120,14 @@ namespace Hmm.Utility.Currency
 
         public static bool operator !=(Money first, Money second)
         {
-            return first != null && !first.Equals(second);
+            return !(first == second);
         }
 
-        public static Money operator *(Money first, Money second)
-        {
-            CheckCurrencyType(first, second, "*");
-
-            return new Money(first.InternalAmount * second.InternalAmount, first._currencyCode);
-        }
-
-        public static Money operator /(Money first, Money second)
+        public static decimal operator /(Money first, Money second)
         {
             CheckCurrencyType(first, second, "/");
 
-            return new Money(first.InternalAmount / second.InternalAmount, first._currencyCode);
+            return (decimal)(first.InternalAmount / second.InternalAmount);
         }
 
         public static Money operator +(Money first, Money second)
@@ -171,7 +163,7 @@ namespace Hmm.Utility.Currency
                 return false;
             }
 
-            return first.Amount == second.Amount;
+            return (first._currencyCode == second._currencyCode) && (first.Amount == second.Amount);
         }
 
         public static bool operator >(Money first, Money second)
@@ -224,7 +216,7 @@ namespace Hmm.Utility.Currency
                 return false;
             }
 
-            return ((CurrencySymbol == other.CurrencySymbol) && (Amount == other.Amount));
+            return ((_currencyCode == other._currencyCode) && (Amount == other.Amount));
         }
 
         public override int GetHashCode()
@@ -232,12 +224,12 @@ namespace Hmm.Utility.Currency
             return Amount.GetHashCode() ^ _currencyCode.GetHashCode();
         }
 
-        public static implicit operator Money(decimal amount)
+        public static explicit operator Money(decimal amount)
         {
             return new Money(amount, LocalCurrencyCode);
         }
 
-        public static implicit operator Money(double amount)
+        public static explicit operator Money(double amount)
         {
             return new Money(amount, LocalCurrencyCode);
         }
@@ -370,6 +362,37 @@ namespace Hmm.Utility.Currency
         }
 
         #endregion implementation of interface ICloneable
+
+        private static string GetCurrencyName(CurrencyCodeType currencyCode)
+        {
+            if (currencyCode == CurrencyCodeType.None)
+                return "None";
+
+            try
+            {
+                return ((Enum)(object)currencyCode).GetDisplayName();
+            }
+            catch
+            {
+                return currencyCode.ToString().ToUpper();
+            }
+        }
+
+        private static string GetCurrencySymbol(CurrencyCodeType currencyCode)
+        {
+            if (currencyCode == CurrencyCodeType.None)
+                return string.Empty;
+
+            try
+            {
+                var region = new RegionInfo(currencyCode.ToString().ToUpper());
+                return region.CurrencySymbol;
+            }
+            catch
+            {
+                return currencyCode.ToString().ToUpper();
+            }
+        }
 
         private static void CheckCurrencyType(Money first, Money second, string operation)
         {
