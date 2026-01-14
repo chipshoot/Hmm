@@ -1,4 +1,4 @@
-﻿using Hmm.Utility.Currency;
+using Hmm.Utility.Currency;
 using Hmm.Utility.MeasureUnit;
 using System;
 using System.Collections.Generic;
@@ -66,6 +66,11 @@ namespace Hmm.Automobile.DomainEntity
         [Range(0, 100)]
         public int? HighwayDrivingPercentage { get; set; }
 
+        public WeatherCondition? WeatherCondition { get; set; }
+
+        // ===== Payment =====
+        public PaymentMethod? PaymentMethod { get; set; }
+
         [StringLength(50)]
         public string ReceiptNumber { get; set; }
 
@@ -86,22 +91,19 @@ namespace Hmm.Automobile.DomainEntity
         {
             get
             {
-                var total = TotalPrice;
-                if (Discounts == null && !Discounts.Any())
+                var total = TotalPrice.Amount;
+                if (Discounts != null && Discounts.Any())
                 {
-                    return TotalPrice;
+                    total -= Discounts.Sum(d => d.Amount.Amount);
                 }
-
-                var totalDiscount = Discounts
-                    .Aggregate(Money.Zero(TotalPrice.Currency), (current, discount) => current + discount.Amount);
-                return TotalPrice - totalDiscount;
+                return new Money(total, TotalPrice.Currency);
             }
         }
 
         // ===== Methods =====
         public decimal CalculateFuelEfficiency()
         {
-            if (!IsFullTank || Fuel.Value <= 0 || Distance.Value <= 0)
+            if (!IsFullTank || Fuel?.Value <= 0 || Distance?.Value <= 0)
             {
                 return 0;
             }

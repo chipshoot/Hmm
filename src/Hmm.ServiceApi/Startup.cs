@@ -141,8 +141,11 @@ namespace Hmm.ServiceApi
                 .AddScoped<IHmmValidator<Contact>, ContactValidator>()
                 //.AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
-                .AddAutoMapper(typeof(ApiMappingProfile))
-                .AddAutoMapper(typeof(HmmMappingProfile))
+                .AddAutoMapper(cfg =>
+                {
+                    cfg.AddProfile<ApiMappingProfile>();
+                    cfg.AddProfile<HmmMappingProfile>();
+                })
                 .AddSwaggerGen();
             services.AddExceptionHandler<GlobalExceptionHandler>();
 

@@ -1,13 +1,12 @@
 using Hmm.Automobile.DomainEntity;
-using Hmm.Core.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.MeasureUnit;
-using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.Automobile.NoteSerialize
 {

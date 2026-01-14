@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GasLog Note Schema",
+  "description": "JSON Schema for GasLog note content validation",
+  "type": "object",
+  "required": ["note"],
+  "properties": {
+    "note": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "object",
+          "required": ["GasLog"],
+          "properties": {
+            "GasLog": {
+              "$ref": "#/definitions/gasLog"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "gasLog": {
+      "type": "object",
+      "required": ["date", "automobile", "odometer", "fuel", "totalPrice"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of the fuel fill-up (ISO 8601 format)"
+        },
+        "automobile": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The ID of the automobile"
+        },
+        "station": {
+          "type": "string",
+          "description": "The name/location of the gas station"
+        },
+        "distance": {
+          "$ref": "#/definitions/dimension",
+          "description": "Distance traveled since last fill-up"
+        },
+        "odometer": {
+          "$ref": "#/definitions/dimension",
+          "description": "Current odometer reading"
+        },
+        "fuel": {
+          "$ref": "#/definitions/volume",
+          "description": "Amount of fuel purchased"
+        },
+        "totalPrice": {
+          "$ref": "#/definitions/money",
+          "description": "Total cost of the fill-up"
+        },
+        "unitPrice": {
+          "$ref": "#/definitions/money",
+          "description": "Price per unit of fuel"
+        },
+        "discounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/discount"
+          },
+          "description": "List of discounts applied to this fill-up"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Additional comments or notes"
+        },
+        "createDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time when this record was created"
+        }
+      }
+    },
+    "money": {
+      "type": "object",
+      "required": ["value", "currencyCode"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "The monetary amount"
+        },
+        "currencyCode": {
+          "type": "string",
+          "enum": [
+            "CAD", "USD", "EUR", "GBP", "JPY", "CNY", "AUD", "CHF",
+            "SEK", "NZD", "MXN", "SGD", "HKD", "NOK", "KRW", "TRY",
+            "RUB", "INR", "BRL", "ZAR"
+          ],
+          "description": "ISO 4217 currency code"
+        }
+      }
+    },
+    "dimension": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The dimensional value"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "Millimetre", "Centimetre", "Metre", "Kilometre",
+            "Inch", "Foot", "Yard", "Mile"
+          ],
+          "description": "The unit of measurement for distance/dimension"
+        }
+      }
+    },
+    "volume": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The volume value"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "Milliliter", "Centiliter", "Deciliter", "Liter", "CubicMeter",
+            "Ounce", "Pint", "Quart", "Gallon", "Bushel"
+          ],
+          "description": "The unit of measurement for volume"
+        }
+      }
+    },
+    "discount": {
+      "type": "object",
+      "required": ["amount", "programId"],
+      "properties": {
+        "amount": {
+          "$ref": "#/definitions/money",
+          "description": "The discount amount"
+        },
+        "programId": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The ID of the discount program"
+        }
+      }
+    }
+  }
+}

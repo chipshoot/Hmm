@@ -87,6 +87,7 @@ namespace Hmm.Utility.Currency
 
         public string CurrencySymbol => GetCurrencySymbol(_currencyCode);
 
+
         /// <summary>
         /// Accesses the internal representation of the value of the Money
         /// </summary>
@@ -107,7 +108,31 @@ namespace Hmm.Utility.Currency
         /// <returns>A decimal with the _amount truncated to the significant number of decimal digits.</returns>
         public decimal TruncatedAmount => (decimal)((long)Math.Truncate(InternalAmount * DecimalDigits)) / DecimalDigits;
 
+        /// <summary>
+        /// Gets the currency type as a strongly-typed enum.
+        /// Useful for type-safe operations, comparisons, and creating related Money instances.
+        /// </summary>
+        public CurrencyCodeType Currency => _currencyCode;
+
         #endregion public properties
+
+        #region static factory methods
+
+        /// <summary>
+        /// Creates a Money instance with zero amount in the specified currency.
+        /// Useful for initializing aggregations and calculations.
+        /// </summary>
+        /// <param name="currencyCode">The currency code for the zero amount.</param>
+        /// <returns>A Money instance with zero amount.</returns>
+        public static Money Zero(CurrencyCodeType currencyCode) => new Money(0.0, currencyCode);
+
+        /// <summary>
+        /// Creates a Money instance with zero amount in the local currency.
+        /// </summary>
+        /// <returns>A Money instance with zero amount in local currency.</returns>
+        public static Money Zero() => new Money(0.0, LocalCurrencyCode);
+
+        #endregion static factory methods
 
         #region override operators
 

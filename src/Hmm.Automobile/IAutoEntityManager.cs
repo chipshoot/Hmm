@@ -1,39 +1,34 @@
-﻿//using Hmm.Automobile.DomainEntity;
-//using Hmm.Core;
-//using Hmm.Core.DomainEntity;
-//using Hmm.Utility.Dal.Query;
-//using Hmm.Utility.Misc;
-//using Hmm.Utility.Validation;
-//using System.Threading.Tasks;
+﻿using Hmm.Automobile.DomainEntity;
+using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Validation;
+using System.Threading.Tasks;
 
-//namespace Hmm.Automobile
-//{
-//    public interface IAutoEntityManager<T> where T : AutomobileBase
-//    {
-//        INoteSerializer<T> NoteSerializer { get; }
+namespace Hmm.Automobile
+{
+    public interface IAutoEntityManager<T> where T : AutomobileBase
+    {
+        INoteSerializer<T> NoteSerializer { get; }
 
-//        IHmmValidator<T> Validator { get; }
+        IHmmValidator<T> Validator { get; }
 
-//        AuthorDb DefaultAuthor { get; }
+        AuthorDb DefaultAuthor { get; }
 
-//        T GetEntityById(int id);
+        T GetEntityById(int id);
 
-//        Task<T> GetEntityByIdAsync(int id);
+        Task<T> GetEntityByIdAsync(int id);
 
-//        PageList<T> GetEntities(ResourceCollectionParameters resourceCollectionParameter = null);
+        PageList<T> GetEntities(ResourceCollectionParameters resourceCollectionParameter = null);
 
-//        Task<PageList<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<PageList<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
 
-//        T Create(T entity);
+        T Create(T entity);
 
-//        Task<T> CreateAsync(T entity);
+        Task<T> CreateAsync(T entity);
 
-//        T Update(T entity);
+        T Update(T entity);
 
-//        Task<T> UpdateAsync(T entity);
+        Task<T> UpdateAsync(T entity);
 
-//        bool IsEntityOwner(int id);
-
-//        ProcessingResult ProcessResult { get; }
-//    }
-//}
+        bool IsEntityOwner(int id);
+    }
+}
