@@ -165,7 +165,7 @@ namespace Hmm.Utility.Misc
         public static ProcessingResult<T> FromException(Exception ex)
         {
             var msg = new ReturnMessage { Message = ex.GetAllMessage(), Type = MessageType.Error };
-            return new ProcessingResult<T>(false, default, new[] { msg }, ErrorCategory.ServerError);
+            return new ProcessingResult<T>(false, default, [msg], ErrorCategory.ServerError);
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace Hmm.Utility.Misc
         public static ProcessingResult<T> Fail(string errorMessage, ErrorCategory errorType = ErrorCategory.ServerError)
         {
             var msg = new ReturnMessage { Message = errorMessage, Type = MessageType.Error };
-            return new ProcessingResult<T>(false, default, new[] { msg }, errorType);
+            return new ProcessingResult<T>(false, default, [msg], errorType);
         }
 
         /// <summary>

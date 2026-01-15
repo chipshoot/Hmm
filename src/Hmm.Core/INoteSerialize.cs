@@ -5,10 +5,8 @@ namespace Hmm.Core
 {
     public interface INoteSerialize<T>
     {
-        T GetEntity(HmmNote note);
+        ProcessingResult<T> GetEntity(HmmNote note);
 
-        HmmNote GetNote(in T entity);
-
-        ProcessingResult ProcessResult { get; }
+        ProcessingResult<HmmNote> GetNote(in T entity);
     }
 }

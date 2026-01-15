@@ -8,16 +8,15 @@ namespace Hmm.Core.NoteSerializer
 {
     public abstract class NoteSerializerBase<T> : INoteSerialize<T>
     {
-        protected NoteSerializerBase(ILogger<T> logger)
+        protected ILogger Logger { get; } = null;
+
+        public NoteSerializerBase(ILogger logger)
         {
-            ArgumentNullException.ThrowIfNull(logger);
-            ProcessResult = new ProcessingResult(logger);
+            Logger = logger;
         }
 
-        public abstract T GetEntity(HmmNote note);
+        public abstract ProcessingResult<T> GetEntity(HmmNote note);
 
-        public abstract HmmNote GetNote(in T entity);
-
-        public ProcessingResult ProcessResult { get; }
+        public abstract ProcessingResult<HmmNote> GetNote(in T entity);
     }
 }

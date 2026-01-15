@@ -1,5 +1,3 @@
-using Hmm.Automobile.DomainEntity;
-using DomainEntity = Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Json;
 using Microsoft.Extensions.Logging;
@@ -7,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Hmm.Automobile.DomainEntity;
+using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.Automobile.NoteSerialize
 {
@@ -40,7 +40,7 @@ namespace Hmm.Automobile.NoteSerialize
             _lookupRepo = lookupRepo;
         }
 
-        public override GasLog GetEntity(DomainEntity.HmmNote note)
+        public override GasLog GetEntity(HmmNote note)
         {
             try
             {

@@ -1,9 +1,9 @@
-using Hmm.Automobile.DomainEntity;
-using DomainEntity = Hmm.Core.Map.DomainEntity;
 using Hmm.Core.NoteSerializer;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
+using Hmm.Automobile.DomainEntity;
+using Hmm.Core.Map.DomainEntity;
 
 namespace Hmm.Automobile.NoteSerialize
 {
@@ -19,7 +19,7 @@ namespace Hmm.Automobile.NoteSerialize
         {
         }
 
-        public override DomainEntity.HmmNote GetNote(in T entity)
+        public override HmmNote GetNote(in T entity)
         {
             if (entity == null)
             {

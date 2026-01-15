@@ -1,5 +1,6 @@
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Json;
+using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
@@ -46,43 +47,49 @@ namespace Hmm.Core.NoteSerializer
         /// </summary>
         protected NoteCatalog Catalog => _catalog ??= GetCatalog();
 
-        public override T GetEntity(HmmNote note)
+        public override ProcessingResult<T> GetEntity(HmmNote note)
         {
             if (note == null)
             {
-                ProcessResult.AddWaningMessage("Null note found when trying to deserialize entity from note", true);
-                return default;
+                return ProcessingResult<T>.Fail("Null note found when trying to de-serialize entity from note", ErrorCategory.NotFound);
             }
 
             return default;
         }
 
-        public override HmmNote GetNote(in T entity)
+        public override ProcessingResult<HmmNote> GetNote(in T entity)
         {
             if (entity == null)
             {
-                ProcessResult.AddWaningMessage("Null entity found when trying to serialize entity to note", true);
-                return null;
+                return ProcessingResult<HmmNote>.Fail("Null entity found when trying to serialize entity to note", ErrorCategory.NotFound);
             }
 
-            switch (entity)
+            try
             {
-                // If entity is HmmNote or its child
-                case HmmNote hmmNote:
-                    {
-                        var note = new HmmNote
+                switch (entity)
+                {
+                    // If entity is HmmNote or its child
+                    case HmmNote hmmNote:
                         {
-                            Subject = hmmNote.Subject,
-                            Content = GetNoteSerializationText(entity),
-                            CreateDate = hmmNote.CreateDate,
-                            Description = hmmNote.Description,
-                            Author = hmmNote.Author,
-                            Catalog = hmmNote.Catalog
-                        };
-                        return note;
-                    }
-                default:
-                    return null;
+                            var note = new HmmNote
+                            {
+                                Subject = hmmNote.Subject,
+                                Content = GetNoteSerializationText(entity),
+                                CreateDate = hmmNote.CreateDate,
+                                Description = hmmNote.Description,
+                                Author = hmmNote.Author,
+                                Catalog = hmmNote.Catalog
+                            };
+                            return ProcessingResult<HmmNote>.Ok(note);
+                        }
+                    default:
+                        return ProcessingResult<HmmNote>.Fail("Unsupported entity type for serialization",
+                            ErrorCategory.MappingError);
+                }
+            }
+            catch (Exception ex)
+            {
+                return ProcessingResult<HmmNote>.FromException(ex);
             }
         }
 
@@ -96,7 +103,6 @@ namespace Hmm.Core.NoteSerializer
         {
             if (entity == null)
             {
-                ProcessResult.AddWaningMessage("Null entity found when trying to serialize entity to JSON text", true);
                 return string.Empty;
             }
 
@@ -105,16 +111,8 @@ namespace Hmm.Core.NoteSerializer
                 return string.Empty;
             }
 
-            try
-            {
-                var jsonDocument = GetNoteContent(note.Content);
-                return jsonDocument.RootElement.GetRawText();
-            }
-            catch (Exception ex)
-            {
-                ProcessResult.WrapException(ex);
-                return string.Empty;
-            }
+            var jsonDocument = GetNoteContent(note.Content);
+            return jsonDocument.RootElement.GetRawText();
         }
 
         /// <summary>
