@@ -1,10 +1,11 @@
 using Hmm.Utility.Dal.Query;
-using Hmm.Utility.Json;
+using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core.Map.DomainEntity;
 
@@ -19,46 +20,57 @@ namespace Hmm.Automobile.NoteSerialize
         private readonly IApplication _app;
         private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
+        private readonly IAutoEntityManager<GasStation> _stationManager;
         private readonly IEntityLookup _lookupRepo;
+        private readonly GasStationJsonSerializer _stationSerializer;
 
         public GasLogJsonNoteSerialize(
             IApplication app,
             ILogger<GasLog> logger,
             IAutoEntityManager<AutomobileInfo> autoManager,
             IAutoEntityManager<GasDiscount> discountManager,
+            IAutoEntityManager<GasStation> stationManager,
             IEntityLookup lookupRepo)
             : base(logger)
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(autoManager);
             ArgumentNullException.ThrowIfNull(discountManager);
+            ArgumentNullException.ThrowIfNull(stationManager);
             ArgumentNullException.ThrowIfNull(lookupRepo);
 
             _app = app;
             _autoManager = autoManager;
             _discountManager = discountManager;
+            _stationManager = stationManager;
             _lookupRepo = lookupRepo;
+
+            // Initialize station serializer
+            _stationSerializer = new GasStationJsonSerializer(stationManager, logger, JsonOptions);
         }
 
-        public override GasLog GetEntity(HmmNote note)
+        public override async Task<ProcessingResult<GasLog>> GetEntity(HmmNote note)
         {
             try
             {
-                var (gasLogElement, document) = GetEntityRoot(note, AutomobileConstant.GasLogRecordSubject);
+                var (gasLogElement, document, error) = GetEntityRoot(note, AutomobileConstant.GasLogRecordSubject);
                 if (!gasLogElement.HasValue || document == null)
                 {
-                    return null;
+                    return ProcessingResult<GasLog>.Fail(
+                        error ?? "Failed to parse gas log from note",
+                        ErrorCategory.MappingError);
                 }
 
                 var gasLogJson = gasLogElement.Value;
 
-                // Parse automobile ID and resolve entity
+                // Parse and resolve automobile
                 var carId = GetIntProperty(gasLogJson, "automobile");
-                var car = _autoManager.GetEntityById(carId);
-                if (car == null)
+                var carResult = await _autoManager.GetEntityByIdAsync(carId);
+                if (!carResult.Success || carResult.Value == null)
                 {
-                    ProcessResult.AddErrorMessage($"Cannot find automobile with ID: {carId}");
-                    return null;
+                    document.Dispose();
+                    return ProcessingResult<GasLog>.NotFound(
+                        $"Cannot find automobile with ID: {carId}");
                 }
 
                 // Create GasLog entity
@@ -66,13 +78,26 @@ namespace Hmm.Automobile.NoteSerialize
                 {
                     Id = note.Id,
                     Date = GetDateTimeProperty(gasLogJson, "date"),
-                    Car = car,
+                    Car = carResult.Value,
                     AutomobileId = carId,
-                    Station = GetStringProperty(gasLogJson, "station", string.Empty),
                     Comment = GetStringProperty(gasLogJson, "comment", string.Empty),
                     CreateDate = GetDateTimeProperty(gasLogJson, "createDate"),
                     AuthorId = note.Author.Id
                 };
+
+                // Parse and resolve GasStation using dedicated serializer
+                if (gasLogJson.TryGetProperty("station", out var stationElement))
+                {
+                    var stationResult = await _stationSerializer.DeserializeAsync(stationElement);
+                    if (stationResult.Success && stationResult.Value != null)
+                    {
+                        gasLog.Station = stationResult.Value;
+                    }
+                    else if (stationResult.HasWarning)
+                    {
+                        Logger.LogWarning("Station deserialization warning: {Message}", stationResult.ErrorMessage);
+                    }
+                }
 
                 // Parse Distance (Dimension)
                 if (gasLogJson.TryGetProperty("distance", out var distanceElement))
@@ -109,11 +134,54 @@ namespace Hmm.Automobile.NoteSerialize
                         unitPriceElement.GetRawText(), JsonOptions);
                 }
 
+                // Parse FuelGrade - optional
+                if (gasLogJson.TryGetProperty("fuelGrade", out var fuelGradeElement))
+                {
+                    if (Enum.TryParse<FuelGrade>(fuelGradeElement.GetString(), true, out var fuelGrade))
+                    {
+                        gasLog.FuelGrade = fuelGrade;
+                    }
+                }
+
+                // Parse boolean flags
+                if (gasLogJson.TryGetProperty("isFullTank", out var isFullTankElement))
+                {
+                    gasLog.IsFullTank = isFullTankElement.GetBoolean();
+                }
+
+                if (gasLogJson.TryGetProperty("isFirstFillUp", out var isFirstFillUpElement))
+                {
+                    gasLog.IsFirstFillUp = isFirstFillUpElement.GetBoolean();
+                }
+
+                // Parse driving context
+                if (gasLogJson.TryGetProperty("cityDrivingPercentage", out var cityElement))
+                {
+                    gasLog.CityDrivingPercentage = cityElement.GetInt32();
+                }
+
+                if (gasLogJson.TryGetProperty("highwayDrivingPercentage", out var highwayElement))
+                {
+                    gasLog.HighwayDrivingPercentage = highwayElement.GetInt32();
+                }
+
+                // Parse receipt number
+                if (gasLogJson.TryGetProperty("receiptNumber", out var receiptElement))
+                {
+                    gasLog.ReceiptNumber = receiptElement.GetString();
+                }
+
+                // Parse location
+                if (gasLogJson.TryGetProperty("location", out var locationElement))
+                {
+                    gasLog.Location = locationElement.GetString();
+                }
+
                 // Parse Discounts array
                 if (gasLogJson.TryGetProperty("discounts", out var discountsElement) &&
                     discountsElement.ValueKind == JsonValueKind.Array)
                 {
-                    var discounts = GetDiscountInfos(discountsElement);
+                    var discounts = await GetDiscountInfosAsync(discountsElement);
                     if (discounts.Any())
                     {
                         gasLog.Discounts = discounts;
@@ -121,12 +189,19 @@ namespace Hmm.Automobile.NoteSerialize
                 }
 
                 document.Dispose();
-                return gasLog;
+                return ProcessingResult<GasLog>.Ok(gasLog);
+            }
+            catch (JsonException ex)
+            {
+                Logger.LogError(ex, "JSON parsing error while deserializing GasLog");
+                return ProcessingResult<GasLog>.Fail(
+                    $"Invalid JSON format: {ex.Message}",
+                    ErrorCategory.MappingError);
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                throw;
+                Logger.LogError(ex, "Error deserializing GasLog from note");
+                return ProcessingResult<GasLog>.FromException(ex);
             }
         }
 
@@ -143,20 +218,59 @@ namespace Hmm.Automobile.NoteSerialize
                 var gasLogData = new Dictionary<string, object>
                 {
                     ["date"] = entity.Date.ToString("o"), // ISO 8601 format
-                    ["automobile"] = entity.Car.Id,
-                    ["station"] = entity.Station ?? string.Empty,
+                    ["automobile"] = entity.AutomobileId,
                     ["distance"] = entity.Distance,
                     ["odometer"] = entity.Odometer,
                     ["fuel"] = entity.Fuel,
                     ["totalPrice"] = entity.TotalPrice,
+                    ["fuelGrade"] = entity.FuelGrade.ToString(),
+                    ["isFullTank"] = entity.IsFullTank,
+                    ["isFirstFillUp"] = entity.IsFirstFillUp,
                     ["comment"] = entity.Comment ?? string.Empty,
                     ["createDate"] = entity.CreateDate.ToString("o")
                 };
+
+                // Serialize Station using dedicated serializer
+                if (entity.Station != null)
+                {
+                    var stationResult = _stationSerializer.Serialize(entity.Station);
+                    if (stationResult.Success && stationResult.Value != null)
+                    {
+                        gasLogData["station"] = stationResult.Value;
+                    }
+                    else
+                    {
+                        Logger.LogWarning("Failed to serialize station: {Error}", stationResult.ErrorMessage);
+                    }
+                }
 
                 // Add UnitPrice if available
                 if (entity.UnitPrice != null && entity.UnitPrice.InternalAmount > 0)
                 {
                     gasLogData["unitPrice"] = entity.UnitPrice;
+                }
+
+                // Add driving context if available
+                if (entity.CityDrivingPercentage.HasValue)
+                {
+                    gasLogData["cityDrivingPercentage"] = entity.CityDrivingPercentage.Value;
+                }
+
+                if (entity.HighwayDrivingPercentage.HasValue)
+                {
+                    gasLogData["highwayDrivingPercentage"] = entity.HighwayDrivingPercentage.Value;
+                }
+
+                // Add receipt number if available
+                if (!string.IsNullOrEmpty(entity.ReceiptNumber))
+                {
+                    gasLogData["receiptNumber"] = entity.ReceiptNumber;
+                }
+
+                // Add location if available
+                if (!string.IsNullOrEmpty(entity.Location))
+                {
+                    gasLogData["location"] = entity.Location;
                 }
 
                 // Add discounts array
@@ -167,7 +281,6 @@ namespace Hmm.Automobile.NoteSerialize
                     {
                         if (discount.Amount == null || discount.Program == null)
                         {
-                            ProcessResult.AddErrorMessage("Cannot found valid discount information, amount or discount program is missing");
                             continue;
                         }
 
@@ -192,13 +305,13 @@ namespace Hmm.Automobile.NoteSerialize
                     }
                 };
 
-                // Serialize to JSON without indentation (compact format)
+                // Serialize to JSON
                 var json = JsonSerializer.Serialize(noteStructure, JsonOptions);
                 return json;
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
+                Logger.LogError(ex, "Error serializing GasLog to JSON");
                 return string.Empty;
             }
         }
@@ -208,7 +321,7 @@ namespace Hmm.Automobile.NoteSerialize
         /// </summary>
         /// <param name="discountsElement">The JSON array containing discount objects.</param>
         /// <returns>List of GasDiscountInfo objects.</returns>
-        private List<GasDiscountInfo> GetDiscountInfos(JsonElement discountsElement)
+        private async Task<List<GasDiscountInfo>> GetDiscountInfosAsync(JsonElement discountsElement)
         {
             var infos = new List<GasDiscountInfo>();
 
@@ -224,7 +337,6 @@ namespace Hmm.Automobile.NoteSerialize
                     // Parse amount (Money)
                     if (!discountElement.TryGetProperty("amount", out var amountElement))
                     {
-                        ProcessResult.AddErrorMessage("Cannot find money information from discount JSON");
                         continue;
                     }
 
@@ -235,34 +347,33 @@ namespace Hmm.Automobile.NoteSerialize
                     if (!discountElement.TryGetProperty("programId", out var programIdElement) ||
                         !programIdElement.TryGetInt32(out var discountId))
                     {
-                        ProcessResult.AddErrorMessage("Cannot find valid discount program ID from JSON");
                         continue;
                     }
 
                     // Resolve discount program entity
-                    var discount = _discountManager.GetEntityById(discountId);
-                    if (discount == null)
+                    var discountResult = await _discountManager.GetEntityByIdAsync(discountId);
+                    if (!discountResult.Success || discountResult.Value == null)
                     {
-                        ProcessResult.AddErrorMessage($"Cannot find discount program with ID: {discountId} from data source");
+                        Logger.LogWarning("Cannot find discount program with ID: {DiscountId}", discountId);
                         continue;
                     }
 
                     infos.Add(new GasDiscountInfo
                     {
                         Amount = money,
-                        Program = discount
+                        Program = discountResult.Value
                     });
                 }
                 catch (Exception ex)
                 {
-                    ProcessResult.AddErrorMessage($"Error parsing discount: {ex.Message}");
+                    Logger.LogWarning(ex, "Error parsing discount info");
                 }
             }
 
             return infos;
         }
 
-        protected override DomainEntity.NoteCatalog GetCatalog()
+        protected override NoteCatalog GetCatalog()
         {
             return _app.GetCatalog(NoteCatalogType.GasLog, _lookupRepo);
         }

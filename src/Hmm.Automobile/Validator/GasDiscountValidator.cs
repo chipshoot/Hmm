@@ -8,7 +8,7 @@ namespace Hmm.Automobile.Validator
     {
         public GasDiscountValidator(IEntityLookup lookupRepo) : base(lookupRepo)
         {
-            RuleFor(a => a.AuthorId).Must(HasValidAuthor).WithMessage("Have valid default author for GasDiscount");
+            RuleFor(a => a.AuthorId).MustAsync(async (id, cancellation) => await HasValidAuthor(id, cancellation)).WithMessage("Have valid default author for GasDiscount");
             RuleFor(d => d.Program).NotEmpty().WithMessage("Need has valid program");
             RuleFor(d => d.Amount).Must(HasValidMoney).WithMessage("Need has valid amount");
         }

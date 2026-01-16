@@ -1,8 +1,7 @@
+using System.Threading.Tasks;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace Hmm.Core.NoteSerializer
 {
@@ -10,13 +9,13 @@ namespace Hmm.Core.NoteSerializer
     {
         protected ILogger Logger { get; } = null;
 
-        public NoteSerializerBase(ILogger logger)
+        protected NoteSerializerBase(ILogger logger)
         {
             Logger = logger;
         }
 
-        public abstract ProcessingResult<T> GetEntity(HmmNote note);
+        public abstract Task<ProcessingResult<T>> GetEntity(HmmNote note);
 
-        public abstract ProcessingResult<HmmNote> GetNote(in T entity);
+        public abstract Task<ProcessingResult<HmmNote>> GetNote(in T entity);
     }
 }

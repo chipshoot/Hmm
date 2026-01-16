@@ -1,16 +1,16 @@
 // Ignore Spelling: Repo
 
 using Hmm.Automobile.DomainEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Xml;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
@@ -42,9 +42,8 @@ namespace Hmm.Automobile
             }
         }
 
-        public ProcessingResult ProcessingResult { get; } = new();
-
-        public bool Register(IAutoEntityManager<AutomobileInfo> automobileMan,
+        public async Task<ProcessingResult<bool>> RegisterAsync(
+            IAutoEntityManager<AutomobileInfo> automobileMan,
             IAutoEntityManager<GasDiscount> discountMan,
             IEntityLookup lookupRepo)
         {
@@ -52,59 +51,59 @@ namespace Hmm.Automobile
             ArgumentNullException.ThrowIfNull(discountMan);
             ArgumentNullException.ThrowIfNull(lookupRepo);
 
-            string application = null;// GetApplication(lookupRepo);
-            var success = false;
-            if (application == null)
-            {
-                ProcessingResult.AddErrorMessage("Cannot get application for automobile");
-                return false;
-            }
-
             try
             {
                 var addSeedRecords = bool.Parse(_configuration["Automobile:Seeding:AddSeedingEntity"] ?? "false");
                 if (!addSeedRecords)
                 {
-                    return true;
+                    return ProcessingResult<bool>.Ok(true);
                 }
 
                 // Insert seeding entity when registering application
                 var dataFileName = _configuration["Automobile:Seeding:SeedingDataFile"];
                 if (string.IsNullOrEmpty(dataFileName))
                 {
-                    return true;
+                    return ProcessingResult<bool>.Ok(true);
                 }
+
                 var entities = GetSeedingEntities(dataFileName);
-                if (entities != null)
+                if (entities == null)
                 {
-                    var automobileBases = entities.ToList();
-                    foreach (var automobile in automobileBases.OfType<AutomobileInfo>())
+                    return ProcessingResult<bool>.Ok(true);
+                }
+
+                var automobileBases = entities.ToList();
+                var errors = new List<string>();
+
+                foreach (var automobile in automobileBases.OfType<AutomobileInfo>())
+                {
+                    var result = await automobileMan.CreateAsync(automobile);
+                    if (!result.Success)
                     {
-                        var newCar = automobileMan.Create(automobile);
-                        if (newCar == null)
-                        {
-                            ProcessingResult.PropagandaResult(automobileMan.ProcessResult);
-                        }
-                    }
-                    foreach (var discount in automobileBases.OfType<GasDiscount>())
-                    {
-                        var newDiscount = discountMan.Create(discount);
-                        if (newDiscount == null)
-                        {
-                            ProcessingResult.PropagandaResult(discountMan.ProcessResult);
-                            success = false;
-                            break;
-                        }
+                        errors.Add($"Failed to create automobile: {result.ErrorMessage}");
                     }
                 }
 
-                // ReSharper restore PossibleNullReferenceException
-                return success;
+                foreach (var discount in automobileBases.OfType<GasDiscount>())
+                {
+                    var result = await discountMan.CreateAsync(discount);
+                    if (!result.Success)
+                    {
+                        errors.Add($"Failed to create discount: {result.ErrorMessage}");
+                        break;
+                    }
+                }
+
+                if (errors.Count > 0)
+                {
+                    return ProcessingResult<bool>.Ok(false, string.Join("; ", errors));
+                }
+
+                return ProcessingResult<bool>.Ok(true);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                ProcessingResult.WrapException(e);
-                return false;
+                return ProcessingResult<bool>.FromException(ex);
             }
         }
 
@@ -124,83 +123,76 @@ namespace Hmm.Automobile
                 return entities;
             }
 
-            entities.AddRange(root.AutomobileInfos);
-            entities.AddRange(root.GasDiscounts);
+            if (root.AutomobileInfos != null)
+            {
+                entities.AddRange(root.AutomobileInfos);
+            }
+
+            if (root.GasDiscounts != null)
+            {
+                entities.AddRange(root.GasDiscounts);
+            }
+
             return entities;
         }
 
-        public NoteCatalog GetCatalog(NoteCatalogType entityType, IEntityLookup lookupRepo)
+        public async Task<NoteCatalog> GetCatalogAsync(NoteCatalogType entityType, IEntityLookup lookupRepo)
         {
             ArgumentNullException.ThrowIfNull(lookupRepo);
 
-            // ReSharper disable PossibleNullReferenceException
-            NoteCatalog catalog;
-            switch (entityType)
+            var catalogName = entityType switch
             {
-                case NoteCatalogType.Automobile:
-                    catalog = _automobileCatalog ??= lookupRepo.GetEntities<NoteCatalog>()
-                        .FirstOrDefault(c => c.Name == AutomobileConstant.AutoMobileInfoCatalogName);
-                    break;
-
-                case NoteCatalogType.GasDiscount:
-                    catalog = _gasDiscountCatalog ??= lookupRepo.GetEntities<NoteCatalog>()
-                        .FirstOrDefault(c => c.Name == AutomobileConstant.GasDiscountCatalogName);
-                    break;
-
-                case NoteCatalogType.GasLog:
-                    catalog = _gasLogCatalog ??= _automobileCatalog = lookupRepo.GetEntities<NoteCatalog>()
-                        .FirstOrDefault(c => c.Name == AutomobileConstant.GasLogCatalogName);
-                    break;
-
-                default:
-                    ProcessingResult.AddErrorMessage($"CatalogType {entityType} is not supported");
-                    catalog = null;
-                    break;
-            }
-
-            if (catalog == null && !lookupRepo.ProcessResult.Success)
-            {
-                ProcessingResult.PropagandaResult(lookupRepo.ProcessResult);
-            }
-
-            // ReSharper restore PossibleNullReferenceException
-            return catalog;
-        }
-
-        private string GetSchema(NoteCatalogType catalog)
-        {
-            var schemaFile = catalog switch
-            {
-                NoteCatalogType.Automobile => _configuration["Automobile:Schema:Automobile"],
-                NoteCatalogType.GasDiscount => _configuration["Automobile:Schema:GasDiscount"],
-                NoteCatalogType.GasLog => _configuration["Automobile:Schema:GasLog"],
-                _ => ""
+                NoteCatalogType.Automobile => AutomobileConstant.AutoMobileInfoCatalogName,
+                NoteCatalogType.GasDiscount => AutomobileConstant.GasDiscountCatalogName,
+                NoteCatalogType.GasLog => AutomobileConstant.GasLogCatalogName,
+                _ => null
             };
 
-            if (string.IsNullOrEmpty(schemaFile))
+            if (string.IsNullOrEmpty(catalogName))
             {
-                return string.Empty;
+                return null;
             }
 
-            if (!File.Exists(schemaFile))
+            // Check cached catalogs first
+            var cachedCatalog = entityType switch
             {
-                return "";
+                NoteCatalogType.Automobile => _automobileCatalog,
+                NoteCatalogType.GasDiscount => _gasDiscountCatalog,
+                NoteCatalogType.GasLog => _gasLogCatalog,
+                _ => null
+            };
+
+            if (cachedCatalog != null)
+            {
+                return cachedCatalog;
             }
 
-            var xmlDoc = new XmlDocument();
-            try
+            // Fetch from repository
+            var catalogsResult = await lookupRepo.GetEntitiesAsync<NoteCatalog>(c => c.Name == catalogName);
+            if (!catalogsResult.Success || catalogsResult.Value == null)
             {
-                xmlDoc.Load(schemaFile);
-                var sw = new StringWriter();
-                var xw = new XmlTextWriter(sw);
-                xmlDoc.WriteTo(xw);
-                return sw.ToString();
+                return null;
             }
-            catch (Exception e)
+
+            var catalog = catalogsResult.Value.FirstOrDefault();
+            if (catalog != null)
             {
-                ProcessingResult.WrapException(e);
-                return "";
+                // Cache the result
+                switch (entityType)
+                {
+                    case NoteCatalogType.Automobile:
+                        _automobileCatalog = catalog;
+                        break;
+                    case NoteCatalogType.GasDiscount:
+                        _gasDiscountCatalog = catalog;
+                        break;
+                    case NoteCatalogType.GasLog:
+                        _gasLogCatalog = catalog;
+                        break;
+                }
             }
+
+            return catalog;
         }
 
         private class SeedingEntityRoot

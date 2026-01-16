@@ -1,203 +1,120 @@
-//using Hmm.Automobile.DomainEntity;
-//using Hmm.Core;
-//using Hmm.Core.DomainEntity;
-//using Hmm.Utility.Dal.Query;
-//using Hmm.Utility.Misc;
-//using Hmm.Utility.Validation;
-//using System;
-//using System.Linq.Expressions;
-//using System.Threading.Tasks;
+using Hmm.Automobile.DomainEntity;
+using Hmm.Core;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
+using Hmm.Utility.Validation;
+using System;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
-//namespace Hmm.Automobile
-//{
-//    public abstract class EntityManagerBase<T> : IAutoEntityManager<T> where T : AutomobileBase
-//    {
-//        protected EntityManagerBase(IHmmValidator<T> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
-//        {
-//            ArgumentNullException.ThrowIfNull(validator);
-//            ArgumentNullException.ThrowIfNull(noteManager);
-//            ArgumentNullException.ThrowIfNull(lookupRepo);
+namespace Hmm.Automobile
+{
+    public abstract class EntityManagerBase<T> : IAutoEntityManager<T> where T : AutomobileBase
+    {
+        protected EntityManagerBase(IHmmValidator<T> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
+        {
+            ArgumentNullException.ThrowIfNull(validator);
+            ArgumentNullException.ThrowIfNull(noteManager);
+            ArgumentNullException.ThrowIfNull(lookupRepo);
 
-//            Validator = validator;
-//            NoteManager = noteManager;
-//            LookupRepo = lookupRepo;
-//            DefaultAuthor = ApplicationRegister.DefaultAuthor;
-//        }
+            Validator = validator;
+            NoteManager = noteManager;
+            LookupRepo = lookupRepo;
+            DefaultAuthor = ApplicationRegister.DefaultAuthor;
+        }
 
-//        public IHmmValidator<T> Validator { get; }
+        public IHmmValidator<T> Validator { get; }
 
-//        /// <summary>
-//        /// Get notes for specific entity
-//        /// </summary>
-//        /// <param name="entity">The entity which used to get type and figure out the catalog</param>
-//        /// <param name="query">Query for note</param>
-//        /// <param name="resourceCollectionParameters">The page information of the resource collection</param>
-//        /// <returns>The notes which belongs to entity type</returns>
-//        protected PageList<HmmNote> GetNotes(T entity, Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-//        {
-//            var catId = entity.GetCatalogId(LookupRepo);
+        protected IHmmNoteManager NoteManager { get; }
 
-//            var hasValidAuthor = DefaultAuthor != null && LookupRepo.GetEntity<AuthorDb>(DefaultAuthor.Id) != null;
-//            switch (hasValidAuthor)
-//            {
-//                case false:
-//                    ProcessResult.AddErrorMessage("Cannot find default author", true);
-//                    return null;
+        protected IEntityLookup LookupRepo { get; }
 
-//                default:
-//                    PageList<HmmNote> notes;
-//                    if (query != null)
-//                    {
-//                        var finalExp = query.And(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
-//                        notes = NoteManager.GetNotes(finalExp, false, resourceCollectionParameters);
-//                    }
-//                    else
-//                    {
-//                        notes = NoteManager.GetNotes(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId, false, resourceCollectionParameters);
-//                    }
+        /// <summary>
+        /// Get notes for specific entity
+        /// </summary>
+        protected async Task<ProcessingResult<PageList<HmmNote>>> GetNotesAsync(
+            T entity,
+            Expression<Func<HmmNote, bool>> query = null,
+            ResourceCollectionParameters resourceCollectionParameters = null)
+        {
+            var catId = await entity.GetCatalogIdAsync(LookupRepo);
 
-//                    return notes;
-//            }
-//        }
+            if (DefaultAuthor == null)
+            {
+                return ProcessingResult<PageList<HmmNote>>.Fail("Default author is not configured", ErrorCategory.ValidationError);
+            }
 
-//        /// <summary>
-//        /// The asynchronous version of <see cref="GetNotes"/>
-//        /// </summary>
-//        /// <param name="entity">The entity which used to get type and figure out the catalog</param>
-//        /// <param name="resourceCollectionParameters">The page information of the resource collection</param>
-//        /// <returns>The notes which belongs to entity type</returns>
-//        protected async Task<PageList<HmmNote>> GetNotesAsync(T entity, Expression<Func<HmmNote, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
-//        {
-//            var catId = await entity.GetCatalogIdAsync(LookupRepo);
-//            var author = await LookupRepo.GetEntityAsync<AuthorDb>(DefaultAuthor.Id);
+            var authorResult = await LookupRepo.GetEntityAsync<Author>(DefaultAuthor.Id);
+            if (!authorResult.Success || authorResult.Value == null)
+            {
+                return ProcessingResult<PageList<HmmNote>>.NotFound("Cannot find default author");
+            }
 
-//            var hasValidAuthor = DefaultAuthor != null && author != null;
-//            switch (hasValidAuthor)
-//            {
-//                case false:
-//                    ProcessResult.AddErrorMessage("Cannot find default author", true);
-//                    return null;
+            Expression<Func<HmmNote, bool>> baseFilter = n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId;
+            var finalQuery = query != null ? query.And(baseFilter) : baseFilter;
 
-//                default:
+            return await NoteManager.GetNotesAsync(finalQuery, false, resourceCollectionParameters);
+        }
 
-//                    PageList<HmmNote> notes;
-//                    if (query != null)
-//                    {
-//                        var finalExp = query.And(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId);
-//                        notes = await NoteManager.GetNotesAsync(finalExp, false, resourceCollectionParameters);
-//                    }
-//                    else
-//                    {
-//                        notes = await NoteManager.GetNotesAsync(n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId, false, resourceCollectionParameters);
-//                    }
+        /// <summary>
+        /// Get note for specific entity by id
+        /// </summary>
+        protected async Task<ProcessingResult<HmmNote>> GetNoteAsync(int id, T entity)
+        {
+            var catId = await entity.GetCatalogIdAsync(LookupRepo);
 
-//                    return notes;
-//            }
-//        }
+            if (DefaultAuthor == null)
+            {
+                return ProcessingResult<HmmNote>.Fail("Default author is not configured", ErrorCategory.ValidationError);
+            }
 
-//        /// <summary>
-//        /// Get notes for specific entity
-//        /// </summary>
-//        /// <param name="id">The id of entity to get type and figure out the catalog</param>
-//        /// <param name="entity">The entity by id which used to get type and figure out the catalog</param>
-//        /// <returns>The notes which belongs to entity type</returns>
-//        protected HmmNote GetNote(int id, T entity)
-//        {
-//            var catId = entity.GetCatalogId(LookupRepo);
+            var authorResult = await LookupRepo.GetEntityAsync<Author>(DefaultAuthor.Id);
+            if (!authorResult.Success || authorResult.Value == null)
+            {
+                return ProcessingResult<HmmNote>.NotFound("Cannot find default author");
+            }
 
-//            var hasValidAuthor = DefaultAuthor != null && LookupRepo.GetEntity<AuthorDb>(DefaultAuthor.Id) != null;
-//            switch (hasValidAuthor)
-//            {
-//                case false:
-//                    ProcessResult.AddErrorMessage("Cannot find default author", true);
-//                    return null;
+            var noteResult = await NoteManager.GetNoteByIdAsync(id);
+            if (!noteResult.Success || noteResult.Value == null)
+            {
+                return ProcessingResult<HmmNote>.NotFound($"Cannot find note with id {id}");
+            }
 
-//                default:
+            var note = noteResult.Value;
+            if (note.Author.Id == DefaultAuthor.Id && note.Catalog.Id == catId)
+            {
+                return ProcessingResult<HmmNote>.Ok(note);
+            }
 
-//                    var note = NoteManager.GetNoteById(id);
-//                    if (note == null)
-//                    {
-//                        return null;
-//                    }
+            return ProcessingResult<HmmNote>.NotFound("Note does not belong to the current author or catalog");
+        }
 
-//                    if (note.Author.Id == DefaultAuthor.Id && note.Catalog.Id == catId)
-//                    {
-//                        return note;
-//                    }
+        #region IAutoEntityManager<T> implementation
 
-//                    return null;
-//            }
-//        }
+        public abstract INoteSerialize<T> NoteSerializer { get; }
 
-//        /// <summary>
-//        /// Get notes for specific entity
-//        /// </summary>
-//        /// <param name="id">The id of entity to get type and figure out the catalog</param>
-//        /// <param name="entity">The entity by id which used to get type and figure out the catalog</param>
-//        /// <returns>The notes which belongs to entity type</returns>
-//        protected async Task<HmmNote> GetNoteAsync(int id, T entity)
-//        {
-//            var catId = await entity.GetCatalogIdAsync(LookupRepo);
+        public Author DefaultAuthor { get; }
 
-//            var hasValidAuthor = DefaultAuthor != null && LookupRepo.GetEntity<AuthorDb>(DefaultAuthor.Id) != null;
-//            switch (hasValidAuthor)
-//            {
-//                case false:
-//                    ProcessResult.AddErrorMessage("Cannot find default author", true);
-//                    return null;
+        public abstract Task<ProcessingResult<T>> GetEntityByIdAsync(int id);
 
-//                default:
+        public abstract Task<ProcessingResult<PageList<T>>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
 
-//                    var note = await NoteManager.GetNoteByIdAsync(id);
-//                    if (note == null)
-//                    {
-//                        return null;
-//                    }
+        public abstract Task<ProcessingResult<T>> CreateAsync(T entity);
 
-//                    if (note.Author.Id == DefaultAuthor.Id && note.Catalog.Id == catId)
-//                    {
-//                        return note;
-//                    }
+        public abstract Task<ProcessingResult<T>> UpdateAsync(T entity);
 
-//                    return null;
-//            }
-//        }
+        public async Task<bool> IsEntityOwnerAsync(int id)
+        {
+            var entityResult = await GetEntityByIdAsync(id);
+            if (!entityResult.Success || entityResult.Value == null)
+            {
+                return false;
+            }
 
-//        protected IHmmNoteManager NoteManager { get; }
+            return entityResult.Value.AuthorId == DefaultAuthor?.Id;
+        }
 
-//        protected IEntityLookup LookupRepo { get; }
-
-//        #region method of interface IAutoEntityManager
-
-//        public abstract Task<T> GetEntityByIdAsync(int id);
-
-//        public abstract PageList<T> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null);
-
-//        public abstract Task<PageList<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
-
-//        public abstract INoteSerializer<T> NoteSerializer { get; }
-
-//        public AuthorDb DefaultAuthor { get; }
-
-//        public abstract T GetEntityById(int id);
-
-//        public abstract T Create(T entity);
-
-//        public abstract Task<T> CreateAsync(T entity);
-
-//        public abstract T Update(T entity);
-
-//        public abstract Task<T> UpdateAsync(T entity);
-
-//        public bool IsEntityOwner(int id)
-//        {
-//            var entity = GetEntityById(id);
-//            var hasEntity = entity != null && entity.AuthorId == DefaultAuthor.Id;
-//            return hasEntity;
-//        }
-
-//        public ProcessingResult ProcessResult { get; } = new ProcessingResult();
-
-//        #endregion method of interface IAutoEntityManager
-//    }
-//}
+        #endregion
+    }
+}

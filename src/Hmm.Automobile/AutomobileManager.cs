@@ -11,193 +11,127 @@ namespace Hmm.Automobile
 {
     public class AutomobileManager : EntityManagerBase<AutomobileInfo>
     {
-        public AutomobileManager(INoteSerializer<AutomobileInfo> noteSerializer, IHmmValidator<AutomobileInfo> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
+        public AutomobileManager(
+            INoteSerialize<AutomobileInfo> noteSerializer,
+            IHmmValidator<AutomobileInfo> validator,
+            IHmmNoteManager noteManager,
+            IEntityLookup lookupRepo)
             : base(validator, noteManager, lookupRepo)
         {
             ArgumentNullException.ThrowIfNull(noteSerializer);
             NoteSerializer = noteSerializer;
         }
 
-        public override PageList<AutomobileInfo> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
+        public override INoteSerialize<AutomobileInfo> NoteSerializer { get; }
+
+        public override async Task<ProcessingResult<PageList<AutomobileInfo>>> GetEntitiesAsync(
+            ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var notes = GetNotes(new AutomobileInfo(), null, resourceCollectionParameters);
-                if (notes == null)
+                var notesResult = await GetNotesAsync(new AutomobileInfo(), null, resourceCollectionParameters);
+                if (!notesResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<PageList<AutomobileInfo>>.Fail(notesResult.ErrorMessage, notesResult.ErrorType);
                 }
 
-                var carList = notes.Select(note => NoteSerializer.GetEntity(note));
+                var notes = notesResult.Value;
+                var carList = notes.Select(note =>
+                {
+                    var entityResult = NoteSerializer.GetEntity(note);
+                    return entityResult.Success ? entityResult.Value : null;
+                }).Where(car => car != null);
+
                 var result = new PageList<AutomobileInfo>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
-                return result;
+                return ProcessingResult<PageList<AutomobileInfo>>.Ok(result);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                if (NoteSerializer.ProcessResult.Success)
-                {
-                    ProcessResult.WrapException(e);
-                }
-                else
-                {
-                    ProcessResult.PropagandaResult(NoteSerializer.ProcessResult);
-                }
-
-                return null;
+                return ProcessingResult<PageList<AutomobileInfo>>.FromException(ex);
             }
         }
 
-        public override async Task<PageList<AutomobileInfo>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
+        public override async Task<ProcessingResult<AutomobileInfo>> GetEntityByIdAsync(int id)
         {
-            try
+            var noteResult = await GetNoteAsync(id, new AutomobileInfo());
+            if (!noteResult.Success)
             {
-                var notes = await GetNotesAsync(new AutomobileInfo(), null, resourceCollectionParameters);
-                var carList = notes.Select(note => NoteSerializer.GetEntity(note));
-                var result = new PageList<AutomobileInfo>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
-                return result;
+                return ProcessingResult<AutomobileInfo>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
-            catch (Exception e)
+
+            return NoteSerializer.GetEntity(noteResult.Value);
+        }
+
+        public override async Task<ProcessingResult<AutomobileInfo>> CreateAsync(AutomobileInfo entity)
+        {
+            if (entity == null)
             {
-                if (NoteSerializer.ProcessResult.Success)
-                {
-                    ProcessResult.WrapException(e);
-                }
-                else
-                {
-                    ProcessResult.PropagandaResult(NoteSerializer.ProcessResult);
-                }
-
-                return null;
+                return ProcessingResult<AutomobileInfo>.Invalid("Entity cannot be null");
             }
-        }
 
-        public override AutomobileInfo GetEntityById(int id)
-        {
-            var note = GetNote(id, new AutomobileInfo());
-            return note == null ? null : NoteSerializer.GetEntity(note);
-        }
-
-        public override async Task<AutomobileInfo> GetEntityByIdAsync(int id)
-        {
-            var note = await GetNoteAsync(id, new AutomobileInfo());
-            return note == null ? null : NoteSerializer.GetEntity(note);
-        }
-
-        public override AutomobileInfo Create(AutomobileInfo entity)
-        {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
             entity.AuthorId = DefaultAuthor.Id;
-            if (!Validator.IsValidEntity(entity, ProcessResult))
+
+            var validationResult = await Validator.ValidateEntityAsync(entity);
+            if (!validationResult.Success)
             {
-                return null;
+                return ProcessingResult<AutomobileInfo>.Invalid(validationResult.ErrorMessage);
             }
 
-            var note = entity.GetNote(NoteSerializer, DefaultAuthor);
-            NoteManager.Create(note);
-            if (NoteManager.ProcessResult.HasReturnedMessage())
+            var noteResult = NoteSerializer.GetNote(entity);
+            if (!noteResult.Success)
             {
-                ProcessResult.PropagandaResult(NoteManager.ProcessResult);
+                return ProcessingResult<AutomobileInfo>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
 
-            return NoteManager.ProcessResult.Success switch
+            var note = noteResult.Value;
+            note.Author = DefaultAuthor;
+
+            var createdNoteResult = await NoteManager.CreateAsync(note);
+            if (!createdNoteResult.Success)
             {
-                false => null,
-                _ => GetEntityById(note.Id)
-            };
+                return ProcessingResult<AutomobileInfo>.Fail(createdNoteResult.ErrorMessage, createdNoteResult.ErrorType);
+            }
+
+            return await GetEntityByIdAsync(createdNoteResult.Value.Id);
         }
 
-        public override async Task<AutomobileInfo> CreateAsync(AutomobileInfo entity)
+        public override async Task<ProcessingResult<AutomobileInfo>> UpdateAsync(AutomobileInfo entity)
         {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
-            entity.AuthorId = DefaultAuthor.Id;
-            if (!Validator.IsValidEntity(entity, ProcessResult))
+            if (entity == null)
             {
-                return null;
+                return ProcessingResult<AutomobileInfo>.Invalid("Entity cannot be null");
             }
 
-            var note = entity.GetNote(NoteSerializer, DefaultAuthor);
-            await NoteManager.CreateAsync(note);
-            if (NoteManager.ProcessResult.HasReturnedMessage())
+            var curAutoResult = await GetEntityByIdAsync(entity.Id);
+            if (!curAutoResult.Success)
             {
-                ProcessResult.PropagandaResult(NoteManager.ProcessResult);
+                return ProcessingResult<AutomobileInfo>.NotFound("Cannot find automobile in data source");
             }
 
-            if (!NoteManager.ProcessResult.Success)
-            {
-                return null;
-            }
-
-            var newAuto = await GetEntityByIdAsync(note.Id);
-            return newAuto;
-        }
-
-        public override AutomobileInfo Update(AutomobileInfo entity)
-        {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
-            var curAuto = GetEntityById(entity.Id);
-            if (curAuto == null)
-            {
-                ProcessResult.AddErrorMessage("Cannot find automobile in data source");
-                return null;
-            }
-
+            var curAuto = curAutoResult.Value;
             curAuto.Brand = entity.Brand;
             curAuto.Maker = entity.Maker;
             curAuto.MeterReading = entity.MeterReading;
-            curAuto.Pin = entity.Pin;
             curAuto.Year = entity.Year;
+            curAuto.Color = entity.Color;
+            curAuto.Plate = entity.Plate;
 
-            var curNote = curAuto.GetNote(NoteSerializer, DefaultAuthor);
-            NoteManager.Update(curNote);
-
-            switch (NoteManager.ProcessResult.Success)
+            var noteResult = NoteSerializer.GetNote(curAuto);
+            if (!noteResult.Success)
             {
-                case false:
-                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
-                    return null;
-
-                default:
-
-                    return GetEntityById(curAuto.Id);
+                return ProcessingResult<AutomobileInfo>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
+
+            var note = noteResult.Value;
+            note.Author = DefaultAuthor;
+
+            var updatedNoteResult = await NoteManager.UpdateAsync(note);
+            if (!updatedNoteResult.Success)
+            {
+                return ProcessingResult<AutomobileInfo>.Fail(updatedNoteResult.ErrorMessage, updatedNoteResult.ErrorType);
+            }
+
+            return await GetEntityByIdAsync(curAuto.Id);
         }
-
-        public override async Task<AutomobileInfo> UpdateAsync(AutomobileInfo entity)
-        {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
-            var curAuto = await GetEntityByIdAsync(entity.Id);
-            if (curAuto == null)
-            {
-                ProcessResult.AddErrorMessage("Cannot find automobile in data source");
-                return null;
-            }
-
-            curAuto.Brand = entity.Brand;
-            curAuto.Maker = entity.Maker;
-            curAuto.MeterReading = entity.MeterReading;
-            curAuto.Pin = entity.Pin;
-            curAuto.Year = entity.Year;
-
-            var curNote = curAuto.GetNote(NoteSerializer, DefaultAuthor);
-            await NoteManager.UpdateAsync(curNote);
-
-            if (!NoteManager.ProcessResult.Success)
-            {
-                return null;
-            }
-
-            var updatedAuto = await GetEntityByIdAsync(curAuto.Id);
-            return updatedAuto;
-        }
-
-        public override INoteSerializer<AutomobileInfo> NoteSerializer { get; }
     }
 }

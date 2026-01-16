@@ -164,18 +164,16 @@ namespace Hmm.Utility.TestHelp
             DateProvider = mockDateProvider.Object;
 
             // Config mapper
-            var config = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<HmmMappingProfile>();
-            });
-            Mapper = config.CreateMapper();
+            Mapper = CreateMapper(cfg => cfg.AddProfile<HmmMappingProfile>());
 
             // Config API mapper
-            var apiConfig = new MapperConfiguration(cfg =>
-            {
-                cfg.AddProfile<ApiMappingProfile>();
-            });
-            ApiMapper = apiConfig.CreateMapper();
+            ApiMapper = CreateMapper(cfg => cfg.AddProfile<ApiMappingProfile>());
+        }
+
+        private static IMapper CreateMapper(Action<IMapperConfigurationExpression> configure)
+        {
+            var config = new MapperConfiguration(configure);
+            return config.CreateMapper();
         }
 
         private void InsertSeedRecords()

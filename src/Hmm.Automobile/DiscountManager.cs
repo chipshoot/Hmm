@@ -1,6 +1,8 @@
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
 using System.Linq;
@@ -10,177 +12,126 @@ namespace Hmm.Automobile
 {
     public class DiscountManager : EntityManagerBase<GasDiscount>
     {
-        public DiscountManager(INoteSerializer<GasDiscount> noteSerializer, IHmmValidator<GasDiscount> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
+        public DiscountManager(
+            INoteSerialize<GasDiscount> noteSerializer,
+            IHmmValidator<GasDiscount> validator,
+            IHmmNoteManager noteManager,
+            IEntityLookup lookupRepo)
             : base(validator, noteManager, lookupRepo)
         {
             ArgumentNullException.ThrowIfNull(noteSerializer);
             NoteSerializer = noteSerializer;
         }
 
-        public override PageList<GasDiscount> GetEntities(ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            var notes = GetNotes(new GasDiscount(), null,resourceCollectionParameters);
-            if (notes == null)
-            {
-                return null;
-            }
-            var carList = notes.Select(note => NoteSerializer.GetEntity(note));
-            var result = new PageList<GasDiscount>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
-            return result;
-        }
+        public override INoteSerialize<GasDiscount> NoteSerializer { get; }
 
-        public override async Task<PageList<GasDiscount>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null)
+        public override async Task<ProcessingResult<PageList<GasDiscount>>> GetEntitiesAsync(
+            ResourceCollectionParameters resourceCollectionParameters = null)
         {
             try
             {
-                var notes = await GetNotesAsync(new GasDiscount(), null, resourceCollectionParameters);
-                if (notes == null)
+                var notesResult = await GetNotesAsync(new GasDiscount(), null, resourceCollectionParameters);
+                if (!notesResult.Success)
                 {
-                    return null;
+                    return ProcessingResult<PageList<GasDiscount>>.Fail(notesResult.ErrorMessage, notesResult.ErrorType);
                 }
-                var discountList = notes.Select(note => NoteSerializer.GetEntity(note));
+
+                var notes = notesResult.Value;
+                var discountList = notes.Select(note =>
+                {
+                    var entityResult = NoteSerializer.GetEntity(note);
+                    return entityResult.Success ? entityResult.Value : null;
+                }).Where(discount => discount != null);
+
                 var result = new PageList<GasDiscount>(discountList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
-                return result;
+                return ProcessingResult<PageList<GasDiscount>>.Ok(result);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                if (NoteSerializer.ProcessResult.Success)
-                {
-                    ProcessResult.WrapException(e);
-                }
-                else
-                {
-                    ProcessResult.PropagandaResult(NoteSerializer.ProcessResult);
-                }
-
-                return null;
+                return ProcessingResult<PageList<GasDiscount>>.FromException(ex);
             }
         }
 
-        public override GasDiscount GetEntityById(int id)
+        public override async Task<ProcessingResult<GasDiscount>> GetEntityByIdAsync(int id)
         {
-            var note = GetNote(id, new GasDiscount());
-            return note == null ? null : NoteSerializer.GetEntity(note);
+            var noteResult = await GetNoteAsync(id, new GasDiscount());
+            if (!noteResult.Success)
+            {
+                return ProcessingResult<GasDiscount>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
+            }
+
+            return NoteSerializer.GetEntity(noteResult.Value);
         }
 
-        public override async Task<GasDiscount> GetEntityByIdAsync(int id)
+        public override async Task<ProcessingResult<GasDiscount>> CreateAsync(GasDiscount entity)
         {
-            var note = await GetNoteAsync(id, new GasDiscount());
-            return note == null ? null : NoteSerializer.GetEntity(note);
-        }
+            if (entity == null)
+            {
+                return ProcessingResult<GasDiscount>.Invalid("Entity cannot be null");
+            }
 
-        public override GasDiscount Create(GasDiscount entity)
-        {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
             entity.AuthorId = DefaultAuthor.Id;
-            if (!Validator.IsValidEntity(entity, ProcessResult))
-            {
-                return null;
-            }
-            var note = entity.GetNote(NoteSerializer, DefaultAuthor);
-            NoteManager.Create(note);
-            switch (NoteManager.ProcessResult.Success)
-            {
-                case false:
-                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
-                    return null;
 
-                default:
-                    return GetEntityById(note.Id);
+            var validationResult = await Validator.ValidateEntityAsync(entity);
+            if (!validationResult.Success)
+            {
+                return ProcessingResult<GasDiscount>.Invalid(validationResult.ErrorMessage);
             }
+
+            var noteResult = NoteSerializer.GetNote(entity);
+            if (!noteResult.Success)
+            {
+                return ProcessingResult<GasDiscount>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
+            }
+
+            var note = noteResult.Value;
+            note.Author = DefaultAuthor;
+
+            var createdNoteResult = await NoteManager.CreateAsync(note);
+            if (!createdNoteResult.Success)
+            {
+                return ProcessingResult<GasDiscount>.Fail(createdNoteResult.ErrorMessage, createdNoteResult.ErrorType);
+            }
+
+            return await GetEntityByIdAsync(createdNoteResult.Value.Id);
         }
 
-        public override async Task<GasDiscount> CreateAsync(GasDiscount entity)
+        public override async Task<ProcessingResult<GasDiscount>> UpdateAsync(GasDiscount entity)
         {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
-            entity.AuthorId = DefaultAuthor.Id;
-            if (!Validator.IsValidEntity(entity, ProcessResult))
+            if (entity == null)
             {
-                return null;
-            }
-            var note = entity.GetNote(NoteSerializer, DefaultAuthor);
-            await NoteManager.CreateAsync(note);
-            switch (NoteManager.ProcessResult.Success)
-            {
-                case false:
-                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
-                    return null;
-
-                default:
-                    var newDiscount = await GetEntityByIdAsync(note.Id);
-                    return newDiscount;
-            }
-        }
-
-        public override GasDiscount Update(GasDiscount entity)
-        {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
-            var curDiscount = GetEntityById(entity.Id);
-            if (curDiscount == null)
-            {
-                ProcessResult.AddErrorMessage("Cannot find discount in data source");
-                return null;
+                return ProcessingResult<GasDiscount>.Invalid("Entity cannot be null");
             }
 
+            var curDiscountResult = await GetEntityByIdAsync(entity.Id);
+            if (!curDiscountResult.Success)
+            {
+                return ProcessingResult<GasDiscount>.NotFound("Cannot find discount in data source");
+            }
+
+            var curDiscount = curDiscountResult.Value;
             curDiscount.Amount = entity.Amount;
             curDiscount.Comment = entity.Comment;
             curDiscount.DiscountType = entity.DiscountType;
             curDiscount.IsActive = entity.IsActive;
             curDiscount.Program = entity.Program;
 
-            var curNote = curDiscount.GetNote(NoteSerializer, DefaultAuthor);
-            NoteManager.Update(curNote);
-
-            switch (NoteManager.ProcessResult.Success)
+            var noteResult = NoteSerializer.GetNote(curDiscount);
+            if (!noteResult.Success)
             {
-                case false:
-                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
-                    return null;
-
-                default:
-                    return GetEntityById(curDiscount.Id);
+                return ProcessingResult<GasDiscount>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
+
+            var note = noteResult.Value;
+            note.Author = DefaultAuthor;
+
+            var updatedNoteResult = await NoteManager.UpdateAsync(note);
+            if (!updatedNoteResult.Success)
+            {
+                return ProcessingResult<GasDiscount>.Fail(updatedNoteResult.ErrorMessage, updatedNoteResult.ErrorType);
+            }
+
+            return await GetEntityByIdAsync(curDiscount.Id);
         }
-
-        public override async Task<GasDiscount> UpdateAsync(GasDiscount entity)
-        {
-            ArgumentNullException.ThrowIfNull(entity);
-
-            // ReSharper disable once PossibleNullReferenceException
-            var curDiscount = await GetEntityByIdAsync(entity.Id);
-            if (curDiscount == null)
-            {
-                ProcessResult.AddErrorMessage("Cannot find discount in data source");
-                return null;
-            }
-
-            curDiscount.Amount = entity.Amount;
-            curDiscount.Comment = entity.Comment;
-            curDiscount.DiscountType = entity.DiscountType;
-            curDiscount.IsActive = entity.IsActive;
-            curDiscount.Program = entity.Program;
-
-            var curNote = curDiscount.GetNote(NoteSerializer, DefaultAuthor);
-            await NoteManager.UpdateAsync(curNote);
-
-            switch (NoteManager.ProcessResult.Success)
-            {
-                case false:
-                    ProcessResult.PropagandaResult(NoteManager.ProcessResult);
-                    return null;
-
-                default:
-                    var updDiscount = await GetEntityByIdAsync(curDiscount.Id);
-                    return updDiscount;
-            }
-        }
-
-        public override INoteSerializer<GasDiscount> NoteSerializer { get; }
     }
 }

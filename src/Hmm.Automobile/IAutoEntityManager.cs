@@ -1,5 +1,8 @@
-﻿using Hmm.Automobile.DomainEntity;
+using Hmm.Automobile.DomainEntity;
+using Hmm.Core;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System.Threading.Tasks;
 
@@ -7,28 +10,20 @@ namespace Hmm.Automobile
 {
     public interface IAutoEntityManager<T> where T : AutomobileBase
     {
-        INoteSerializer<T> NoteSerializer { get; }
+        INoteSerialize<T> NoteSerializer { get; }
 
         IHmmValidator<T> Validator { get; }
 
-        AuthorDb DefaultAuthor { get; }
+        Author DefaultAuthor { get; }
 
-        T GetEntityById(int id);
+        Task<ProcessingResult<T>> GetEntityByIdAsync(int id);
 
-        Task<T> GetEntityByIdAsync(int id);
+        Task<ProcessingResult<PageList<T>>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameter = null);
 
-        PageList<T> GetEntities(ResourceCollectionParameters resourceCollectionParameter = null);
+        Task<ProcessingResult<T>> CreateAsync(T entity);
 
-        Task<PageList<T>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameters = null);
+        Task<ProcessingResult<T>> UpdateAsync(T entity);
 
-        T Create(T entity);
-
-        Task<T> CreateAsync(T entity);
-
-        T Update(T entity);
-
-        Task<T> UpdateAsync(T entity);
-
-        bool IsEntityOwner(int id);
+        Task<bool> IsEntityOwnerAsync(int id);
     }
 }

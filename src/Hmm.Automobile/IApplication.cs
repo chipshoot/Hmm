@@ -1,19 +1,18 @@
-﻿using Hmm.Automobile.DomainEntity;
-using Hmm.Core;
-using Hmm.Core.DomainEntity;
+using Hmm.Automobile.DomainEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
     public interface IApplication
     {
-        bool Register(IAutoEntityManager<AutomobileInfo> automobileMan,
+        Task<ProcessingResult<bool>> RegisterAsync(
+            IAutoEntityManager<AutomobileInfo> automobileMan,
             IAutoEntityManager<GasDiscount> discountMan,
             IEntityLookup lookupRepo);
 
-        NoteCatalog GetCatalog(NoteCatalogType entityType, IEntityLookup lookupRepo);
-
-        ProcessingResult ProcessingResult { get; }
+        Task<NoteCatalog> GetCatalogAsync(NoteCatalogType entityType, IEntityLookup lookupRepo);
     }
 }

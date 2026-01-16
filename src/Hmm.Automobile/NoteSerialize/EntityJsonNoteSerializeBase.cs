@@ -1,4 +1,5 @@
 using Hmm.Core.NoteSerializer;
+using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
@@ -19,24 +20,48 @@ namespace Hmm.Automobile.NoteSerialize
         {
         }
 
-        public override HmmNote GetNote(in T entity)
+        public override ProcessingResult<HmmNote> GetNote(in T entity)
         {
             if (entity == null)
             {
-                ProcessResult.AddWaningMessage("Null entity found when trying to serialize entity to note", true);
-                return null;
+                return ProcessingResult<HmmNote>.Fail(
+                    "Null entity found when trying to serialize entity to note",
+                    ErrorCategory.NotFound);
             }
 
-            var subject = entity.GetSubject();
-            var note = new DomainEntity.HmmNote
+            var subject = GetSubject(entity);
+            var content = GetNoteSerializationText(entity);
+
+            if (string.IsNullOrEmpty(content))
+            {
+                return ProcessingResult<HmmNote>.Fail(
+                    "Failed to serialize entity content to JSON",
+                    ErrorCategory.MappingError);
+            }
+
+            var note = new HmmNote
             {
                 Id = entity.Id,
                 Subject = subject,
-                Content = GetNoteSerializationText(entity),
+                Content = content,
                 Catalog = Catalog
             };
 
-            return note;
+            return ProcessingResult<HmmNote>.Ok(note);
+        }
+
+        /// <summary>
+        /// Gets the subject string for the entity based on its type.
+        /// </summary>
+        protected virtual string GetSubject(T entity)
+        {
+            return entity switch
+            {
+                AutomobileInfo => AutomobileConstant.AutoMobileRecordSubject,
+                GasDiscount => AutomobileConstant.GasDiscountRecordSubject,
+                GasLog log => GasLog.GetNoteSubject(log.AutomobileId),
+                _ => typeof(T).Name
+            };
         }
 
         /// <summary>
@@ -45,12 +70,12 @@ namespace Hmm.Automobile.NoteSerialize
         /// </summary>
         /// <param name="note">The note containing JSON content.</param>
         /// <param name="entityName">The expected entity name in the JSON (e.g., "gasLog", "automobile").</param>
-        /// <returns>Tuple of (entityElement, fullDocument) or (null, null) if parsing fails.</returns>
-        protected (JsonElement? entityElement, JsonDocument document) GetEntityRoot(DomainEntity.HmmNote note, string entityName)
+        /// <returns>Tuple of (entityElement, fullDocument, errorMessage) or (null, null, errorMessage) if parsing fails.</returns>
+        protected (JsonElement? entityElement, JsonDocument document, string error) GetEntityRoot(HmmNote note, string entityName)
         {
             if (note == null || string.IsNullOrEmpty(entityName))
             {
-                return (null, null);
+                return (null, null, "Note or entity name is null");
             }
 
             try
@@ -58,8 +83,7 @@ namespace Hmm.Automobile.NoteSerialize
                 var noteContent = note.Content;
                 if (string.IsNullOrEmpty(noteContent))
                 {
-                    ProcessResult.AddErrorMessage("Empty note content found", logWarning: true);
-                    return (null, null);
+                    return (null, null, "Empty note content found");
                 }
 
                 var document = JsonDocument.Parse(noteContent);
@@ -70,14 +94,14 @@ namespace Hmm.Automobile.NoteSerialize
                 // Expected structure: { "note": { "content": { "entityName": { ... } } } }
                 if (!document.RootElement.TryGetProperty("note", out var noteElement))
                 {
-                    ProcessResult.AddErrorMessage($"Missing 'note' root element in JSON", logWarning: true);
-                    return (null, null);
+                    document.Dispose();
+                    return (null, null, "Missing 'note' element in JSON");
                 }
 
                 if (!noteElement.TryGetProperty("content", out var contentElement))
                 {
-                    ProcessResult.AddErrorMessage($"Missing 'content' element in note JSON", logWarning: true);
-                    return (null, null);
+                    document.Dispose();
+                    return (null, null, "Missing 'content' element in note JSON");
                 }
 
                 // Use case-insensitive property lookup for entity name
@@ -93,71 +117,23 @@ namespace Hmm.Automobile.NoteSerialize
 
                 if (!found)
                 {
-                    ProcessResult.AddErrorMessage($"Missing '{entityName}' element in content JSON", logWarning: true);
-                    return (null, null);
+                    document.Dispose();
+                    return (null, null, $"Missing '{entityName}' element in content JSON");
                 }
 
-                return (entityElement, document);
+                return (entityElement, document, null);
             }
             catch (JsonException ex)
             {
-                ProcessResult.AddErrorMessage($"Invalid JSON format: {ex.Message}", logWarning: false);
-                return (null, null);
+                return (null, null, $"Invalid JSON format: {ex.Message}");
             }
             catch (Exception ex)
             {
-                ProcessResult.WrapException(ex);
-                return (null, null);
+                return (null, null, $"Error parsing JSON: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Helper method to safely get a string property from a JsonElement.
-        /// </summary>
-        /// <param name="element">The JSON element.</param>
-        /// <param name="propertyName">The property name to retrieve.</param>
-        /// <param name="defaultValue">Default value if property not found.</param>
-        /// <returns>The string value or default.</returns>
-        protected string GetStringProperty(JsonElement element, string propertyName, string defaultValue = null)
-        {
-            if (element.TryGetProperty(propertyName, out var property))
-            {
-                return property.GetString() ?? defaultValue;
-            }
-            return defaultValue;
-        }
-
-        /// <summary>
-        /// Helper method to safely get an integer property from a JsonElement.
-        /// </summary>
-        /// <param name="element">The JSON element.</param>
-        /// <param name="propertyName">The property name to retrieve.</param>
-        /// <param name="defaultValue">Default value if property not found.</param>
-        /// <returns>The integer value or default.</returns>
-        protected int GetIntProperty(JsonElement element, string propertyName, int defaultValue = 0)
-        {
-            if (element.TryGetProperty(propertyName, out var property) && property.TryGetInt32(out var value))
-            {
-                return value;
-            }
-            return defaultValue;
-        }
-
-        /// <summary>
-        /// Helper method to safely get a DateTime property from a JsonElement.
-        /// Supports ISO 8601 format.
-        /// </summary>
-        /// <param name="element">The JSON element.</param>
-        /// <param name="propertyName">The property name to retrieve.</param>
-        /// <param name="defaultValue">Default value if property not found.</param>
-        /// <returns>The DateTime value or default.</returns>
-        protected DateTime GetDateTimeProperty(JsonElement element, string propertyName, DateTime? defaultValue = null)
-        {
-            if (element.TryGetProperty(propertyName, out var property) && property.TryGetDateTime(out var value))
-            {
-                return value;
-            }
-            return defaultValue ?? DateTime.MinValue;
-        }
+        // Note: Helper methods GetStringProperty, GetIntProperty, GetDateTimeProperty, GetBoolProperty, GetDoubleProperty
+        // are inherited from DefaultJsonNoteSerializer<T>
     }
 }

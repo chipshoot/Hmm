@@ -4,7 +4,6 @@ using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;

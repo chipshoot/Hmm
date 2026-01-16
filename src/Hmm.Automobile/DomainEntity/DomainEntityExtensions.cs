@@ -1,149 +1,49 @@
-//using Hmm.Core;
-//using Hmm.Core.DomainEntity;
-//using Hmm.Utility.Dal.Query;
-//using Hmm.Utility.Validation;
-//using System;
-//using System.Linq;
-//using System.Threading.Tasks;
+using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Query;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
-//namespace Hmm.Automobile.DomainEntity
-//{
-//    public static class DomainEntityExtensions
-//    {
-//        public static string GetSubject(this AutomobileBase entity)
-//        {
-//            var subject = entity switch
-//            {
-//                AutomobileInfo => AutomobileConstant.AutoMobileRecordSubject,
-//                GasDiscount => AutomobileConstant.GasDiscountRecordSubject,
-//                GasLog => AutomobileConstant.GasLogRecordSubject,
-//                _ => string.Empty
-//            };
+namespace Hmm.Automobile.DomainEntity
+{
+    public static class DomainEntityExtensions
+    {
+        public static string GetSubject(this AutomobileBase entity)
+        {
+            return entity switch
+            {
+                AutomobileInfo => AutomobileConstant.AutoMobileRecordSubject,
+                GasDiscount => AutomobileConstant.GasDiscountRecordSubject,
+                GasLog => AutomobileConstant.GasLogRecordSubject,
+                _ => string.Empty
+            };
+        }
 
-//            return subject;
-//        }
+        public static async Task<int> GetCatalogIdAsync(this AutomobileBase entity, IEntityLookup lookup)
+        {
+            ArgumentNullException.ThrowIfNull(lookup);
 
-//        public static int GetCatalogId(this AutomobileBase entity, IEntityLookup lookup)
-//        {
-//            if (lookup == null) throw new ArgumentNullException(nameof(lookup));
-//            var catalogId = 0;
-//            switch (entity)
-//            {
-//                case AutomobileInfo:
-//                    var autoCat = lookup.GetEntities<NoteCatalog>()
-//                        .FirstOrDefault(cat => cat.Name == AutomobileConstant.AutoMobileInfoCatalogName);
-//                    if (autoCat != null)
-//                    {
-//                        catalogId = autoCat.Id;
-//                    }
-//                    break;
+            var catalogName = entity switch
+            {
+                AutomobileInfo => AutomobileConstant.AutoMobileInfoCatalogName,
+                GasDiscount => AutomobileConstant.GasDiscountCatalogName,
+                GasLog => AutomobileConstant.GasLogCatalogName,
+                _ => null
+            };
 
-//                case GasDiscount:
-//                    var discountCat = lookup.GetEntities<NoteCatalog>()
-//                        .FirstOrDefault(cat => cat.Name == AutomobileConstant.GasDiscountCatalogName);
-//                    if (discountCat != null)
-//                    {
-//                        catalogId = discountCat.Id;
-//                    }
-//                    break;
+            if (string.IsNullOrEmpty(catalogName))
+            {
+                return 0;
+            }
 
-//                case GasLog:
-//                    var logCat = lookup.GetEntities<NoteCatalog>()
-//                        .FirstOrDefault(cat => cat.Name == AutomobileConstant.GasLogCatalogName);
-//                    if (logCat != null)
-//                    {
-//                        catalogId = logCat.Id;
-//                    }
-//                    break;
+            var catalogsResult = await lookup.GetEntitiesAsync<NoteCatalog>(cat => cat.Name == catalogName);
+            if (!catalogsResult.Success || catalogsResult.Value == null)
+            {
+                return 0;
+            }
 
-//                default:
-//                    catalogId = 0;
-//                    break;
-//            }
-
-//            return catalogId;
-//        }
-
-//        public static async Task<int> GetCatalogIdAsync(this AutomobileBase entity, IEntityLookup lookup)
-//        {
-//            if (lookup == null) throw new ArgumentNullException(nameof(lookup));
-//            var catalogId = 0;
-//            switch (entity)
-//            {
-//                case AutomobileInfo:
-//                    var autoCats = await lookup.GetEntitiesAsync<NoteCatalog>(cat =>
-//                        cat.Name == AutomobileConstant.AutoMobileInfoCatalogName);
-//                    var autoCat = autoCats.FirstOrDefault();
-//                    if (autoCat != null)
-//                    {
-//                        catalogId = autoCat.Id;
-//                    }
-//                    break;
-
-//                case GasDiscount:
-//                    var discountCats = await lookup.GetEntitiesAsync<NoteCatalog>(cat => cat.Name == AutomobileConstant.GasDiscountCatalogName);
-//                    var discountCat = discountCats.FirstOrDefault();
-//                    if (discountCat != null)
-//                    {
-//                        catalogId = discountCat.Id;
-//                    }
-//                    break;
-
-//                case GasLog:
-//                    var logCats = await lookup.GetEntitiesAsync<NoteCatalog>(cat => cat.Name == AutomobileConstant.GasLogCatalogName);
-//                    var logCat = logCats.FirstOrDefault();
-//                    if (logCat != null)
-//                    {
-//                        catalogId = logCat.Id;
-//                    }
-//                    break;
-
-//                default:
-//                    catalogId = 0;
-//                    break;
-//            }
-
-//            return catalogId;
-//        }
-
-//        public static HmmNote GetNote(this AutomobileInfo automobile, INoteSerializer<AutomobileInfo> serializer, AuthorDb author)
-//        {
-//            ArgumentNullException.ThrowIfNull(author);
-//            if (automobile == null)
-//            {
-//                return null;
-//            }
-
-//            var note = serializer.GetNote(automobile);
-//            note.Author = author;
-//            return note;
-//        }
-
-//        public static HmmNote GetNote(this GasDiscount discount, INoteSerializer<GasDiscount> serializer, AuthorDb author)
-//        {
-//            ArgumentNullException.ThrowIfNull(author);
-//            if (discount == null)
-//            {
-//                return null;
-//            }
-
-//            var note = serializer.GetNote(discount);
-//            note.Author = author;
-//            return note;
-//        }
-
-//        public static HmmNote GetNote(this GasLog log, INoteSerializer<GasLog> serializer, AuthorDb author)
-//        {
-//            ArgumentNullException.ThrowIfNull(author);
-//            if (log == null)
-//            {
-//                return null;
-//            }
-
-//            var note = serializer.GetNote(log);
-//            note.Subject = GasLog.GetNoteSubject(log.Car.Id);
-//            note.Author = author;
-//            return note;
-//        }
-//    }
-//}
+            var catalog = catalogsResult.Value.FirstOrDefault();
+            return catalog?.Id ?? 0;
+        }
+    }
+}

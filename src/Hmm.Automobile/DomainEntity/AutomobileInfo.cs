@@ -45,8 +45,6 @@ namespace Hmm.Automobile.DomainEntity
         [Range(0, 200)]
         public decimal FuelTankCapacity { get; set; }
 
-        public MeasurementUnit FuelUnit { get; set; } = MeasurementUnit.Liter;
-
         [Range(0, 200)]
         public decimal CityMPG { get; set; }
 
@@ -59,8 +57,6 @@ namespace Hmm.Automobile.DomainEntity
         // ===== Meter/Odometer =====
         [Range(0, long.MaxValue)]
         public long MeterReading { get; set; }
-
-        public MeasurementUnit MeterUnit { get; set; } = MeasurementUnit.Kilometer;
 
         public int? PurchaseMeterReading { get; set; }
 
@@ -139,13 +135,5 @@ namespace Hmm.Automobile.DomainEntity
         Financed,
         Leased,
         Company
-    }
-
-    public enum MeasurementUnit
-    {
-        Mile,
-        Kilometer,
-        Gallon,
-        Liter
     }
 }
