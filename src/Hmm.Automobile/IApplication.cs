@@ -14,5 +14,7 @@ namespace Hmm.Automobile
             IEntityLookup lookupRepo);
 
         Task<NoteCatalog> GetCatalogAsync(NoteCatalogType entityType, IEntityLookup lookupRepo);
+
+        NoteCatalog GetCatalog(NoteCatalogType entityType, IEntityLookup lookupRepo);
     }
 }

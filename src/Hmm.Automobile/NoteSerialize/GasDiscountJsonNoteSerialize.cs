@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile.NoteSerialize
 {
@@ -32,16 +33,16 @@ namespace Hmm.Automobile.NoteSerialize
             _lookupRepo = lookupRepo;
         }
 
-        public override ProcessingResult<GasDiscount> GetEntity(HmmNote note)
+        public override Task<ProcessingResult<GasDiscount>> GetEntity(HmmNote note)
         {
             try
             {
                 var (discountElement, document, error) = GetEntityRoot(note, AutomobileConstant.GasDiscountRecordSubject);
                 if (!discountElement.HasValue || document == null)
                 {
-                    return ProcessingResult<GasDiscount>.Fail(
+                    return Task.FromResult(ProcessingResult<GasDiscount>.Fail(
                         error ?? "Failed to parse gas discount from note",
-                        ErrorCategory.MappingError);
+                        ErrorCategory.MappingError));
                 }
 
                 var discountJson = discountElement.Value;
@@ -68,11 +69,11 @@ namespace Hmm.Automobile.NoteSerialize
                 };
 
                 document.Dispose();
-                return ProcessingResult<GasDiscount>.Ok(discount);
+                return Task.FromResult(ProcessingResult<GasDiscount>.Ok(discount));
             }
             catch (Exception ex)
             {
-                return ProcessingResult<GasDiscount>.FromException(ex);
+                return Task.FromResult(ProcessingResult<GasDiscount>.FromException(ex));
             }
         }
 

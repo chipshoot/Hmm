@@ -3,6 +3,7 @@ using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core.Map.DomainEntity;
 
@@ -20,13 +21,13 @@ namespace Hmm.Automobile.NoteSerialize
         {
         }
 
-        public override ProcessingResult<HmmNote> GetNote(in T entity)
+        public override Task<ProcessingResult<HmmNote>> GetNote(in T entity)
         {
             if (entity == null)
             {
-                return ProcessingResult<HmmNote>.Fail(
+                return Task.FromResult(ProcessingResult<HmmNote>.Fail(
                     "Null entity found when trying to serialize entity to note",
-                    ErrorCategory.NotFound);
+                    ErrorCategory.NotFound));
             }
 
             var subject = GetSubject(entity);
@@ -34,9 +35,9 @@ namespace Hmm.Automobile.NoteSerialize
 
             if (string.IsNullOrEmpty(content))
             {
-                return ProcessingResult<HmmNote>.Fail(
+                return Task.FromResult(ProcessingResult<HmmNote>.Fail(
                     "Failed to serialize entity content to JSON",
-                    ErrorCategory.MappingError);
+                    ErrorCategory.MappingError));
             }
 
             var note = new HmmNote
@@ -47,7 +48,7 @@ namespace Hmm.Automobile.NoteSerialize
                 Catalog = Catalog
             };
 
-            return ProcessingResult<HmmNote>.Ok(note);
+            return Task.FromResult(ProcessingResult<HmmNote>.Ok(note));
         }
 
         /// <summary>
@@ -60,6 +61,7 @@ namespace Hmm.Automobile.NoteSerialize
                 AutomobileInfo => AutomobileConstant.AutoMobileRecordSubject,
                 GasDiscount => AutomobileConstant.GasDiscountRecordSubject,
                 GasLog log => GasLog.GetNoteSubject(log.AutomobileId),
+                GasStation => AutomobileConstant.GasStationRecordSubject,
                 _ => typeof(T).Name
             };
         }

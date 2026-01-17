@@ -1,5 +1,4 @@
 using Hmm.Automobile.DomainEntity;
-using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,16 +9,17 @@ using System.Threading.Tasks;
 namespace Hmm.Automobile.NoteSerialize
 {
     /// <summary>
-    /// JSON serializer for GasStation entities.
-    /// Handles serialization/deserialization of GasStation objects to/from JSON.
+    /// Helper class for parsing GasStation references in GasLog JSON.
+    /// Supports: station ID (for lookup), string name, or full station object.
+    /// This is used by GasLogJsonNoteSerialize to handle station references.
     /// </summary>
-    public class GasStationJsonSerializer
+    public class GasStationXRefSerializer
     {
         private readonly IAutoEntityManager<GasStation> _stationManager;
         private readonly ILogger _logger;
         private readonly JsonSerializerOptions _jsonOptions;
 
-        public GasStationJsonSerializer(
+        public GasStationXRefSerializer(
             IAutoEntityManager<GasStation> stationManager,
             ILogger logger,
             JsonSerializerOptions jsonOptions = null)
@@ -81,14 +81,17 @@ namespace Hmm.Automobile.NoteSerialize
                     }
 
                     // Otherwise, deserialize as inline station object
-                    var station = JsonSerializer.Deserialize<GasStation>(
-                        stationElement.GetRawText(), _jsonOptions);
+                    var station = new GasStation
+                    {
+                        Name = GetStringProperty(stationElement, "name"),
+                        Address = GetStringProperty(stationElement, "address"),
+                        City = GetStringProperty(stationElement, "city"),
+                        State = GetStringProperty(stationElement, "state"),
+                        ZipCode = GetStringProperty(stationElement, "zipCode"),
+                        Description = GetStringProperty(stationElement, "description")
+                    };
 
-                    return station != null
-                        ? ProcessingResult<GasStation>.Ok(station)
-                        : ProcessingResult<GasStation>.Fail(
-                            "Failed to deserialize station object",
-                            ErrorCategory.MappingError);
+                    return ProcessingResult<GasStation>.Ok(station);
                 }
 
                 return ProcessingResult<GasStation>.Ok(null, "No valid station data found");
@@ -191,7 +194,7 @@ namespace Hmm.Automobile.NoteSerialize
             }
 
             var result = await _stationManager.GetEntityByIdAsync(stationId);
-            
+
             if (!result.Success)
             {
                 _logger.LogWarning("Cannot find gas station with ID: {StationId}", stationId);
@@ -217,8 +220,17 @@ namespace Hmm.Automobile.NoteSerialize
             try
             {
                 // Try to find existing station by name
-                var stations = await _stationManager.GetEntitiesAsync();
-                var existingStation = stations.Value?.FirstOrDefault(s =>
+                var stationsResult = await _stationManager.GetEntitiesAsync();
+                if (!stationsResult.Success || stationsResult.Value == null)
+                {
+                    return ProcessingResult<GasStation>.Ok(new GasStation
+                    {
+                        Name = stationName,
+                        Description = $"Gas station: {stationName}"
+                    });
+                }
+
+                var existingStation = stationsResult.Value.FirstOrDefault(s =>
                     s.Name.Equals(stationName, StringComparison.OrdinalIgnoreCase));
 
                 if (existingStation != null)
@@ -233,14 +245,22 @@ namespace Hmm.Automobile.NoteSerialize
                     Description = $"Gas station: {stationName}"
                 };
 
-                return ProcessingResult<GasStation>.Ok(newStation)
-                    .WithInfo($"Created transient station: {stationName}");
+                return ProcessingResult<GasStation>.Ok(newStation);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error finding or creating station by name: {StationName}", stationName);
                 return ProcessingResult<GasStation>.FromException(ex);
             }
+        }
+
+        private static string GetStringProperty(JsonElement element, string propertyName, string defaultValue = null)
+        {
+            if (element.TryGetProperty(propertyName, out var property))
+            {
+                return property.GetString() ?? defaultValue;
+            }
+            return defaultValue;
         }
     }
 }

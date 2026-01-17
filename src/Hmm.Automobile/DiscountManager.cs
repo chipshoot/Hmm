@@ -37,11 +37,13 @@ namespace Hmm.Automobile
                 }
 
                 var notes = notesResult.Value;
-                var discountList = notes.Select(note =>
+                var discountTasks = notes.Select(async note =>
                 {
-                    var entityResult = NoteSerializer.GetEntity(note);
+                    var entityResult = await NoteSerializer.GetEntity(note);
                     return entityResult.Success ? entityResult.Value : null;
-                }).Where(discount => discount != null);
+                });
+                var discounts = await Task.WhenAll(discountTasks);
+                var discountList = discounts.Where(discount => discount != null);
 
                 var result = new PageList<GasDiscount>(discountList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
                 return ProcessingResult<PageList<GasDiscount>>.Ok(result);
@@ -60,7 +62,7 @@ namespace Hmm.Automobile
                 return ProcessingResult<GasDiscount>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
 
-            return NoteSerializer.GetEntity(noteResult.Value);
+            return await NoteSerializer.GetEntity(noteResult.Value);
         }
 
         public override async Task<ProcessingResult<GasDiscount>> CreateAsync(GasDiscount entity)
@@ -78,7 +80,7 @@ namespace Hmm.Automobile
                 return ProcessingResult<GasDiscount>.Invalid(validationResult.ErrorMessage);
             }
 
-            var noteResult = NoteSerializer.GetNote(entity);
+            var noteResult = await NoteSerializer.GetNote(entity);
             if (!noteResult.Success)
             {
                 return ProcessingResult<GasDiscount>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
@@ -116,7 +118,7 @@ namespace Hmm.Automobile
             curDiscount.IsActive = entity.IsActive;
             curDiscount.Program = entity.Program;
 
-            var noteResult = NoteSerializer.GetNote(curDiscount);
+            var noteResult = await NoteSerializer.GetNote(curDiscount);
             if (!noteResult.Success)
             {
                 return ProcessingResult<GasDiscount>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Hmm.Automobile.NoteSerialize
 {
@@ -31,16 +32,16 @@ namespace Hmm.Automobile.NoteSerialize
             _lookupRepo = lookupRepo;
         }
 
-        public override ProcessingResult<AutomobileInfo> GetEntity(HmmNote note)
+        public override Task<ProcessingResult<AutomobileInfo>> GetEntity(HmmNote note)
         {
             try
             {
                 var (automobileElement, document, error) = GetEntityRoot(note, AutomobileConstant.AutoMobileRecordSubject);
                 if (!automobileElement.HasValue || document == null)
                 {
-                    return ProcessingResult<AutomobileInfo>.Fail(
+                    return Task.FromResult(ProcessingResult<AutomobileInfo>.Fail(
                         error ?? "Failed to parse automobile from note",
-                        ErrorCategory.MappingError);
+                        ErrorCategory.MappingError));
                 }
 
                 var autoJson = automobileElement.Value;
@@ -107,11 +108,11 @@ namespace Hmm.Automobile.NoteSerialize
                 };
 
                 document.Dispose();
-                return ProcessingResult<AutomobileInfo>.Ok(automobile);
+                return Task.FromResult(ProcessingResult<AutomobileInfo>.Ok(automobile));
             }
             catch (Exception ex)
             {
-                return ProcessingResult<AutomobileInfo>.FromException(ex);
+                return Task.FromResult(ProcessingResult<AutomobileInfo>.FromException(ex));
             }
         }
 

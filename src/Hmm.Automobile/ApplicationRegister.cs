@@ -21,6 +21,7 @@ namespace Hmm.Automobile
         private NoteCatalog _automobileCatalog;
         private NoteCatalog _gasDiscountCatalog;
         private NoteCatalog _gasLogCatalog;
+        private NoteCatalog _gasStationCatalog;
 
         public ApplicationRegister(IConfiguration configuration)
         {
@@ -145,6 +146,7 @@ namespace Hmm.Automobile
                 NoteCatalogType.Automobile => AutomobileConstant.AutoMobileInfoCatalogName,
                 NoteCatalogType.GasDiscount => AutomobileConstant.GasDiscountCatalogName,
                 NoteCatalogType.GasLog => AutomobileConstant.GasLogCatalogName,
+                NoteCatalogType.GasStation => AutomobileConstant.GasStationCatalogName,
                 _ => null
             };
 
@@ -159,6 +161,7 @@ namespace Hmm.Automobile
                 NoteCatalogType.Automobile => _automobileCatalog,
                 NoteCatalogType.GasDiscount => _gasDiscountCatalog,
                 NoteCatalogType.GasLog => _gasLogCatalog,
+                NoteCatalogType.GasStation => _gasStationCatalog,
                 _ => null
             };
 
@@ -189,10 +192,18 @@ namespace Hmm.Automobile
                     case NoteCatalogType.GasLog:
                         _gasLogCatalog = catalog;
                         break;
+                    case NoteCatalogType.GasStation:
+                        _gasStationCatalog = catalog;
+                        break;
                 }
             }
 
             return catalog;
+        }
+
+        public NoteCatalog GetCatalog(NoteCatalogType entityType, IEntityLookup lookupRepo)
+        {
+            return GetCatalogAsync(entityType, lookupRepo).GetAwaiter().GetResult();
         }
 
         private class SeedingEntityRoot

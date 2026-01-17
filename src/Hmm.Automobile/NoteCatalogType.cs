@@ -6,6 +6,8 @@
 
         GasDiscount,
 
-        GasLog
+        GasLog,
+
+        GasStation
     }
 }

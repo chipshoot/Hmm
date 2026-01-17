@@ -22,7 +22,7 @@ namespace Hmm.Automobile.NoteSerialize
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
         private readonly IAutoEntityManager<GasStation> _stationManager;
         private readonly IEntityLookup _lookupRepo;
-        private readonly GasStationJsonSerializer _stationSerializer;
+        private readonly GasStationXRefSerializer _stationSerializer;
 
         public GasLogJsonNoteSerialize(
             IApplication app,
@@ -45,8 +45,8 @@ namespace Hmm.Automobile.NoteSerialize
             _stationManager = stationManager;
             _lookupRepo = lookupRepo;
 
-            // Initialize station serializer
-            _stationSerializer = new GasStationJsonSerializer(stationManager, logger, JsonOptions);
+            // Initialize station serializer for cross-references
+            _stationSerializer = new GasStationXRefSerializer(stationManager, logger, JsonOptions);
         }
 
         public override async Task<ProcessingResult<GasLog>> GetEntity(HmmNote note)

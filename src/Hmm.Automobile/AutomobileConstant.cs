@@ -10,19 +10,26 @@ namespace Hmm.Automobile
 
         public const string GasLogCatalogName = "Hmm.AutomobileMan.GasLog";
 
+        public const string GasStationCatalogName = "Hmm.AutomobileMan.GasStation";
+
         /// <summary>
-        /// Base subject is used for root element of <see cref="AutomobileInfo"/> note XML content 
+        /// Base subject is used for root element of <see cref="AutomobileInfo"/> note XML content
         /// </summary>
         public const string AutoMobileRecordSubject = "Automobile";
 
         /// <summary>
-        /// Base subject is used for root element of <see cref="GasDiscount"/> note XML content 
+        /// Base subject is used for root element of <see cref="GasDiscount"/> note XML content
         /// </summary>
         public const string GasDiscountRecordSubject = "GasDiscount";
 
         /// <summary>
-        /// Base subject is used for root element of <see cref="GasLog"/> note XML content 
+        /// Base subject is used for root element of <see cref="GasLog"/> note XML content
         /// </summary>
         public const string GasLogRecordSubject = "GasLog";
+
+        /// <summary>
+        /// Base subject is used for root element of <see cref="GasStation"/> note JSON content
+        /// </summary>
+        public const string GasStationRecordSubject = "GasStation";
     }
 }

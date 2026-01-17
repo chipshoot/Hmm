@@ -1,17 +1,28 @@
-﻿using System;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.Automobile.DomainEntity
 {
-    public class GasStation
+    public class GasStation : AutomobileBase
     {
-        public Guid Id { get; set; }
-
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; }
 
-        public string? Address { get; set; }
+        [StringLength(200)]
+        public string Address { get; set; }
 
-        public DateTime? LastVisited { get; set; }
+        [StringLength(50)]
+        public string City { get; set; }
 
-        public string Comment { get; set; }
+        [StringLength(50)]
+        public string State { get; set; }
+
+        [StringLength(20)]
+        public string ZipCode { get; set; }
+
+        [StringLength(500)]
+        public string Description { get; set; }
+
+        public bool IsActive { get; set; } = true;
     }
 }

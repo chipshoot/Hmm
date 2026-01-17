@@ -36,11 +36,13 @@ namespace Hmm.Automobile
                 }
 
                 var notes = notesResult.Value;
-                var carList = notes.Select(note =>
+                var carTasks = notes.Select(async note =>
                 {
-                    var entityResult = NoteSerializer.GetEntity(note);
+                    var entityResult = await NoteSerializer.GetEntity(note);
                     return entityResult.Success ? entityResult.Value : null;
-                }).Where(car => car != null);
+                });
+                var cars = await Task.WhenAll(carTasks);
+                var carList = cars.Where(car => car != null);
 
                 var result = new PageList<AutomobileInfo>(carList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
                 return ProcessingResult<PageList<AutomobileInfo>>.Ok(result);
@@ -59,7 +61,7 @@ namespace Hmm.Automobile
                 return ProcessingResult<AutomobileInfo>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
 
-            return NoteSerializer.GetEntity(noteResult.Value);
+            return await NoteSerializer.GetEntity(noteResult.Value);
         }
 
         public override async Task<ProcessingResult<AutomobileInfo>> CreateAsync(AutomobileInfo entity)
@@ -77,7 +79,7 @@ namespace Hmm.Automobile
                 return ProcessingResult<AutomobileInfo>.Invalid(validationResult.ErrorMessage);
             }
 
-            var noteResult = NoteSerializer.GetNote(entity);
+            var noteResult = await NoteSerializer.GetNote(entity);
             if (!noteResult.Success)
             {
                 return ProcessingResult<AutomobileInfo>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
@@ -116,7 +118,7 @@ namespace Hmm.Automobile
             curAuto.Color = entity.Color;
             curAuto.Plate = entity.Plate;
 
-            var noteResult = NoteSerializer.GetNote(curAuto);
+            var noteResult = await NoteSerializer.GetNote(curAuto);
             if (!noteResult.Success)
             {
                 return ProcessingResult<AutomobileInfo>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
