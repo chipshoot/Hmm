@@ -118,7 +118,9 @@ namespace Hmm.Automobile
             }
 
             var jsonText = File.ReadAllText(dataFileName);
-            var root = JsonSerializer.Deserialize<SeedingEntityRoot>(jsonText);
+            var options = new JsonSerializerOptions();
+            options.Converters.Add(new Utility.Json.MoneyJsonConverter());
+            var root = JsonSerializer.Deserialize<SeedingEntityRoot>(jsonText, options);
             if (root == null)
             {
                 return entities;

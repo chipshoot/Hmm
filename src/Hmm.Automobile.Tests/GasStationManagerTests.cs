@@ -3,7 +3,6 @@ using Hmm.Automobile.NoteSerialize;
 using Hmm.Automobile.Validator;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
-using Hmm.Utility.Currency;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -16,11 +15,11 @@ using Xunit;
 
 namespace Hmm.Automobile.Tests
 {
-    public class DiscountManagerTests : AutoTestFixtureBase
+    public class GasStationManagerTests : AutoTestFixtureBase
     {
-        private IAutoEntityManager<GasDiscount> _manager;
+        private GasStationManager _manager;
 
-        public DiscountManagerTests()
+        public GasStationManagerTests()
         {
             SetupDevEnv();
         }
@@ -28,26 +27,28 @@ namespace Hmm.Automobile.Tests
         #region CreateAsync Tests
 
         [Fact]
-        public async Task CreateAsync_WithValidDiscount_ReturnsCreatedEntity()
+        public async Task CreateAsync_WithValidStation_ReturnsCreatedEntity()
         {
             // Arrange
-            var discount = new GasDiscount
+            var station = new GasStation
             {
-                Program = "Costco membership",
-                Amount = new Money(0.6m),
-                DiscountType = GasDiscountType.PerLiter,
-                Comment = "Test Discount",
+                Name = "Costco Gas",
+                Address = "123 Main St",
+                City = "Vancouver",
+                State = "BC",
+                ZipCode = "V6B 1A1",
+                Description = "Test station",
                 IsActive = true
             };
 
             // Act
-            var result = await _manager.CreateAsync(discount);
+            var result = await _manager.CreateAsync(station);
 
             // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.Value);
             Assert.True(result.Value.Id >= 1);
-            Assert.Equal("Costco membership", result.Value.Program);
+            Assert.Equal("Costco Gas", result.Value.Name);
             Assert.Equal(ApplicationRegister.DefaultAuthor.Id, result.Value.AuthorId);
         }
 
@@ -65,15 +66,15 @@ namespace Hmm.Automobile.Tests
         [Fact]
         public async Task CreateAsync_WithInvalidEntity_ReturnsValidationError()
         {
-            // Arrange - missing required fields
-            var discount = new GasDiscount
+            // Arrange - missing required name
+            var station = new GasStation
             {
-                Program = "", // Empty - invalid
-                Amount = new Money(0.6m)
+                Name = "", // Empty - invalid
+                City = "Vancouver"
             };
 
             // Act
-            var result = await _manager.CreateAsync(discount);
+            var result = await _manager.CreateAsync(station);
 
             // Assert
             Assert.False(result.Success);
@@ -84,21 +85,21 @@ namespace Hmm.Automobile.Tests
         #region UpdateAsync Tests
 
         [Fact]
-        public async Task UpdateAsync_WithValidDiscount_ReturnsUpdatedEntity()
+        public async Task UpdateAsync_WithValidStation_ReturnsUpdatedEntity()
         {
             // Arrange
-            var discounts = await SetupEnvironmentAsync();
-            var discount = discounts.FirstOrDefault();
-            Assert.NotNull(discount);
+            var stations = await SetupEnvironmentAsync();
+            var station = stations.FirstOrDefault();
+            Assert.NotNull(station);
 
             // Act
-            discount.Program = "Petro-Canada";
-            var result = await _manager.UpdateAsync(discount);
+            station.Name = "Updated Gas Station";
+            var result = await _manager.UpdateAsync(station);
 
             // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.Value);
-            Assert.Equal("Petro-Canada", result.Value.Program);
+            Assert.Equal("Updated Gas Station", result.Value.Name);
         }
 
         [Fact]
@@ -116,15 +117,14 @@ namespace Hmm.Automobile.Tests
         public async Task UpdateAsync_WithNonExistentEntity_ReturnsNotFound()
         {
             // Arrange
-            var discount = new GasDiscount
+            var station = new GasStation
             {
                 Id = 99999, // Non-existent
-                Program = "Test",
-                Amount = new Money(0.5m)
+                Name = "Test"
             };
 
             // Act
-            var result = await _manager.UpdateAsync(discount);
+            var result = await _manager.UpdateAsync(station);
 
             // Assert
             Assert.False(result.Success);
@@ -134,25 +134,29 @@ namespace Hmm.Automobile.Tests
         public async Task UpdateAsync_UpdatesAllProperties()
         {
             // Arrange
-            var discounts = await SetupEnvironmentAsync();
-            var discount = discounts.First();
+            var stations = await SetupEnvironmentAsync();
+            var station = stations.First();
 
             // Act
-            discount.Program = "Updated Program";
-            discount.Amount = new Money(1.5m);
-            discount.Comment = "Updated Comment";
-            discount.DiscountType = GasDiscountType.Flat;
-            discount.IsActive = false;
+            station.Name = "Updated Name";
+            station.Address = "Updated Address";
+            station.City = "Updated City";
+            station.State = "Updated State";
+            station.ZipCode = "12345";
+            station.Description = "Updated Description";
+            station.IsActive = false;
 
-            var result = await _manager.UpdateAsync(discount);
+            var result = await _manager.UpdateAsync(station);
 
             // Assert
             Assert.True(result.Success);
             var updated = result.Value;
-            Assert.Equal("Updated Program", updated.Program);
-            Assert.Equal(1.5m, updated.Amount.Amount);
-            Assert.Equal("Updated Comment", updated.Comment);
-            Assert.Equal(GasDiscountType.Flat, updated.DiscountType);
+            Assert.Equal("Updated Name", updated.Name);
+            Assert.Equal("Updated Address", updated.Address);
+            Assert.Equal("Updated City", updated.City);
+            Assert.Equal("Updated State", updated.State);
+            Assert.Equal("12345", updated.ZipCode);
+            Assert.Equal("Updated Description", updated.Description);
             Assert.False(updated.IsActive);
         }
 
@@ -161,7 +165,7 @@ namespace Hmm.Automobile.Tests
         #region GetEntitiesAsync Tests
 
         [Fact]
-        public async Task GetEntitiesAsync_ReturnsAllDiscounts()
+        public async Task GetEntitiesAsync_ReturnsAllStations()
         {
             // Arrange
             await SetupEnvironmentAsync();
@@ -172,8 +176,8 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.Value);
-            var discounts = result.Value.ToList();
-            Assert.Equal(2, discounts.Count);
+            var stations = result.Value.ToList();
+            Assert.Equal(2, stations.Count);
         }
 
         [Fact]
@@ -203,17 +207,17 @@ namespace Hmm.Automobile.Tests
         public async Task GetEntityByIdAsync_WithValidId_ReturnsEntity()
         {
             // Arrange
-            var discounts = await SetupEnvironmentAsync();
-            var expectedDiscount = discounts.First();
+            var stations = await SetupEnvironmentAsync();
+            var expectedStation = stations.First();
 
             // Act
-            var result = await _manager.GetEntityByIdAsync(expectedDiscount.Id);
+            var result = await _manager.GetEntityByIdAsync(expectedStation.Id);
 
             // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.Value);
-            Assert.Equal(expectedDiscount.Id, result.Value.Id);
-            Assert.Equal(expectedDiscount.Program, result.Value.Program);
+            Assert.Equal(expectedStation.Id, result.Value.Id);
+            Assert.Equal(expectedStation.Name, result.Value.Name);
         }
 
         [Fact]
@@ -231,17 +235,106 @@ namespace Hmm.Automobile.Tests
 
         #endregion
 
+        #region GetActiveStationsAsync Tests
+
+        [Fact]
+        public async Task GetActiveStationsAsync_ReturnsOnlyActiveStations()
+        {
+            // Arrange
+            await SetupEnvironmentAsync();
+            var allStations = await _manager.GetEntitiesAsync();
+            var inactiveStation = allStations.Value.First();
+            inactiveStation.IsActive = false;
+            await _manager.UpdateAsync(inactiveStation);
+
+            // Act
+            var result = await _manager.GetActiveStationsAsync();
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Single(result.Value);
+            Assert.True(result.Value.All(s => s.IsActive));
+        }
+
+        #endregion
+
+        #region GetByNameAsync Tests
+
+        [Fact]
+        public async Task GetByNameAsync_WithValidName_ReturnsStation()
+        {
+            // Arrange
+            await SetupEnvironmentAsync();
+
+            // Act
+            var result = await _manager.GetByNameAsync("Costco Gas");
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("Costco Gas", result.Value.Name);
+        }
+
+        [Fact]
+        public async Task GetByNameAsync_WithNonExistentName_ReturnsNotFound()
+        {
+            // Arrange
+            await SetupEnvironmentAsync();
+
+            // Act
+            var result = await _manager.GetByNameAsync("NonExistent Station");
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GetByNameAsync_WithEmptyName_ReturnsInvalid()
+        {
+            // Act
+            var result = await _manager.GetByNameAsync("");
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GetByNameAsync_WithNullName_ReturnsInvalid()
+        {
+            // Act
+            var result = await _manager.GetByNameAsync(null);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GetByNameAsync_IsCaseInsensitive()
+        {
+            // Arrange
+            await SetupEnvironmentAsync();
+
+            // Act
+            var result = await _manager.GetByNameAsync("COSTCO GAS");
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+        }
+
+        #endregion
+
         #region IsEntityOwnerAsync Tests
 
         [Fact]
         public async Task IsEntityOwnerAsync_WithOwnedEntity_ReturnsTrue()
         {
             // Arrange
-            var discounts = await SetupEnvironmentAsync();
-            var discount = discounts.First();
+            var stations = await SetupEnvironmentAsync();
+            var station = stations.First();
 
             // Act
-            var isOwner = await _manager.IsEntityOwnerAsync(discount.Id);
+            var isOwner = await _manager.IsEntityOwnerAsync(station.Id);
 
             // Assert
             Assert.True(isOwner);
@@ -285,51 +378,55 @@ namespace Hmm.Automobile.Tests
 
         #endregion
 
-        private async Task<List<GasDiscount>> SetupEnvironmentAsync()
+        private async Task<List<GasStation>> SetupEnvironmentAsync()
         {
-            var discounts = new List<GasDiscount>();
+            var stations = new List<GasStation>();
 
-            var discount1 = new GasDiscount
+            var station1 = new GasStation
             {
-                Program = "Costco membership",
-                Amount = new Money(0.6m),
-                DiscountType = GasDiscountType.PerLiter,
-                Comment = "Test Discount",
+                Name = "Costco Gas",
+                Address = "123 Main St",
+                City = "Vancouver",
+                State = "BC",
+                ZipCode = "V6B 1A1",
+                Description = "Costco gas station",
                 IsActive = true
             };
-            var result1 = await _manager.CreateAsync(discount1);
+            var result1 = await _manager.CreateAsync(station1);
             Assert.True(result1.Success);
-            discounts.Add(result1.Value);
+            stations.Add(result1.Value);
 
-            var discount2 = new GasDiscount
+            var station2 = new GasStation
             {
-                Program = "Petro-Canada membership",
-                Amount = new Money(0.2m),
-                DiscountType = GasDiscountType.PerLiter,
-                Comment = "Test Discount 2",
+                Name = "Shell Station",
+                Address = "456 Oak Ave",
+                City = "Burnaby",
+                State = "BC",
+                ZipCode = "V5H 2Z8",
+                Description = "Shell gas station",
                 IsActive = true
             };
-            var result2 = await _manager.CreateAsync(discount2);
+            var result2 = await _manager.CreateAsync(station2);
             Assert.True(result2.Success);
-            discounts.Add(result2.Value);
+            stations.Add(result2.Value);
 
-            return discounts;
+            return stations;
         }
 
         private void SetupDevEnv()
         {
             InsertSeedRecords();
 
-            var noteSerializer = new GasDiscountJsonNoteSerialize(
+            var noteSerializer = new GasStationJsonNoteSerialize(
                 Application,
-                new NullLogger<GasDiscount>(),
+                new NullLogger<GasStation>(),
                 LookupRepository);
 
             var noteManager = CreateNoteManager();
 
-            _manager = new DiscountManager(
+            _manager = new GasStationManager(
                 noteSerializer,
-                new GasDiscountValidator(LookupRepository),
+                new GasStationValidator(LookupRepository),
                 noteManager,
                 LookupRepository);
         }

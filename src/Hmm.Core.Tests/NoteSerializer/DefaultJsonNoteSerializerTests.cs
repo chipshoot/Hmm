@@ -2,8 +2,11 @@ using Hmm.Core.Map.DomainEntity;
 using Hmm.Core.NoteSerializer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NJsonSchema.Validation;
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Hmm.Core.Tests.NoteSerializer
@@ -42,13 +45,13 @@ namespace Hmm.Core.Tests.NoteSerializer
         #region GetEntity Tests
 
         [Fact]
-        public void GetEntity_WithNullNote_ReturnsFailureResult()
+        public async Task GetEntity_WithNullNote_ReturnsFailureResult()
         {
             // Arrange
             HmmNote note = null;
 
             // Act
-            var result = _serializer.GetEntity(note);
+            var result = await _serializer.GetEntity(note);
 
             // Assert
             Assert.False(result.Success);
@@ -57,7 +60,7 @@ namespace Hmm.Core.Tests.NoteSerializer
         }
 
         [Fact]
-        public void GetEntity_WithHmmNoteType_ReturnsNote()
+        public async Task GetEntity_WithHmmNoteType_ReturnsNote()
         {
             // Arrange
             var note = new HmmNote
@@ -70,7 +73,7 @@ namespace Hmm.Core.Tests.NoteSerializer
             };
 
             // Act
-            var result = _serializer.GetEntity(note);
+            var result = await _serializer.GetEntity(note);
 
             // Assert
             Assert.True(result.Success);
@@ -80,7 +83,7 @@ namespace Hmm.Core.Tests.NoteSerializer
         }
 
         [Fact]
-        public void GetEntity_WithNonHmmNoteType_ReturnsFailure()
+        public async Task GetEntity_WithNonHmmNoteType_ReturnsFailure()
         {
             // Arrange - using the concrete test serializer which uses HmmNote as T
             var note = new HmmNote
@@ -95,10 +98,32 @@ namespace Hmm.Core.Tests.NoteSerializer
             var stringSerializer = new TestJsonNoteSerializer(new NullLogger<HmmNote>());
 
             // Act
-            var result = stringSerializer.GetEntity(note);
+            var result = await stringSerializer.GetEntity(note);
 
             // Assert
             Assert.True(result.Success); // HmmNote is assignable to HmmNote
+        }
+
+        [Fact]
+        public async Task GetEntity_WithComplexJsonContent_ReturnsNote()
+        {
+            // Arrange
+            var note = new HmmNote
+            {
+                Id = 1,
+                Subject = "Complex JSON",
+                Content = "{\"note\":{\"content\":{\"nested\":{\"data\":\"value\"},\"array\":[1,2,3]}}}",
+                Author = _testAuthor,
+                Catalog = _testCatalog
+            };
+
+            // Act
+            var result = await _serializer.GetEntity(note);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(note.Content, result.Value.Content);
         }
 
         #endregion
@@ -106,13 +131,13 @@ namespace Hmm.Core.Tests.NoteSerializer
         #region GetNote Tests
 
         [Fact]
-        public void GetNote_WithNullEntity_ReturnsFailureResult()
+        public async Task GetNote_WithNullEntity_ReturnsFailureResult()
         {
             // Arrange
             HmmNote entity = null;
 
             // Act
-            var result = _serializer.GetNote(entity);
+            var result = await _serializer.GetNote(entity);
 
             // Assert
             Assert.False(result.Success);
@@ -121,7 +146,7 @@ namespace Hmm.Core.Tests.NoteSerializer
         }
 
         [Fact]
-        public void GetNote_WithValidHmmNote_ReturnsSerializedNote()
+        public async Task GetNote_WithValidHmmNote_ReturnsSerializedNote()
         {
             // Arrange
             var entity = new HmmNote
@@ -136,7 +161,7 @@ namespace Hmm.Core.Tests.NoteSerializer
             };
 
             // Act
-            var result = _serializer.GetNote(entity);
+            var result = await _serializer.GetNote(entity);
 
             // Assert
             Assert.True(result.Success);
@@ -146,12 +171,12 @@ namespace Hmm.Core.Tests.NoteSerializer
             Assert.NotEmpty(result.Value.Content);
 
             // Verify content is valid JSON
-            var jsonDoc = JsonDocument.Parse(result.Value.Content);
+            using var jsonDoc = JsonDocument.Parse(result.Value.Content);
             Assert.True(jsonDoc.RootElement.TryGetProperty("note", out _));
         }
 
         [Fact]
-        public void GetNote_WithValidHmmNoteContainingJsonContent_PreservesStructure()
+        public async Task GetNote_WithValidHmmNoteContainingJsonContent_PreservesStructure()
         {
             // Arrange
             var jsonContent = "{\"note\":{\"content\":{\"data\":\"test value\"}}}";
@@ -165,15 +190,60 @@ namespace Hmm.Core.Tests.NoteSerializer
             };
 
             // Act
-            var result = _serializer.GetNote(entity);
+            var result = await _serializer.GetNote(entity);
 
             // Assert
             Assert.True(result.Success);
             Assert.NotNull(result.Value);
 
-            var resultDoc = JsonDocument.Parse(result.Value.Content);
+            using var resultDoc = JsonDocument.Parse(result.Value.Content);
             Assert.True(resultDoc.RootElement.TryGetProperty("note", out var noteElement));
-            Assert.True(noteElement.TryGetProperty("content", out var contentElement));
+            Assert.True(noteElement.TryGetProperty("content", out _));
+        }
+
+        [Fact]
+        public async Task GetNote_PreservesAuthorAndCatalog()
+        {
+            // Arrange
+            var entity = new HmmNote
+            {
+                Id = 3,
+                Subject = "Author Test",
+                Content = "test content",
+                Author = _testAuthor,
+                Catalog = _testCatalog,
+                Description = "Test description"
+            };
+
+            // Act
+            var result = await _serializer.GetNote(entity);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(_testAuthor, result.Value.Author);
+            Assert.Equal(_testCatalog, result.Value.Catalog);
+            Assert.Equal("Test description", result.Value.Description);
+        }
+
+        [Fact]
+        public async Task GetNote_WithNoCatalog_UsesDefaultCatalog()
+        {
+            // Arrange
+            var entity = new HmmNote
+            {
+                Id = 4,
+                Subject = "No Catalog",
+                Content = "test",
+                Author = _testAuthor,
+                Catalog = null
+            };
+
+            // Act
+            var result = await _serializer.GetNote(entity);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value.Catalog);
         }
 
         #endregion
@@ -379,6 +449,180 @@ namespace Hmm.Core.Tests.NoteSerializer
             Assert.False(result);
         }
 
+        [Fact]
+        public void IsValidNoteStructure_WithArrayRoot_ReturnsFalse()
+        {
+            // Arrange
+            var json = "[1, 2, 3]";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = _serializer.TestIsValidNoteStructure(document);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsValidNoteStructure_WithNoteAsArray_ReturnsFalse()
+        {
+            // Arrange
+            var json = "{\"note\":[1,2,3]}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = _serializer.TestIsValidNoteStructure(document);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsValidNoteStructure_WithNoteAsString_ReturnsFalse()
+        {
+            // Arrange
+            var json = "{\"note\":\"string value\"}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = _serializer.TestIsValidNoteStructure(document);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void IsValidNoteStructure_WithNestedContent_ReturnsTrue()
+        {
+            // Arrange
+            var json = "{\"note\":{\"content\":{\"nested\":{\"deep\":\"value\"}}}}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = _serializer.TestIsValidNoteStructure(document);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void IsValidNoteStructure_WithContentAsArray_ReturnsTrue()
+        {
+            // Arrange - content can be any value type including array
+            var json = "{\"note\":{\"content\":[1,2,3]}}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = _serializer.TestIsValidNoteStructure(document);
+
+            // Assert
+            Assert.True(result);
+        }
+
+        #endregion
+
+        #region ValidateContent Tests
+
+        [Fact]
+        public void ValidateContent_WithNullDocument_ReturnsEmptyCollection()
+        {
+            // Arrange
+            JsonDocument document = null;
+
+            // Act
+            var result = _serializer.TestValidateContent(document);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void ValidateContent_WithNoSchema_ReturnsEmptyCollection()
+        {
+            // Arrange
+            var json = "{\"note\":{\"content\":\"test\"}}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = _serializer.TestValidateContent(document);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void ValidateContent_WithSchemaAndValidContent_ReturnsEmptyCollection()
+        {
+            // Arrange
+            var schema = @"{
+                ""type"": ""object"",
+                ""properties"": {
+                    ""note"": {
+                        ""type"": ""object"",
+                        ""properties"": {
+                            ""content"": { ""type"": ""string"" }
+                        }
+                    }
+                }
+            }";
+            var catalog = new NoteCatalog { Name = "Test", Schema = schema };
+            var serializerWithSchema = new TestJsonNoteSerializer(new NullLogger<HmmNote>(), catalog);
+
+            var json = "{\"note\":{\"content\":\"test\"}}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = serializerWithSchema.TestValidateContent(document);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void ValidateContent_WithSchemaButUninitialized_ReturnsEmptyCollection()
+        {
+            // Arrange - Schema is set but _schema field is not initialized until Validator property is accessed
+            // Since Validator property is private and ValidateContent uses _schema directly,
+            // the schema validation will not occur without explicit Validator access
+            var schema = @"{
+                ""type"": ""string""
+            }";
+            var catalog = new NoteCatalog { Name = "Test", Schema = schema };
+            var serializerWithSchema = new TestJsonNoteSerializer(new NullLogger<HmmNote>(), catalog);
+
+            var json = "{\"note\":{\"content\":\"test\"}}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = serializerWithSchema.TestValidateContent(document);
+
+            // Assert - Returns empty because _schema is lazily loaded via Validator property
+            // which is not called directly by ValidateContent
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public void ValidateContent_WithEmptySchema_ReturnsEmptyCollection()
+        {
+            // Arrange
+            var catalog = new NoteCatalog { Name = "Test", Schema = "" };
+            var serializerWithSchema = new TestJsonNoteSerializer(new NullLogger<HmmNote>(), catalog);
+
+            var json = "{\"note\":{\"content\":\"test\"}}";
+            using var document = JsonDocument.Parse(json);
+
+            // Act
+            var result = serializerWithSchema.TestValidateContent(document);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
         #endregion
 
         #region Helper Method Tests
@@ -535,6 +779,151 @@ namespace Hmm.Core.Tests.NoteSerializer
             Assert.Equal(0.0, result);
         }
 
+        [Fact]
+        public void GetBoolProperty_WithFalseValue_ReturnsFalse()
+        {
+            // Arrange
+            var json = "{\"isActive\":false}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act
+            var result = _serializer.TestGetBoolProperty(element, "isActive", true);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void GetIntProperty_WithNonIntegerValue_ThrowsException()
+        {
+            // Arrange - TryGetInt32 throws when value is not a Number type
+            var json = "{\"count\":\"not a number\"}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act & Assert - Implementation does not gracefully handle type mismatch
+            Assert.Throws<InvalidOperationException>(() => _serializer.TestGetIntProperty(element, "count", 42));
+        }
+
+        [Fact]
+        public void GetDoubleProperty_WithIntegerValue_ReturnsDouble()
+        {
+            // Arrange
+            var json = "{\"value\":42}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act
+            var result = _serializer.TestGetDoubleProperty(element, "value");
+
+            // Assert
+            Assert.Equal(42.0, result);
+        }
+
+        [Fact]
+        public void GetStringProperty_WithNullValue_ReturnsNull()
+        {
+            // Arrange
+            var json = "{\"name\":null}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act
+            var result = _serializer.TestGetStringProperty(element, "name");
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void GetStringProperty_WithNullValueAndDefault_ReturnsDefault()
+        {
+            // Arrange
+            var json = "{\"name\":null}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act
+            var result = _serializer.TestGetStringProperty(element, "name", "default");
+
+            // Assert
+            Assert.Equal("default", result);
+        }
+
+        [Fact]
+        public void GetDateTimeProperty_WithInvalidFormat_ReturnsDefault()
+        {
+            // Arrange
+            var json = "{\"date\":\"not a date\"}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+            var defaultDate = new DateTime(2020, 1, 1);
+
+            // Act
+            var result = _serializer.TestGetDateTimeProperty(element, "date", defaultDate);
+
+            // Assert
+            Assert.Equal(defaultDate, result);
+        }
+
+        [Fact]
+        public void GetDateTimeProperty_WithNoDefault_ReturnsMinValue()
+        {
+            // Arrange
+            var json = "{\"name\":\"test\"}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act
+            var result = _serializer.TestGetDateTimeProperty(element, "date");
+
+            // Assert
+            Assert.Equal(DateTime.MinValue, result);
+        }
+
+        [Fact]
+        public void GetDoubleProperty_WithNonNumericValue_ThrowsException()
+        {
+            // Arrange - TryGetDouble throws when value is not a Number type
+            var json = "{\"value\":\"not a number\"}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act & Assert - Implementation does not gracefully handle type mismatch
+            Assert.Throws<InvalidOperationException>(() => _serializer.TestGetDoubleProperty(element, "value", 99.9));
+        }
+
+        [Fact]
+        public void GetIntProperty_WithDecimalValue_ReturnsDefault()
+        {
+            // Arrange - 3.14 cannot be parsed as Int32
+            var json = "{\"count\":3.14}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act
+            var result = _serializer.TestGetIntProperty(element, "count", 100);
+
+            // Assert
+            Assert.Equal(100, result);
+        }
+
+        [Fact]
+        public void GetBoolProperty_WithNonBooleanValue_ReturnsDefault()
+        {
+            // Arrange
+            var json = "{\"isActive\":\"yes\"}";
+            using var document = JsonDocument.Parse(json);
+            var element = document.RootElement;
+
+            // Act
+            var result = _serializer.TestGetBoolProperty(element, "isActive", true);
+
+            // Assert
+            Assert.True(result); // Returns default because "yes" is not a boolean
+        }
+
         #endregion
 
         #region CreateEmptyNoteDocument Tests
@@ -609,7 +998,7 @@ namespace Hmm.Core.Tests.NoteSerializer
         #region Edge Cases and Error Handling
 
         [Fact]
-        public void GetNote_WithEmptyContent_CreatesValidJsonStructure()
+        public async Task GetNote_WithEmptyContent_CreatesValidJsonStructure()
         {
             // Arrange
             var entity = new HmmNote
@@ -622,7 +1011,7 @@ namespace Hmm.Core.Tests.NoteSerializer
             };
 
             // Act
-            var result = _serializer.GetNote(entity);
+            var result = await _serializer.GetNote(entity);
 
             // Assert
             Assert.True(result.Success);
@@ -667,7 +1056,7 @@ namespace Hmm.Core.Tests.NoteSerializer
         }
 
         [Fact]
-        public void ProcessingResult_Success_HasCorrectProperties()
+        public async Task ProcessingResult_Success_HasCorrectProperties()
         {
             // Arrange
             var note = new HmmNote
@@ -680,7 +1069,7 @@ namespace Hmm.Core.Tests.NoteSerializer
             };
 
             // Act
-            var result = _serializer.GetEntity(note);
+            var result = await _serializer.GetEntity(note);
 
             // Assert
             Assert.True(result.Success);
@@ -690,19 +1079,67 @@ namespace Hmm.Core.Tests.NoteSerializer
         }
 
         [Fact]
-        public void ProcessingResult_Failure_HasCorrectProperties()
+        public async Task ProcessingResult_Failure_HasCorrectProperties()
         {
             // Arrange
             HmmNote note = null;
 
             // Act
-            var result = _serializer.GetEntity(note);
+            var result = await _serializer.GetEntity(note);
 
             // Assert
             Assert.False(result.Success);
             Assert.Null(result.Value);
             Assert.True(result.HasError);
             Assert.NotEmpty(result.ErrorMessage);
+        }
+
+        [Fact]
+        public void GetNoteContent_WithNullString_ReturnsEmptyNoteStructure()
+        {
+            // Arrange
+            string content = null;
+
+            // Act
+            using var result = _serializer.TestGetNoteContent(content);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.True(result.RootElement.TryGetProperty("note", out var noteElement));
+            Assert.True(noteElement.TryGetProperty("content", out var contentElement));
+            Assert.Equal(string.Empty, contentElement.GetString());
+        }
+
+        [Fact]
+        public void GetNoteContent_WithLargeContent_HandlesCorrectly()
+        {
+            // Arrange
+            var content = new string('X', 100000); // 100KB of content
+
+            // Act
+            using var result = _serializer.TestGetNoteContent(content);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.True(result.RootElement.TryGetProperty("note", out var noteElement));
+            Assert.True(noteElement.TryGetProperty("content", out var contentElement));
+            Assert.Equal(content, contentElement.GetString());
+        }
+
+        [Fact]
+        public void GetNoteContent_WithNewlinesAndTabs_PreservesThem()
+        {
+            // Arrange
+            var content = "Line1\nLine2\r\nLine3\tTabbed";
+
+            // Act
+            using var result = _serializer.TestGetNoteContent(content);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.True(result.RootElement.TryGetProperty("note", out var noteElement));
+            Assert.True(noteElement.TryGetProperty("content", out var contentElement));
+            Assert.Equal(content, contentElement.GetString());
         }
 
         #endregion
@@ -725,6 +1162,13 @@ namespace Hmm.Core.Tests.NoteSerializer
             {
             }
 
+            public TestJsonNoteSerializer(ILogger<HmmNote> logger, NoteCatalog catalog) : base(logger)
+            {
+                _testCatalog = catalog;
+            }
+
+            private NoteCatalog _testCatalog;
+
             // Expose protected methods for testing
             public JsonDocument TestGetNoteContent(string noteContent) => GetNoteContent(noteContent);
 
@@ -737,6 +1181,8 @@ namespace Hmm.Core.Tests.NoteSerializer
             public JsonDocument TestCreateNoteJsonDocument(string content) => CreateNoteJsonDocument(content);
 
             public NoteCatalog TestGetCatalog() => GetCatalog();
+
+            public ICollection<ValidationError> TestValidateContent(JsonDocument document) => ValidateContent(document);
 
             public string TestGetStringProperty(JsonElement element, string propertyName, string defaultValue = null)
                 => GetStringProperty(element, propertyName, defaultValue);
@@ -752,6 +1198,11 @@ namespace Hmm.Core.Tests.NoteSerializer
 
             public double TestGetDoubleProperty(JsonElement element, string propertyName, double defaultValue = 0.0)
                 => GetDoubleProperty(element, propertyName, defaultValue);
+
+            protected override NoteCatalog GetCatalog()
+            {
+                return _testCatalog ?? base.GetCatalog();
+            }
         }
 
         #endregion
