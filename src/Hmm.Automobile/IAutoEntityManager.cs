@@ -10,7 +10,7 @@ namespace Hmm.Automobile
 {
     public interface IAutoEntityManager<T> where T : AutomobileBase
     {
-        INoteSerialize<T> NoteSerializer { get; }
+        INoteSerializer<T> NoteSerializer { get; }
 
         IHmmValidator<T> Validator { get; }
 

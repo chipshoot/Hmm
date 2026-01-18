@@ -1,292 +1,580 @@
-﻿//using Hmm.Automobile.DomainEntity;
-//using Hmm.Automobile.Validator;
-//using Hmm.Utility.MeasureUnit;
-//using Hmm.Utility.Misc;
-//using Hmm.Utility.Validation;
-//using System;
-//using System.Collections.Generic;
-//using Xunit;
+using Hmm.Automobile.DomainEntity;
+using Hmm.Automobile.Validator;
+using Hmm.Utility.Currency;
+using Hmm.Utility.MeasureUnit;
+using Hmm.Utility.Validation;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Xunit;
 
-//namespace Hmm.Automobile.Tests
-//{
-//    public class GasLogValidatorTests : AutoTestFixtureBase
-//    {
-//        private IHmmValidator<GasLog> _validator;
-//        private int _authorId;
+namespace Hmm.Automobile.Tests
+{
+    public class GasLogValidatorTests : AutoTestFixtureBase
+    {
+        private IHmmValidator<GasLog> _validator;
+        private int _authorId;
 
-//        public GasLogValidatorTests()
-//        {
-//            SetupTestEnv();
-//        }
+        public GasLogValidatorTests()
+        {
+            SetupTestEnv();
+        }
 
-//        [Fact]
-//        public void ValidGasLogCanPassValidation()
-//        {
-//            // Arrange
-//            var log = new GasLog
-//            {
-//                AuthorId = _authorId,
-//                Date = DateProvider.UtcNow,
-//                Car = new AutomobileInfo(),
-//                CurrentMeterReading = 30000.GetKilometer(),
-//                Distance = 340.GetKilometer(),
-//                Gas = 40d.GetLiter(),
-//                Price = 1.34m.GetCad(),
-//                Station = "Costco",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>
-//                {
-//                    new()
-//                    {
-//                        Program = new GasDiscount{Amount = 0.8m.GetCad(), Program = "Petro-Canada membership", DiscountType = GasDiscountType.PerLiter, AuthorId = _authorId},
-//                        Amount = 0.8m.GetCad()
-//                    }
-//                },
-//                Comment = "Test gas log",
-//            };
+        #region Valid Entity Tests
 
-//            // Act
+        [Fact]
+        public async Task ValidGasLog_CanPassValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//            // Assert
-//            Assert.True(result);
-//            Assert.Empty(processResult.MessageList);
-//        }
+            // Assert
+            Assert.True(result.Success);
+        }
 
-//        [Fact]
-//        public void GasLogMustHaveValid_Author()
-//        {
-//            // Arrange
-//            var log = new GasLog
-//            {
-//                Date = DateProvider.UtcNow,
-//                Car = new AutomobileInfo(),
-//                CurrentMeterReading = 30000.GetKilometer(),
-//                Distance = 340.GetKilometer(),
-//                Gas = 40d.GetLiter(),
-//                Price = 1.34m.GetCad(),
-//                Station = "Costco",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>(),
-//                Comment = "Test gas log"
-//            };
+        [Fact]
+        public async Task ValidGasLog_WithDiscounts_CanPassValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Discounts = new List<GasDiscountInfo>
+            {
+                new()
+                {
+                    Program = new GasDiscount
+                    {
+                        AuthorId = _authorId,
+                        Program = "Petro-Canada membership",
+                        Amount = 0.08m.GetCad(),
+                        DiscountType = GasDiscountType.PerLiter
+                    },
+                    Amount = 3.20m.GetCad()
+                }
+            };
 
-//            // Act
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+            // Assert
+            Assert.True(result.Success);
+        }
 
-//            // Assert
-//            Assert.False(result);
-//            Assert.Single(processResult.MessageList);
-//        }
+        #endregion
 
-//        [Theory]
-//        [InlineData("0001-01-01")]
-//        [InlineData("2021-11-20")]
-//        public void GasLogMustHaveValid_Date(string date)
-//        {
-//            // Arrange
-//            CurrentTime = new DateTime(2021, 9, 9);
-//            var logDate = DateTime.Parse(date);
-//            var log = new GasLog
-//            {
-//                AuthorId = _authorId,
-//                Date = logDate,
-//                Car = new AutomobileInfo(),
-//                CurrentMeterReading = 30000.GetKilometer(),
-//                Distance = 340.GetKilometer(),
-//                Gas = 40d.GetLiter(),
-//                Price = 1.34m.GetCad(),
-//                Station = "Costco",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>(),
-//                Comment = "Test gas log"
-//            };
+        #region AuthorId Validation Tests
 
-//            // Act
+        [Fact]
+        public async Task GasLog_MustHaveValid_Author()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.AuthorId = 0; // Invalid
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//            // Assert
-//            Assert.False(result);
-//            Assert.Single(processResult.MessageList);
-//        }
+            // Assert
+            Assert.False(result.Success);
+        }
 
-//        [Fact]
-//        public void GasLogMustHaveValid_Automobile()
-//        {
-//            // Arrange
-//            var log = new GasLog
-//            {
-//                AuthorId = _authorId,
-//                Date = DateProvider.UtcNow,
-//                Car = null,
-//                CurrentMeterReading = 30000.GetKilometer(),
-//                Distance = 340.GetKilometer(),
-//                Gas = 40d.GetLiter(),
-//                Price = 1.34m.GetCad(),
-//                Station = "Costco",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>(),
-//                Comment = "Test gas log"
-//            };
+        [Fact]
+        public async Task GasLog_WithNonExistentAuthor_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.AuthorId = 99999; // Non-existent
 
-//            // Act
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+            // Assert
+            Assert.False(result.Success);
+        }
 
-//            // Assert
-//            Assert.False(result);
-//            Assert.Single(processResult.MessageList);
-//        }
+        #endregion
 
-//        [Theory]
-//        [InlineData(100, 200, true, 0)]
-//        [InlineData(100, 100, true, 0)]
-//        [InlineData(100, 50, false, 2)]
-//        [InlineData(0, 50, false, 2)]
-//        public void GasLogMustHaveValid_Distance(int distance, int meterReading, bool exceptResult, int errorCount)
-//        {
-//            // Arrange
-//            var log = new GasLog
-//            {
-//                AuthorId = _authorId,
-//                Date = DateProvider.UtcNow,
-//                Car = new AutomobileInfo(),
-//                Distance = distance.GetKilometer(),
-//                CurrentMeterReading = meterReading.GetKilometer(),
-//                Gas = 40d.GetLiter(),
-//                Price = 1.34m.GetCad(),
-//                Station = "Costco",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>(),
-//                Comment = "Test gas log"
-//            };
+        #region Date Validation Tests
 
-//            // Act
+        [Fact]
+        public async Task GasLog_MustHaveValid_Date_NotMinValue()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Date = DateTime.MinValue; // Invalid
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//            // Assert
-//            Assert.Equal(exceptResult, result);
-//            Assert.Equal(errorCount, processResult.MessageList.Count);
-//        }
+            // Assert
+            Assert.False(result.Success);
+        }
 
-//        [Fact]
-//        public void GasLogMustHaveValid_Gas()
-//        {
-//            // Arrange
-//            var log = new GasLog
-//            {
-//                AuthorId = _authorId,
-//                Date = DateProvider.UtcNow,
-//                Car = new AutomobileInfo(),
-//                Distance = 100.GetKilometer(),
-//                CurrentMeterReading = 1000.GetKilometer(),
-//                Gas = 0d.GetLiter(),
-//                Price = 1.34m.GetCad(),
-//                Station = "Costco",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>(),
-//                Comment = "Test gas log"
-//            };
+        [Fact]
+        public async Task GasLog_MustHaveValid_Date_NotFuture()
+        {
+            // Arrange
+            CurrentTime = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var log = CreateValidGasLog();
+            log.Date = new DateTime(2024, 12, 25); // Future date
 
-//            // Act
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+            // Assert
+            Assert.False(result.Success);
+        }
 
-//            // Assert
-//            Assert.False(result);
-//            Assert.Single(processResult.MessageList);
-//        }
+        [Fact]
+        public async Task GasLog_WithTodayDate_PassesValidation()
+        {
+            // Arrange
+            CurrentTime = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var log = CreateValidGasLog();
+            log.Date = CurrentTime;
 
-//        [Theory]
-//        [InlineData(0, true)]
-//        [InlineData(10, true)]
-//        [InlineData(-10, false)]
-//        public void GasLogMustHaveValid_Price(decimal price, bool exceptResult)
-//        {
-//            // Arrange
-//            var log = new GasLog
-//            {
-//                AuthorId = _authorId,
-//                Date = DateProvider.UtcNow,
-//                Car = new AutomobileInfo(),
-//                Distance = 100.GetKilometer(),
-//                CurrentMeterReading = 1000.GetKilometer(),
-//                Gas = 30d.GetLiter(),
-//                Price = price.GetCad(),
-//                Station = "Costco",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>(),
-//                Comment = "Test gas log"
-//            };
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//            // Act
+            // Assert
+            Assert.True(result.Success);
+        }
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+        [Fact]
+        public async Task GasLog_WithPastDate_PassesValidation()
+        {
+            // Arrange
+            CurrentTime = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var log = CreateValidGasLog();
+            log.Date = new DateTime(2024, 1, 1);
 
-//            // Assert
-//            Assert.Equal(exceptResult, result);
-//            if (result)
-//            {
-//                Assert.Empty(processResult.MessageList);
-//            }
-//            else
-//            {
-//                Assert.Single(processResult.MessageList);
-//            }
-//        }
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
 
-//        [Fact]
-//        public void GasLogMustHaveValid_Station()
-//        {
-//            // Arrange
-//            var log = new GasLog
-//            {
-//                AuthorId = _authorId,
-//                Date = DateProvider.UtcNow,
-//                Car = new AutomobileInfo(),
-//                CurrentMeterReading = 30000.GetKilometer(),
-//                Distance = 340.GetKilometer(),
-//                Gas = 40d.GetLiter(),
-//                Price = 1.34m.GetCad(),
-//                Station = "",
-//                CreateDate = DateProvider.UtcNow,
-//                Discounts = new List<GasDiscountInfo>
-//                {
-//                    new()
-//                    {
-//                        Program = new GasDiscount{Amount = 0.8m.GetCad(), Program = "Petro-Canada membership", DiscountType = GasDiscountType.PerLiter, AuthorId = _authorId},
-//                        Amount = 0.8m.GetCad()
-//                    }
-//                },
-//                Comment = "Test gas log",
-//            };
+            // Assert
+            Assert.True(result.Success);
+        }
 
-//            // Act
+        #endregion
 
-//            var processResult = new ProcessingResult();
-//            var result = _validator.IsValidEntity(log, processResult);
+        #region Car Validation Tests
 
-//            // Assert
-//            Assert.False(result);
-//            Assert.Single(processResult.MessageList);
-//        }
+        [Fact]
+        public async Task GasLog_MustHaveValid_Automobile()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Car = null; // Invalid
 
-//        private void SetupTestEnv()
-//        {
-//            InsertSeedRecords();
-//            _validator = new GasLogValidator(LookupRepository, DateProvider);
-//            _authorId = ApplicationRegister.DefaultAuthor.Id;
-//        }
-//    }
-//}
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        #endregion
+
+        #region Distance and Odometer Validation Tests
+
+        [Theory]
+        [InlineData(100, 200, true)]  // Distance < Odometer - valid
+        [InlineData(100, 100, true)]  // Distance == Odometer - valid
+        [InlineData(200, 100, false)] // Distance > Odometer - invalid
+        [InlineData(0, 100, false)]   // Zero distance - invalid
+        [InlineData(100, 0, false)]   // Zero odometer - invalid
+        public async Task GasLog_MustHaveValid_DistanceAndOdometer(int distance, int odometer, bool expectValid)
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Distance = ((double)distance).GetKilometer();
+            log.Odometer = ((double)odometer).GetKilometer();
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.Equal(expectValid, result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithNegativeDistance_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Distance = new Dimension(-100, DimensionUnit.Kilometre);
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithNegativeOdometer_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Odometer = new Dimension(-1000, DimensionUnit.Kilometre);
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        #endregion
+
+        #region Fuel Validation Tests
+
+        [Fact]
+        public async Task GasLog_MustHaveValid_Fuel()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Fuel = 0d.GetLiter(); // Zero - invalid
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithNegativeFuel_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Fuel = new Volume(-40, VolumeUnit.Liter);
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithPositiveFuel_PassesValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Fuel = 50d.GetLiter();
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+        }
+
+        #endregion
+
+        #region UnitPrice Validation Tests
+
+        [Theory]
+        [InlineData(0, true)]
+        [InlineData(10, true)]
+        [InlineData(-10, false)]
+        public async Task GasLog_MustHaveValid_UnitPrice(decimal price, bool expectValid)
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.UnitPrice = price.GetCad();
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.Equal(expectValid, result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithNullUnitPrice_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.UnitPrice = null;
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        #endregion
+
+        #region Station Validation Tests
+
+        [Fact]
+        public async Task GasLog_MustHaveValid_Station()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Station = null; // Invalid
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_MustHaveValid_StationName()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Station = new GasStation { Name = "" }; // Empty name - invalid
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithStationNameTooLong_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Station = new GasStation { Name = new string('A', 1001) }; // 1001 chars - exceeds max
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithStationNameAt1000Chars_PassesValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Station = new GasStation { Name = new string('A', 1000) };
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+        }
+
+        #endregion
+
+        #region CreateDate Validation Tests
+
+        [Fact]
+        public async Task GasLog_MustHaveValid_CreateDate_NotMinValue()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.CreateDate = DateTime.MinValue; // Invalid
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_MustHaveValid_CreateDate_NotFuture()
+        {
+            // Arrange
+            CurrentTime = new DateTime(2024, 6, 15, 12, 0, 0, DateTimeKind.Utc);
+            var log = CreateValidGasLog();
+            log.CreateDate = new DateTime(2025, 1, 1); // Future date
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        #endregion
+
+        #region Discounts Validation Tests
+
+        [Fact]
+        public async Task GasLog_WithInvalidDiscount_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Discounts = new List<GasDiscountInfo>
+            {
+                new()
+                {
+                    Program = null, // Invalid - null program
+                    Amount = 3.20m.GetCad()
+                }
+            };
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithInvalidDiscountAmount_FailsValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Discounts = new List<GasDiscountInfo>
+            {
+                new()
+                {
+                    Program = new GasDiscount
+                    {
+                        AuthorId = _authorId,
+                        Program = "Test",
+                        Amount = 0.05m.GetCad(),
+                        DiscountType = GasDiscountType.PerLiter
+                    },
+                    Amount = new Money(-1m, CurrencyCodeType.Cad) // Invalid - negative
+                }
+            };
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithEmptyDiscountList_PassesValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Discounts = new List<GasDiscountInfo>();
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+        }
+
+        [Fact]
+        public async Task GasLog_WithMultipleValidDiscounts_PassesValidation()
+        {
+            // Arrange
+            var log = CreateValidGasLog();
+            log.Discounts = new List<GasDiscountInfo>
+            {
+                new()
+                {
+                    Program = new GasDiscount
+                    {
+                        AuthorId = _authorId,
+                        Program = "Discount 1",
+                        Amount = 0.05m.GetCad(),
+                        DiscountType = GasDiscountType.PerLiter
+                    },
+                    Amount = 2.00m.GetCad()
+                },
+                new()
+                {
+                    Program = new GasDiscount
+                    {
+                        AuthorId = _authorId,
+                        Program = "Discount 2",
+                        Amount = 0.03m.GetCad(),
+                        DiscountType = GasDiscountType.PerLiter
+                    },
+                    Amount = 1.20m.GetCad()
+                }
+            };
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+        }
+
+        #endregion
+
+        #region Multiple Validation Errors Tests
+
+        [Fact]
+        public async Task GasLog_WithMultipleErrors_FailsValidation()
+        {
+            // Arrange
+            var log = new GasLog
+            {
+                AuthorId = 0, // Invalid
+                Date = DateTime.MinValue, // Invalid
+                Car = null, // Invalid
+                Distance = 0d.GetKilometer(), // Invalid
+                Odometer = 0d.GetKilometer(), // Invalid
+                Fuel = 0d.GetLiter(), // Invalid
+                UnitPrice = new Money(-1m, CurrencyCodeType.Cad), // Invalid
+                Station = null, // Invalid
+                CreateDate = DateTime.MinValue // Invalid
+            };
+
+            // Act
+            var result = await _validator.ValidateEntityAsync(log);
+
+            // Assert
+            Assert.False(result.Success);
+        }
+
+        #endregion
+
+        private GasLog CreateValidGasLog()
+        {
+            return new GasLog
+            {
+                AuthorId = _authorId,
+                Date = CurrentTime,
+                Car = new AutomobileInfo
+                {
+                    AuthorId = _authorId,
+                    Brand = "Outback",
+                    Maker = "Subaru",
+                    MeterReading = 50000,
+                    Year = 2018,
+                    VIN = "1HGBH41JXMN109186",
+                    Plate = "BCTT208",
+                    Color = "Blue"
+                },
+                Distance = 340d.GetKilometer(),
+                Odometer = 30000d.GetKilometer(),
+                Fuel = 40d.GetLiter(),
+                UnitPrice = 1.34m.GetCad(),
+                TotalPrice = 53.60m.GetCad(),
+                Station = new GasStation
+                {
+                    Name = "Costco",
+                    Address = "123 Main St",
+                    City = "Vancouver",
+                    State = "BC"
+                },
+                CreateDate = CurrentTime,
+                Discounts = new List<GasDiscountInfo>(),
+                Comment = "Test gas log"
+            };
+        }
+
+        private void SetupTestEnv()
+        {
+            InsertSeedRecords();
+            _validator = new GasLogValidator(LookupRepository, DateProvider);
+            _authorId = ApplicationRegister.DefaultAuthor.Id;
+        }
+    }
+}

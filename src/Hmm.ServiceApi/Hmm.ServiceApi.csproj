@@ -6,13 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Areas\AutomobileInfoService\**" />
-    <Content Remove="Areas\AutomobileInfoService\**" />
-    <EmbeddedResource Remove="Areas\AutomobileInfoService\**" />
-    <None Remove="Areas\AutomobileInfoService\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="IdentityServer4" Version="4.1.2" />
     <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />

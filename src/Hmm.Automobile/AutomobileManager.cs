@@ -12,7 +12,7 @@ namespace Hmm.Automobile
     public class AutomobileManager : EntityManagerBase<AutomobileInfo>
     {
         public AutomobileManager(
-            INoteSerialize<AutomobileInfo> noteSerializer,
+            INoteSerializer<AutomobileInfo> noteSerializer,
             IHmmValidator<AutomobileInfo> validator,
             IHmmNoteManager noteManager,
             IEntityLookup lookupRepo)
@@ -22,7 +22,7 @@ namespace Hmm.Automobile
             NoteSerializer = noteSerializer;
         }
 
-        public override INoteSerialize<AutomobileInfo> NoteSerializer { get; }
+        public override INoteSerializer<AutomobileInfo> NoteSerializer { get; }
 
         public override async Task<ProcessingResult<PageList<AutomobileInfo>>> GetEntitiesAsync(
             ResourceCollectionParameters resourceCollectionParameters = null)

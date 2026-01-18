@@ -1,5 +1,4 @@
 using Hmm.Automobile.DomainEntity;
-using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
@@ -10,7 +9,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Xml.Linq;
 using DomainNoteContentFormatType = Hmm.Core.Map.DomainEntity.NoteContentFormatType;
-using DbNoteContentFormatType = Hmm.Core.Map.DbEntity.NoteContentFormatType;
 
 namespace Hmm.Automobile.Tests
 {

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hmm.Core.NoteSerializer
 {
-    public abstract class NoteSerializerBase<T> : INoteSerialize<T>
+    public abstract class NoteSerializerBase<T> : INoteSerializer<T>
     {
         protected ILogger Logger { get; } = null;
 

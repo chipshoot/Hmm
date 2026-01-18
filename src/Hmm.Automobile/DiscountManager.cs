@@ -13,7 +13,7 @@ namespace Hmm.Automobile
     public class DiscountManager : EntityManagerBase<GasDiscount>
     {
         public DiscountManager(
-            INoteSerialize<GasDiscount> noteSerializer,
+            INoteSerializer<GasDiscount> noteSerializer,
             IHmmValidator<GasDiscount> validator,
             IHmmNoteManager noteManager,
             IEntityLookup lookupRepo)
@@ -23,7 +23,7 @@ namespace Hmm.Automobile
             NoteSerializer = noteSerializer;
         }
 
-        public override INoteSerialize<GasDiscount> NoteSerializer { get; }
+        public override INoteSerializer<GasDiscount> NoteSerializer { get; }
 
         public override async Task<ProcessingResult<PageList<GasDiscount>>> GetEntitiesAsync(
             ResourceCollectionParameters resourceCollectionParameters = null)

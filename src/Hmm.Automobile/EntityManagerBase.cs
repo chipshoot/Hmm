@@ -92,7 +92,7 @@ namespace Hmm.Automobile
 
         #region IAutoEntityManager<T> implementation
 
-        public abstract INoteSerialize<T> NoteSerializer { get; }
+        public abstract INoteSerializer<T> NoteSerializer { get; }
 
         public Author DefaultAuthor { get; }
 

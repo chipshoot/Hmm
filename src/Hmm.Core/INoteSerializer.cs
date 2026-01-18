@@ -4,7 +4,7 @@ using Hmm.Utility.Misc;
 
 namespace Hmm.Core
 {
-    public interface INoteSerialize<T>
+    public interface INoteSerializer<T>
     {
         Task<ProcessingResult<T>> GetEntity(HmmNote note);
 
