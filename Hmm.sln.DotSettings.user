@@ -7,228 +7,53 @@
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Abootstrap_002Fd_003Adist_002Fd_003Ajs_002Ff_003Abootstrap_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Eslim_002Ejs/@EntryIndexedValue">True</s:Boolean>
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=17d9afcc_002D69e9_002D4d26_002Dbfd6_002Dc6ebcaab4c04/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AutomobileSeedingServiceTests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Can_Add_Contact_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Can_Delete_Author_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Cannot_Delete_NonExists_Contact_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Can_Update_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests.Can_Add_Author_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests.Cannot_Add_Already_Existed_AccountName_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests.Can_Delete_Author_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests.Cannot_Delete_NonExists_Author_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests.Can_Add_NoteCatalog_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests.CanNot_Add_Already_Existed_NoteCatalog_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests.Can_Delete_Note_Catalog_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests.Cannot_Delete_NonExists_Catalog_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests.Can_Update_Catalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests.Cannot_Update_Catalog_For_NonExists_Catalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests.Cannot_Update_Catalog_With_Duplicated_Name&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Add_Note_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests.Can_Delete_Contact_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Cannot_Add_Null_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.CanAddNoteWithNonExistCatalogDefaultCatalogApplied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Description&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Subject&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Content&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Catalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_Note_Catalog_To_Null_Catalog_Default_Catalog_Applied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_NoteCatalog_To_Non_Exists_Catalog_Default_Catalog_Applied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Update_NoteCatalog_To_Catalog_With_Invalid_Id_DefaultCatalog_Applied&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Cannot_Update_NonExits_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Can_Delete_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Cannot_Delete_NonExists_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests.Cannot_Add_Note_With_NonExist_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteCatalogRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Can_Add_Tag_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.CanNot_Add_Already_Existed_Tag_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Can_Delete_Tag_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Cannot_Delete_NonExists_Tag_From_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Can_Update_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Cannot_Update_Tag_For_NonExists_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests.Cannot_Update_Tag_With_Duplicated_Name&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net8.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Get_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_ContactDao_To_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_Contact_To_ContactDao&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.AuthorMappingTests.Can_Map_AuthorDao_To_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.AuthorMappingTests.Can_Map_Author_To_AuthorDao&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests.Can_Map_NoteCatalogDao_To_NoteCatalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests.Can_Map_TagDao_To_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests.Can_Map_Tag_To_TagDao&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteMappingTests.Can_Map_NoteDao_To_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteMappingTests.Can_Map_Note_To_NoteDao&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.AuthorMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_Invalid_ContactInfo_To_Empty_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests.Can_Map_Invalid_ContactInfo_To_Contact_With_Empty_ContactInfo&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.ContactMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net8.0::Hmm.Core.Map.Tests.TagMappingTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Add_Valid_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Update_Valid_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Cannot_Update_Not_Exists_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Deactivate_Contact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests.Can_Check_Contact_Exists&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ContactManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Can_Get_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Can_Add_Valid_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Cannot_Add_Invalid_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Can_Update_Valid_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Can_Check_Author_Exists&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Check_Author_Exists_With_Invalid_Id_Get_False&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Can_Deactivate_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Cannot_Update_Not_Exists_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests.Can_Get_Author_With_Query&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogManagerTests.Can_Add_Catalog_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogManagerTests.Can_Update_Catalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogValidatorTests.NoteCatalog_Must_Has_Valid_Name_Length&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogValidatorTests.NoteCatalog_Must_Has_Valid_Schema_Length&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogValidatorTests.NoteCatalog_Must_Has_Valid_Description_Length&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Can_Get_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Can_Get_Tag_With_Query&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Can_Add_Valid_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Cannot_Add_Invalid_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Can_Update_Valid_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Cannot_Update_InValid_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Cannot_Update_Not_Exists_Tag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Can_Deactivate_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Can_Check_Tag_Exists&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests.Check_Tag_Exists_With_Invalid_Id_Get_False&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.TagManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Can_Add_Note_To_DataSource&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Can_Update_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Cannot_Update_Invalid_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Can_Search_Note_By_Id&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Can_Delete_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Cannot_Get_Deleted_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests.Cannot_Delete_Not_Exists_Note&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.HmmNoteManagerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.Get_ReturnsOkResult_WithListOfTags&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.Get_ReturnsNotFound_WhenNoTagFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.GetTagById_ReturnsOkResult_WithTag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.GetTagById_ReturnsNotFound_WhenTagNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.AddTag_ReturnsCreatedResult_WithNewTag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.AddTag_ReturnsBadRequest_WhenCreationFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsNotFound_WhenTagNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests.PatchTag_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.TagControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteCatalogValidatorTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.Get_ReturnsOkResult_WithListOfCatalogs&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.Get_ReturnsNotFound_WhenNoCatalogFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.GetCatalogById_ReturnsOkResult_WithCatalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.GetCatalogById_ReturnsNotFound_WhenCatalogNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.AddCatalog_ReturnsCreatedResult_WithNewCatalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.AddCatalog_ReturnsBadRequest_WhenCreationFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.AddCatalog_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.UpdateCatalog_ReturnsNoContent_WhenUpdateIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.UpdateCatalog_ReturnsBadRequest_WhenTagIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.UpdateCatalog_ReturnsBadRequest_WhenTagNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.UpdateCatalog_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.UpdateCatalog_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.PatchTag_ReturnsNoContent_WhenPatchIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.PatchTag_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.PatchCatalog_ReturnsNotFound_WhenTagNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.PatchCatalog_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests.PatchCatalog_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.Get_ReturnsOkResult_WithListOfContacts&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.Get_ReturnsNotFound_WhenNoContactFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.GetContactById_ReturnsOkResult_WithTag&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.GetContactById_ReturnsNotFound_WhenTagNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.GetContactById_ReturnsNotFound_WhenContactNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.AddContact_ReturnsCreatedResult_WithNewContact&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.AddContact_ReturnsBadRequest_WhenCreationFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.AddContact_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.UpdateContact_ReturnsNoContent_WhenUpdateIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.UpdateContact_ReturnsBadRequest_WhenContactIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.UpdateContact_ReturnsBadRequest_WhenContactNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.UpdateContact_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.UpdateContact_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.PatchContact_ReturnsNoContent_WhenPatchIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.PatchContact_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.PatchContact_ReturnsNotFound_WhenContactNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.PatchContact_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.PatchContact_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.Delete_ReturnsNoContent_WhenDeleteIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.Delete_ReturnsBadRequest_WhenIdIsInvalid&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.Delete_ReturnsBadRequest_WhenContactNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests.Delete_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Get_ReturnsOkResult_WithListOfAuthors&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Get_ReturnsNotFound_WhenNoAuthorFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.GetAuthorById_ReturnsOkResult_WithAuthor&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.GetAuthorById_ReturnsNotFound_WhenAuthorNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.AddAuthor_ReturnsCreatedResult_WithNewAuthor&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.AddAuthor_ReturnsBadRequest_WhenCreationFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.AddAuthor_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.UpdateAuthor_ReturnsNoContent_WhenUpdateIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.UpdateAuthor_ReturnsBadRequest_WhenAuthorIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.UpdateAuthor_ReturnsBadRequest_WhenAuthorNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.UpdateAuthor_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.UpdateAuthor_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.PatchAuthor_ReturnsNoContent_WhenPatchIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.PatchAuthor_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.PatchAuthor_ReturnsNotFound_WhenAuthorNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.PatchAuthor_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.PatchAuthor_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Delete_ReturnsNoContent_WhenDeleteIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Delete_ReturnsBadRequest_WhenIdIsInvalid&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Delete_ReturnsBadRequest_WhenAuthorNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests.Delete_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Get_ReturnsOkResult_WithListOfNotes&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Get_ReturnsNotFound_WhenNoNoteFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.GetNoteById_ReturnsOkResult_WithNote&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.GetNoteById_ReturnsNotFound_WhenNoteNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.AddNote_ReturnsCreatedResult_WithNewNote&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.AddNote_ReturnsBadRequest_WhenCreationFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.AddNote_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsNoContent_WhenUpdateIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsBadRequest_WhenNoteIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsBadRequest_WhenNoteNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.UpdateNote_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsNoContent_WhenPatchIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsBadRequest_WhenPatchDocIsNullOrInvalidId&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsNotFound_WhenNoteNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsBadRequest_WhenUpdateFails&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.PatchNote_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsNoContent_WhenDeleteIsSuccessful&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsBadRequest_WhenIdIsInvalid&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsBadRequest_WhenNoteNotFound&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests.Delete_ReturnsInternalServerError_OnException&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net8.0::Hmm.ServiceApi.Core.Tests.NoteControllerTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Subject_Length&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Description_Length&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Author&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.NoteValidatorTests.Note_Must_Has_Valid_Catalog&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ValidatorTests.NoteValidatorTests.CannotChangeAuthorForExistsNote&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net8.0::Hmm.Core.Tests.ValidatorTests.NoteValidatorTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6fa9f3a7_002Dea12_002D4820_002D98e1_002D634ffe7bc4f0/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Constructor_WithNullAutomobileManager_ThrowsArgumentNullException" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.Constructor_WithNullAutomobileManager_ThrowsArgumentNullException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.Constructor_WithNullDiscountManager_ThrowsArgumentNullException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.Constructor_WithNullLogger_ThrowsArgumentNullException&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.Constructor_WithValidParameters_CreatesInstance&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithNullFilePath_ReturnsInvalidResult&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithEmptyFilePath_ReturnsInvalidResult&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithWhitespaceFilePath_ReturnsInvalidResult&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithNonExistentFile_ReturnsNotFoundResult&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithValidAutomobileData_SeedsSuccessfully&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithInvalidJson_ReturnsFailureResult&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithNullJsonRoot_ReturnsFailureResult&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithEmptyJsonFile_ReturnsSuccessWithZeroCount&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithMixedData_SeedsBothTypes&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=7ad5d40c_002D0142_002D457c_002Db758_002D6d163d4ca8c5/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AutomobileSeedingServiceTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.Constructor_WithNullAutomobileManager_ThrowsArgumentNullException&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>

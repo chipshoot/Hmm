@@ -1,28 +1,39 @@
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Misc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace Hmm.Automobile.Tests
 {
+    /// <summary>
+    /// Tests for ApplicationRegister functionality.
+    /// Seeding-specific tests have been moved to AutomobileSeedingServiceTests.
+    /// </summary>
     public class ApplicationRegisterTests : AutoTestFixtureBase
     {
         private readonly IConfiguration _configuration;
+        private readonly Mock<ISeedingService> _seedingServiceMock;
+        private readonly Mock<ILogger<ApplicationRegister>> _loggerMock;
 
         public ApplicationRegisterTests()
         {
             InsertSeedRecords();
+            
             var configBuilder = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
                     ["Automobile:Seeding:AddSeedingEntity"] = "false"
                 });
             _configuration = configBuilder.Build();
+
+            _seedingServiceMock = new Mock<ISeedingService>();
+            _loggerMock = new Mock<ILogger<ApplicationRegister>>();
         }
 
         #region Constructor Tests
@@ -31,14 +42,33 @@ namespace Hmm.Automobile.Tests
         public void Constructor_WithNullConfiguration_ThrowsArgumentNullException()
         {
             // Arrange & Act & Assert
-            Assert.Throws<System.ArgumentNullException>(() => new ApplicationRegister(null));
+            Assert.Throws<ArgumentNullException>(() =>
+                new ApplicationRegister(null, _seedingServiceMock.Object, _loggerMock.Object));
         }
 
         [Fact]
-        public void Constructor_WithValidConfiguration_CreatesInstance()
+        public void Constructor_WithNullSeedingService_ThrowsArgumentNullException()
+        {
+            // Arrange & Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new ApplicationRegister(_configuration, null, _loggerMock.Object));
+        }
+
+        [Fact]
+        public void Constructor_WithValidParameters_CreatesInstance()
         {
             // Arrange & Act
-            var register = new ApplicationRegister(_configuration);
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
+
+            // Assert
+            Assert.NotNull(register);
+        }
+
+        [Fact]
+        public void Constructor_WithNullLogger_CreatesInstance()
+        {
+            // Arrange & Act
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object);
 
             // Assert
             Assert.NotNull(register);
@@ -78,44 +108,20 @@ namespace Hmm.Automobile.Tests
         #region RegisterAsync Tests
 
         [Fact]
-        public async Task RegisterAsync_WithNullAutomobileManager_ThrowsArgumentNullException()
-        {
-            // Arrange
-            var register = new ApplicationRegister(_configuration);
-            var discountManager = new Mock<IAutoEntityManager<GasDiscount>>().Object;
-
-            // Act & Assert
-            await Assert.ThrowsAsync<System.ArgumentNullException>(
-                () => register.RegisterAsync(null, discountManager, LookupRepository));
-        }
-
-        [Fact]
-        public async Task RegisterAsync_WithNullDiscountManager_ThrowsArgumentNullException()
-        {
-            // Arrange
-            var register = new ApplicationRegister(_configuration);
-            var automobileManager = new Mock<IAutoEntityManager<AutomobileInfo>>().Object;
-
-            // Act & Assert
-            await Assert.ThrowsAsync<System.ArgumentNullException>(
-                () => register.RegisterAsync(automobileManager, null, LookupRepository));
-        }
-
-        [Fact]
         public async Task RegisterAsync_WithNullLookupRepo_ThrowsArgumentNullException()
         {
             // Arrange
-            var register = new ApplicationRegister(_configuration);
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
             var automobileManager = new Mock<IAutoEntityManager<AutomobileInfo>>().Object;
             var discountManager = new Mock<IAutoEntityManager<GasDiscount>>().Object;
 
             // Act & Assert
-            await Assert.ThrowsAsync<System.ArgumentNullException>(
+            await Assert.ThrowsAsync<ArgumentNullException>(
                 () => register.RegisterAsync(automobileManager, discountManager, null));
         }
 
         [Fact]
-        public async Task RegisterAsync_WhenSeedingDisabled_ReturnsSuccess()
+        public async Task RegisterAsync_WhenSeedingDisabled_ReturnsSuccessWithoutCallingSeedingService()
         {
             // Arrange
             var config = new ConfigurationBuilder()
@@ -124,7 +130,8 @@ namespace Hmm.Automobile.Tests
                     ["Automobile:Seeding:AddSeedingEntity"] = "false"
                 })
                 .Build();
-            var register = new ApplicationRegister(config);
+            
+            var register = new ApplicationRegister(config, _seedingServiceMock.Object, _loggerMock.Object);
             var automobileManager = new Mock<IAutoEntityManager<AutomobileInfo>>().Object;
             var discountManager = new Mock<IAutoEntityManager<GasDiscount>>().Object;
 
@@ -134,10 +141,16 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.True(result.Success);
             Assert.True(result.Value);
+            Assert.Contains("Seeding disabled", result.Messages[0].Message);
+            
+            // Verify seeding service was not called
+            _seedingServiceMock.Verify(
+                x => x.SeedDataAsync(It.IsAny<string>()),
+                Times.Never);
         }
 
         [Fact]
-        public async Task RegisterAsync_WhenSeedingEnabledButNoDataFile_ReturnsSuccess()
+        public async Task RegisterAsync_WhenSeedingEnabledButNoDataFile_ReturnsSuccessWithoutCallingSeedingService()
         {
             // Arrange
             var config = new ConfigurationBuilder()
@@ -147,7 +160,8 @@ namespace Hmm.Automobile.Tests
                     ["Automobile:Seeding:SeedingDataFile"] = ""
                 })
                 .Build();
-            var register = new ApplicationRegister(config);
+            
+            var register = new ApplicationRegister(config, _seedingServiceMock.Object, _loggerMock.Object);
             var automobileManager = new Mock<IAutoEntityManager<AutomobileInfo>>().Object;
             var discountManager = new Mock<IAutoEntityManager<GasDiscount>>().Object;
 
@@ -157,20 +171,32 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.True(result.Success);
             Assert.True(result.Value);
+            Assert.Contains("No seeding data file configured", result.Messages[0].Message);
+            
+            // Verify seeding service was not called
+            _seedingServiceMock.Verify(
+                x => x.SeedDataAsync(It.IsAny<string>()),
+                Times.Never);
         }
 
         [Fact]
-        public async Task RegisterAsync_WhenSeedingEnabledWithNonExistentFile_ReturnsSuccess()
+        public async Task RegisterAsync_WhenSeedingEnabledWithFile_CallsSeedingService()
         {
             // Arrange
+            var dataFile = "test-seeding-data.json";
             var config = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
                     ["Automobile:Seeding:AddSeedingEntity"] = "true",
-                    ["Automobile:Seeding:SeedingDataFile"] = "nonexistent.json"
+                    ["Automobile:Seeding:SeedingDataFile"] = dataFile
                 })
                 .Build();
-            var register = new ApplicationRegister(config);
+
+            _seedingServiceMock
+                .Setup(x => x.SeedDataAsync(dataFile))
+                .ReturnsAsync(ProcessingResult<int>.Ok(5, "Successfully seeded 5 entities"));
+
+            var register = new ApplicationRegister(config, _seedingServiceMock.Object, _loggerMock.Object);
             var automobileManager = new Mock<IAutoEntityManager<AutomobileInfo>>().Object;
             var discountManager = new Mock<IAutoEntityManager<GasDiscount>>().Object;
 
@@ -180,182 +206,74 @@ namespace Hmm.Automobile.Tests
             // Assert
             Assert.True(result.Success);
             Assert.True(result.Value);
+            Assert.Contains("5 entities seeded", result.Messages[0].Message);
+            
+            // Verify seeding service was called with correct file path
+            _seedingServiceMock.Verify(
+                x => x.SeedDataAsync(dataFile),
+                Times.Once);
         }
 
-        #endregion
-
-        #region GetSeedingEntities Tests
-
         [Fact]
-        public void GetSeedingEntities_WithNullFileName_ReturnsEmptyList()
+        public async Task RegisterAsync_WhenSeedingFails_ReturnsFailure()
         {
+            // Arrange
+            var dataFile = "invalid-file.json";
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    ["Automobile:Seeding:AddSeedingEntity"] = "true",
+                    ["Automobile:Seeding:SeedingDataFile"] = dataFile
+                })
+                .Build();
+
+            _seedingServiceMock
+                .Setup(x => x.SeedDataAsync(dataFile))
+                .ReturnsAsync(ProcessingResult<int>.NotFound("Seeding data file not found"));
+
+            var register = new ApplicationRegister(config, _seedingServiceMock.Object, _loggerMock.Object);
+            var automobileManager = new Mock<IAutoEntityManager<AutomobileInfo>>().Object;
+            var discountManager = new Mock<IAutoEntityManager<GasDiscount>>().Object;
+
             // Act
-            var entities = ApplicationRegister.GetSeedingEntities(null);
+            var result = await register.RegisterAsync(automobileManager, discountManager, LookupRepository);
 
             // Assert
-            Assert.NotNull(entities);
-            Assert.Empty(entities);
+            Assert.False(result.Success);
+            Assert.Contains("Seeding failed", result.ErrorMessage);
         }
 
         [Fact]
-        public void GetSeedingEntities_WithEmptyFileName_ReturnsEmptyList()
+        public async Task RegisterAsync_WhenSeedingSucceedsWithWarnings_PreservesWarnings()
         {
+            // Arrange
+            var dataFile = "test-data.json";
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string>
+                {
+                    ["Automobile:Seeding:AddSeedingEntity"] = "true",
+                    ["Automobile:Seeding:SeedingDataFile"] = dataFile
+                })
+                .Build();
+
+            var seedResult = ProcessingResult<int>.Ok(3, "Seeded 3 entities")
+                .WithWarning("Failed to create automobile 'TestCar': Validation error");
+
+            _seedingServiceMock
+                .Setup(x => x.SeedDataAsync(dataFile))
+                .ReturnsAsync(seedResult);
+
+            var register = new ApplicationRegister(config, _seedingServiceMock.Object, _loggerMock.Object);
+            var automobileManager = new Mock<IAutoEntityManager<AutomobileInfo>>().Object;
+            var discountManager = new Mock<IAutoEntityManager<GasDiscount>>().Object;
+
             // Act
-            var entities = ApplicationRegister.GetSeedingEntities("");
+            var result = await register.RegisterAsync(automobileManager, discountManager, LookupRepository);
 
             // Assert
-            Assert.NotNull(entities);
-            Assert.Empty(entities);
-        }
-
-        [Fact]
-        public void GetSeedingEntities_WithNonExistentFile_ReturnsEmptyList()
-        {
-            // Act
-            var entities = ApplicationRegister.GetSeedingEntities("nonexistent_file.json");
-
-            // Assert
-            Assert.NotNull(entities);
-            Assert.Empty(entities);
-        }
-
-        [Fact]
-        public void GetSeedingEntities_WithValidJsonFile_ReturnsEntities()
-        {
-            // Arrange
-            var testJsonContent = @"{
-                ""AutomobileInfos"": [
-                    {
-                        ""VIN"": ""1HGBH41JXMN109186"",
-                        ""Maker"": ""Honda"",
-                        ""Brand"": ""Civic"",
-                        ""Model"": ""EX"",
-                        ""Year"": 2021,
-                        ""Color"": ""Blue"",
-                        ""Plate"": ""ABC123"",
-                        ""EngineType"": 0,
-                        ""FuelType"": 0
-                    }
-                ],
-                ""GasDiscounts"": [
-                    {
-                        ""Program"": ""Test Discount"",
-                        ""Amount"": { ""value"": 0.05, ""currencyCode"": ""CAD"" }
-                    }
-                ]
-            }";
-            var tempFile = Path.GetTempFileName();
-            try
-            {
-                File.WriteAllText(tempFile, testJsonContent);
-
-                // Act
-                var entities = ApplicationRegister.GetSeedingEntities(tempFile);
-
-                // Assert
-                Assert.NotNull(entities);
-                var entityList = entities.ToList();
-                Assert.Equal(2, entityList.Count);
-                Assert.Single(entityList.OfType<AutomobileInfo>());
-                Assert.Single(entityList.OfType<GasDiscount>());
-            }
-            finally
-            {
-                File.Delete(tempFile);
-            }
-        }
-
-        [Fact]
-        public void GetSeedingEntities_WithEmptyJsonRoot_ReturnsEmptyList()
-        {
-            // Arrange
-            var testJsonContent = "null";
-            var tempFile = Path.GetTempFileName();
-            try
-            {
-                File.WriteAllText(tempFile, testJsonContent);
-
-                // Act
-                var entities = ApplicationRegister.GetSeedingEntities(tempFile);
-
-                // Assert
-                Assert.NotNull(entities);
-                Assert.Empty(entities);
-            }
-            finally
-            {
-                File.Delete(tempFile);
-            }
-        }
-
-        [Fact]
-        public void GetSeedingEntities_WithOnlyAutomobiles_ReturnsAutomobiles()
-        {
-            // Arrange
-            var testJsonContent = @"{
-                ""AutomobileInfos"": [
-                    {
-                        ""VIN"": ""1HGBH41JXMN109186"",
-                        ""Maker"": ""Honda"",
-                        ""Brand"": ""Civic"",
-                        ""Model"": ""EX"",
-                        ""Year"": 2021,
-                        ""Plate"": ""ABC123"",
-                        ""EngineType"": 0,
-                        ""FuelType"": 0
-                    }
-                ]
-            }";
-            var tempFile = Path.GetTempFileName();
-            try
-            {
-                File.WriteAllText(tempFile, testJsonContent);
-
-                // Act
-                var entities = ApplicationRegister.GetSeedingEntities(tempFile);
-
-                // Assert
-                Assert.NotNull(entities);
-                var entityList = entities.ToList();
-                Assert.Single(entityList);
-                Assert.IsType<AutomobileInfo>(entityList.First());
-            }
-            finally
-            {
-                File.Delete(tempFile);
-            }
-        }
-
-        [Fact]
-        public void GetSeedingEntities_WithOnlyDiscounts_ReturnsDiscounts()
-        {
-            // Arrange
-            var testJsonContent = @"{
-                ""GasDiscounts"": [
-                    {
-                        ""Program"": ""Test Discount"",
-                        ""Amount"": { ""value"": 0.05, ""currencyCode"": ""CAD"" }
-                    }
-                ]
-            }";
-            var tempFile = Path.GetTempFileName();
-            try
-            {
-                File.WriteAllText(tempFile, testJsonContent);
-
-                // Act
-                var entities = ApplicationRegister.GetSeedingEntities(tempFile);
-
-                // Assert
-                Assert.NotNull(entities);
-                var entityList = entities.ToList();
-                Assert.Single(entityList);
-                Assert.IsType<GasDiscount>(entityList.First());
-            }
-            finally
-            {
-                File.Delete(tempFile);
-            }
+            Assert.True(result.Success);
+            Assert.True(result.HasWarning);
+            Assert.Contains(result.Messages, m => m.Message.Contains("Failed to create automobile"));
         }
 
         #endregion
@@ -367,10 +285,12 @@ namespace Hmm.Automobile.Tests
         [InlineData(NoteCatalogType.GasDiscount, AutomobileConstant.GasDiscountCatalogName)]
         [InlineData(NoteCatalogType.GasLog, AutomobileConstant.GasLogCatalogName)]
         [InlineData(NoteCatalogType.GasStation, AutomobileConstant.GasStationCatalogName)]
-        public async Task GetCatalogAsync_WithValidType_ReturnsCorrectCatalog(NoteCatalogType catalogType, string expectedName)
+        public async Task GetCatalogAsync_WithValidType_ReturnsCorrectCatalog(
+            NoteCatalogType catalogType,
+            string expectedName)
         {
             // Arrange
-            var register = new ApplicationRegister(_configuration);
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
 
             // Act
             var catalog = await register.GetCatalogAsync(catalogType, LookupRepository);
@@ -384,10 +304,10 @@ namespace Hmm.Automobile.Tests
         public async Task GetCatalogAsync_WithNullLookupRepo_ThrowsArgumentNullException()
         {
             // Arrange
-            var register = new ApplicationRegister(_configuration);
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
 
             // Act & Assert
-            await Assert.ThrowsAsync<System.ArgumentNullException>(
+            await Assert.ThrowsAsync<ArgumentNullException>(
                 () => register.GetCatalogAsync(NoteCatalogType.Automobile, null));
         }
 
@@ -395,7 +315,7 @@ namespace Hmm.Automobile.Tests
         public async Task GetCatalogAsync_CachesCatalog()
         {
             // Arrange
-            var register = new ApplicationRegister(_configuration);
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
 
             // Act
             var catalog1 = await register.GetCatalogAsync(NoteCatalogType.Automobile, LookupRepository);
@@ -407,18 +327,35 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(catalog1.Name, catalog2.Name);
         }
 
+        [Fact]
+        public async Task GetCatalogAsync_WithInvalidType_ReturnsNull()
+        {
+            // Arrange
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
+
+            // Act
+            var catalog = await register.GetCatalogAsync((NoteCatalogType)999, LookupRepository);
+
+            // Assert
+            Assert.Null(catalog);
+        }
+
         [Theory]
         [InlineData(NoteCatalogType.Automobile, AutomobileConstant.AutoMobileInfoCatalogName)]
         [InlineData(NoteCatalogType.GasDiscount, AutomobileConstant.GasDiscountCatalogName)]
         [InlineData(NoteCatalogType.GasLog, AutomobileConstant.GasLogCatalogName)]
         [InlineData(NoteCatalogType.GasStation, AutomobileConstant.GasStationCatalogName)]
-        public void GetCatalog_WithValidType_ReturnsCorrectCatalog(NoteCatalogType catalogType, string expectedName)
+        public void GetCatalog_WithValidType_ReturnsCorrectCatalog(
+            NoteCatalogType catalogType,
+            string expectedName)
         {
             // Arrange
-            var register = new ApplicationRegister(_configuration);
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
 
             // Act
+#pragma warning disable CS0618 // Type or member is obsolete
             var catalog = register.GetCatalog(catalogType, LookupRepository);
+#pragma warning restore CS0618
 
             // Assert
             Assert.NotNull(catalog);
@@ -429,13 +366,25 @@ namespace Hmm.Automobile.Tests
         public void GetCatalog_WithInvalidType_ReturnsNull()
         {
             // Arrange
-            var register = new ApplicationRegister(_configuration);
+            var register = new ApplicationRegister(_configuration, _seedingServiceMock.Object, _loggerMock.Object);
 
             // Act
+#pragma warning disable CS0618 // Type or member is obsolete
             var catalog = register.GetCatalog((NoteCatalogType)999, LookupRepository);
+#pragma warning restore CS0618
 
             // Assert
             Assert.Null(catalog);
+        }
+
+        [Fact]
+        public void GetCatalog_IsMarkedAsObsolete()
+        {
+            // This test verifies that GetCatalog method is marked with Obsolete attribute
+            var method = typeof(ApplicationRegister).GetMethod("GetCatalog");
+            var obsoleteAttribute = method.GetCustomAttributes(typeof(ObsoleteAttribute), false);
+
+            Assert.NotEmpty(obsoleteAttribute);
         }
 
         #endregion
