@@ -1198,11 +1198,6 @@ namespace Hmm.Core.Tests.NoteSerializer
 
             public double TestGetDoubleProperty(JsonElement element, string propertyName, double defaultValue = 0.0)
                 => GetDoubleProperty(element, propertyName, defaultValue);
-
-            protected override NoteCatalog GetCatalog()
-            {
-                return _testCatalog ?? base.GetCatalog();
-            }
         }
 
         #endregion

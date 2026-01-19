@@ -1,12 +1,10 @@
-// Ignore Spelling: Repo
-
-using Hmm.Automobile.DomainEntity;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,7 +12,7 @@ namespace Hmm.Automobile
 {
     /// <summary>
     /// Manages the registration, initialization, and configuration of the Automobile application module.
-    /// 
+    ///
     /// <para><b>Responsibilities:</b></para>
     /// <list type="bullet">
     /// <item><description>Registers the Automobile module with the Hmm system</description></item>
@@ -22,20 +20,26 @@ namespace Hmm.Automobile
     /// <item><description>Provides access to NoteCatalog instances for different entity types</description></item>
     /// <item><description>Manages the default author for automobile-related notes</description></item>
     /// </list>
-    /// 
+    ///
     /// <para><b>Design Notes:</b></para>
     /// <list type="bullet">
-    /// <item><description>Uses caching to minimize database queries for frequently accessed catalogs</description></item>
+    /// <item><description>Uses thread-safe caching to minimize database queries for frequently accessed catalogs</description></item>
     /// <item><description>Delegates seeding operations to ISeedingService for better separation of concerns</description></item>
     /// <item><description>Implements IApplication interface for module registration pattern</description></item>
+    /// <item><description>Uses strongly-typed configuration via IOptions pattern</description></item>
     /// </list>
-    /// 
+    ///
     /// <para><b>Configuration Requirements:</b></para>
     /// <code>
+    /// // In Startup.cs or Program.cs:
+    /// services.Configure&lt;AutomobileSeedingOptions&gt;(
+    ///     configuration.GetSection("Automobile:Seeding"));
+    ///
+    /// // appsettings.json:
     /// {
     ///   "Automobile": {
     ///     "Seeding": {
-    ///       "AddSeedingEntity": "true",
+    ///       "AddSeedingEntity": true,
     ///       "SeedingDataFile": "path/to/seeding-data.json"
     ///     }
     ///   }
@@ -44,33 +48,37 @@ namespace Hmm.Automobile
     /// </summary>
     public class ApplicationRegister : IApplication
     {
-        private static Author _appAuthor;
-        private readonly IConfiguration _configuration;
+        private static readonly Lazy<Author> AppAuthorLazy = new(() => new Author
+        {
+            AccountName = "03D9D3DE-0C3C-4775-BEC3-6B698B696837",
+            Description = "Automobile default author",
+            Role = AuthorRoleType.Author,
+            IsActivated = true
+        });
+
+        private readonly AutomobileSeedingOptions _options;
         private readonly ILogger<ApplicationRegister> _logger;
         private readonly ISeedingService _seedingService;
-        
-        // Catalog cache fields
-        private NoteCatalog _automobileCatalog;
-        private NoteCatalog _gasDiscountCatalog;
-        private NoteCatalog _gasLogCatalog;
-        private NoteCatalog _gasStationCatalog;
+
+        // Thread-safe catalog cache
+        private readonly ConcurrentDictionary<NoteCatalogType, NoteCatalog> _catalogCache = new();
 
         /// <summary>
         /// Initializes a new instance of the ApplicationRegister class.
         /// </summary>
-        /// <param name="configuration">Application configuration containing seeding and module settings.</param>
+        /// <param name="options">Configuration options for automobile seeding.</param>
         /// <param name="seedingService">Service for seeding data from external sources.</param>
         /// <param name="logger">Logger instance for diagnostics and error tracking.</param>
         /// <exception cref="ArgumentNullException">Thrown when required dependencies are null.</exception>
         public ApplicationRegister(
-            IConfiguration configuration,
+            IOptions<AutomobileSeedingOptions> options,
             ISeedingService seedingService,
             ILogger<ApplicationRegister> logger = null)
         {
-            ArgumentNullException.ThrowIfNull(configuration);
+            ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(seedingService);
-            
-            _configuration = configuration;
+
+            _options = options.Value ?? new AutomobileSeedingOptions();
             _seedingService = seedingService;
             _logger = logger;
         }
@@ -80,33 +88,18 @@ namespace Hmm.Automobile
         /// This author is used when no specific author is provided for automobile operations.
         /// </summary>
         /// <remarks>
-        /// <para><b>Thread Safety Warning:</b> This property uses lazy initialization with a static field,
-        /// which may have race conditions in highly concurrent scenarios. Consider using Lazy&lt;T&gt; 
-        /// or dependency injection for the author instead.</para>
-        /// 
-        /// <para>The default author has a GUID-based account name to ensure uniqueness and is 
+        /// <para>This property uses thread-safe lazy initialization via <see cref="Lazy{T}"/>,
+        /// ensuring the Author instance is created only once and is safe for concurrent access.</para>
+        ///
+        /// <para>The default author has a GUID-based account name to ensure uniqueness and is
         /// automatically activated.</para>
         /// </remarks>
         /// <value>An Author instance configured as the default automobile author.</value>
-        public static Author DefaultAuthor
-        {
-            get
-            {
-                return _appAuthor ??= new Author
-                {
-                    AccountName = "03D9D3DE-0C3C-4775-BEC3-6B698B696837",
-                    Description = "Automobile default author",
-                    Role = AuthorRoleType.Author,
-                    IsActivated = true
-                };
-            }
-        }
+        public static Author DefaultAuthor => AppAuthorLazy.Value;
 
         /// <summary>
         /// Registers the Automobile module with the Hmm system and optionally seeds initial data.
         /// </summary>
-        /// <param name="automobileMan">Manager for AutomobileInfo entities (not used - kept for interface compatibility).</param>
-        /// <param name="discountMan">Manager for GasDiscount entities (not used - kept for interface compatibility).</param>
         /// <param name="lookupRepo">Repository for entity lookups and queries.</param>
         /// <returns>
         /// A ProcessingResult indicating success or failure of the registration.
@@ -115,34 +108,27 @@ namespace Hmm.Automobile
         /// <remarks>
         /// <para><b>Seeding Behavior:</b></para>
         /// <list type="bullet">
-        /// <item><description>Checks configuration key "Automobile:Seeding:AddSeedingEntity"</description></item>
+        /// <item><description>Checks configuration option AddSeedingEntity</description></item>
         /// <item><description>If true, delegates to ISeedingService to read and seed data</description></item>
         /// <item><description>Seeding service handles all entity creation and error collection</description></item>
         /// </list>
-        /// 
-        /// <para><b>Note:</b> automobileMan and discountMan parameters are kept for backward compatibility
-        /// but are no longer used. The ISeedingService injected in the constructor handles entity creation.</para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown when lookupRepo is null.</exception>
-        public async Task<ProcessingResult<bool>> RegisterAsync(
-            IAutoEntityManager<AutomobileInfo> automobileMan,
-            IAutoEntityManager<GasDiscount> discountMan,
-            IEntityLookup lookupRepo)
+        public async Task<ProcessingResult<bool>> RegisterAsync(IEntityLookup lookupRepo)
         {
             ArgumentNullException.ThrowIfNull(lookupRepo);
 
             try
             {
                 // Check if seeding is enabled
-                var addSeedRecords = bool.Parse(_configuration["Automobile:Seeding:AddSeedingEntity"] ?? "false");
-                if (!addSeedRecords)
+                if (!_options.AddSeedingEntity)
                 {
                     _logger?.LogInformation("Seeding is disabled for Automobile module");
                     return ProcessingResult<bool>.Ok(true, "Seeding disabled - no data loaded");
                 }
 
                 // Get seeding data file path
-                var dataFileName = _configuration["Automobile:Seeding:SeedingDataFile"];
+                var dataFileName = _options.SeedingDataFile;
                 if (string.IsNullOrWhiteSpace(dataFileName))
                 {
                     _logger?.LogWarning("Seeding is enabled but no data file specified");
@@ -197,9 +183,10 @@ namespace Hmm.Automobile
         /// <remarks>
         /// <para><b>Caching Strategy:</b></para>
         /// <list type="bullet">
+        /// <item><description>Uses thread-safe ConcurrentDictionary for caching</description></item>
         /// <item><description>First call queries the database and caches the result</description></item>
         /// <item><description>Subsequent calls return the cached instance</description></item>
-        /// <item><description>Cache is per-instance (not static) and never expires</description></item>
+        /// <item><description>Cache is per-instance and never expires</description></item>
         /// <item><description>To refresh, create a new ApplicationRegister instance</description></item>
         /// </list>
         /// </remarks>
@@ -207,32 +194,15 @@ namespace Hmm.Automobile
         {
             ArgumentNullException.ThrowIfNull(lookupRepo);
 
-            var catalogName = entityType switch
-            {
-                NoteCatalogType.Automobile => AutomobileConstant.AutoMobileInfoCatalogName,
-                NoteCatalogType.GasDiscount => AutomobileConstant.GasDiscountCatalogName,
-                NoteCatalogType.GasLog => AutomobileConstant.GasLogCatalogName,
-                NoteCatalogType.GasStation => AutomobileConstant.GasStationCatalogName,
-                _ => null
-            };
-
+            var catalogName = GetCatalogName(entityType);
             if (string.IsNullOrEmpty(catalogName))
             {
                 _logger?.LogWarning("Unknown catalog type requested: {EntityType}", entityType);
                 return null;
             }
 
-            // Check cached catalogs first
-            var cachedCatalog = entityType switch
-            {
-                NoteCatalogType.Automobile => _automobileCatalog,
-                NoteCatalogType.GasDiscount => _gasDiscountCatalog,
-                NoteCatalogType.GasLog => _gasLogCatalog,
-                NoteCatalogType.GasStation => _gasStationCatalog,
-                _ => null
-            };
-
-            if (cachedCatalog != null)
+            // Try to get from cache first (thread-safe)
+            if (_catalogCache.TryGetValue(entityType, out var cachedCatalog))
             {
                 return cachedCatalog;
             }
@@ -249,23 +219,8 @@ namespace Hmm.Automobile
             var catalog = catalogsResult.Value.FirstOrDefault();
             if (catalog != null)
             {
-                // Cache the result
-                switch (entityType)
-                {
-                    case NoteCatalogType.Automobile:
-                        _automobileCatalog = catalog;
-                        break;
-                    case NoteCatalogType.GasDiscount:
-                        _gasDiscountCatalog = catalog;
-                        break;
-                    case NoteCatalogType.GasLog:
-                        _gasLogCatalog = catalog;
-                        break;
-                    case NoteCatalogType.GasStation:
-                        _gasStationCatalog = catalog;
-                        break;
-                }
-                
+                // Thread-safe cache update - if another thread already added it, that's fine
+                _catalogCache.TryAdd(entityType, catalog);
                 _logger?.LogDebug("Catalog cached: {CatalogName}", catalogName);
             }
 
@@ -273,19 +228,18 @@ namespace Hmm.Automobile
         }
 
         /// <summary>
-        /// Synchronously retrieves a NoteCatalog for the specified entity type.
+        /// Gets the catalog name for the specified entity type.
         /// </summary>
-        /// <param name="entityType">The type of entity for which to retrieve the catalog.</param>
-        /// <param name="lookupRepo">Repository for entity lookups.</param>
-        /// <returns>The NoteCatalog for the specified entity type, or null if not found.</returns>
-        /// <remarks>
-        /// <para><b>Warning:</b> This method uses GetAwaiter().GetResult() which can cause deadlocks
-        /// in certain synchronization contexts (e.g., ASP.NET, WPF, WinForms).</para>
-        /// </remarks>
-        [Obsolete("Use GetCatalogAsync instead to avoid potential deadlocks")]
-        public NoteCatalog GetCatalog(NoteCatalogType entityType, IEntityLookup lookupRepo)
+        private static string GetCatalogName(NoteCatalogType entityType)
         {
-            return GetCatalogAsync(entityType, lookupRepo).GetAwaiter().GetResult();
+            return entityType switch
+            {
+                NoteCatalogType.Automobile => AutomobileConstant.AutoMobileInfoCatalogName,
+                NoteCatalogType.GasDiscount => AutomobileConstant.GasDiscountCatalogName,
+                NoteCatalogType.GasLog => AutomobileConstant.GasLogCatalogName,
+                NoteCatalogType.GasStation => AutomobileConstant.GasStationCatalogName,
+                _ => null
+            };
         }
     }
 }

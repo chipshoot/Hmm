@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Hmm.Automobile\Hmm.Automobile.csproj" />
     <ProjectReference Include="..\Hmm.Contract\Hmm.Contract.csproj" />
     <ProjectReference Include="..\Hmm.Core.Dal.EF\Hmm.Core.Dal.EF.csproj" />
     <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />

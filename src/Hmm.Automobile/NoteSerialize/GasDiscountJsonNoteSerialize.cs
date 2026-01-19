@@ -116,9 +116,9 @@ namespace Hmm.Automobile.NoteSerialize
             }
         }
 
-        protected override NoteCatalog GetCatalog()
+        protected override Task<NoteCatalog> GetCatalogAsync()
         {
-            return _app.GetCatalog(NoteCatalogType.GasDiscount, _lookupRepo);
+            return _app.GetCatalogAsync(NoteCatalogType.GasDiscount, _lookupRepo);
         }
 
         // Note: Helper methods (GetBoolProperty, GetStringProperty, etc.) are inherited from DefaultJsonNoteSerializer<T>

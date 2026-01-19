@@ -224,9 +224,9 @@ namespace Hmm.Automobile.NoteSerialize
             }
         }
 
-        protected override NoteCatalog GetCatalog()
+        protected override Task<NoteCatalog> GetCatalogAsync()
         {
-            return _app.GetCatalog(NoteCatalogType.Automobile, _lookupRepo);
+            return _app.GetCatalogAsync(NoteCatalogType.Automobile, _lookupRepo);
         }
 
         #region Helper Methods for Nullable Types

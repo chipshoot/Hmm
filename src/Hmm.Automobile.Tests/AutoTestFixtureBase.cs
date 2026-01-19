@@ -121,16 +121,10 @@ namespace Hmm.Automobile.Tests
         {
             var fakeApplication = new Mock<IApplication>();
 
-            fakeApplication.Setup(app => app.GetCatalog(It.IsAny<NoteCatalogType>(), It.IsAny<IEntityLookup>()))
-                .Returns((NoteCatalogType type, IEntityLookup lookupRepo) => GetCatalogForType(type));
-
             fakeApplication.Setup(app => app.GetCatalogAsync(It.IsAny<NoteCatalogType>(), It.IsAny<IEntityLookup>()))
                 .ReturnsAsync((NoteCatalogType type, IEntityLookup lookupRepo) => GetCatalogForType(type));
 
-            fakeApplication.Setup(app => app.RegisterAsync(
-                    It.IsAny<IAutoEntityManager<AutomobileInfo>>(),
-                    It.IsAny<IAutoEntityManager<GasDiscount>>(),
-                    It.IsAny<IEntityLookup>()))
+            fakeApplication.Setup(app => app.RegisterAsync(It.IsAny<IEntityLookup>()))
                 .ReturnsAsync(ProcessingResult<bool>.Ok(true));
 
             return fakeApplication.Object;

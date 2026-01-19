@@ -319,21 +319,32 @@ namespace Hmm.Core.NoteSerializer
         }
 
         /// <summary>
-        /// Gets the note catalog for this serializer.
+        /// Asynchronously gets the note catalog for this serializer.
         ///
         /// Override in derived classes to:
         /// - Return entity-specific catalog with JSON schema
         /// - Enable schema validation for your entity type
         /// - Provide metadata about the note type
         /// </summary>
-        /// <returns>The note catalog.</returns>
-        protected virtual NoteCatalog GetCatalog()
+        /// <returns>A task containing the note catalog.</returns>
+        protected virtual Task<NoteCatalog> GetCatalogAsync()
         {
-            return new NoteCatalog
+            return Task.FromResult(new NoteCatalog
             {
                 Name = $"{typeof(T).Name}Catalog",
                 Schema = null // No schema validation by default
-            };
+            });
+        }
+
+        /// <summary>
+        /// Synchronously gets the note catalog for this serializer.
+        /// This method exists for backward compatibility with code that cannot be made async.
+        /// Prefer using <see cref="GetCatalogAsync"/> when possible.
+        /// </summary>
+        /// <returns>The note catalog.</returns>
+        protected NoteCatalog GetCatalog()
+        {
+            return GetCatalogAsync().GetAwaiter().GetResult();
         }
 
         /// <summary>

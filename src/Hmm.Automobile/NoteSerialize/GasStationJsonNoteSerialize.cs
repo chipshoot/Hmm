@@ -117,9 +117,9 @@ namespace Hmm.Automobile.NoteSerialize
             }
         }
 
-        protected override NoteCatalog GetCatalog()
+        protected override Task<NoteCatalog> GetCatalogAsync()
         {
-            return _app.GetCatalogAsync(NoteCatalogType.GasStation, _lookupRepo).GetAwaiter().GetResult();
+            return _app.GetCatalogAsync(NoteCatalogType.GasStation, _lookupRepo);
         }
     }
 }
