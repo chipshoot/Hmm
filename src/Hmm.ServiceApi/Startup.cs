@@ -102,7 +102,21 @@ namespace Hmm.ServiceApi
             {
                 opt.AddPolicy(AllowCorsPolicy, builder =>
                 {
-                    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+                    if (appSetting.CorsOrigins != null && appSetting.CorsOrigins.Length > 0)
+                    {
+                        builder.WithOrigins(appSetting.CorsOrigins)
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials();
+                    }
+                    else
+                    {
+                        // Fallback for development if no origins configured - restrict to localhost only
+                        builder.WithOrigins("https://localhost:5001", "https://localhost:5002", "http://localhost:3000")
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials();
+                    }
                 });
             });
 

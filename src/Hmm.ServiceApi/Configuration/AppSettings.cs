@@ -12,6 +12,12 @@ public class AppSettings
     /// </summary>
     public string ApiAudience { get; set; }
 
+    /// <summary>
+    /// List of allowed CORS origins. Only requests from these origins will be accepted.
+    /// For security, avoid using "*" in production. Example: ["https://myapp.com", "https://admin.myapp.com"]
+    /// </summary>
+    public string[] CorsOrigins { get; set; }
+
     public AutomobileSetting Automobile { get; set; }
 
     public class AutomobileSetting
