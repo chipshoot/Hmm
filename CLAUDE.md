@@ -110,14 +110,14 @@ Infrastructure (Hmm.Utility)
 
 **Hmm.Automobile** - Domain module for vehicle expense tracking
 - `AutomobileInfo`, `GasLog`, `GasDiscount` entities
-- Stores complex objects as serialized note content using XML
+- Stores complex objects as serialized note content using JSON
 - Subject pattern: `GasLog,AutomobileId:{id}` for searchability
 
 **Hmm.BigCalendar** - Domain module for calendar/appointment management
 - `Appointment` entity with Guid-based primary keys
 - `IAppointmentManager` for CRUD and date range queries
 
-**Hmm.Idp** - Duende IdentityServer 4 identity provider (.NET 6.0)
+**Hmm.Idp** - Duende IdentityServer 7 identity provider (.NET 9.0)
 - ASP.NET Identity for user management
 - OAuth 2.0 / OpenID Connect authentication
 - JWT token generation
@@ -166,7 +166,7 @@ Generic entity retrieval through:
 
 ### Note-Based Storage Pattern
 Complex domain objects can be stored as note content:
-- Used by Automobile module (GasLog stored as XML in note)
+- Used by Automobile module (GasLog stored as JSON in note)
 - Subject field used for searchability and categorization
 - Leverages existing HmmNote infrastructure for any domain
 
@@ -223,7 +223,7 @@ All test projects use:
 - Many-to-many relationship with Notes
 
 **NoteCatalog** - Note templates with:
-- Name, Schema (XML), Render (HTML)
+- Name, Schema (JSON), Render (HTML)
 - `NoteContentFormatType` (Plain, Html, Markdown, etc.)
 
 ## Development Notes
