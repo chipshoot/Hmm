@@ -834,7 +834,7 @@ namespace Hmm.Automobile.Tests
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _author = ApplicationRegister.DefaultAuthor;
+            _author = TestDefaultAuthor;
 
             // Setup test entities
             _testCar = new AutomobileInfo

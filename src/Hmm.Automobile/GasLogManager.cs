@@ -23,8 +23,9 @@ namespace Hmm.Automobile
             IHmmNoteManager noteManager,
             IAutoEntityManager<AutomobileInfo> autoManager,
             IEntityLookup lookupRepo,
+            IAuthorProvider authorProvider,
             IDateTimeProvider dateProvider)
-            : base(validator, noteManager, lookupRepo)
+            : base(validator, noteManager, lookupRepo, authorProvider)
         {
             ArgumentNullException.ThrowIfNull(autoManager);
             ArgumentNullException.ThrowIfNull(noteSerializer);

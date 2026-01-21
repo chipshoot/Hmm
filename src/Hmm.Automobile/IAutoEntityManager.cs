@@ -14,7 +14,11 @@ namespace Hmm.Automobile
 
         IHmmValidator<T> Validator { get; }
 
-        Author DefaultAuthor { get; }
+        /// <summary>
+        /// Gets the author provider for resolving the author used in automobile operations.
+        /// This can be either the default author provider or the current user provider.
+        /// </summary>
+        IAuthorProvider AuthorProvider { get; }
 
         Task<ProcessingResult<T>> GetEntityByIdAsync(int id);
 

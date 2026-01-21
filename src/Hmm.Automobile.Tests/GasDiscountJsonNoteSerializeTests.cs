@@ -712,7 +712,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _serializer = new GasDiscountJsonNoteSerialize(Application, new NullLogger<GasDiscount>(), LookupRepository);
-            _author = ApplicationRegister.DefaultAuthor;
+            _author = TestDefaultAuthor;
         }
 
         #endregion

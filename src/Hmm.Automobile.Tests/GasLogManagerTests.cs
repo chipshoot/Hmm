@@ -45,7 +45,7 @@ namespace Hmm.Automobile.Tests
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GasLogManager(null, validator, noteManager, _autoManager, LookupRepository, _dateProviderMock.Object));
+                new GasLogManager(null, validator, noteManager, _autoManager, LookupRepository, CreateMockAuthorProvider(), _dateProviderMock.Object));
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace Hmm.Automobile.Tests
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GasLogManager(noteSerializer, null, noteManager, _autoManager, LookupRepository, _dateProviderMock.Object));
+                new GasLogManager(noteSerializer, null, noteManager, _autoManager, LookupRepository, CreateMockAuthorProvider(), _dateProviderMock.Object));
         }
 
         [Fact]
@@ -69,7 +69,7 @@ namespace Hmm.Automobile.Tests
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GasLogManager(noteSerializer, validator, null, _autoManager, LookupRepository, _dateProviderMock.Object));
+                new GasLogManager(noteSerializer, validator, null, _autoManager, LookupRepository, CreateMockAuthorProvider(), _dateProviderMock.Object));
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace Hmm.Automobile.Tests
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GasLogManager(noteSerializer, validator, noteManager, null, LookupRepository, _dateProviderMock.Object));
+                new GasLogManager(noteSerializer, validator, noteManager, null, LookupRepository, CreateMockAuthorProvider(), _dateProviderMock.Object));
         }
 
         [Fact]
@@ -95,7 +95,7 @@ namespace Hmm.Automobile.Tests
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GasLogManager(noteSerializer, validator, noteManager, _autoManager, null, _dateProviderMock.Object));
+                new GasLogManager(noteSerializer, validator, noteManager, _autoManager, null, CreateMockAuthorProvider(), _dateProviderMock.Object));
         }
 
         [Fact]
@@ -108,7 +108,7 @@ namespace Hmm.Automobile.Tests
 
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GasLogManager(noteSerializer, validator, noteManager, _autoManager, LookupRepository, null));
+                new GasLogManager(noteSerializer, validator, noteManager, _autoManager, LookupRepository, CreateMockAuthorProvider(), null));
         }
 
         [Fact]
@@ -604,7 +604,7 @@ namespace Hmm.Automobile.Tests
 
             // Assert
             Assert.True(result.Success);
-            Assert.Equal(ApplicationRegister.DefaultAuthor.Id, result.Value.AuthorId);
+            Assert.Equal(TestDefaultAuthor.Id, result.Value.AuthorId);
             Assert.NotEqual(DateTime.MinValue, result.Value.CreateDate);
         }
 
@@ -655,11 +655,12 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public void DefaultAuthor_ReturnsValidAuthor()
+        public void AuthorProvider_ReturnsValidAuthor()
         {
             // Assert
-            Assert.NotNull(_manager.DefaultAuthor);
-            Assert.Equal(ApplicationRegister.DefaultAuthor.AccountName, _manager.DefaultAuthor.AccountName);
+            Assert.NotNull(_manager.AuthorProvider);
+            Assert.NotNull(_manager.AuthorProvider.CachedAuthor);
+            Assert.Equal(TestDefaultAuthor.AccountName, _manager.AuthorProvider.CachedAuthor.AccountName);
         }
 
         #endregion
@@ -822,7 +823,8 @@ namespace Hmm.Automobile.Tests
                 autoNoteSerializer,
                 new AutomobileValidator(LookupRepository),
                 autoNoteManager,
-                LookupRepository);
+                LookupRepository,
+                CreateMockAuthorProvider());
 
             // Create discount manager
             var discountNoteSerializer = new GasDiscountJsonNoteSerialize(
@@ -834,7 +836,8 @@ namespace Hmm.Automobile.Tests
                 discountNoteSerializer,
                 new GasDiscountValidator(LookupRepository),
                 discountNoteManager,
-                LookupRepository);
+                LookupRepository,
+                CreateMockAuthorProvider());
 
             // Create station manager
             var stationNoteSerializer = new GasStationJsonNoteSerialize(
@@ -846,7 +849,8 @@ namespace Hmm.Automobile.Tests
                 stationNoteSerializer,
                 new GasStationValidator(LookupRepository),
                 stationNoteManager,
-                LookupRepository);
+                LookupRepository,
+                CreateMockAuthorProvider());
 
             // Create gas log manager
             var gasLogNoteSerializer = CreateGasLogSerializer();
@@ -857,6 +861,7 @@ namespace Hmm.Automobile.Tests
                 gasLogNoteManager,
                 _autoManager,
                 LookupRepository,
+                CreateMockAuthorProvider(),
                 _dateProviderMock.Object);
         }
 

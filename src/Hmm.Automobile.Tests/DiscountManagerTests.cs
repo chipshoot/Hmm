@@ -48,7 +48,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(result.Value);
             Assert.True(result.Value.Id >= 1);
             Assert.Equal("Costco membership", result.Value.Program);
-            Assert.Equal(ApplicationRegister.DefaultAuthor.Id, result.Value.AuthorId);
+            Assert.Equal(TestDefaultAuthor.Id, result.Value.AuthorId);
         }
 
         [Fact]
@@ -276,11 +276,12 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public void DefaultAuthor_ReturnsValidAuthor()
+        public void AuthorProvider_ReturnsValidAuthor()
         {
             // Assert
-            Assert.NotNull(_manager.DefaultAuthor);
-            Assert.Equal(ApplicationRegister.DefaultAuthor.AccountName, _manager.DefaultAuthor.AccountName);
+            Assert.NotNull(_manager.AuthorProvider);
+            Assert.NotNull(_manager.AuthorProvider.CachedAuthor);
+            Assert.Equal(TestDefaultAuthor.AccountName, _manager.AuthorProvider.CachedAuthor.AccountName);
         }
 
         #endregion
@@ -331,7 +332,8 @@ namespace Hmm.Automobile.Tests
                 noteSerializer,
                 new GasDiscountValidator(LookupRepository),
                 noteManager,
-                LookupRepository);
+                LookupRepository,
+                CreateMockAuthorProvider());
         }
 
         private IHmmNoteManager CreateNoteManager()

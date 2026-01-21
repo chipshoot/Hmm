@@ -17,6 +17,7 @@ namespace Hmm.Automobile.Tests
     {
         private readonly Mock<IOptions<AutomobileSeedingOptions>> _optionsMock;
         private readonly Mock<ISeedingService> _seedingServiceMock;
+        private readonly IDefaultAuthorProvider _authorProvider;
         private readonly Mock<ILogger<ApplicationRegister>> _loggerMock;
 
         public ApplicationRegisterTests()
@@ -31,6 +32,7 @@ namespace Hmm.Automobile.Tests
             });
 
             _seedingServiceMock = new Mock<ISeedingService>();
+            _authorProvider = CreateMockDefaultAuthorProvider();
             _loggerMock = new Mock<ILogger<ApplicationRegister>>();
         }
 
@@ -41,7 +43,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange & Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new ApplicationRegister(null, _seedingServiceMock.Object, _loggerMock.Object));
+                new ApplicationRegister(null, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object));
         }
 
         [Fact]
@@ -49,14 +51,22 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange & Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new ApplicationRegister(_optionsMock.Object, null, _loggerMock.Object));
+                new ApplicationRegister(_optionsMock.Object, null, _authorProvider, _loggerMock.Object));
+        }
+
+        [Fact]
+        public void Constructor_WithNullAuthorProvider_ThrowsArgumentNullException()
+        {
+            // Arrange & Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, null, _loggerMock.Object));
         }
 
         [Fact]
         public void Constructor_WithValidParameters_CreatesInstance()
         {
             // Arrange & Act
-            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Assert
             Assert.NotNull(register);
@@ -66,7 +76,7 @@ namespace Hmm.Automobile.Tests
         public void Constructor_WithNullLogger_CreatesInstance()
         {
             // Arrange & Act
-            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object);
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider);
 
             // Assert
             Assert.NotNull(register);
@@ -80,7 +90,7 @@ namespace Hmm.Automobile.Tests
             optionsMock.Setup(o => o.Value).Returns((AutomobileSeedingOptions)null);
 
             // Act
-            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object);
+            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _authorProvider);
 
             // Assert
             Assert.NotNull(register);
@@ -88,53 +98,35 @@ namespace Hmm.Automobile.Tests
 
         #endregion
 
-        #region DefaultAuthor Tests
+        #region AuthorProvider Tests
 
         [Fact]
-        public void DefaultAuthor_ReturnsValidAuthor()
+        public void AuthorProvider_ReturnsInjectedProvider()
         {
-            // Act
-            var author = ApplicationRegister.DefaultAuthor;
-
-            // Assert
-            Assert.NotNull(author);
-            Assert.Equal("03D9D3DE-0C3C-4775-BEC3-6B698B696837", author.AccountName);
-            Assert.Equal("Automobile default author", author.Description);
-            Assert.Equal(AuthorRoleType.Author, author.Role);
-            Assert.True(author.IsActivated);
-        }
-
-        [Fact]
-        public void DefaultAuthor_ReturnsSameInstance()
-        {
-            // Act
-            var author1 = ApplicationRegister.DefaultAuthor;
-            var author2 = ApplicationRegister.DefaultAuthor;
-
-            // Assert
-            Assert.Same(author1, author2);
-        }
-
-        [Fact]
-        public void DefaultAuthor_IsThreadSafe()
-        {
-            // This test verifies that DefaultAuthor can be accessed concurrently without issues
             // Arrange
-            var tasks = new Task<Author>[100];
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
-            for (int i = 0; i < 100; i++)
-            {
-                tasks[i] = Task.Run(() => ApplicationRegister.DefaultAuthor);
-            }
-            Task.WaitAll(tasks);
+            var provider = register.AuthorProvider;
 
-            // Assert - all tasks should return the same instance
-            var firstAuthor = tasks[0].Result;
-            foreach (var task in tasks)
-            {
-                Assert.Same(firstAuthor, task.Result);
-            }
+            // Assert
+            Assert.NotNull(provider);
+            Assert.Same(_authorProvider, provider);
+        }
+
+        [Fact]
+        public async Task AuthorProvider_GetDefaultAuthorAsync_ReturnsAuthor()
+        {
+            // Arrange
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
+
+            // Act
+            var result = await register.AuthorProvider.GetDefaultAuthorAsync();
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(TestDefaultAuthor.AccountName, result.Value.AccountName);
         }
 
         #endregion
@@ -145,7 +137,7 @@ namespace Hmm.Automobile.Tests
         public async Task RegisterAsync_WithNullLookupRepo_ThrowsArgumentNullException()
         {
             // Arrange
-            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(
@@ -157,7 +149,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             var optionsMock = CreateOptionsMock(addSeedingEntity: false, seedingDataFile: null);
-            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var result = await register.RegisterAsync(LookupRepository);
@@ -178,7 +170,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             var optionsMock = CreateOptionsMock(addSeedingEntity: true, seedingDataFile: "");
-            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var result = await register.RegisterAsync(LookupRepository);
@@ -205,7 +197,7 @@ namespace Hmm.Automobile.Tests
                 .Setup(x => x.SeedDataAsync(dataFile))
                 .ReturnsAsync(ProcessingResult<int>.Ok(5, "Successfully seeded 5 entities"));
 
-            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var result = await register.RegisterAsync(LookupRepository);
@@ -232,7 +224,7 @@ namespace Hmm.Automobile.Tests
                 .Setup(x => x.SeedDataAsync(dataFile))
                 .ReturnsAsync(ProcessingResult<int>.NotFound("Seeding data file not found"));
 
-            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var result = await register.RegisterAsync(LookupRepository);
@@ -256,7 +248,7 @@ namespace Hmm.Automobile.Tests
                 .Setup(x => x.SeedDataAsync(dataFile))
                 .ReturnsAsync(seedResult);
 
-            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var result = await register.RegisterAsync(LookupRepository);
@@ -278,7 +270,7 @@ namespace Hmm.Automobile.Tests
                 .Setup(x => x.SeedDataAsync(dataFile))
                 .ThrowsAsync(new InvalidOperationException("Unexpected error"));
 
-            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var result = await register.RegisterAsync(LookupRepository);
@@ -302,7 +294,7 @@ namespace Hmm.Automobile.Tests
             string expectedName)
         {
             // Arrange
-            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var catalog = await register.GetCatalogAsync(catalogType, LookupRepository);
@@ -316,7 +308,7 @@ namespace Hmm.Automobile.Tests
         public async Task GetCatalogAsync_WithNullLookupRepo_ThrowsArgumentNullException()
         {
             // Arrange
-            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(
@@ -327,7 +319,7 @@ namespace Hmm.Automobile.Tests
         public async Task GetCatalogAsync_CachesCatalog()
         {
             // Arrange
-            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var catalog1 = await register.GetCatalogAsync(NoteCatalogType.Automobile, LookupRepository);
@@ -343,7 +335,7 @@ namespace Hmm.Automobile.Tests
         public async Task GetCatalogAsync_WithInvalidType_ReturnsNull()
         {
             // Arrange
-            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _loggerMock.Object);
+            var register = new ApplicationRegister(_optionsMock.Object, _seedingServiceMock.Object, _authorProvider, _loggerMock.Object);
 
             // Act
             var catalog = await register.GetCatalogAsync((NoteCatalogType)999, LookupRepository);

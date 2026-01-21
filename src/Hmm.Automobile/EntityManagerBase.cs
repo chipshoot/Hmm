@@ -12,16 +12,21 @@ namespace Hmm.Automobile
 {
     public abstract class EntityManagerBase<T> : IAutoEntityManager<T> where T : AutomobileBase
     {
-        protected EntityManagerBase(IHmmValidator<T> validator, IHmmNoteManager noteManager, IEntityLookup lookupRepo)
+        protected EntityManagerBase(
+            IHmmValidator<T> validator,
+            IHmmNoteManager noteManager,
+            IEntityLookup lookupRepo,
+            IAuthorProvider authorProvider)
         {
             ArgumentNullException.ThrowIfNull(validator);
             ArgumentNullException.ThrowIfNull(noteManager);
             ArgumentNullException.ThrowIfNull(lookupRepo);
+            ArgumentNullException.ThrowIfNull(authorProvider);
 
             Validator = validator;
             NoteManager = noteManager;
             LookupRepo = lookupRepo;
-            DefaultAuthor = ApplicationRegister.DefaultAuthor;
+            AuthorProvider = authorProvider;
         }
 
         public IHmmValidator<T> Validator { get; }
@@ -29,6 +34,18 @@ namespace Hmm.Automobile
         protected IHmmNoteManager NoteManager { get; }
 
         protected IEntityLookup LookupRepo { get; }
+
+        /// <summary>
+        /// Gets the author provider for resolving the author used in automobile operations.
+        /// This can be either the default author provider or the current user provider.
+        /// </summary>
+        public IAuthorProvider AuthorProvider { get; }
+
+        /// <summary>
+        /// Gets the current author. Returns the cached author if available, otherwise returns null.
+        /// For async access with proper initialization, use AuthorProvider.GetAuthorAsync().
+        /// </summary>
+        protected Author DefaultAuthor => AuthorProvider.CachedAuthor;
 
         /// <summary>
         /// Get notes for specific entity
@@ -40,18 +57,14 @@ namespace Hmm.Automobile
         {
             var catId = await entity.GetCatalogIdAsync(LookupRepo);
 
-            if (DefaultAuthor == null)
+            var authorResult = await AuthorProvider.GetAuthorAsync();
+            if (!authorResult.Success)
             {
-                return ProcessingResult<PageList<HmmNote>>.Fail("Default author is not configured", ErrorCategory.ValidationError);
+                return ProcessingResult<PageList<HmmNote>>.Fail(authorResult.ErrorMessage, authorResult.ErrorType);
             }
 
-            var authorResult = await LookupRepo.GetEntityAsync<Author>(DefaultAuthor.Id);
-            if (!authorResult.Success || authorResult.Value == null)
-            {
-                return ProcessingResult<PageList<HmmNote>>.NotFound("Cannot find default author");
-            }
-
-            Expression<Func<HmmNote, bool>> baseFilter = n => n.Author.Id == DefaultAuthor.Id && n.Catalog.Id == catId;
+            var author = authorResult.Value;
+            Expression<Func<HmmNote, bool>> baseFilter = n => n.Author.Id == author.Id && n.Catalog.Id == catId;
             var finalQuery = query != null ? query.And(baseFilter) : baseFilter;
 
             return await NoteManager.GetNotesAsync(finalQuery, false, resourceCollectionParameters);
@@ -64,16 +77,13 @@ namespace Hmm.Automobile
         {
             var catId = await entity.GetCatalogIdAsync(LookupRepo);
 
-            if (DefaultAuthor == null)
+            var authorResult = await AuthorProvider.GetAuthorAsync();
+            if (!authorResult.Success)
             {
-                return ProcessingResult<HmmNote>.Fail("Default author is not configured", ErrorCategory.ValidationError);
+                return ProcessingResult<HmmNote>.Fail(authorResult.ErrorMessage, authorResult.ErrorType);
             }
 
-            var authorResult = await LookupRepo.GetEntityAsync<Author>(DefaultAuthor.Id);
-            if (!authorResult.Success || authorResult.Value == null)
-            {
-                return ProcessingResult<HmmNote>.NotFound("Cannot find default author");
-            }
+            var author = authorResult.Value;
 
             var noteResult = await NoteManager.GetNoteByIdAsync(id);
             if (!noteResult.Success || noteResult.Value == null)
@@ -82,7 +92,7 @@ namespace Hmm.Automobile
             }
 
             var note = noteResult.Value;
-            if (note.Author.Id == DefaultAuthor.Id && note.Catalog.Id == catId)
+            if (note.Author.Id == author.Id && note.Catalog.Id == catId)
             {
                 return ProcessingResult<HmmNote>.Ok(note);
             }
@@ -93,8 +103,6 @@ namespace Hmm.Automobile
         #region IAutoEntityManager<T> implementation
 
         public abstract INoteSerializer<T> NoteSerializer { get; }
-
-        public Author DefaultAuthor { get; }
 
         public abstract Task<ProcessingResult<T>> GetEntityByIdAsync(int id);
 
@@ -112,7 +120,13 @@ namespace Hmm.Automobile
                 return false;
             }
 
-            return entityResult.Value.AuthorId == DefaultAuthor?.Id;
+            var authorResult = await AuthorProvider.GetAuthorAsync();
+            if (!authorResult.Success)
+            {
+                return false;
+            }
+
+            return entityResult.Value.AuthorId == authorResult.Value.Id;
         }
 
         #endregion

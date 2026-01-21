@@ -17,11 +17,61 @@ namespace Hmm.Automobile.Tests
         protected readonly XNamespace XmlNamespace = @"http://schema.hmm.com/2020";
         private IApplication _app;
         private bool _automobileCatalogsAdded;
+        private static Author _testDefaultAuthor;
 
         protected const string NoteXmlTextBase =
             "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>";
 
         protected IApplication Application => _app ??= GetApplication();
+
+        /// <summary>
+        /// Gets the default author used for automobile tests.
+        /// This is a test-only property that provides a consistent author for testing.
+        /// </summary>
+        protected static Author TestDefaultAuthor => _testDefaultAuthor ??= CreateTestDefaultAuthor();
+
+        /// <summary>
+        /// Creates a mock IAuthorProvider that returns TestDefaultAuthor.
+        /// </summary>
+        protected static IAuthorProvider CreateMockAuthorProvider()
+        {
+            var mock = new Mock<IAuthorProvider>();
+            mock.Setup(p => p.GetAuthorAsync())
+                .ReturnsAsync(ProcessingResult<Author>.Ok(TestDefaultAuthor));
+            mock.Setup(p => p.CachedAuthor).Returns(TestDefaultAuthor);
+            return mock.Object;
+        }
+
+        /// <summary>
+        /// Creates a mock IDefaultAuthorProvider that returns TestDefaultAuthor.
+        /// </summary>
+        protected static IDefaultAuthorProvider CreateMockDefaultAuthorProvider()
+        {
+            var mock = new Mock<IDefaultAuthorProvider>();
+            mock.Setup(p => p.GetAuthorAsync())
+                .ReturnsAsync(ProcessingResult<Author>.Ok(TestDefaultAuthor));
+            mock.Setup(p => p.GetDefaultAuthorAsync())
+                .ReturnsAsync(ProcessingResult<Author>.Ok(TestDefaultAuthor));
+            mock.Setup(p => p.CachedAuthor).Returns(TestDefaultAuthor);
+            return mock.Object;
+        }
+
+        private static Author CreateTestDefaultAuthor()
+        {
+            var author = new Author
+            {
+                AccountName = "automobile-test-author",
+                Description = "Automobile test default author",
+                Role = AuthorRoleType.Author,
+                IsActivated = true
+            };
+
+            // Set ID via reflection for testing
+            var idProperty = typeof(Author).GetProperty("Id");
+            idProperty?.SetValue(author, 1);
+
+            return author;
+        }
 
         protected void InsertSeedRecords()
         {
@@ -33,21 +83,13 @@ namespace Hmm.Automobile.Tests
         private void SetupDomainEntityLookups()
         {
             var lookupMock = Mock.Get(LookupRepository);
-            var defaultAuthor = ApplicationRegister.DefaultAuthor;
-
-            // Ensure the default author has a valid ID for testing
-            // Use reflection to set the ID if it's 0
-            if (defaultAuthor.Id == 0)
-            {
-                var idProperty = typeof(Author).GetProperty("Id");
-                idProperty?.SetValue(defaultAuthor, 1);
-            }
+            var defaultAuthor = TestDefaultAuthor;
 
             // Setup GetEntityAsync<Author> for validation
             lookupMock.Setup(lk => lk.GetEntityAsync<Author>(It.IsAny<int>()))
                 .ReturnsAsync((int id) =>
                 {
-                    // Return default author if ID matches or if it's the DefaultAuthor's ID
+                    // Return default author if ID matches
                     if (id == defaultAuthor.Id || id == 1)
                     {
                         return ProcessingResult<Author>.Ok(defaultAuthor);

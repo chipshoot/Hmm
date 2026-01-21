@@ -116,6 +116,19 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
             CreateMap<GasDiscountInfo, ApiDiscountInfo>()
                 .ForMember(d => d.DiscountId, opt => opt.MapFrom(s => s.Program.Id))
                 .ForMember(d => d.Amount, opt => opt.MapFrom(s => s.Amount.Amount));
+
+            // GasStation mappings
+            CreateMap<GasStation, ApiGasStation>();
+
+            CreateMap<ApiGasStationForCreate, GasStation>();
+
+            CreateMap<ApiGasStationForUpdate, GasStation>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<GasStation, ApiGasStationForUpdate>();
+
+            CreateMap<PageList<GasStation>, PageList<ApiGasStation>>()
+                .ConvertUsing(new PageListConverter<GasStation, ApiGasStation>());
         }
     }
 }

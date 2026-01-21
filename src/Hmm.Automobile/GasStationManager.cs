@@ -16,8 +16,9 @@ namespace Hmm.Automobile
             INoteSerializer<GasStation> noteSerializer,
             IHmmValidator<GasStation> validator,
             IHmmNoteManager noteManager,
-            IEntityLookup lookupRepo)
-            : base(validator, noteManager, lookupRepo)
+            IEntityLookup lookupRepo,
+            IAuthorProvider authorProvider)
+            : base(validator, noteManager, lookupRepo, authorProvider)
         {
             ArgumentNullException.ThrowIfNull(noteSerializer);
             NoteSerializer = noteSerializer;
@@ -142,7 +143,7 @@ namespace Hmm.Automobile
         /// <summary>
         /// Gets active gas stations only.
         /// </summary>
-        public async Task<ProcessingResult<PageList<GasStation>>> GetActiveStationsAsync(
+        public virtual async Task<ProcessingResult<PageList<GasStation>>> GetActiveStationsAsync(
             ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var allStationsResult = await GetEntitiesAsync(resourceCollectionParameters);
@@ -166,7 +167,7 @@ namespace Hmm.Automobile
         /// </summary>
         /// <param name="name">The station name to search for.</param>
         /// <returns>ProcessingResult containing the station if found.</returns>
-        public async Task<ProcessingResult<GasStation>> GetByNameAsync(string name)
+        public virtual async Task<ProcessingResult<GasStation>> GetByNameAsync(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {

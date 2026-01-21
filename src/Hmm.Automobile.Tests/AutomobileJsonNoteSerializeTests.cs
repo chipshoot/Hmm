@@ -765,7 +765,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _serializer = new AutomobileJsonNoteSerialize(Application, new NullLogger<AutomobileInfo>(), LookupRepository);
-            _author = ApplicationRegister.DefaultAuthor;
+            _author = TestDefaultAuthor;
         }
 
         #endregion Helper Methods

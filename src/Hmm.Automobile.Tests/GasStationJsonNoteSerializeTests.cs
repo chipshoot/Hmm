@@ -737,7 +737,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _serializer = new GasStationJsonNoteSerialize(Application, new NullLogger<GasStation>(), LookupRepository);
-            _author = ApplicationRegister.DefaultAuthor;
+            _author = TestDefaultAuthor;
         }
 
         #endregion

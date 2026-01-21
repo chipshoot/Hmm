@@ -18,13 +18,14 @@ namespace Hmm.Automobile
     /// <item><description>Registers the Automobile module with the Hmm system</description></item>
     /// <item><description>Coordinates data seeding through ISeedingService</description></item>
     /// <item><description>Provides access to NoteCatalog instances for different entity types</description></item>
-    /// <item><description>Manages the default author for automobile-related notes</description></item>
+    /// <item><description>Provides access to the default author via IDefaultAuthorProvider</description></item>
     /// </list>
     ///
     /// <para><b>Design Notes:</b></para>
     /// <list type="bullet">
     /// <item><description>Uses thread-safe caching to minimize database queries for frequently accessed catalogs</description></item>
     /// <item><description>Delegates seeding operations to ISeedingService for better separation of concerns</description></item>
+    /// <item><description>Delegates default author management to IDefaultAuthorProvider</description></item>
     /// <item><description>Implements IApplication interface for module registration pattern</description></item>
     /// <item><description>Uses strongly-typed configuration via IOptions pattern</description></item>
     /// </list>
@@ -33,32 +34,25 @@ namespace Hmm.Automobile
     /// <code>
     /// // In Startup.cs or Program.cs:
     /// services.Configure&lt;AutomobileSeedingOptions&gt;(
-    ///     configuration.GetSection("Automobile:Seeding"));
+    ///     configuration.GetSection("Automobile"));
     ///
     /// // appsettings.json:
     /// {
     ///   "Automobile": {
-    ///     "Seeding": {
-    ///       "AddSeedingEntity": true,
-    ///       "SeedingDataFile": "path/to/seeding-data.json"
-    ///     }
+    ///     "DefaultAuthorAccountName": "automobile-service",
+    ///     "CreateDefaultAuthorIfMissing": true,
+    ///     "AddSeedingEntity": true,
+    ///     "SeedingDataFile": "path/to/seeding-data.json"
     ///   }
     /// }
     /// </code>
     /// </summary>
     public class ApplicationRegister : IApplication
     {
-        private static readonly Lazy<Author> AppAuthorLazy = new(() => new Author
-        {
-            AccountName = "03D9D3DE-0C3C-4775-BEC3-6B698B696837",
-            Description = "Automobile default author",
-            Role = AuthorRoleType.Author,
-            IsActivated = true
-        });
-
         private readonly AutomobileSeedingOptions _options;
         private readonly ILogger<ApplicationRegister> _logger;
         private readonly ISeedingService _seedingService;
+        private readonly IDefaultAuthorProvider _authorProvider;
 
         // Thread-safe catalog cache
         private readonly ConcurrentDictionary<NoteCatalogType, NoteCatalog> _catalogCache = new();
@@ -68,34 +62,34 @@ namespace Hmm.Automobile
         /// </summary>
         /// <param name="options">Configuration options for automobile seeding.</param>
         /// <param name="seedingService">Service for seeding data from external sources.</param>
+        /// <param name="authorProvider">Provider for the default author used by automobile operations.</param>
         /// <param name="logger">Logger instance for diagnostics and error tracking.</param>
         /// <exception cref="ArgumentNullException">Thrown when required dependencies are null.</exception>
         public ApplicationRegister(
             IOptions<AutomobileSeedingOptions> options,
             ISeedingService seedingService,
+            IDefaultAuthorProvider authorProvider,
             ILogger<ApplicationRegister> logger = null)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(seedingService);
+            ArgumentNullException.ThrowIfNull(authorProvider);
 
             _options = options.Value ?? new AutomobileSeedingOptions();
             _seedingService = seedingService;
+            _authorProvider = authorProvider;
             _logger = logger;
         }
 
         /// <summary>
-        /// Gets the default author for automobile-related notes.
-        /// This author is used when no specific author is provided for automobile operations.
+        /// Gets the provider for accessing the default author for automobile operations.
         /// </summary>
         /// <remarks>
-        /// <para>This property uses thread-safe lazy initialization via <see cref="Lazy{T}"/>,
-        /// ensuring the Author instance is created only once and is safe for concurrent access.</para>
-        ///
-        /// <para>The default author has a GUID-based account name to ensure uniqueness and is
-        /// automatically activated.</para>
+        /// <para>Use this provider to retrieve the default author from the database.</para>
+        /// <para>The author is configured via <see cref="AutomobileSeedingOptions.DefaultAuthorAccountName"/>
+        /// and can be auto-created if <see cref="AutomobileSeedingOptions.CreateDefaultAuthorIfMissing"/> is true.</para>
         /// </remarks>
-        /// <value>An Author instance configured as the default automobile author.</value>
-        public static Author DefaultAuthor => AppAuthorLazy.Value;
+        public IDefaultAuthorProvider AuthorProvider => _authorProvider;
 
         /// <summary>
         /// Registers the Automobile module with the Hmm system and optionally seeds initial data.

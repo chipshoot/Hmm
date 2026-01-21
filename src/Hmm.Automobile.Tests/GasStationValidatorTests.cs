@@ -432,7 +432,7 @@ namespace Hmm.Automobile.Tests
         {
             InsertSeedRecords();
             _validator = new GasStationValidator(LookupRepository);
-            _authorId = ApplicationRegister.DefaultAuthor.Id;
+            _authorId = TestDefaultAuthor.Id;
         }
     }
 }

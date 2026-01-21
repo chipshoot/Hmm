@@ -720,7 +720,7 @@ namespace Hmm.Automobile.Tests
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _author = ApplicationRegister.DefaultAuthor;
+            _author = TestDefaultAuthor;
 
             _testStation = new GasStation
             {

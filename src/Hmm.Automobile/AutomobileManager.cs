@@ -15,8 +15,9 @@ namespace Hmm.Automobile
             INoteSerializer<AutomobileInfo> noteSerializer,
             IHmmValidator<AutomobileInfo> validator,
             IHmmNoteManager noteManager,
-            IEntityLookup lookupRepo)
-            : base(validator, noteManager, lookupRepo)
+            IEntityLookup lookupRepo,
+            IAuthorProvider authorProvider)
+            : base(validator, noteManager, lookupRepo, authorProvider)
         {
             ArgumentNullException.ThrowIfNull(noteSerializer);
             NoteSerializer = noteSerializer;
