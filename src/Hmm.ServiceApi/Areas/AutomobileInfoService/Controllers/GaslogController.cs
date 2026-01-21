@@ -9,6 +9,7 @@ using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.ServiceApi.Models;
 using Hmm.ServiceApi.Models.Validation;
 using Hmm.Utility.Currency;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
@@ -20,6 +21,7 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
+    [Authorize]
     [ApiController]
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]

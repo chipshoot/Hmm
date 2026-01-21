@@ -2,15 +2,16 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-06 (verified fixes: #1, #3, #5, #6, #7, #12, #13, #14, #82)
+Last Updated: 2026-01-21 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #12, #13, #14, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (9 resolved)
+Total Defects Found: 107+ (13 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
 ================================================================================
-Note: Issues #1, #3, #5, #6, and #7 have been resolved as of 2026-01-06
+Note: Issues #1, #3, #5, #6, #7, and #8 have been resolved as of 2026-01-21
+      Issue #4 is partially resolved (Hmm.Automobile restored, Hmm.BigCalendar still commented)
 
 1. **[RESOLVED] CRITICAL VALIDATION BUG - INVERTED LOGIC**
    Status: ✓ FIXED (Verified 2026-01-06)
@@ -35,12 +36,22 @@ Note: Issues #1, #3, #5, #6, and #7 have been resolved as of 2026-01-06
    Resolution: DbEntity folder successfully removed from Hmm.Core.Dal.EF
    Current State: Only src/Hmm.Core.Map/DbEntity/* exists (correct)
 
-4. **CRITICAL - DOMAIN MODULES COMPLETELY COMMENTED OUT**
-   Location: src/Hmm.Automobile/*.cs (ALL 376 lines commented)
-            src/Hmm.BigCalendar/Managers/*.cs (ALL commented)
-   Problem: Entire implementations are non-functional
-   Impact: Modules unusable in production despite being in codebase
-   Fix: Either restore functionality or remove dead code
+4. **[PARTIALLY RESOLVED] CRITICAL - DOMAIN MODULES COMPLETELY COMMENTED OUT**
+   Status: PARTIALLY FIXED (Verified 2026-01-21)
+   Location: src/Hmm.Automobile/*.cs - ✓ RESTORED
+            src/Hmm.BigCalendar/Managers/*.cs - ✗ STILL COMMENTED OUT
+   Problem: Entire implementations were non-functional
+   Resolution (Hmm.Automobile):
+   - EntityManagerBase.cs: 134 lines, fully functional base class
+   - AutomobileManager.cs: 140 lines, fully restored with CRUD operations
+   - GasLogManager.cs: 297 lines, fully restored with gas logging functionality
+   - DiscountManager.cs: 140 lines, fully restored with discount management
+   - GasStationManager.cs: Functional
+   - All managers use async/await pattern with ProcessingResult<T>
+   Remaining Issue (Hmm.BigCalendar):
+   - DefaultAppointmentManager.cs: All 82 lines still completely commented out
+   - BigCalendar module remains non-functional
+   Impact: Hmm.Automobile is now usable; Hmm.BigCalendar still unusable
 
 5. **[RESOLVED] CRITICAL - MUTABLE GETHASHCODE() VIOLATES .NET CONTRACT**
    Status: ✓ FIXED (Verified 2026-01-05)
@@ -76,27 +87,55 @@ Note: Issues #1, #3, #5, #6, and #7 have been resolved as of 2026-01-06
    - Now respects DI configuration, enabling proper testing with different databases
    - Updated test fixture (DbTestFixtureBase.cs) to use new constructor signature
 
-8. **CRITICAL - AUTOMOBILE UPDATE MISSING PROPERTIES (DATA CORRUPTION)**
-   Location: src/Hmm.Automobile/AutomobileManager.cs:138-168
-   Problem: Update copies Brand, Maker, Year but NOT Color or Plate
-   Impact: User updates to Color/Plate are silently ignored, data loss
-   Fix: Copy all properties or use AutoMapper
+8. **[RESOLVED] CRITICAL - AUTOMOBILE UPDATE MISSING PROPERTIES (DATA CORRUPTION)**
+   Status: ✓ FIXED (Verified 2026-01-21)
+   Location: src/Hmm.Automobile/AutomobileManager.cs:115-120
+   Problem: Update was copying Brand, Maker, Year but NOT Color or Plate
+   Resolution: All properties now copied in UpdateAsync method:
+   - curAuto.Brand = entity.Brand;
+   - curAuto.Maker = entity.Maker;
+   - curAuto.MeterReading = entity.MeterReading;
+   - curAuto.Year = entity.Year;
+   - curAuto.Color = entity.Color;      // Added
+   - curAuto.Plate = entity.Plate;      // Added
+   Impact: User updates to Color/Plate are now properly persisted
 
 ================================================================================
 SECURITY VULNERABILITIES (P0 - FIX IMMEDIATELY)
 ================================================================================
 
-9. **NO AUTHORIZATION DESPITE AUTHENTICATION SETUP**
+9. **[RESOLVED] NO AUTHORIZATION DESPITE AUTHENTICATION SETUP**
+   Status: ✓ FIXED (Verified 2026-01-21)
    Location: src/Hmm.ServiceApi/Areas/*/Controllers/*.cs
    Problem: Zero [Authorize] attributes on any controller
-   Impact: API completely open, authentication infrastructure unused
-   Fix: Add [Authorize] to all controllers or document as intentionally public
+   Resolution: Added [Authorize] attribute to all 9 controllers:
+   HmmNoteService (5 controllers):
+   - HmmNoteController.cs
+   - AuthorController.cs
+   - ContactController.cs
+   - NoteCatalogController.cs
+   - TagController.cs
+   AutomobileInfoService (4 controllers):
+   - AutomobileController.cs
+   - GasDiscountController.cs
+   - GasLogController.cs
+   - GasStationController.cs
+   Impact: All API endpoints now require valid JWT Bearer token authentication
 
-10. **JWT AUDIENCE VALIDATION DISABLED**
-    Location: src/Hmm.ServiceApi/Startup.cs:82
-    Problem: ValidateAudience = false
-    Impact: Tokens from ANY audience accepted, security vulnerability
-    Fix: Enable validation and configure correct audience
+10. **[RESOLVED] JWT AUDIENCE VALIDATION DISABLED**
+    Status: ✓ FIXED (Verified 2026-01-21)
+    Location: src/Hmm.ServiceApi/Startup.cs:82-86
+    Problem: ValidateAudience = false - tokens from ANY audience accepted
+    Resolution: Enabled JWT audience validation with configurable audience
+    Changes made:
+    - Added ApiAudience property to AppSettings.cs
+    - Updated Startup.cs JWT configuration:
+      * ValidateAudience = true
+      * ValidAudience = appSetting.ApiAudience
+    - Added ApiAudience to appsettings.json (default: "hmmapi")
+    - Moved IdpBaseUrl into AppSettings section for consistency
+    Impact: Only tokens with matching audience claim are now accepted
+    Note: Identity Provider must be configured to issue tokens with "hmmapi" audience
 
 11. **CORS ALLOWS ALL ORIGINS**
     Location: src/Hmm.ServiceApi/Startup.cs:102
@@ -139,24 +178,19 @@ ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
     - Benefits: Validators now mockable for testing, loose coupling achieved, testability improved
     - All 5 validators now follow dependency inversion principle
 
-14. **[PLANNED] SOLID VIOLATION - SINGLE RESPONSIBILITY**
-    Status: REFACTORING PLAN CREATED (2026-01-06)
-    Location: src/Hmm.Core/DefaultManager/HmmNoteManager.cs (313 lines)
-    Problem: Handles multiple responsibilities - CRUD operations and tag association
-    Impact:
-    - 313 lines of code (should be ~200)
-    - 6 injected dependencies (should be ~5)
-    - Tag management mixed with note management
-    - N+1 query problem in ApplyTag method (3+ queries per tag)
-    - Hard to test (requires mocking 6 dependencies)
-    - Cannot reuse tag association logic for other entities
-    Refactoring Plan: See REFACTORING_PLAN_ISSUE_14.md
-    - Extract tag association into INoteTagAssociationService
-    - Reduce HmmNoteManager to CRUD-only operations
-    - Fix N+1 query problem with batch operations
-    - Estimated effort: 50-74 hours over 2-3 weeks
-    - Risk level: HIGH (requires phased approach with deprecation)
-    - Target: Reduce to ~200 lines, 5 dependencies, single responsibility
+14. **[RESOLVED] SOLID VIOLATION - SINGLE RESPONSIBILITY**
+    Status: ✓ FIXED (Verified 2026-01-21)
+    Location: src/Hmm.Core/DefaultManager/HmmNoteManager.cs (now 189 lines, was 313)
+    Problem: Handled multiple responsibilities - CRUD operations and tag association
+    Resolution: Extracted tag association into separate NoteTagAssociationManager
+    - Created INoteTagAssociationManager interface and NoteTagAssociationManager class
+    - HmmNoteManager reduced from 313 to 189 lines (40% reduction)
+    - Dependencies reduced from 6 to 5
+    - Tag management extracted to NoteTagAssociationManager (297 lines)
+    - NoteTagAssociationManager registered in DI container (Startup.cs:136)
+    - Controllers updated to use both IHmmNoteManager and INoteTagAssociationManager
+    - ApplyMultipleTagsAsync method added with batch processing support
+    - Single responsibility achieved: HmmNoteManager handles only note CRUD operations
 
 15. **SOLID VIOLATION - OPEN/CLOSED (REPOSITORY BASE)**
     Location: src/Hmm.Core.Dal.EF/RepositoryBase.cs:36-79
@@ -763,20 +797,20 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (9 resolved)
-Blocking (P0): 6 (5 resolved: #1, #3, #5, #6, #7)
-Security Vulnerabilities: 4 (1 resolved: #12)
-Critical (P1): 40 (2 resolved: #13, #14)
+Total Defects Found: 107+ (13 resolved, 1 partially resolved)
+Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
+Security Vulnerabilities: 4 (3 resolved: #9, #10, #12)
+Critical (P1): 40 (2 resolved: #13, #14 - both now FIXED)
 Important (P2): 45
 Technical Debt (P3): 16+ (1 resolved: #82)
 
 By Category:
 - Business Logic Bugs: 8
-- Security Issues: 4 (1 resolved: #12)
+- Security Issues: 4 (3 resolved: #9, #10, #12)
 - Performance Issues: 9
 - Thread Safety: 4
 - Code Duplication: 6
-- SOLID Violations: 15 (2 resolved: #13, #14)
+- SOLID Violations: 15 (2 resolved: #13, #14 - both FIXED)
 - Data Layer Issues: 9 (1 resolved)
 - API Design: 12
 - Dead Code: 10
@@ -785,11 +819,11 @@ By Category:
 - Missing Features: 12
 
 By Project:
-- Hmm.Core: 35 defects (3 resolved: #1, #13, #14)
+- Hmm.Core: 35 defects (3 resolved: #1, #13, #14 - all FIXED)
 - Hmm.Core.Dal.EF: 18 defects (3 resolved: #3, #7, #82)
 - Hmm.ServiceApi: 25 defects (1 resolved: #12)
-- Hmm.Automobile: 15 defects
-- Hmm.BigCalendar: 10 defects
+- Hmm.Automobile: 15 defects (2 resolved: #4-partial, #8 - module restored, update fixed)
+- Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)
 - Hmm.Utility: 14 defects (1 resolved: #5)
 
 ================================================================================
@@ -817,17 +851,18 @@ IMMEDIATE (Do This Week):
 1. ✓ [COMPLETED] Fix validation bug in NoteValidator.cs:37, 67
 2. Remove hardcoded password from source control
 3. ✓ [COMPLETED] Remove duplicate DbEntity folder from Hmm.Core.Dal.EF
-4. Add [Authorize] to all controllers or document public API intent
-5. Enable JWT audience validation
+4. ✓ [COMPLETED] Add [Authorize] to all controllers (9 controllers updated)
+5. ✓ [COMPLETED] Enable JWT audience validation (ApiAudience configured)
 6. ✓ [COMPLETED] Add global exception handler
 7. ✓ [COMPLETED] Fix DbContext.OnConfiguring anti-pattern
-8. Fix Automobile update missing Color/Plate properties
+8. ✓ [COMPLETED] Fix Automobile update missing Color/Plate properties
+   - Restore Hmm.BigCalendar module (still commented out)
 
 CRITICAL (Do This Month):
 9. ✓ [COMPLETED] Inject validators instead of "new"
 10. Remove SaveAsync from repositories, implement Unit of Work
 11. Fix expression mapper null check issue
-12. ✓ [COMPLETED] Refactor HmmNoteManager SRP violation (tag association extracted)
+12. ✓ [COMPLETED] Refactor HmmNoteManager SRP violation (tag association extracted to NoteTagAssociationManager)
 13. Extract duplicate uniqueness validation
 14. Extract duplicate expression building
 15. Extract duplicate deactivate implementation
@@ -836,7 +871,7 @@ CRITICAL (Do This Month):
 18. Add ProducesResponseType attributes
 
 IMPORTANT (Next Quarter):
-19. Split HmmNoteManager (SRP violation)
+19. ✓ [COMPLETED] Split HmmNoteManager (SRP violation) - Now 189 lines with NoteTagAssociationManager extracted
 20. Implement proper transaction boundaries
 21. Fix specification pattern for EF support
 22. Cache expression compilation
@@ -867,15 +902,16 @@ CRITICAL:
 - ✓ [COMPLETED] src/Hmm.ServiceApi/Middleware/GlobalExceptionHandler.cs (fixed)
 - src/Hmm.ServiceApi/Startup.cs (security config)
 - ✓ [COMPLETED] src/Hmm.Core.Dal.EF/HmmDataContext.cs (OnConfiguring removed, enum mapping moved to DI)
-- src/Hmm.Automobile/AutomobileManager.cs (missing properties in update)
+- ✓ [COMPLETED] src/Hmm.Automobile/AutomobileManager.cs (Color/Plate now copied in update)
+- src/Hmm.BigCalendar/Managers/DefaultAppointmentManager.cs (still completely commented out)
 
 HIGH PRIORITY:
-- src/Hmm.Core/DefaultManager/HmmNoteManager.cs (N+1, SRP)
+- ✓ [COMPLETED] src/Hmm.Core/DefaultManager/HmmNoteManager.cs (SRP fixed - tag association extracted)
 - src/Hmm.Core.Dal.EF/Repositories/*.cs (Unit of Work)
 - src/Hmm.Core/DefaultManager/Validator/*.cs (duplication)
 - src/Hmm.Core.Map/ExpressionMapper.cs (null checks)
 - ✓ [COMPLETED] src/Hmm.Utility/Dal/DataEntity/AbstractEntity.cs (GetHashCode fixed)
-- src/Hmm.ServiceApi/Areas/*/Controllers/*.cs (authorization) - error handling COMPLETED
+- ✓ [COMPLETED] src/Hmm.ServiceApi/Areas/*/Controllers/*.cs (authorization added, error handling fixed)
 - ✓ [COMPLETED] src/Hmm.ServiceApi/Areas/HmmNoteService/Controllers/*.cs (exception exposure fixed)
 
 ================================================================================

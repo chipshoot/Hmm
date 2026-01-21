@@ -5,6 +5,7 @@ using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Cors;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
+    [Authorize]
     [ApiController]
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]

@@ -81,7 +81,8 @@ namespace Hmm.ServiceApi
                     opt.Authority = appSetting.IdpBaseUrl;
                     opt.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateAudience = false
+                        ValidateAudience = true,
+                        ValidAudience = appSetting.ApiAudience
                     };
                 });
             services.AddApiVersioning(setup =>

@@ -6,6 +6,12 @@ public class AppSettings
 
     public string IdpBaseUrl { get; set; }
 
+    /// <summary>
+    /// The expected audience for JWT tokens. This should match the audience
+    /// claim in tokens issued by the Identity Provider for this API.
+    /// </summary>
+    public string ApiAudience { get; set; }
+
     public AutomobileSetting Automobile { get; set; }
 
     public class AutomobileSetting
