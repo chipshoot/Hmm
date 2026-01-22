@@ -1,4 +1,5 @@
 ﻿using Hmm.Core.Map.DbEntity;
+using Hmm.Utility.Dal.DataEntity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
@@ -34,6 +35,15 @@ namespace Hmm.Core.Dal.EF
         public async Task SaveAsync()
         {
             await base.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Gets the default entity for any type that extends HasDefaultEntity.
+        /// Uses EF Core's Set&lt;T&gt;() to dynamically access the DbSet, enabling Open/Closed principle compliance.
+        /// </summary>
+        public async Task<T> GetDefaultEntityAsync<T>() where T : HasDefaultEntity
+        {
+            return await Set<T>().FirstOrDefaultAsync(e => e.IsDefault);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -1,13 +1,9 @@
 ﻿using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Hmm.Core.Map.DbEntity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
 {
@@ -33,6 +29,14 @@ namespace Hmm.Core.Dal.EF
 
         protected ILogger Logger { get; }
 
+        /// <summary>
+        /// Validates a property and returns the default entity if the provided one is invalid.
+        /// This method follows the Open/Closed Principle - it works with any entity type that
+        /// extends HasDefaultEntity without requiring modification for new types.
+        /// </summary>
+        /// <typeparam name="TP">Entity type that extends HasDefaultEntity</typeparam>
+        /// <param name="property">The property to validate</param>
+        /// <returns>The validated property or the default entity</returns>
         protected async Task<ProcessingResult<TP>> PropertyCheckingAsync<TP>(TP property) where TP : HasDefaultEntity
         {
             try
@@ -60,17 +64,14 @@ namespace Hmm.Core.Dal.EF
                     return ProcessingResult<TP>.Ok(property);
                 }
 
-                if (typeof(TP) == typeof(NoteCatalogDao))
+                // Use the generic GetDefaultEntityAsync method - no hardcoded type checks needed
+                var defaultEntity = await DataContext.GetDefaultEntityAsync<TP>();
+                if (defaultEntity == null)
                 {
-                    var defaultCatalog = await DataContext.Catalogs.Cast<TP>().FirstOrDefaultAsync(c => c.IsDefault);
-                    if (defaultCatalog == null)
-                    {
-                        return ProcessingResult<TP>.NotFound($"No default {typeof(TP).Name} found");
-                    }
-                    return ProcessingResult<TP>.Ok(defaultCatalog);
+                    return ProcessingResult<TP>.NotFound($"No default {typeof(TP).Name} found");
                 }
 
-                return ProcessingResult<TP>.Fail($"{typeof(TP)} is not supported");
+                return ProcessingResult<TP>.Ok(defaultEntity);
             }
             catch (Exception ex)
             {

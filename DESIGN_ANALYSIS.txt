@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-21 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #82)
+Last Updated: 2026-01-21 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (14 resolved, 1 partially resolved)
+Total Defects Found: 107+ (15 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -203,11 +203,25 @@ ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
     - ApplyMultipleTagsAsync method added with batch processing support
     - Single responsibility achieved: HmmNoteManager handles only note CRUD operations
 
-15. **SOLID VIOLATION - OPEN/CLOSED (REPOSITORY BASE)**
-    Location: src/Hmm.Core.Dal.EF/RepositoryBase.cs:36-79
-    Problem: PropertyCheckingAsync has hardcoded type checks (if typeof == NoteCatalogDao)
-    Impact: Must modify base class for each new entity type
-    Fix: Use strategy pattern or remove type-specific logic
+15. **[RESOLVED] SOLID VIOLATION - OPEN/CLOSED (REPOSITORY BASE)**
+    Status: ✓ FIXED (Verified 2026-01-21)
+    Location: src/Hmm.Core.Dal.EF/RepositoryBase.cs:35-75
+    Problem: PropertyCheckingAsync had hardcoded type checks (if typeof == NoteCatalogDao)
+    Resolution: Implemented generic default entity resolution using EF Core's Set<T>()
+    Changes made:
+    - Added GetDefaultEntityAsync<T>() method to IHmmDataContext interface
+      * Generic method works with any type extending HasDefaultEntity
+      * Documented for Open/Closed principle compliance
+    - Implemented GetDefaultEntityAsync<T>() in HmmDataContext
+      * Uses EF Core's Set<T>() to dynamically access DbSet
+      * Returns entity where IsDefault == true
+    - Refactored RepositoryBase.PropertyCheckingAsync<TP>()
+      * Removed hardcoded typeof(NoteCatalogDao) check
+      * Now uses DataContext.GetDefaultEntityAsync<TP>()
+      * Works with any HasDefaultEntity type without modification
+    - Removed unnecessary using statements (Hmm.Core.Map.DbEntity, System.Linq, Microsoft.EntityFrameworkCore)
+    Impact: Adding new entity types with default support no longer requires modifying RepositoryBase
+    Open/Closed Principle: Class is now open for extension, closed for modification
 
 16. **REPOSITORY PATTERN LEAKS DBSET**
     Location: src/Hmm.Core.Dal.EF/IHmmDataContext.cs:7-23
@@ -808,10 +822,10 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (14 resolved, 1 partially resolved)
+Total Defects Found: 107+ (15 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
-Critical (P1): 40 (2 resolved: #13, #14 - both now FIXED)
+Critical (P1): 40 (3 resolved: #13, #14, #15)
 Important (P2): 45
 Technical Debt (P3): 16+ (1 resolved: #82)
 
@@ -821,7 +835,7 @@ By Category:
 - Performance Issues: 9
 - Thread Safety: 4
 - Code Duplication: 6
-- SOLID Violations: 15 (2 resolved: #13, #14 - both FIXED)
+- SOLID Violations: 15 (3 resolved: #13, #14, #15)
 - Data Layer Issues: 9 (1 resolved)
 - API Design: 12
 - Dead Code: 10
@@ -831,7 +845,7 @@ By Category:
 
 By Project:
 - Hmm.Core: 35 defects (3 resolved: #1, #13, #14 - all FIXED)
-- Hmm.Core.Dal.EF: 18 defects (3 resolved: #3, #7, #82)
+- Hmm.Core.Dal.EF: 18 defects (4 resolved: #3, #7, #15, #82)
 - Hmm.ServiceApi: 25 defects (1 resolved: #12)
 - Hmm.Automobile: 15 defects (2 resolved: #4-partial, #8 - module restored, update fixed)
 - Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)
