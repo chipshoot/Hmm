@@ -20,11 +20,31 @@ namespace Hmm.ServiceApi.Core.Tests
     {
         private readonly AuthorManager _authorManager;
         private readonly AuthorController _controller;
+        private readonly Mock<IHmmValidator<Author>> _mockValidator;
 
         public AuthorControllerTests()
         {
-            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Author>>());
+            _mockValidator = new Mock<IHmmValidator<Author>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Author>()))
+                .ReturnsAsync(ProcessingResult<Author>.Ok(It.IsAny<Author>()));
+            _authorManager = new AuthorManager(AuthorRepository, UnitOfWork, Mapper, LookupRepository, _mockValidator.Object);
             _controller = new AuthorController(_authorManager, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
+
+            // Set up HttpContext for the controller
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+        }
+
+        private AuthorController CreateControllerWithMockedManager(Mock<IAuthorManager> mockManager)
+        {
+            var controller = new AuthorController(mockManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            return controller;
         }
 
         #region Get author by Id
@@ -126,14 +146,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiAuthor = new ApiAuthorForCreate { AccountName = "TestAuthor" };
             var mockAuthorManager = new Mock<IAuthorManager>();
             mockAuthorManager.Setup(m => m.CreateAsync(It.IsAny<Author>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockAuthorManager);
 
             // Act
             var result = await controller.Post(apiAuthor);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Add a new author
@@ -179,7 +199,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task UpdateAuthor_ReturnsBadRequest_WhenAuthorNotFound()
+        public async Task UpdateAuthor_ReturnsNotFound_WhenAuthorNotFound()
         {
             // Arrange
             const int authorId = 1000;
@@ -189,27 +209,23 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Put(authorId, apiAuthorForUpdate);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var msg = (badRequestResult.Value as List<ReturnMessage>)?[0].Message;
-            Assert.Equal("Cannot update author: UpdatedAuthor, because system cannot find it in data source", msg);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Author with id {authorId} not found", notFoundResult.Value);
         }
 
         [Fact]
         public async Task UpdateAuthor_ReturnsBadRequest_WhenUpdateFails()
         {
             // Arrange
-            var existingAuthorResult = await _authorManager.GetAuthorByIdAsync(100);
-            Assert.True(existingAuthorResult.Success);
-            var existingAuthor = existingAuthorResult.Value;
-            
-            var existingAuthor2Result = await _authorManager.GetAuthorByIdAsync(101);
-            Assert.True(existingAuthor2Result.Success);
-            var existingAuthor2 = existingAuthor2Result.Value;
-            
-            var apiAuthorForUpdate = new ApiAuthorForUpdate { AccountName = existingAuthor2.AccountName };
+            const int authorId = 100;
+            var apiAuthorForUpdate = new ApiAuthorForUpdate { AccountName = "UpdatedAuthor" };
+            var mockAuthorManager = new Mock<IAuthorManager>();
+            mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>()))
+                .ReturnsAsync(ProcessingResult<Author>.Invalid("Validation error occurred"));
+            var controller = CreateControllerWithMockedManager(mockAuthorManager);
 
             // Act
-            var result = await _controller.Put(existingAuthor.Id, apiAuthorForUpdate);
+            var result = await controller.Put(authorId, apiAuthorForUpdate);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -226,14 +242,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockAuthorManager = new Mock<IAuthorManager>();
             mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "Exists Author" }));
             mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockAuthorManager);
 
             // Act
             var result = await controller.Put(authorId, apiAuthorForUpdate);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Update author
@@ -290,7 +306,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Patch(authorId, patchDoc);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Author with id {authorId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -299,13 +316,17 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int authorId = 100;
             var patchDoc = new JsonPatchDocument<ApiAuthorForUpdate>();
-            var existingAuthorResult = await _authorManager.GetAuthorByIdAsync(authorId);
-            Assert.True(existingAuthorResult.Success);
-            var existingAuthor = existingAuthorResult.Value;
-            patchDoc.Replace(e => e.AccountName, existingAuthor.AccountName);
+            patchDoc.Replace(e => e.AccountName, "SomeNewName");
+
+            var mockAuthorManager = new Mock<IAuthorManager>();
+            mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>()))
+                .ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "ExistsAuthor" }));
+            mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>()))
+                .ReturnsAsync(ProcessingResult<Author>.Invalid("Validation error occurred"));
+            var controller = CreateControllerWithMockedManager(mockAuthorManager);
 
             // Act
-            var result = await _controller.Patch(authorId + 1, patchDoc);
+            var result = await controller.Patch(authorId, patchDoc);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -324,14 +345,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockAuthorManager = new Mock<IAuthorManager>();
             mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "ExistsAuthor" }));
             mockAuthorManager.Setup(m => m.UpdateAsync(It.IsAny<Author>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockAuthorManager);
 
             // Act
             var result = await controller.Patch(authorId, patchDoc);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Patch author
@@ -357,18 +378,18 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenIdIsInvalid()
+        public async Task Delete_ReturnsNotFound_WhenIdIsInvalid()
         {
             // Act
             var result = await _controller.Delete(0);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Invalid author id found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal("Author with id 0 not found", notFoundResult.Value);
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenAuthorNotFound()
+        public async Task Delete_ReturnsNotFound_WhenAuthorNotFound()
         {
             // Arrange
             const int authorId = 1;
@@ -377,8 +398,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Delete(authorId);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"Invalid author id found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Author with id {authorId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -390,14 +411,14 @@ namespace Hmm.ServiceApi.Core.Tests
             mockAuthorManager.Setup(a => a.GetAuthorByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Author>.Ok(new Author { Id = id, AccountName = "ExistsAuthor" }));
             mockAuthorManager.Setup(a => a.IsAuthorExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
             mockAuthorManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
-            var controller = new AuthorController(mockAuthorManager.Object, ApiMapper, new Mock<ILogger<AuthorController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockAuthorManager);
 
             // Act
             var result = await controller.Delete(authorId);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Delete Author

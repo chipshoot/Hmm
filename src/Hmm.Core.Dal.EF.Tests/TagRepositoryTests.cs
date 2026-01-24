@@ -1,4 +1,4 @@
-﻿using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -22,6 +22,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await TagRepository.AddAsync(tag);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -40,6 +41,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true,
                 Description = "testing tag",
             });
+            await DbContext.CommitAsync();
             Assert.True(firstResult.Success);
 
             var tag = new TagDao
@@ -70,10 +72,12 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             var addResult = await TagRepository.AddAsync(tag);
+            await DbContext.CommitAsync();
             Assert.True(addResult.Success);
 
             // Act
             var result = await TagRepository.DeleteAsync(tag);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -91,6 +95,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             var addResult = await TagRepository.AddAsync(tag);
+            await DbContext.CommitAsync();
             Assert.True(addResult.Success);
 
             var tag2 = new TagDao
@@ -120,6 +125,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             var addResult = await TagRepository.AddAsync(tag);
+            await DbContext.CommitAsync();
             Assert.True(addResult.Success);
             Assert.NotNull(addResult.Value);
 
@@ -127,6 +133,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await TagRepository.UpdateAsync(tag);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -138,6 +145,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             result = await TagRepository.UpdateAsync(tag);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -157,6 +165,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             var addResult = await TagRepository.AddAsync(tag);
+            await DbContext.CommitAsync();
             Assert.True(addResult.Success);
 
             var tag2 = new TagDao
@@ -185,6 +194,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing tag"
             };
             var addResult1 = await TagRepository.AddAsync(tag);
+            await DbContext.CommitAsync();
             Assert.True(addResult1.Success);
 
             var tag2 = new TagDao
@@ -194,6 +204,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing tag2"
             };
             var addResult2 = await TagRepository.AddAsync(tag2);
+            await DbContext.CommitAsync();
             Assert.True(addResult2.Success);
 
             tag.Name = tag2.Name;
@@ -227,6 +238,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 // Act
                 note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
                 var updateResult = await NoteRepository.UpdateAsync(note);
+                await DbContext.CommitAsync();
                 Assert.True(updateResult.Success);
             }
             var savedNoteResult = await NoteRepository.GetEntityAsync(note.Id);
@@ -258,6 +270,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 // Act
                 tag.Notes.Add(new NoteTagRefDao { Note = note, NoteId = note.Id, Tag = tag, TagId = tag.Id });
                 var updateResult = await TagRepository.UpdateAsync(tag);
+                await DbContext.CommitAsync();
                 Assert.True(updateResult.Success);
             }
 
@@ -294,12 +307,14 @@ namespace Hmm.Core.Dal.EF.Tests
 
             note.Tags.Add(new NoteTagRefDao { Note = note, Tag = tag });
             var savedNoteResult = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
             Assert.True(savedNoteResult.Success);
             Assert.NotNull(savedNoteResult.Value);
             Assert.Single(savedNoteResult.Value.Tags);
 
             // Act
             var deleteResult = await TagRepository.DeleteAsync(tag);
+            await DbContext.CommitAsync();
             Assert.True(deleteResult.Success);
             var deleteTagResult = await TagRepository.GetEntityAsync(tagId);
             var finalNoteResult = await NoteRepository.GetEntityAsync(note.Id);
@@ -339,7 +354,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Name = "DefaultCatalog",
                 FormatType = NoteContentFormatType.PlainText,
                 Schema = "",
-                IsDefault = false,
+                IsDefault = true,
                 Description = "Description"
             };
             var catalogResult = await CatalogRepository.AddAsync(catalog);
@@ -361,6 +376,9 @@ namespace Hmm.Core.Dal.EF.Tests
             var authorResult = await AuthorRepository.AddAsync(author);
             Assert.True(authorResult.Success);
             Assert.NotNull(authorResult.Value);
+
+            // Commit catalog and author so they can be found by note repository lookups
+            await DbContext.CommitAsync();
 
             var note = new HmmNoteDao
             {
@@ -389,6 +407,9 @@ namespace Hmm.Core.Dal.EF.Tests
             var noteResult2 = await NoteRepository.AddAsync(note);
             Assert.True(noteResult2.Success);
             Assert.NotNull(noteResult2.Value);
+
+            // Commit all the test data
+            await DbContext.CommitAsync();
         }
 
         public async Task InitializeAsync()

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
@@ -16,18 +15,26 @@ namespace Hmm.Core.DefaultManager
     public class AuthorManager : IAuthorManager
     {
         private readonly IRepository<AuthorDao> _authorRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IHmmValidator<Author> _validator;
         private readonly IMapper _mapper;
         private readonly IEntityLookup _lookup;
 
-        public AuthorManager(IRepository<AuthorDao> authorRepository, IMapper mapper, IEntityLookup lookup, IHmmValidator<Author> validator)
+        public AuthorManager(
+            IRepository<AuthorDao> authorRepository,
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IEntityLookup lookup,
+            IHmmValidator<Author> validator)
         {
             ArgumentNullException.ThrowIfNull(authorRepository);
+            ArgumentNullException.ThrowIfNull(unitOfWork);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(lookup);
             ArgumentNullException.ThrowIfNull(validator);
 
             _authorRepository = authorRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _validator = validator;
             _lookup = lookup;
@@ -56,8 +63,13 @@ namespace Hmm.Core.DefaultManager
                     daoQuery = isActivatedExpression;
                 }
 
-                var authorDaos = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-                var authors = _mapper.Map<PageList<Author>>(authorDaos);
+                var authorDaosResult = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                if (!authorDaosResult.Success)
+                {
+                    return ProcessingResult<PageList<Author>>.Fail(authorDaosResult.ErrorMessage, authorDaosResult.ErrorType);
+                }
+
+                var authors = _mapper.Map<PageList<Author>>(authorDaosResult.Value);
                 return ProcessingResult<PageList<Author>>.Ok(authors);
             }
             catch (Exception ex)
@@ -125,6 +137,8 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Author>.Fail(addedUsrDaoResult.ErrorMessage, addedUsrDaoResult.ErrorType);
                 }
 
+                await _unitOfWork.CommitAsync();
+
                 var createdAuthor = _mapper.Map<Author>(addedUsrDaoResult.Value);
                 return ProcessingResult<Author>.Ok(createdAuthor);
             }
@@ -161,6 +175,8 @@ namespace Hmm.Core.DefaultManager
                 {
                     return ProcessingResult<Author>.Fail(updatedUserDaoResult.ErrorMessage, updatedUserDaoResult.ErrorType);
                 }
+
+                await _unitOfWork.CommitAsync();
 
                 var updatedUser = _mapper.Map<Author>(updatedUserDaoResult.Value);
                 if (updatedUser == null)
@@ -199,6 +215,8 @@ namespace Hmm.Core.DefaultManager
                 {
                     return ProcessingResult<Unit>.Fail(updatedResult.ErrorMessage, updatedResult.ErrorType);
                 }
+
+                await _unitOfWork.CommitAsync();
 
                 return ProcessingResult<Unit>.Ok(Unit.Value, $"User with id {id} has been deactivated");
             }

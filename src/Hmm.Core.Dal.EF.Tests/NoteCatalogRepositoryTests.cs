@@ -1,4 +1,4 @@
-﻿using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -27,6 +27,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -40,6 +41,7 @@ namespace Hmm.Core.Dal.EF.Tests
         {
             // Arrange
             await CatalogRepository.AddAsync(SampleDataGenerator.GetCatalogDao());
+            await DbContext.CommitAsync();
 
             var cat = SampleDataGenerator.GetCatalogDao();
 
@@ -58,9 +60,11 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var catalog = SampleDataGenerator.GetCatalogDao();
             await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
 
             // Act
             var result = await CatalogRepository.DeleteAsync(catalog);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -73,6 +77,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var catalog = SampleDataGenerator.GetCatalogDao();
 
             await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
 
             var catalog2 = new NoteCatalogDao
             {
@@ -96,6 +101,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var catalog = SampleDataGenerator.GetCatalogDao();
             var catalogResult = await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
 
             var author = new AuthorDao
             {
@@ -105,6 +111,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
             await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             var note = new HmmNoteDao
             {
@@ -116,6 +123,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Catalog = catalogResult.Value
             };
             await NoteRepository.AddAsync(note);
+            await DbContext.CommitAsync();
 
             // Act
             var result = await CatalogRepository.DeleteAsync(catalog);
@@ -131,10 +139,12 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange - update name
             var catalog = SampleDataGenerator.GetCatalogDao();
             await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
             catalog.Name = "GasLog2";
 
             // Act
             var result = await CatalogRepository.UpdateAsync(catalog);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -146,6 +156,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             result = await CatalogRepository.UpdateAsync(catalog);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -159,6 +170,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var catalog = SampleDataGenerator.GetCatalogDao();
             await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
 
             var catalog2 = new NoteCatalogDao
             {
@@ -183,6 +195,7 @@ namespace Hmm.Core.Dal.EF.Tests
             // Arrange
             var catalog = SampleDataGenerator.GetCatalogDao();
             await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
 
             var catalog2 = new NoteCatalogDao
             {
@@ -193,6 +206,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "testing note2"
             };
             await CatalogRepository.AddAsync(catalog2);
+            await DbContext.CommitAsync();
 
             catalog.Name = catalog2.Name;
 

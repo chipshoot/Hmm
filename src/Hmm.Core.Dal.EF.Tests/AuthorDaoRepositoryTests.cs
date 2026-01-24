@@ -28,6 +28,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -51,6 +52,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -81,6 +83,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             await AuthorRepository.AddAsync(authorExists);
+            await DbContext.CommitAsync();
             var result = await AuthorRepository.AddAsync(author);
 
             // Assert
@@ -101,9 +104,11 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             var addResult = await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             // Act
             var result = await AuthorRepository.DeleteAsync(addResult.Value);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -123,6 +128,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             var author2 = new AuthorDao
             {
@@ -154,6 +160,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Description = "Description"
             };
             var catalogResult = await CatalogRepository.AddAsync(catalog);
+            await DbContext.CommitAsync();
 
             var author = new AuthorDao
             {
@@ -163,6 +170,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
             var authorResult = await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             var note = new HmmNoteDao
             {
@@ -174,6 +182,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Catalog = catalogResult.Value
             };
             await NoteRepository.AddAsync(note);
+            await DbContext.CommitAsync();
 
             // Act
             var result = await AuthorRepository.DeleteAsync(author);
@@ -196,12 +205,14 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             // Arrange - activate status
             author.IsActivated = false;
 
             // Act
             var result = await AuthorRepository.UpdateAsync(author);
+            await DbContext.CommitAsync();
 
             // Arrange
             Assert.True(result.Success);
@@ -213,6 +224,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             result = await AuthorRepository.UpdateAsync(author);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -233,12 +245,14 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             // Arrange - activate status
             author.ContactInfo = _defaultContact;
 
             // Act
             var result = await AuthorRepository.UpdateAsync(author);
+            await DbContext.CommitAsync();
 
             // Arrange
             Assert.True(result.Success);
@@ -250,6 +264,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             result = await AuthorRepository.UpdateAsync(author);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -270,6 +285,7 @@ namespace Hmm.Core.Dal.EF.Tests
             };
 
             await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             var author2 = new AuthorDao
             {
@@ -299,6 +315,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
             await AuthorRepository.AddAsync(author);
+            await DbContext.CommitAsync();
 
             var user2 = new AuthorDao
             {
@@ -308,6 +325,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 IsActivated = true
             };
             await AuthorRepository.AddAsync(user2);
+            await DbContext.CommitAsync();
 
             author.AccountName = user2.AccountName;
 
@@ -325,6 +343,7 @@ namespace Hmm.Core.Dal.EF.Tests
             var contact = SampleDataGenerator.GetContactDao();
             var result = await ContactRepository.AddAsync(contact);
             _defaultContact = result.Value;
+            await DbContext.CommitAsync();
         }
 
         public async Task DisposeAsync()

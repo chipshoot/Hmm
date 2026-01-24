@@ -20,11 +20,29 @@ namespace Hmm.ServiceApi.Core.Tests
     {
         private readonly TagManager _tagManager;
         private readonly TagController _controller;
+        private readonly Mock<IHmmValidator<Tag>> _mockValidator;
 
         public TagControllerTests()
         {
-            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Tag>>());
+            _mockValidator = new Mock<IHmmValidator<Tag>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
+                .ReturnsAsync(ProcessingResult<Tag>.Ok(It.IsAny<Tag>()));
+            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, _mockValidator.Object);
             _controller = new TagController(_tagManager, ApiMapper, new Mock<ILogger<TagController>>().Object);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+        }
+
+        private TagController CreateControllerWithMockedManager(Mock<ITagManager> mockManager)
+        {
+            var controller = new TagController(mockManager.Object, ApiMapper, new Mock<ILogger<TagController>>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            return controller;
         }
 
         #region Get tag by Id
@@ -126,14 +144,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiTag = new ApiTagForCreate { Name = "TestTag" };
             var mockTagManager = new Mock<ITagManager>();
             mockTagManager.Setup(m => m.CreateAsync(It.IsAny<Tag>())).Throws(new Exception());
-            var controller = new TagController(mockTagManager.Object, ApiMapper, new Mock<ILogger<TagController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockTagManager);
 
             // Act
             var result = await controller.Post(apiTag);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Add a new tag
@@ -219,14 +237,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockTagManager = new Mock<ITagManager>();
             mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Tag>.Ok(new Tag { Id = id, Name = "Exists Tag" }));
             mockTagManager.Setup(m => m.UpdateAsync(It.IsAny<Tag>())).Throws(new Exception());
-            var controller = new TagController(mockTagManager.Object, ApiMapper, new Mock<ILogger<TagController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockTagManager);
 
             // Act
             var result = await controller.Put(tagId, apiTagForUpdate);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Update tag
@@ -280,7 +298,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Patch(tagId, patchDoc);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Tag with id {tagId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -313,14 +332,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockTagManager = new Mock<ITagManager>();
             mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Tag>.Ok(new Tag { Id = id, Name = "Exists Tag" }));
             mockTagManager.Setup(m => m.UpdateAsync(It.IsAny<Tag>())).Throws(new Exception());
-            var controller = new TagController(mockTagManager.Object, ApiMapper, new Mock<ILogger<TagController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockTagManager);
 
             // Act
             var result = await controller.Patch(tagId, patchDoc);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Patch tag
@@ -332,27 +351,29 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int tagId = 100;
-            var existingTag = await _tagManager.GetTagByIdAsync(tagId);
-            Assert.NotNull(existingTag);
+            var existingTagResult = await _tagManager.GetTagByIdAsync(tagId);
+            Assert.True(existingTagResult.Success);
+            Assert.NotNull(existingTagResult.Value);
 
             // Act
             var result = await _controller.Delete(tagId);
-            var deletedTag = await _tagManager.GetTagByIdAsync(tagId);
+            var deletedTagResult = await _tagManager.GetTagByIdAsync(tagId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Null(deletedTag);
+            Assert.False(deletedTagResult.Success);
+            Assert.Equal(ErrorCategory.Deleted, deletedTagResult.ErrorType);
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenIdIsInvalid()
+        public async Task Delete_ReturnsNotFound_WhenIdIsInvalid()
         {
             // Act
             var result = await _controller.Delete(0);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Invalid tag id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal("Tag with id 0 not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -376,15 +397,16 @@ namespace Hmm.ServiceApi.Core.Tests
             const int tagId = 1;
             var mockTagManager = new Mock<ITagManager>();
             mockTagManager.Setup(a => a.GetTagByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Tag>.Ok(new Tag { Id = id, Name = "Exists Tag" }));
+            mockTagManager.Setup(a => a.IsTagExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
             mockTagManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
-            var controller = new TagController(mockTagManager.Object, ApiMapper, new Mock<ILogger<TagController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockTagManager);
 
             // Act
             var result = await controller.Delete(tagId);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Delete tag

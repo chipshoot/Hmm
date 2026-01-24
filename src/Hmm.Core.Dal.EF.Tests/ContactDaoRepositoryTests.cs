@@ -1,4 +1,4 @@
-﻿// Ignore Spelling: Dao
+// Ignore Spelling: Dao
 
 using Hmm.Utility.TestHelp;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +17,7 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
 
         // Act
         var result = await ContactRepository.AddAsync(contact);
+        await DbContext.CommitAsync();
 
         // Assert
         Assert.True(result.Success);
@@ -31,9 +32,11 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         // Arrange
         var contact = SampleDataGenerator.GetContactDao();
         var addResult = await ContactRepository.AddAsync(contact);
+        await DbContext.CommitAsync();
 
         // Act
         var result = await ContactRepository.DeleteAsync(addResult.Value);
+        await DbContext.CommitAsync();
 
         // Assert
         Assert.True(result.Success);
@@ -45,6 +48,7 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         // Arrange
         var contact1 = SampleDataGenerator.GetContactDao();
         await ContactRepository.AddAsync(contact1);
+        await DbContext.CommitAsync();
 
         var contact2 = SampleDataGenerator.GetContactDao();
         contact2.Id = 200;
@@ -64,12 +68,14 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
         // Arrange - update first name
         var contact = SampleDataGenerator.GetContactDao();
         await ContactRepository.AddAsync(contact);
+        await DbContext.CommitAsync();
 
         // Arrange - activate status
         contact.IsActivated = false;
 
         // Act
         var result = await ContactRepository.UpdateAsync(contact);
+        await DbContext.CommitAsync();
 
         // Arrange
         Assert.True(result.Success);
@@ -81,6 +87,7 @@ public class ContactDaoRepositoryTests : DbTestFixtureBase, IAsyncLifetime
 
         // Act
         result = await ContactRepository.UpdateAsync(contact);
+        await DbContext.CommitAsync();
 
         // Assert
         Assert.True(result.Success);

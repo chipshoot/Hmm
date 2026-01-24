@@ -44,7 +44,7 @@ public class ContactEfRepository : IRepository<ContactDao>
     {
         try
         {
-            var contact = await _dataContext.Contacts.FindAsync(id);
+            var contact = await _dataContext.Set<ContactDao>().FindAsync(id);
 
             if (contact == null)
             {
@@ -73,10 +73,9 @@ public class ContactEfRepository : IRepository<ContactDao>
         {
             // Reset id to 0 to make sure it is a new entity
             entity.Id = 0;
-            _dataContext.Contacts.Add(entity);
-            await _dataContext.SaveAsync();
+            _dataContext.Set<ContactDao>().Add(entity);
 
-            var result = ProcessingResult<ContactDao>.Ok(entity, $"Contact for '{entity.Contact}' created successfully");
+            var result = ProcessingResult<ContactDao>.Ok(entity, $"Contact for '{entity.Contact}' added to context (pending commit)");
             result.LogMessages(_logger);
             return result;
         }
@@ -101,20 +100,9 @@ public class ContactEfRepository : IRepository<ContactDao>
                 return invalidResult;
             }
 
-            _dataContext.Contacts.Update(entity);
-            await _dataContext.SaveAsync();
+            _dataContext.Set<ContactDao>().Update(entity);
 
-            var updatedContactResult = await _lookupRepository.GetEntityAsync<ContactDao>(entity.Id);
-            if (!updatedContactResult.Success)
-            {
-                var errorResult = ProcessingResult<ContactDao>.Fail(
-                    $"Contact updated but failed to retrieve: {updatedContactResult.ErrorMessage}",
-                    updatedContactResult.ErrorType);
-                errorResult.LogMessages(_logger);
-                return errorResult;
-            }
-
-            var result = ProcessingResult<ContactDao>.Ok(updatedContactResult.Value, $"Contact for '{entity.Contact}' updated successfully");
+            var result = ProcessingResult<ContactDao>.Ok(entity, $"Contact for '{entity.Contact}' updated in context (pending commit)");
             result.LogMessages(_logger);
             return result;
         }
@@ -132,10 +120,18 @@ public class ContactEfRepository : IRepository<ContactDao>
 
         try
         {
-            _dataContext.Contacts.Remove(entity);
-            await _dataContext.SaveAsync();
+            // Check if the entity exists
+            var existingContact = await _dataContext.Set<ContactDao>().FindAsync(entity.Id);
+            if (existingContact == null)
+            {
+                var notFoundResult = ProcessingResult<Unit>.NotFound($"Contact with ID {entity.Id} not found");
+                notFoundResult.LogMessages(_logger);
+                return notFoundResult;
+            }
 
-            var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Contact for '{entity.Contact}' (ID: {entity.Id}) deleted successfully");
+            _dataContext.Set<ContactDao>().Remove(existingContact);
+
+            var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Contact for '{entity.Contact}' (ID: {entity.Id}) marked for deletion (pending commit)");
             result.LogMessages(_logger);
             return result;
         }
@@ -149,6 +145,6 @@ public class ContactEfRepository : IRepository<ContactDao>
 
     public void Flush()
     {
-        _dataContext.Save();
+        _dataContext.Commit();
     }
 }

@@ -1,11 +1,9 @@
 ﻿using Hmm.Core.DefaultManager;
 using Hmm.Core.Map.DomainEntity;
-using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -22,7 +20,7 @@ namespace Hmm.Core.Tests
             _mockValidator = new Mock<IHmmValidator<Author>>();
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Author>()))
                 .ReturnsAsync(ProcessingResult<Author>.Ok(It.IsAny<Author>()));
-            _authorManager = new AuthorManager(AuthorRepository, Mapper, LookupRepository, _mockValidator.Object);
+            _authorManager = new AuthorManager(AuthorRepository, UnitOfWork, Mapper, LookupRepository, _mockValidator.Object);
         }
 
         [Fact]

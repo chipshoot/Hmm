@@ -43,8 +43,13 @@ namespace Hmm.Core.DefaultManager
                     daoQuery = ExpressionMapper<NoteCatalog, NoteCatalogDao>.MapExpression(query);
                 }
 
-                var catalogDaos = await _catalogRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-                var catalogs = _mapper.Map<PageList<NoteCatalog>>(catalogDaos);
+                var catalogDaosResult = await _catalogRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                if (!catalogDaosResult.Success)
+                {
+                    return ProcessingResult<PageList<NoteCatalog>>.Fail(catalogDaosResult.ErrorMessage, catalogDaosResult.ErrorType);
+                }
+
+                var catalogs = _mapper.Map<PageList<NoteCatalog>>(catalogDaosResult.Value);
                 return ProcessingResult<PageList<NoteCatalog>>.Ok(catalogs);
             }
             catch (Exception ex)

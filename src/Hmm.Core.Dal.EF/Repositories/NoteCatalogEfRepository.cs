@@ -36,7 +36,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         public async Task<ProcessingResult<PageList<NoteCatalogDao>>> GetEntitiesAsync(Expression<Func<NoteCatalogDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var entities = _dataContext.Catalogs;
+            var entities = _dataContext.Set<NoteCatalogDao>();
 
             var result = query == null
                 ? await PageList<NoteCatalogDao>.CreateAsync(entities, pageIdx, pageSize)
@@ -54,7 +54,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             try
             {
-                var catalog = await _dataContext.Catalogs.FindAsync(id);
+                var catalog = await _dataContext.Set<NoteCatalogDao>().FindAsync(id);
 
                 if (catalog == null)
                 {
@@ -83,10 +83,9 @@ namespace Hmm.Core.Dal.EF.Repositories
             {
                 // Reset the id to 0 to make sure it is a new entity
                 entity.Id = 0;
-                _dataContext.Catalogs.Add(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<NoteCatalogDao>().Add(entity);
 
-                var result = ProcessingResult<NoteCatalogDao>.Ok(entity, $"NoteCatalog '{entity.Name}' created successfully");
+                var result = ProcessingResult<NoteCatalogDao>.Ok(entity, $"NoteCatalog '{entity.Name}' added to context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -111,20 +110,9 @@ namespace Hmm.Core.Dal.EF.Repositories
                     return invalidResult;
                 }
 
-                _dataContext.Catalogs.Update(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<NoteCatalogDao>().Update(entity);
 
-                var updatedCatalogResult = await _lookupRepository.GetEntityAsync<NoteCatalogDao>(entity.Id);
-                if (!updatedCatalogResult.Success)
-                {
-                    var errorResult = ProcessingResult<NoteCatalogDao>.Fail(
-                        $"NoteCatalog updated but failed to retrieve: {updatedCatalogResult.ErrorMessage}",
-                        updatedCatalogResult.ErrorType);
-                    errorResult.LogMessages(_logger);
-                    return errorResult;
-                }
-
-                var result = ProcessingResult<NoteCatalogDao>.Ok(updatedCatalogResult.Value, $"NoteCatalog '{entity.Name}' updated successfully");
+                var result = ProcessingResult<NoteCatalogDao>.Ok(entity, $"NoteCatalog '{entity.Name}' updated in context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -142,10 +130,9 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
-                _dataContext.Catalogs.Remove(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<NoteCatalogDao>().Remove(entity);
 
-                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"NoteCatalog '{entity.Name}' (ID: {entity.Id}) deleted successfully");
+                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"NoteCatalog '{entity.Name}' (ID: {entity.Id}) marked for deletion (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -159,7 +146,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public void Flush()
         {
-            _dataContext.Save();
+            _dataContext.Commit();
         }
     }
 }

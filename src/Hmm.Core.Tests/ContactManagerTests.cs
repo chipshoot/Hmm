@@ -2,8 +2,10 @@
 using System.Threading.Tasks;
 using AutoMapper;
 using Hmm.Core.DefaultManager;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
@@ -14,10 +16,16 @@ namespace Hmm.Core.Tests
     public class ContactManagerTests : CoreTestFixtureBase
     {
         private readonly ContactManager _contactManager;
+        private readonly ContactManager _contactManagerWithRealValidator;
+        private readonly Mock<IHmmValidator<Contact>> _mockValidator;
 
         public ContactManagerTests()
         {
-            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Contact>>());
+            _mockValidator = new Mock<IHmmValidator<Contact>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
+                .ReturnsAsync(ProcessingResult<Contact>.Ok(It.IsAny<Contact>()));
+            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, _mockValidator.Object);
+            _contactManagerWithRealValidator = new ContactManager(ContactRepository, Mapper, LookupRepository, new ContactValidator());
         }
 
         [Fact]
@@ -58,13 +66,12 @@ namespace Hmm.Core.Tests
             contact.LastName = "Test Last Name";
 
             // Act
-            var newContactResult = await _contactManager.CreateAsync(contact);
+            var newContactResult = await _contactManagerWithRealValidator.CreateAsync(contact);
 
             // Assert
             Assert.Null(newContactResult.Value);
             Assert.False(newContactResult.Success);
-            Assert.Equal("FirstName : 'First Name' must be between 1 and 200 characters. You entered 255 characters.",
-                newContactResult.Messages[0].Message);
+            Assert.Contains("'First Name' must be between 1 and 200 characters", newContactResult.Messages[0].Message);
         }
 
         [Fact]
@@ -93,16 +100,18 @@ namespace Hmm.Core.Tests
         {
             //    Arrange
             var contact = SampleDataGenerator.GetContact();
-            await _contactManager.CreateAsync(contact);
-            Assert.True(contact.Id > 0, "new contact.Id is greater then 0");
+            var createResult = await _contactManager.CreateAsync(contact);
+            Assert.True(createResult.Success, "Contact should be created successfully");
+            Assert.True(createResult.Value.Id > 0, "new contact.Id is greater then 0");
 
             //   Act
-            contact.LastName = GetRandomString(255);
-            var newContactResult = await _contactManager.UpdateAsync(contact);
+            var contactToUpdate = createResult.Value;
+            contactToUpdate.LastName = GetRandomString(255);
+            var newContactResult = await _contactManagerWithRealValidator.UpdateAsync(contactToUpdate);
 
             //  Assert
             Assert.False(newContactResult.Success);
-            Assert.Contains("LastName : 'Last Name' must be between 1 and 200 characters. You entered 255 characters", newContactResult.Messages[0].Message);
+            Assert.Contains("'Last Name' must be between 1 and 200 characters", newContactResult.Messages[0].Message);
             Assert.Null(newContactResult.Value);
         }
 
@@ -145,12 +154,13 @@ namespace Hmm.Core.Tests
             Assert.True(contact.IsActivated);
 
             // Act
-            await _contactManager.DeActivateAsync(contact.Id);
+            var deactivateResult = await _contactManager.DeActivateAsync(contact.Id);
             var updatedContactResult = await _contactManager.GetContactByIdAsync(contact.Id);
 
             // Assert
-            Assert.True(updatedContactResult.Success);
-            Assert.Empty(updatedContactResult.Messages);
+            Assert.True(deactivateResult.Success);
+            Assert.False(updatedContactResult.Success);
+            Assert.Equal(ErrorCategory.Deleted, updatedContactResult.ErrorType);
             Assert.Null(updatedContactResult.Value);
         }
 

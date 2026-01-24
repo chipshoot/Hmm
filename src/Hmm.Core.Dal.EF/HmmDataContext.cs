@@ -2,6 +2,7 @@
 using Hmm.Utility.Dal.DataEntity;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
@@ -20,11 +21,12 @@ namespace Hmm.Core.Dal.EF
 
         public DbSet<NoteTagRefDao> NoteTagRefs { get; set; }
 
-        public void Save()
+        /// <inheritdoc />
+        public int Commit()
         {
             try
             {
-                base.SaveChanges();
+                return base.SaveChanges();
             }
             catch (Exception ex)
             {
@@ -32,9 +34,17 @@ namespace Hmm.Core.Dal.EF
             }
         }
 
-        public async Task SaveAsync()
+        /// <inheritdoc />
+        public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
         {
-            await base.SaveChangesAsync();
+            try
+            {
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                throw new DataSourceException(ex.Message, ex);
+            }
         }
 
         /// <summary>
@@ -48,14 +58,27 @@ namespace Hmm.Core.Dal.EF
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasPostgresEnum<NoteContentFormatType>("note_content_format_type");
+            var isPostgres = Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
 
-            modelBuilder.Entity<HmmNoteDao>().ToTable("notes")
+            if (isPostgres)
+            {
+                modelBuilder.HasPostgresEnum<NoteContentFormatType>("note_content_format_type");
+            }
+
+            modelBuilder.Entity<HmmNoteDao>().ToTable("notes");
+
+            // Configure Version property differently based on provider
+            var versionProperty = modelBuilder.Entity<HmmNoteDao>()
                 .Property(n => n.Version)
-                .HasColumnType("bytea")
                 .HasColumnName("ts")
                 .IsConcurrencyToken()
                 .ValueGeneratedOnAddOrUpdate();
+
+            if (isPostgres)
+            {
+                versionProperty.HasColumnType("bytea");
+            }
+
             modelBuilder.Entity<HmmNoteDao>()
             .HasOne(n => n.Author)
             .WithMany()
@@ -81,9 +104,13 @@ namespace Hmm.Core.Dal.EF
 
             modelBuilder.Entity<AuthorDao>().ToTable("authors");
             modelBuilder.Entity<ContactDao>().ToTable("contacts");
-            modelBuilder.Entity<NoteCatalogDao>().ToTable("notecatalogs")
-                .Property(e => e.Schema)
-                .HasColumnType("xml");
+
+            // Configure Schema property - use xml type only for PostgreSQL
+            var catalogEntity = modelBuilder.Entity<NoteCatalogDao>().ToTable("notecatalogs");
+            if (isPostgres)
+            {
+                catalogEntity.Property(e => e.Schema).HasColumnType("xml");
+            }
 
             modelBuilder.Entity<TagDao>().ToTable("tags");
 

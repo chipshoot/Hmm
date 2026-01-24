@@ -17,6 +17,7 @@ namespace Hmm.Core.DefaultManager
         #region private fields
 
         private readonly IVersionRepository<HmmNoteDao> _noteRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IHmmValidator<HmmNote> _validator;
         private readonly IDateTimeProvider _dateProvider;
@@ -24,14 +25,22 @@ namespace Hmm.Core.DefaultManager
 
         #endregion private fields
 
-        public HmmNoteManager(IVersionRepository<HmmNoteDao> noteRepository, IMapper mapper, IEntityLookup lookup, IDateTimeProvider dateProvider, IHmmValidator<HmmNote> validator)
+        public HmmNoteManager(
+            IVersionRepository<HmmNoteDao> noteRepository,
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IEntityLookup lookup,
+            IDateTimeProvider dateProvider,
+            IHmmValidator<HmmNote> validator)
         {
             ArgumentNullException.ThrowIfNull(noteRepository);
+            ArgumentNullException.ThrowIfNull(unitOfWork);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(dateProvider);
             ArgumentNullException.ThrowIfNull(validator);
 
             _noteRepository = noteRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _dateProvider = dateProvider;
             _lookup = lookup;
@@ -113,6 +122,8 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<HmmNote>.Fail(addedNoteDaoResult.ErrorMessage, addedNoteDaoResult.ErrorType);
                 }
 
+                await _unitOfWork.CommitAsync();
+
                 var createdNote = _mapper.Map<HmmNote>(addedNoteDaoResult.Value);
                 return ProcessingResult<HmmNote>.Ok(createdNote);
             }
@@ -151,6 +162,8 @@ namespace Hmm.Core.DefaultManager
                 {
                     return ProcessingResult<HmmNote>.Fail(updatedNoteDaoResult.ErrorMessage, updatedNoteDaoResult.ErrorType);
                 }
+
+                await _unitOfWork.CommitAsync();
 
                 var updatedNote = _mapper.Map<HmmNote>(updatedNoteDaoResult.Value);
                 if (updatedNote == null)

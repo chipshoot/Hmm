@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.extensibility.core" Version="2.9.3" />
@@ -26,6 +27,7 @@
     <ProjectReference Include="..\Hmm.Core.Dal.EF\Hmm.Core.Dal.EF.csproj" />
     <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />
     <ProjectReference Include="..\Hmm.Utility.TestHelp\Hmm.Utility.TestHelp.csproj" />
+    <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>

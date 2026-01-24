@@ -7,11 +7,7 @@
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Abootstrap_002Fd_003Adist_002Fd_003Ajs_002Ff_003Abootstrap_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Ejs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/ExcludedFiles/FilesAndFoldersToSkip/=B2D19632_002DE034_002D4F19_002DB598_002D365C6ED8DB2E_002Fd_003Awwwroot_002Fd_003Alib_002Fd_003Ajquery_002Fd_003Adist_002Ff_003Ajquery_002Eslim_002Ejs/@EntryIndexedValue">True</s:Boolean>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=17d9afcc_002D69e9_002D4d26_002Dbfd6_002Dc6ebcaab4c04/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AutomobileSeedingServiceTests #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
+	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6fa9f3a7_002Dea12_002D4820_002D98e1_002D634ffe7bc4f0/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Constructor_WithNullAutomobileManager_ThrowsArgumentNullException" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.Constructor_WithNullAutomobileManager_ThrowsArgumentNullException&lt;/TestId&gt;&#xD;
@@ -27,13 +23,30 @@
     &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithNullJsonRoot_ReturnsFailureResult&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithEmptyJsonFile_ReturnsSuccessWithZeroCount&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.SeedDataAsync_WithMixedData_SeedsBothTypes&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net10.0::Hmm.Core.Dal.EF.Tests.AuthorDaoRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net10.0::Hmm.Core.Dal.EF.Tests.ContactDaoRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net10.0::Hmm.Core.Dal.EF.Tests.HmmDataContextCommitTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net10.0::Hmm.Core.Dal.EF.Tests.NoteRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::49995799-C24B-4391-8FA3-A3579B20F649::net10.0::Hmm.Core.Dal.EF.Tests.TagRepositoryTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net10.0::Hmm.Core.Map.Tests.AuthorMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net10.0::Hmm.Core.Map.Tests.ContactMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net10.0::Hmm.Core.Map.Tests.NoteCatalogMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net10.0::Hmm.Core.Map.Tests.NoteMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::39C6A1E5-E029-498A-8912-AC59F90F585B::net10.0::Hmm.Core.Map.Tests.TagMappingTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net10.0::Hmm.Core.Tests.AuthorManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net10.0::Hmm.Core.Tests.ContactManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net10.0::Hmm.Core.Tests.NoteCatalogManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net10.0::Hmm.Core.Tests.NoteTagAssociationManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::E1F25495-A499-4F76-9C1D-F33BA6B4540F::net10.0::Hmm.Core.Tests.TagManagerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.AuthorControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.AutomobileControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.ContactControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.GasDiscountControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.GasLogControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.GasStationControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=7ad5d40c_002D0142_002D457c_002Db758_002D6d163d4ca8c5/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="AutomobileSeedingServiceTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
 	
 	
 	
@@ -51,11 +64,8 @@
 	
 	
 	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=e83eb37a_002D5f06_002D41e6_002D9d53_002Dbfea1f3106ca/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DescriptionMustHasValidContentLength" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::F0467F50-5366-1572-C4F2-6CC4CEA5BB68::net10.0::Hmm.Automobile.Tests.AutomobileSeedingServiceTests.Constructor_WithNullAutomobileManager_ThrowsArgumentNullException&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
+	
+	
 	<s:Boolean x:Key="/Default/Housekeeping/ProjectModelSynchronizer/ReadProjectModelFromDisk/@EntryValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=gaslogs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Petro/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

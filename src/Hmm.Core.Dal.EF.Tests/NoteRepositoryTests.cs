@@ -38,6 +38,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await NoteRepository.AddAsync(note);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -106,6 +107,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await NoteRepository.AddAsync(note);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -131,10 +133,12 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
+            await DbContext.CommitAsync();
 
             // Act
             note.Description = "testing note2";
             var result = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -160,11 +164,12 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
 
             // Act
             note.Subject = "This is new subject";
             var result = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -190,13 +195,14 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
 
             // Act
             var newXml = new XmlDocument();
             newXml.LoadXml("<?xml version=\"1.0\" encoding=\"utf-16\"?><GasLog></GasLog>");
             note.Content = newXml.InnerXml;
             var result = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -224,7 +230,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
 
             // changed the note catalog
             var catalogListResult = await CatalogRepository.GetEntitiesAsync(cat => !cat.IsDefault);
@@ -233,6 +239,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var result = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
 
             // Assert
             Assert.True(result.Success);
@@ -264,7 +271,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
             var savedRecListResult = await NoteRepository.GetEntitiesAsync();
             var savedRecList = savedRecListResult.Value;
             var savedRec = savedRecList.FirstOrDefault();
@@ -276,6 +283,7 @@ namespace Hmm.Core.Dal.EF.Tests
 
             // Act
             var updateResult = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
             savedRec = updateResult.Value;
 
             // Assert
@@ -314,16 +322,16 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
 
             note.Catalog = catalog;
 
             // Act
             var savedRecResult = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
             var savedRec = savedRecResult.Value;
 
             // Assert
-            // ProcessMessage no longer exists - check result.Success instead
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
             Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
@@ -358,16 +366,16 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
 
             note.Catalog = catalog;
 
             // Act
             var savedRecResult = await NoteRepository.UpdateAsync(note);
+            await DbContext.CommitAsync();
             var savedRec = savedRecResult.Value;
 
             // Assert
-            // ProcessMessage no longer exists - check result.Success instead
             Assert.NotNull(savedRec);
             Assert.NotNull(savedRec.Catalog);
             Assert.Equal(DefaultNoteCatalogName, savedRec.Catalog.Name);
@@ -388,6 +396,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
+            await DbContext.CommitAsync();
 
             // Act
             var orgId = note.Id;
@@ -425,10 +434,11 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
 
             // Act
             var deleteResult = await NoteRepository.DeleteAsync(note);
+            await DbContext.CommitAsync();
             var notesResult = await NoteRepository.GetEntitiesAsync();
 
             // Assert
@@ -451,7 +461,7 @@ namespace Hmm.Core.Dal.EF.Tests
                 Content = xmlDoc.InnerXml,
             };
             await NoteRepository.AddAsync(note);
-            // ProcessMessage no longer exists - check result.Success instead
+            await DbContext.CommitAsync();
 
             // change the note id to create a new note
             var orgId = note.Id;
@@ -559,6 +569,9 @@ namespace Hmm.Core.Dal.EF.Tests
             };
             var authorResult = await AuthorRepository.AddAsync(author);
             _author = authorResult.Value;
+
+            // Commit the changes to make them visible to queries
+            await DbContext.CommitAsync();
         }
     }
 }

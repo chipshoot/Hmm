@@ -48,18 +48,18 @@ namespace Hmm.Core.Dal.EF
                 T entity;
                 if (typeof(T) == typeof(AuthorDao))
                 {
-                    entity = await _dataContext.Authors
+                    entity = await _dataContext.Set<AuthorDao>()
                         .AsNoTracking()
                         .Include(a => a.ContactInfo)
                         .FirstOrDefaultAsync(a => a.Id == id) as T;
                 }
                 else if (typeof(T) == typeof(ContactDao))
                 {
-                    entity = await _dataContext.Contacts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
+                    entity = await _dataContext.Set<ContactDao>().AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
                 }
                 else if (typeof(T) == typeof(HmmNoteDao))
                 {
-                    entity = await _dataContext.Notes
+                    entity = await _dataContext.Set<HmmNoteDao>()
                         .AsNoTracking()
                         .Include(n => n.Author)
                         .Include(n => n.Catalog)
@@ -68,11 +68,11 @@ namespace Hmm.Core.Dal.EF
                 }
                 else if (typeof(T) == typeof(NoteCatalogDao))
                 {
-                    entity = await _dataContext.Catalogs.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
+                    entity = await _dataContext.Set<NoteCatalogDao>().AsNoTracking().FirstOrDefaultAsync(c => c.Id == id) as T;
                 }
                 else if (typeof(T) == typeof(TagDao))
                 {
-                    entity = await _dataContext.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id) as T;
+                    entity = await _dataContext.Set<TagDao>().AsNoTracking().FirstOrDefaultAsync(t => t.Id == id) as T;
                 }
                 else
                 {
@@ -97,27 +97,27 @@ namespace Hmm.Core.Dal.EF
             IQueryable<T> entities;
             if (typeof(T) == typeof(HmmNoteDao))
             {
-                entities = _dataContext.Notes
+                entities = _dataContext.Set<HmmNoteDao>()
                     .Include(n => n.Author)
                     .Include(n => n.Tags)
                     .Include(n => n.Catalog).AsNoTracking().Cast<T>();
             }
-            if (typeof(T) == typeof(NoteCatalogDao))
+            else if (typeof(T) == typeof(NoteCatalogDao))
             {
-                entities = _dataContext.Catalogs.AsNoTracking().Cast<T>();
+                entities = _dataContext.Set<NoteCatalogDao>().AsNoTracking().Cast<T>();
             }
             else if (typeof(T) == typeof(AuthorDao))
             {
-                entities = _dataContext.Authors
+                entities = _dataContext.Set<AuthorDao>()
                     .Include(a => a.ContactInfo).AsNoTracking().Cast<T>();
             }
             else if (typeof(T) == typeof(ContactDao))
             {
-                entities = _dataContext.Contacts.AsNoTracking().Cast<T>();
+                entities = _dataContext.Set<ContactDao>().AsNoTracking().Cast<T>();
             }
             else if (typeof(T) == typeof(TagDao))
             {
-                entities = _dataContext.Tags.AsNoTracking().Cast<T>();
+                entities = _dataContext.Set<TagDao>().AsNoTracking().Cast<T>();
             }
             else
             {

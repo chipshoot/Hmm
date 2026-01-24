@@ -37,7 +37,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         public async Task<ProcessingResult<PageList<TagDao>>> GetEntitiesAsync(Expression<Func<TagDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
-            var entities = _dataContext.Tags;
+            var entities = _dataContext.Set<TagDao>();
 
             var result = query == null
                 ? await PageList<TagDao>.CreateAsync(entities, pageIdx, pageSize)
@@ -55,7 +55,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             try
             {
-                var tag = await _dataContext.Tags.Include(t => t.Notes).AsNoTracking().FirstOrDefaultAsync(t => t.Id == tagId);
+                var tag = await _dataContext.Set<TagDao>().Include(t => t.Notes).AsNoTracking().FirstOrDefaultAsync(t => t.Id == tagId);
 
                 if (tag == null)
                 {
@@ -96,7 +96,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             try
             {
-                var tag = await _dataContext.Tags
+                var tag = await _dataContext.Set<TagDao>()
                     .FirstOrDefaultAsync(t => t.Id == id);
 
                 if (tag == null)
@@ -124,10 +124,20 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
-                _dataContext.Tags.Add(entity);
-                await _dataContext.SaveAsync();
+                // Check for duplicate tag name
+                var existingTagsResult = await _lookupRepository.GetEntitiesAsync<TagDao>(
+                    t => t.Name == entity.Name);
+                if (existingTagsResult.Success && existingTagsResult.Value?.Count > 0)
+                {
+                    var invalidResult = ProcessingResult<TagDao>.Invalid(
+                        $"Tag with name '{entity.Name}' already exists");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
+                }
 
-                var result = ProcessingResult<TagDao>.Ok(entity, $"Tag '{entity.Name}' created successfully");
+                _dataContext.Set<TagDao>().Add(entity);
+
+                var result = ProcessingResult<TagDao>.Ok(entity, $"Tag '{entity.Name}' added to context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -152,20 +162,20 @@ namespace Hmm.Core.Dal.EF.Repositories
                     return invalidResult;
                 }
 
-                _dataContext.Tags.Update(entity);
-                await _dataContext.SaveAsync();
-
-                var updatedTagResult = await _lookupRepository.GetEntityAsync<TagDao>(entity.Id);
-                if (!updatedTagResult.Success)
+                // Check for duplicate tag name (excluding current entity)
+                var existingTagsResult = await _lookupRepository.GetEntitiesAsync<TagDao>(
+                    t => t.Name == entity.Name && t.Id != entity.Id);
+                if (existingTagsResult.Success && existingTagsResult.Value?.Count > 0)
                 {
-                    var errorResult = ProcessingResult<TagDao>.Fail(
-                        $"Tag updated but failed to retrieve: {updatedTagResult.ErrorMessage}",
-                        updatedTagResult.ErrorType);
-                    errorResult.LogMessages(_logger);
-                    return errorResult;
+                    var invalidResult = ProcessingResult<TagDao>.Invalid(
+                        $"Another tag with name '{entity.Name}' already exists");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
                 }
 
-                var result = ProcessingResult<TagDao>.Ok(updatedTagResult.Value, $"Tag '{entity.Name}' updated successfully");
+                _dataContext.Set<TagDao>().Update(entity);
+
+                var result = ProcessingResult<TagDao>.Ok(entity, $"Tag '{entity.Name}' updated in context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -183,10 +193,9 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
-                _dataContext.Tags.Remove(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<TagDao>().Remove(entity);
 
-                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Tag '{entity.Name}' (ID: {entity.Id}) deleted successfully");
+                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Tag '{entity.Name}' (ID: {entity.Id}) marked for deletion (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -200,7 +209,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public void Flush()
         {
-            _dataContext.Save();
+            _dataContext.Commit();
         }
     }
 }

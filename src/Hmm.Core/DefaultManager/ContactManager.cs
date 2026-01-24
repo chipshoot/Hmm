@@ -56,8 +56,13 @@ public class ContactManager : IContactManager
                 daoQuery = isActivatedExpression;
             }
 
-            var contactDaos = await _contactDaoRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-            var contacts = _mapper.Map<PageList<Contact>>(contactDaos);
+            var contactDaosResult = await _contactDaoRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+            if (!contactDaosResult.Success)
+            {
+                return ProcessingResult<PageList<Contact>>.Fail(contactDaosResult.ErrorMessage, contactDaosResult.ErrorType);
+            }
+
+            var contacts = _mapper.Map<PageList<Contact>>(contactDaosResult.Value);
             return ProcessingResult<PageList<Contact>>.Ok(contacts);
         }
         catch (Exception ex)

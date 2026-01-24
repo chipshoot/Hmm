@@ -32,7 +32,7 @@ namespace Hmm.Core.Tests
                         {
                             return ProcessingResult<Tag>.Ok(tag);
                         });
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, LookupRepository, DateProvider, hmmValidator.Object);
+            _noteManager = new HmmNoteManager(NoteRepository, UnitOfWork, Mapper, LookupRepository, DateProvider, hmmValidator.Object);
             _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, tagValidator.Object);
             _associationManager = new NoteTagAssociationManager(_noteManager, _tagManager);
         }

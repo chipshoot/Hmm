@@ -20,12 +20,35 @@ namespace Hmm.ServiceApi.Core.Tests
     {
         private readonly HmmNoteManager _noteManager;
         private readonly HmmNoteController _controller;
+        private readonly NoteTagAssociationManager _noteTagAssociationManager;
+        private readonly Mock<IHmmValidator<HmmNote>> _mockValidator;
 
         public NoteControllerTests()
         {
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
-            var noteTagAssociationManager = Mock.Of<INoteTagAssociationManager>();
-            _controller = new HmmNoteController(_noteManager, noteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            _mockValidator = new Mock<IHmmValidator<HmmNote>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<HmmNote>()))
+                .ReturnsAsync(ProcessingResult<HmmNote>.Ok(It.IsAny<HmmNote>()));
+            var tagValidator = new Mock<IHmmValidator<Tag>>();
+            tagValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
+                .ReturnsAsync(ProcessingResult<Tag>.Ok(It.IsAny<Tag>()));
+            _noteManager = new HmmNoteManager(NoteRepository, UnitOfWork, Mapper, LookupRepository, DateProvider, _mockValidator.Object);
+            var tagManager = new TagManager(TagRepository, Mapper, LookupRepository, tagValidator.Object);
+            _noteTagAssociationManager = new NoteTagAssociationManager(_noteManager, tagManager);
+            _controller = new HmmNoteController(_noteManager, _noteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+        }
+
+        private HmmNoteController CreateControllerWithMockedManager(Mock<IHmmNoteManager> mockManager)
+        {
+            var controller = new HmmNoteController(mockManager.Object, _noteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            return controller;
         }
 
         #region Get note by Id
@@ -129,15 +152,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiNote = new ApiNoteForCreate { Subject = "TestNote" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
-            var mockNoteTagAssociationManager = Mock.Of<INoteTagAssociationManager>();
-            var controller = new HmmNoteController(mockNoteManager.Object, mockNoteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act
             var result = await controller.Post(apiNote);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Add a new note
@@ -182,7 +204,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task UpdateNote_ReturnsBadRequest_WhenNoteNotFound()
+        public async Task UpdateNote_ReturnsNotFound_WhenNoteNotFound()
         {
             // Arrange
             const int noteId = 1000;
@@ -195,8 +217,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Put(noteId, apiNoteForUpdate);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"The note {noteId} cannot be found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Note with id {noteId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -227,15 +249,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
-            var mockNoteTagAssociationManager = Mock.Of<INoteTagAssociationManager>();
-            var controller = new HmmNoteController(mockNoteManager.Object, mockNoteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act
             var result = await controller.Put(noteId, apiNoteForUpdate);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Update note
@@ -416,15 +437,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
             mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
-            var mockNoteTagAssociationManager = Mock.Of<INoteTagAssociationManager>();
-            var controller = new HmmNoteController(mockNoteManager.Object, mockNoteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act
             var result = await controller.Patch(noteId, patchDoc);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Patch note
@@ -449,14 +469,14 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenIdIsInvalid()
+        public async Task Delete_ReturnsNotFound_WhenIdIsInvalid()
         {
             // Act
             var result = await _controller.Delete(0);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Invalid note id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal("Note with id 0 not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -481,16 +501,15 @@ namespace Hmm.ServiceApi.Core.Tests
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
-            mockNoteManager.Setup(m => m.DeleteAsync(It.IsAny<int>())).Throws(new Exception());
-            var mockNoteTagAssociationManager = Mock.Of<INoteTagAssociationManager>();
-            var controller = new HmmNoteController(mockNoteManager.Object, mockNoteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
+            var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act
             var result = await controller.Delete(noteId);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Delete note

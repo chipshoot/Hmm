@@ -1,6 +1,8 @@
 using System.Linq;
 using Hmm.Core.DefaultManager;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
@@ -12,10 +14,16 @@ namespace Hmm.Core.Tests
     public class NoteCatalogManagerTests : CoreTestFixtureBase
     {
         private readonly NoteCatalogManager _catalogManager;
+        private readonly NoteCatalogManager _catalogManagerWithRealValidator;
+        private readonly Mock<IHmmValidator<NoteCatalog>> _mockValidator;
 
         public NoteCatalogManagerTests()
         {
-            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<NoteCatalog>>());
+            _mockValidator = new Mock<IHmmValidator<NoteCatalog>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<NoteCatalog>()))
+                .ReturnsAsync(ProcessingResult<NoteCatalog>.Ok(It.IsAny<NoteCatalog>()));
+            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, _mockValidator.Object);
+            _catalogManagerWithRealValidator = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, new NoteCatalogValidator(CatalogRepository));
         }
 
         [Fact]
@@ -49,11 +57,11 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newCatalogResult = await _catalogManager.CreateAsync(catalog);
+            var newCatalogResult = await _catalogManagerWithRealValidator.CreateAsync(catalog);
 
             // Assert
             Assert.False(newCatalogResult.Success);
-            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", newCatalogResult.Messages.First().Message);
+            Assert.Contains("'Name' must be between 1 and 200 characters", newCatalogResult.Messages.First().Message);
             Assert.Null(newCatalogResult.Value);
         }
 
@@ -66,8 +74,9 @@ namespace Hmm.Core.Tests
                 Name = "Test Catalog",
                 Schema = "test schema"
             };
-            await _catalogManager.CreateAsync(catalog);
-            var savedCatalogResult = await _catalogManager.GetEntityByIdAsync(catalog.Id);
+            var createResult = await _catalogManager.CreateAsync(catalog);
+            Assert.True(createResult.Success, "Catalog should be created successfully");
+            var savedCatalogResult = await _catalogManager.GetEntityByIdAsync(createResult.Value.Id);
             Assert.NotNull(savedCatalogResult.Value);
 
             // Act
@@ -90,14 +99,16 @@ namespace Hmm.Core.Tests
                 Schema = "test schema"
             };
             var savedCatalogResult = await _catalogManager.CreateAsync(catalog);
+            Assert.True(savedCatalogResult.Success, "Catalog should be created successfully");
 
             // Act
-            savedCatalogResult.Value.Name = GetRandomString(255);
-            var updatedCatalogResult = await _catalogManager.UpdateAsync(savedCatalogResult.Value);
+            var catalogToUpdate = savedCatalogResult.Value;
+            catalogToUpdate.Name = GetRandomString(255);
+            var updatedCatalogResult = await _catalogManagerWithRealValidator.UpdateAsync(catalogToUpdate);
 
             // Assert
             Assert.False(updatedCatalogResult.Success);
-            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", updatedCatalogResult.Messages.First().Message);
+            Assert.Contains("'Name' must be between 1 and 200 characters", updatedCatalogResult.Messages.First().Message);
             Assert.Null(updatedCatalogResult.Value);
         }
 

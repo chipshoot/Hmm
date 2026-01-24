@@ -32,7 +32,8 @@ namespace Hmm.ServiceApi.Core.Tests
                 Mock.Of<INoteSerializer<GasStation>>(),
                 Mock.Of<IHmmValidator<GasStation>>(),
                 Mock.Of<IHmmNoteManager>(),
-                Mock.Of<IEntityLookup>());
+                Mock.Of<IEntityLookup>(),
+                Mock.Of<IAuthorProvider>());
 
             var config = new MapperConfiguration(cfg =>
             {

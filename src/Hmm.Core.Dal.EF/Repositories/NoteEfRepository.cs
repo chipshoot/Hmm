@@ -41,8 +41,8 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var notes = query == null
-                ? _dataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags)
-                : _dataContext.Notes.Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags).Where(query);
+                ? _dataContext.Set<HmmNoteDao>().Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags)
+                : _dataContext.Set<HmmNoteDao>().Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags).Where(query);
             var result = resourceCollectionParameters == null
                 ? await PageList<HmmNoteDao>.CreateAsync(notes, pageIdx, pageSize)
                 : await PageList<HmmNoteDao>.CreateAsync(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
@@ -59,7 +59,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             try
             {
-                var note = await _dataContext.Notes
+                var note = await _dataContext.Set<HmmNoteDao>()
                     .Include(n=>n.Tags)
                     .FirstOrDefaultAsync(n=>n.Id == id);
 
@@ -100,13 +100,13 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 entity.CreateDate = _dateTimeProvider.UtcNow;
                 entity.LastModifiedDate = _dateTimeProvider.UtcNow;
-                var savedAuthor = await _dataContext.Authors.FindAsync(entity.Author.Id);
+                var savedAuthor = await _dataContext.Set<AuthorDao>().FindAsync(entity.Author.Id);
                 if (savedAuthor != null)
                 {
                     entity.Author = savedAuthor;
                 }
 
-                var savedCat = await _dataContext.Catalogs.FindAsync(entity.Catalog.Id);
+                var savedCat = await _dataContext.Set<NoteCatalogDao>().FindAsync(entity.Catalog.Id);
                 if (savedCat != null)
                 {
                     entity.Catalog = savedCat;
@@ -114,10 +114,9 @@ namespace Hmm.Core.Dal.EF.Repositories
 
                 // Reset the id to 0 to avoid EF core updating the record
                 entity.Id = 0;
-                _dataContext.Notes.Add(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<HmmNoteDao>().Add(entity);
 
-                var result = ProcessingResult<HmmNoteDao>.Ok(entity, $"Note '{entity.Subject}' created successfully");
+                var result = ProcessingResult<HmmNoteDao>.Ok(entity, $"Note '{entity.Subject}' added to context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -145,7 +144,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 else
                 {
                     var lookupResult = await _lookupRepository.GetEntityAsync<NoteCatalogDao>(property.Id);
-                    if (!lookupResult.Success)
+                    if (!lookupResult.Success || lookupResult.Value == null)
                     {
                         defaultNeeded = true;
                     }
@@ -156,7 +155,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                     return ProcessingResult<NoteCatalogDao>.Ok(property);
                 }
 
-                var defaultCatalog = await _dataContext.Catalogs.FirstOrDefaultAsync(c => c.IsDefault);
+                var defaultCatalog = await _dataContext.Set<NoteCatalogDao>().FirstOrDefaultAsync(c => c.IsDefault);
                 if (defaultCatalog == null)
                 {
                     return ProcessingResult<NoteCatalogDao>.NotFound("No default NoteCatalog found");
@@ -175,6 +174,22 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
+                // Check if the note exists
+                if (entity.Id <= 0)
+                {
+                    var invalidResult = ProcessingResult<HmmNoteDao>.Invalid($"Cannot update note with invalid id {entity.Id}");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
+                }
+
+                var existingNote = await _dataContext.Set<HmmNoteDao>().AsNoTracking().FirstOrDefaultAsync(n => n.Id == entity.Id);
+                if (existingNote == null)
+                {
+                    var notFoundResult = ProcessingResult<HmmNoteDao>.NotFound($"Note with ID {entity.Id} not found");
+                    notFoundResult.LogMessages(_logger);
+                    return notFoundResult;
+                }
+
                 // Check if we need to apply default catalog
                 var catalogResult = await PropertyCheckingAsync(entity.Catalog);
                 if (!catalogResult.Success)
@@ -186,20 +201,9 @@ namespace Hmm.Core.Dal.EF.Repositories
                 entity.Catalog = catalogResult.Value;
 
                 entity.LastModifiedDate = _dateTimeProvider.UtcNow;
-                _dataContext.Notes.Update(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<HmmNoteDao>().Update(entity);
 
-                var updatedNoteResult = await _lookupRepository.GetEntityAsync<HmmNoteDao>(entity.Id);
-                if (!updatedNoteResult.Success)
-                {
-                    var errorResult = ProcessingResult<HmmNoteDao>.Fail(
-                        $"Note updated but failed to retrieve: {updatedNoteResult.ErrorMessage}",
-                        updatedNoteResult.ErrorType);
-                    errorResult.LogMessages(_logger);
-                    return errorResult;
-                }
-
-                var result = ProcessingResult<HmmNoteDao>.Ok(updatedNoteResult.Value, $"Note '{entity.Subject}' updated successfully");
+                var result = ProcessingResult<HmmNoteDao>.Ok(entity, $"Note '{entity.Subject}' updated in context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -217,10 +221,18 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
-                _dataContext.Notes.Remove(entity);
-                await _dataContext.SaveAsync();
+                // Check if the note exists
+                var existingNote = await _dataContext.Set<HmmNoteDao>().FindAsync(entity.Id);
+                if (existingNote == null)
+                {
+                    var notFoundResult = ProcessingResult<Unit>.NotFound($"Note with ID {entity.Id} not found");
+                    notFoundResult.LogMessages(_logger);
+                    return notFoundResult;
+                }
 
-                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Note '{entity.Subject}' (ID: {entity.Id}) deleted successfully");
+                _dataContext.Set<HmmNoteDao>().Remove(existingNote);
+
+                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Note '{entity.Subject}' (ID: {entity.Id}) marked for deletion (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -247,7 +259,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public void Flush()
         {
-            _dataContext.Save();
+            _dataContext.Commit();
         }
     }
 }

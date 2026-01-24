@@ -23,11 +23,29 @@ namespace Hmm.ServiceApi.Core.Tests
     {
         private readonly ContactManager _contactManager;
         private readonly ContactController _controller;
+        private readonly Mock<IHmmValidator<Contact>> _mockValidator;
 
         public ContactControllerTests()
         {
-            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Contact>>());
+            _mockValidator = new Mock<IHmmValidator<Contact>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
+                .ReturnsAsync(ProcessingResult<Contact>.Ok(It.IsAny<Contact>()));
+            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, _mockValidator.Object);
             _controller = new ContactController(_contactManager, ApiMapper, new Mock<ILogger<ContactController>>().Object);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+        }
+
+        private ContactController CreateControllerWithMockedManager(Mock<IContactManager> mockManager)
+        {
+            var controller = new ContactController(mockManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            return controller;
         }
 
         #region Get contact by Id
@@ -164,14 +182,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiContact = new ApiContactForCreate { FirstName = "TestContact" };
             var mockContactManager = new Mock<IContactManager>();
             mockContactManager.Setup(m => m.CreateAsync(It.IsAny<Contact>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockContactManager);
 
             // Act
             var result = await controller.Post(apiContact);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Add a new contact
@@ -282,16 +300,15 @@ namespace Hmm.ServiceApi.Core.Tests
             var existContact = existContactResult.Value;
             var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existContact);
             var mockContactManager = new Mock<IContactManager>();
-            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockContactManager);
 
             // Act
             var result = await controller.Put(contactId, apiContactForUpdate);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Update contact
@@ -377,14 +394,14 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockContactManager = new Mock<IContactManager>();
             mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.UpdateAsync(It.IsAny<Contact>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockContactManager);
 
             // Act
             var result = await controller.Patch(contactId, patchDoc);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Patch contact
@@ -410,18 +427,18 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenIdIsInvalid()
+        public async Task Delete_ReturnsNotFound_WhenIdIsInvalid()
         {
             // Act
             var result = await _controller.Delete(0);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"The contact 0 cannot be found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal("Contact with id 0 not found", notFoundResult.Value);
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenContactNotFound()
+        public async Task Delete_ReturnsNotFound_WhenContactNotFound()
         {
             // Arrange
             const int contactId = 1;
@@ -430,8 +447,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Delete(contactId);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"The contact {contactId} cannot be found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Contact with id {contactId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -440,16 +457,15 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int contactId = 1;
             var mockContactManager = new Mock<IContactManager>();
-            mockContactManager.Setup(a => a.GetContactByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => ProcessingResult<Contact>.Ok(new Contact { Id = id, LastName = "Exists Contact" }));
             mockContactManager.Setup(m => m.DeActivateAsync(It.IsAny<int>())).Throws(new Exception());
-            var controller = new ContactController(mockContactManager.Object, ApiMapper, new Mock<ILogger<ContactController>>().Object);
+            var controller = CreateControllerWithMockedManager(mockContactManager);
 
             // Act
             var result = await controller.Delete(contactId);
 
             // Assert
-            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         #endregion Delete contact

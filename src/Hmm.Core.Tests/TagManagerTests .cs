@@ -1,5 +1,7 @@
 ﻿using Hmm.Core.DefaultManager;
+using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
@@ -12,10 +14,16 @@ namespace Hmm.Core.Tests
     public class TagManagerTests : CoreTestFixtureBase
     {
         private readonly TagManager _tagManager;
+        private readonly TagManager _tagManagerWithRealValidator;
+        private readonly Mock<IHmmValidator<Tag>> _mockValidator;
 
         public TagManagerTests()
         {
-            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, Mock.Of<IHmmValidator<Tag>>());
+            _mockValidator = new Mock<IHmmValidator<Tag>>();
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
+                .ReturnsAsync(ProcessingResult<Tag>.Ok(It.IsAny<Tag>()));
+            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, _mockValidator.Object);
+            _tagManagerWithRealValidator = new TagManager(TagRepository, Mapper, LookupRepository, new TagValidator(TagRepository));
         }
 
         [Fact]
@@ -165,7 +173,6 @@ namespace Hmm.Core.Tests
         public async Task Cannot_Add_Invalid_Tag()
         {
             // Arrange
-
             var tag = new Tag
             {
                 Name = GetRandomString(255),
@@ -174,11 +181,11 @@ namespace Hmm.Core.Tests
             };
 
             // Act
-            var newTagResult = await _tagManager.CreateAsync(tag);
+            var newTagResult = await _tagManagerWithRealValidator.CreateAsync(tag);
 
             // Assert
             Assert.False(newTagResult.Success);
-            Assert.Equal("Name : 'Name' must be between 1 and 200 characters. You entered 255 characters.", newTagResult.Messages.First()?.Message);
+            Assert.Contains("'Name' must be between 1 and 200 characters", newTagResult.Messages.First()?.Message);
             Assert.Null(newTagResult.Value);
         }
 
@@ -218,12 +225,14 @@ namespace Hmm.Core.Tests
                 IsActivated = true,
                 Description = "Sample Tag"
             };
-            await _tagManager.CreateAsync(tag);
-            Assert.True(tag.Id > 0, "newTag.Id is greater then 0");
+            var createResult = await _tagManager.CreateAsync(tag);
+            Assert.True(createResult.Success, "Tag should be created successfully");
+            Assert.True(createResult.Value.Id > 0, "newTag.Id is greater then 0");
 
             //   Act
-            tag.Name = GetRandomString(255);
-            var newTagResult = await _tagManager.UpdateAsync(tag);
+            var tagToUpdate = createResult.Value;
+            tagToUpdate.Name = GetRandomString(255);
+            var newTagResult = await _tagManagerWithRealValidator.UpdateAsync(tagToUpdate);
 
             //  Assert
             Assert.False(newTagResult.Success);
@@ -275,12 +284,13 @@ namespace Hmm.Core.Tests
             Assert.True(tag.IsActivated);
 
             // Act
-            await _tagManager.DeActivateAsync(tag.Id);
+            var deactivateResult = await _tagManager.DeActivateAsync(tag.Id);
             var updatedTagResult = await _tagManager.GetTagByIdAsync(tag.Id);
 
             // Assert
-            Assert.True(updatedTagResult.Success);
-            Assert.Empty(updatedTagResult.Messages);
+            Assert.True(deactivateResult.Success);
+            Assert.False(updatedTagResult.Success);
+            Assert.Equal(ErrorCategory.Deleted, updatedTagResult.ErrorType);
             Assert.Null(updatedTagResult.Value);
         }
 
@@ -295,13 +305,14 @@ namespace Hmm.Core.Tests
             Assert.True(tag.IsActivated);
 
             // Act
-            await _tagManager.DeActivateAsync(tag.Id);
+            var deactivateResult = await _tagManager.DeActivateAsync(tag.Id);
             var updatedTagResult = await _tagManager.GetTagByIdAsync(tag.Id);
             tagsResult = await _tagManager.GetEntitiesAsync();
 
             // Assert
-            Assert.True(updatedTagResult.Success);
-            Assert.Empty(updatedTagResult.Messages);
+            Assert.True(deactivateResult.Success);
+            Assert.False(updatedTagResult.Success);
+            Assert.Equal(ErrorCategory.Deleted, updatedTagResult.ErrorType);
             Assert.Null(updatedTagResult.Value);
             Assert.Equal(tagNum - 1, tagsResult.Value.Count);
         }

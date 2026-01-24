@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Serilog;
 using System;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,9 +28,9 @@ namespace Hmm.Utility.TestHelp
         private const string DatabaseName = "hmm_postgres";
         protected IHmmDataContext DbContext;
         protected IDbContextTransaction Transaction;
-        private static bool _initialized;
-        private static readonly object Lock = new();
-        private static DbContextOptions _dbContextOptions;
+        private DbConnection? _sqliteInMemoryConnection;
+        private TestDbProvider _provider;
+        
 
         protected DbTestFixtureBase()
         {
@@ -47,8 +48,90 @@ namespace Hmm.Utility.TestHelp
             });
             Logger = loggerFactory.CreateLogger("DbTestFixtureBase");
 
-            var connectString = config["AppSettings:ConnectionString"];
-            SetDbEnvironment(connectString);
+            SetDbEnvironment(config);
+        }
+
+        private void SetDbEnvironment(IConfiguration config)
+        {
+            _provider = Enum.Parse<TestDbProvider>(
+                config["TestDb:Provider"] ?? "Postgres",
+                ignoreCase: true);
+
+            var cs = config["TestDb:ConnectionString"] ?? config["AppSettings:ConnectionString"];
+
+            var optBuilder = new DbContextOptionsBuilder<HmmDataContext>();
+
+            switch (_provider)
+            {
+                case TestDbProvider.Postgres:
+                {
+                    var dataSourceBuilder = new NpgsqlDataSourceBuilder(cs);
+                    dataSourceBuilder.MapEnum<NoteContentFormatType>();
+                    var dataSource = dataSourceBuilder.Build();
+                    optBuilder.UseNpgsql(dataSource);
+                    break;
+                }
+
+                case TestDbProvider.SqlServer:
+                {
+                    optBuilder.UseSqlServer(cs);
+                    break;
+                }
+
+                case TestDbProvider.SqliteMemory:
+                {
+                    // IMPORTANT: SQLite in-memory DB exists only while the connection stays OPEN
+                    _sqliteInMemoryConnection = new Microsoft.Data.Sqlite.SqliteConnection("Filename=:memory:");
+                    _sqliteInMemoryConnection.Open();
+                    optBuilder.UseSqlite(_sqliteInMemoryConnection);
+                    break;
+                }
+            }
+
+            DbContext = new HmmDataContext(optBuilder.Options);
+
+            // ... init repositories exactly like you do today ...
+            LookupRepository = new EfEntityLookup(DbContext);
+            var dateProvider = new DateTimeAdapter();
+            AuthorRepository = new AuthorEfRepository(DbContext, LookupRepository, Logger);
+            ContactRepository = new ContactEfRepository(DbContext, LookupRepository, Logger);
+            NoteRepository = new NoteEfRepository(DbContext, LookupRepository, dateProvider, Logger);
+            CatalogRepository = new NoteCatalogEfRepository(DbContext, LookupRepository, dateProvider, Logger);
+            TagRepository = new TagEfRepository(DbContext, LookupRepository, dateProvider, Logger);
+            DateProvider = new DateTimeAdapter();
+
+            ResetDatabase(config);
+        }
+
+        private void ResetDatabase(IConfiguration config)
+        {
+            var ef = (DbContext)DbContext;
+
+            switch (_provider)
+            {
+                case TestDbProvider.Postgres:
+                {
+                    // Keep your existing behavior, but ONLY for Postgres
+                    EnsureDatabaseDeleted(config.GetConnectionString("DefaultConnection"));
+                    ef.Database.EnsureCreated();
+                    break;
+                }
+
+                case TestDbProvider.SqlServer:
+                {
+                    // Works for LocalDB / dedicated test DB
+                    ef.Database.EnsureDeleted();
+                    ef.Database.EnsureCreated();
+                    break;
+                }
+
+                case TestDbProvider.SqliteMemory:
+                {
+                    // In-memory: just ensure schema is created
+                    ef.Database.EnsureCreated();
+                    break;
+                }
+            }
         }
 
         protected IRepository<AuthorDao> AuthorRepository { get; private set; }
@@ -71,18 +154,19 @@ namespace Hmm.Utility.TestHelp
         {
             try
             {
-                DbContext.Tags.Entry(tag).State = EntityState.Detached;
-                await DbContext.Tags.LoadAsync();
+                var tagSet = DbContext.Set<TagDao>();
+                tagSet.Entry(tag).State = EntityState.Detached;
+                await tagSet.LoadAsync();
 
-                var entities = DbContext.Tags.Local.ToList<TagDao>();
+                var entities = tagSet.Local.ToList<TagDao>();
                 foreach (var entity in entities)
                 {
                     if (entity.Id == tag.Id)
                     {
-                        DbContext.Tags.Entry(entity).State = EntityState.Detached;
+                        tagSet.Entry(entity).State = EntityState.Detached;
                     }
                 }
-                DbContext.Tags.Entry(tag).State = EntityState.Modified;
+                tagSet.Entry(tag).State = EntityState.Modified;
             }
             catch (Exception e)
             {
@@ -91,61 +175,21 @@ namespace Hmm.Utility.TestHelp
             }
         }
 
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
-
-        private void SetDbEnvironment(string connectString)
-        {
-            if (!_initialized)
-            {
-                lock (Lock)
+                public void Dispose()
                 {
-                    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectString);
-                    dataSourceBuilder.MapEnum<NoteContentFormatType>();
-                    var dataSource = dataSourceBuilder.Build();
-                    var optBuilder = new DbContextOptionsBuilder()
-                        .UseNpgsql(dataSource);
-                    _dbContextOptions = optBuilder.Options;
-                    _initialized = true;
+                    (DbContext as DbContext)?.Dispose();
+                    _sqliteInMemoryConnection?.Dispose();
+                    GC.SuppressFinalize(this);
+                }
+
+                private void EnsureDatabaseDeleted(string connectionString)
+                {
+                    using var connection = new NpgsqlConnection(connectionString);
+                    connection.Open();
+
+                    using var command = connection.CreateCommand();
+                    command.CommandText = $"DROP DATABASE IF EXISTS \"{DatabaseName}\" WITH (FORCE);";
+                    command.ExecuteNonQuery();
                 }
             }
-
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .Build();
-
-            DbContext = new HmmDataContext(_dbContextOptions);
-
-            LookupRepository = new EfEntityLookup(DbContext);
-            var dateProvider = new DateTimeAdapter();
-            AuthorRepository = new AuthorEfRepository(DbContext, LookupRepository, Logger);
-            ContactRepository = new ContactEfRepository(DbContext, LookupRepository, Logger);
-            NoteRepository = new NoteEfRepository(DbContext, LookupRepository, dateProvider, Logger);
-            CatalogRepository = new NoteCatalogEfRepository(DbContext, LookupRepository, dateProvider, Logger);
-            TagRepository = new TagEfRepository(DbContext, LookupRepository, dateProvider, Logger);
-            DateProvider = new DateTimeAdapter();
-
-            var contact = DbContext as DbContext;
-            EnsureDatabaseDeleted(config.GetConnectionString("DefaultConnection"));
-            EnsureDatabaseCreated();
         }
-
-        private void EnsureDatabaseDeleted(string connectionString)
-        {
-            using var connection = new NpgsqlConnection(connectionString);
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = $"DROP DATABASE IF EXISTS \"{DatabaseName}\" WITH (FORCE);";
-            command.ExecuteNonQuery();
-        }
-
-        private void EnsureDatabaseCreated()
-        {
-            var context = DbContext as DbContext;
-            context?.Database.EnsureCreated();
-        }
-    }
-}

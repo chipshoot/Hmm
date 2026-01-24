@@ -55,8 +55,13 @@ namespace Hmm.Core.DefaultManager
                     daoQuery = isActivatedExpression;
                 }
 
-                var tagDaos = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
-                var tags = _mapper.Map<PageList<Tag>>(tagDaos);
+                var tagDaosResult = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                if (!tagDaosResult.Success)
+                {
+                    return ProcessingResult<PageList<Tag>>.Fail(tagDaosResult.ErrorMessage, tagDaosResult.ErrorType);
+                }
+
+                var tags = _mapper.Map<PageList<Tag>>(tagDaosResult.Value);
                 return ProcessingResult<PageList<Tag>>.Ok(tags);
             }
             catch (Exception ex)

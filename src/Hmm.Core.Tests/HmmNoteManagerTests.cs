@@ -4,7 +4,6 @@ using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -19,7 +18,7 @@ namespace Hmm.Core.Tests
 
         public HmmNoteManagerTests()
         {
-            _noteManager = new HmmNoteManager(NoteRepository, Mapper, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
+            _noteManager = new HmmNoteManager(NoteRepository, UnitOfWork, Mapper, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
         }
 
         [Fact]

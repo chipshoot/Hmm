@@ -178,7 +178,7 @@ namespace Hmm.Core.Tests.ValidatorTests
         public async Task CannotChangeAuthorForExistsNote()
         {
             // Arrange
-            var manager = new HmmNoteManager(NoteRepository, Mapper, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
+            var manager = new HmmNoteManager(NoteRepository, UnitOfWork, Mapper, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
             var note = new HmmNote
             {
                 Author = _author,

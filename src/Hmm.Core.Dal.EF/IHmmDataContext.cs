@@ -1,26 +1,25 @@
-﻿using Hmm.Core.Map.DbEntity;
-using Hmm.Utility.Dal.DataEntity;
+﻿using Hmm.Utility.Dal.DataEntity;
+using Hmm.Utility.Dal.Repository;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
 {
-    public interface IHmmDataContext
+    /// <summary>
+    /// Data context interface that abstracts EF Core implementation details.
+    /// Uses generic Set&lt;T&gt;() method instead of exposing DbSet properties directly,
+    /// following the Repository pattern best practices.
+    /// Implements IUnitOfWork to support proper transaction boundaries.
+    /// </summary>
+    public interface IHmmDataContext : IUnitOfWork
     {
-        DbSet<HmmNoteDao> Notes { get; set; }
-
-        DbSet<AuthorDao> Authors { get; set; }
-        DbSet<ContactDao> Contacts { get; set; }
-
-        DbSet<NoteCatalogDao> Catalogs { get; set; }
-
-        DbSet<TagDao> Tags { get; set; }
-
-        DbSet<NoteTagRefDao> NoteTagRefs { get; set; }
-
-        void Save();
-
-        Task SaveAsync();
+        /// <summary>
+        /// Gets the DbSet for the specified entity type.
+        /// This is the single point of access for entity collections, replacing individual DbSet properties.
+        /// </summary>
+        /// <typeparam name="T">The entity type</typeparam>
+        /// <returns>DbSet for the entity type</returns>
+        DbSet<T> Set<T>() where T : class;
 
         /// <summary>
         /// Gets the default entity for any type that extends HasDefaultEntity.

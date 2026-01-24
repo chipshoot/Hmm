@@ -4,7 +4,6 @@ using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq.Expressions;
@@ -44,7 +43,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             try
             {
-                var author = await _dataContext.Authors.FindAsync(id);
+                var author = await _dataContext.Set<AuthorDao>().FindAsync(id);
 
                 if (author == null)
                 {
@@ -71,12 +70,22 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
+                // Check for duplicate AccountName
+                var existingAuthorsResult = await _lookupRepo.GetEntitiesAsync<AuthorDao>(
+                    a => a.AccountName == entity.AccountName);
+                if (existingAuthorsResult.Success && existingAuthorsResult.Value?.Count > 0)
+                {
+                    var invalidResult = ProcessingResult<AuthorDao>.Invalid(
+                        $"Author with AccountName '{entity.AccountName}' already exists");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
+                }
+
                 // Reset id to 0 to make sure it is a new entity
                 entity.Id = 0;
-                _dataContext.Authors.Add(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<AuthorDao>().Add(entity);
 
-                var result = ProcessingResult<AuthorDao>.Ok(entity, $"Author '{entity.AccountName}' created successfully");
+                var result = ProcessingResult<AuthorDao>.Ok(entity, $"Author '{entity.AccountName}' added to context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -101,20 +110,20 @@ namespace Hmm.Core.Dal.EF.Repositories
                     return invalidResult;
                 }
 
-                _dataContext.Authors.Update(entity);
-                await _dataContext.SaveAsync();
-
-                var updatedAuthorResult = await _lookupRepo.GetEntityAsync<AuthorDao>(entity.Id);
-                if (!updatedAuthorResult.Success)
+                // Check for duplicate AccountName (excluding the current entity)
+                var existingAuthorsResult = await _lookupRepo.GetEntitiesAsync<AuthorDao>(
+                    a => a.AccountName == entity.AccountName && a.Id != entity.Id);
+                if (existingAuthorsResult.Success && existingAuthorsResult.Value?.Count > 0)
                 {
-                    var errorResult = ProcessingResult<AuthorDao>.Fail(
-                        $"Author updated but failed to retrieve: {updatedAuthorResult.ErrorMessage}",
-                        updatedAuthorResult.ErrorType);
-                    errorResult.LogMessages(_logger);
-                    return errorResult;
+                    var invalidResult = ProcessingResult<AuthorDao>.Invalid(
+                        $"Another author with AccountName '{entity.AccountName}' already exists");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
                 }
 
-                var result = ProcessingResult<AuthorDao>.Ok(updatedAuthorResult.Value, $"Author '{entity.AccountName}' updated successfully");
+                _dataContext.Set<AuthorDao>().Update(entity);
+
+                var result = ProcessingResult<AuthorDao>.Ok(entity, $"Author '{entity.AccountName}' updated in context (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -132,10 +141,9 @@ namespace Hmm.Core.Dal.EF.Repositories
 
             try
             {
-                _dataContext.Authors.Remove(entity);
-                await _dataContext.SaveAsync();
+                _dataContext.Set<AuthorDao>().Remove(entity);
 
-                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Author '{entity.AccountName}' (ID: {entity.Id}) deleted successfully");
+                var result = ProcessingResult<Unit>.Ok(Unit.Value, $"Author '{entity.AccountName}' (ID: {entity.Id}) marked for deletion (pending commit)");
                 result.LogMessages(_logger);
                 return result;
             }
@@ -149,7 +157,7 @@ namespace Hmm.Core.Dal.EF.Repositories
 
         public void Flush()
         {
-            _dataContext.Save();
+            _dataContext.Commit();
         }
     }
 }

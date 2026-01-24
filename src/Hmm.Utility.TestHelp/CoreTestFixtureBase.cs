@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hmm.Utility.TestHelp
@@ -48,6 +49,8 @@ namespace Hmm.Utility.TestHelp
         protected IEntityLookup LookupRepository { get; private set; }
 
         protected IDateTimeProvider DateProvider { get; private set; }
+
+        protected IUnitOfWork UnitOfWork { get; private set; }
 
         #endregion Properties
 
@@ -158,6 +161,9 @@ namespace Hmm.Utility.TestHelp
 
             // Setup tag repository
             TagRepository = GetTagRepository();
+
+            // Setup unit of work
+            UnitOfWork = GetUnitOfWork();
 
             var mockDateProvider = new Mock<IDateTimeProvider>();
             mockDateProvider.Setup(t => t.UtcNow).Returns(() => CurrentTime);
@@ -601,6 +607,14 @@ namespace Hmm.Utility.TestHelp
                         ? ProcessingResult<PageList<HmmNoteDao>>.Ok(PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable(), PageIdx, PageSize))
                         : ProcessingResult<PageList<HmmNoteDao>>.Ok(PageList<HmmNoteDao>.Create(_noteDaos.AsQueryable().Where(query), PageIdx, PageSize)));
             return mockNotes.Object;
+        }
+
+        private IUnitOfWork GetUnitOfWork()
+        {
+            var mockUow = new Mock<IUnitOfWork>();
+			mockUow.Setup(u => u.Commit()).Returns(0);
+			mockUow.Setup(u => u.CommitAsync(It.IsAny<CancellationToken>())).ReturnsAsync(0);
+            return mockUow.Object;
         }
 
         #region Reset data
