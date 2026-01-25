@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-21 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #82)
+Last Updated: 2026-01-25 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (15 resolved, 1 partially resolved)
+Total Defects Found: 107+ (17 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -223,17 +223,39 @@ ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
     Impact: Adding new entity types with default support no longer requires modifying RepositoryBase
     Open/Closed Principle: Class is now open for extension, closed for modification
 
-16. **REPOSITORY PATTERN LEAKS DBSET**
-    Location: src/Hmm.Core.Dal.EF/IHmmDataContext.cs:7-23
-    Problem: Interface exposes DbSet<T> properties (EF-specific types)
-    Impact: No real abstraction, cannot swap ORM, repository pattern pointless
-    Fix: Hide DbSet, expose only methods, or remove repository layer
+16. **[RESOLVED] REPOSITORY PATTERN LEAKS DBSET**
+    Status: ✓ FIXED (Verified 2026-01-25)
+    Location: src/Hmm.Core.Dal.EF/IHmmDataContext.cs
+    Problem: Interface exposed individual DbSet<T> properties (EF-specific types)
+    Resolution: Refactored IHmmDataContext interface to use generic Set<T>() method
+    Changes made:
+    - Removed individual DbSet<T> properties from interface (Notes, Authors, Contacts, etc.)
+    - Added generic DbSet<T> Set<T>() method for unified entity access
+    - Interface now implements IUnitOfWork for proper abstraction
+    - Added comprehensive XML documentation explaining the pattern
+    - HmmDataContext implementation keeps DbSet properties internally (required by EF Core)
+      but they are no longer exposed through the interface
+    Impact: Repository pattern now provides proper abstraction over data access
 
-17. **UNIT OF WORK VIOLATION - IMMEDIATE SAVES**
-    Location: All repositories (e.g., src/Hmm.Core.Dal.EF/Repositories/NoteEfRepository.cs:118)
-    Problem: Every Add/Update/Delete immediately calls SaveAsync()
-    Impact: No transactions, no atomic multi-entity operations, data consistency risk
-    Fix: Remove SaveAsync from repositories, let managers control transaction boundaries
+17. **[RESOLVED] UNIT OF WORK VIOLATION - IMMEDIATE SAVES**
+    Status: ✓ FIXED (Verified 2026-01-25)
+    Location: All repositories in src/Hmm.Core.Dal.EF/Repositories/
+    Problem: Every Add/Update/Delete immediately called SaveAsync()
+    Resolution: Implemented proper Unit of Work pattern
+    Changes made:
+    - Created IUnitOfWork interface in Hmm.Utility.Dal.Repository with Commit() and CommitAsync()
+    - IHmmDataContext now implements IUnitOfWork
+    - HmmDataContext implements Commit() and CommitAsync() with proper exception handling
+    - All repository methods (Add, Update, Delete) no longer call SaveAsync()
+    - Repository operations now log "pending commit" status messages
+    - Managers (e.g., AuthorManager, HmmNoteManager) inject IUnitOfWork
+    - Managers call CommitAsync() to control transaction boundaries
+    - Flush() method on repositories delegates to _dataContext.Commit()
+    Example flow:
+    - Repository.AddAsync() -> adds to context (no save)
+    - Repository.UpdateAsync() -> updates context (no save)
+    - Manager calls _unitOfWork.CommitAsync() -> all changes persisted atomically
+    Impact: Enables atomic multi-entity operations, proper transaction management
 
 18. **EXPRESSION MAPPER IS NAIVE AND FRAGILE**
     Location: src/Hmm.Core.Map/ExpressionMapper.cs:22-31
@@ -822,10 +844,10 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (15 resolved, 1 partially resolved)
+Total Defects Found: 107+ (17 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
-Critical (P1): 40 (3 resolved: #13, #14, #15)
+Critical (P1): 40 (5 resolved: #13, #14, #15, #16, #17)
 Important (P2): 45
 Technical Debt (P3): 16+ (1 resolved: #82)
 
@@ -835,8 +857,8 @@ By Category:
 - Performance Issues: 9
 - Thread Safety: 4
 - Code Duplication: 6
-- SOLID Violations: 15 (3 resolved: #13, #14, #15)
-- Data Layer Issues: 9 (1 resolved)
+- SOLID Violations: 15 (5 resolved: #13, #14, #15, #16, #17)
+- Data Layer Issues: 9
 - API Design: 12
 - Dead Code: 10
 - Infrastructure: 13 (1 resolved)
@@ -845,7 +867,7 @@ By Category:
 
 By Project:
 - Hmm.Core: 35 defects (3 resolved: #1, #13, #14 - all FIXED)
-- Hmm.Core.Dal.EF: 18 defects (4 resolved: #3, #7, #15, #82)
+- Hmm.Core.Dal.EF: 18 defects (6 resolved: #3, #7, #15, #16, #17, #82)
 - Hmm.ServiceApi: 25 defects (1 resolved: #12)
 - Hmm.Automobile: 15 defects (2 resolved: #4-partial, #8 - module restored, update fixed)
 - Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)
@@ -885,7 +907,7 @@ IMMEDIATE (Do This Week):
 
 CRITICAL (Do This Month):
 9. ✓ [COMPLETED] Inject validators instead of "new"
-10. Remove SaveAsync from repositories, implement Unit of Work
+10. ✓ [COMPLETED] Remove SaveAsync from repositories, implement Unit of Work (#17 fixed)
 11. Fix expression mapper null check issue
 12. ✓ [COMPLETED] Refactor HmmNoteManager SRP violation (tag association extracted to NoteTagAssociationManager)
 13. Extract duplicate uniqueness validation
@@ -932,7 +954,8 @@ CRITICAL:
 
 HIGH PRIORITY:
 - ✓ [COMPLETED] src/Hmm.Core/DefaultManager/HmmNoteManager.cs (SRP fixed - tag association extracted)
-- src/Hmm.Core.Dal.EF/Repositories/*.cs (Unit of Work)
+- ✓ [COMPLETED] src/Hmm.Core.Dal.EF/Repositories/*.cs (Unit of Work pattern implemented)
+- ✓ [COMPLETED] src/Hmm.Core.Dal.EF/IHmmDataContext.cs (DbSet abstraction fixed, IUnitOfWork implemented)
 - src/Hmm.Core/DefaultManager/Validator/*.cs (duplication)
 - src/Hmm.Core.Map/ExpressionMapper.cs (null checks)
 - ✓ [COMPLETED] src/Hmm.Utility/Dal/DataEntity/AbstractEntity.cs (GetHashCode fixed)

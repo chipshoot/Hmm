@@ -44,6 +44,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		CLAUDE.md = CLAUDE.md
 		DESIGN_ANALYSIS.txt = DESIGN_ANALYSIS.txt
+		DockerSetup.txt = DockerSetup.txt
 		REFACTORING_PLAN_ISSUE_14.md = REFACTORING_PLAN_ISSUE_14.md
 		Weight_Class_Analysis.md = Weight_Class_Analysis.md
 	EndProjectSection

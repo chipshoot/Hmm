@@ -1,0 +1,54 @@
+version: '3.4'
+
+services:
+  db-test:
+    build:
+      context: ../..
+      dockerfile: src/Hmm.Docker/Dockerfile
+    container_name: hmm-db-test
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Password123!"
+      MSSQL_PID: "Express"
+    ports:
+      - "14330:1433"
+    networks:
+      - test-net
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password123!' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+
+  hmm-seq:
+    image: datalust/seq:latest
+    container_name: hmm-seq-test
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - 5342:5341
+      - 8082:80
+    networks:
+      - test-net
+
+  # Optional: Run the API connected to this test DB
+  api-test:
+    build:
+      context: ../..
+      dockerfile: src/Hmm.ServiceApi/Dockerfile
+    container_name: hmm-api-test
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__HmmNoteConnection=Server=db-test;Database=hmm;User Id=sa;Password=Password123!;TrustServerCertificate=True
+      - Serilog__WriteTo__1__Args__serverUrl=http://hmm-seq:5341
+    ports:
+      - "8080:80"
+    depends_on:
+      db-test:
+        condition: service_healthy
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge
