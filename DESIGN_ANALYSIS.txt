@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-25 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #82)
+Last Updated: 2026-01-25 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #20, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (17 resolved, 1 partially resolved)
+Total Defects Found: 107+ (19 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -257,11 +257,22 @@ ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
     - Manager calls _unitOfWork.CommitAsync() -> all changes persisted atomically
     Impact: Enables atomic multi-entity operations, proper transaction management
 
-18. **EXPRESSION MAPPER IS NAIVE AND FRAGILE**
-    Location: src/Hmm.Core.Map/ExpressionMapper.cs:22-31
-    Problem: Simple name matching, no null checks, will crash if property missing
-    Impact: Runtime exceptions, cannot handle navigation properties or mismatched names
-    Fix: Add null checks, use AutoMapper.ProjectTo, add property name mapping config
+18. **[RESOLVED] EXPRESSION MAPPER IS NAIVE AND FRAGILE**
+    Status: ✓ FIXED (Verified 2026-01-25)
+    Location: src/Hmm.Core.Map/ExpressionMapper.cs
+    Problem: Simple name matching, no null checks, would crash if property missing
+    Resolution: Completely refactored ExpressionMapper with robust error handling
+    Changes made:
+    - Added null checks for all member lookups with descriptive error messages
+    - Added support for custom property name mappings via IReadOnlyDictionary<string, string>
+    - Added caching of member lookups using ConcurrentDictionary for performance
+    - Added case-insensitive fallback for property matching
+    - Added proper handling for navigation properties (nested member access)
+    - Added handling for closure variables and constants in lambda expressions
+    - Added comprehensive XML documentation
+    - MapExpression() now has overload accepting property mappings
+    - Throws InvalidOperationException with helpful message when property not found
+    Impact: Expression mapping now handles edge cases gracefully with clear error messages
 
 19. **SPECIFICATION PATTERN CANNOT WORK WITH EF**
     Location: src/Hmm.Utility/Specification/Specification.cs:6
@@ -269,11 +280,25 @@ ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
     Impact: Cannot translate to SQL, only works in-memory
     Fix: Change to Expression-based specification
 
-20. **STATIC COUPLING ANTI-PATTERN**
-    Location: src/Hmm.Automobile/ApplicationRegister.cs:33-45
-    Problem: Static DefaultAuthor with hardcoded GUID "03D9D3DE-0C3C-4775-BEC3-6B698B696837"
-    Impact: Cannot test, cannot change per-tenant, thread safety issues
-    Fix: Inject ICurrentUserProvider or similar service
+20. **[RESOLVED] STATIC COUPLING ANTI-PATTERN**
+    Status: ✓ FIXED (Verified 2026-01-25)
+    Location: src/Hmm.Automobile/ApplicationRegister.cs
+    Problem: Static DefaultAuthor with hardcoded GUID
+    Resolution: Implemented proper dependency injection with IDefaultAuthorProvider
+    Changes made:
+    - Created IDefaultAuthorProvider interface for dependency injection and testability
+    - Created DefaultAuthorProvider implementation with:
+      * Configuration via IOptions<AutomobileSeedingOptions> (no hardcoded GUIDs)
+      * Author account name configurable via "DefaultAuthorAccountName" setting
+      * Thread-safe caching using SemaphoreSlim with double-check locking
+      * Option to auto-create author if missing (CreateDefaultAuthorIfMissing)
+      * Uses IAuthorManager for database operations
+    - Refactored ApplicationRegister to:
+      * Inject IDefaultAuthorProvider via constructor (no static state)
+      * Use IOptions pattern for all configuration
+      * Expose AuthorProvider property for external access
+    - Added AutomobileSeedingOptions configuration class
+    Impact: Fully testable, configurable per-tenant, thread-safe author resolution
 
 ================================================================================
 DATA LAYER DEFECTS (P1 - FIX SOON)
@@ -844,10 +869,10 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (17 resolved, 1 partially resolved)
+Total Defects Found: 107+ (19 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
-Critical (P1): 40 (5 resolved: #13, #14, #15, #16, #17)
+Critical (P1): 40 (7 resolved: #13, #14, #15, #16, #17, #18, #20)
 Important (P2): 45
 Technical Debt (P3): 16+ (1 resolved: #82)
 
@@ -857,7 +882,7 @@ By Category:
 - Performance Issues: 9
 - Thread Safety: 4
 - Code Duplication: 6
-- SOLID Violations: 15 (5 resolved: #13, #14, #15, #16, #17)
+- SOLID Violations: 15 (7 resolved: #13, #14, #15, #16, #17, #18, #20)
 - Data Layer Issues: 9
 - API Design: 12
 - Dead Code: 10
@@ -869,7 +894,7 @@ By Project:
 - Hmm.Core: 35 defects (3 resolved: #1, #13, #14 - all FIXED)
 - Hmm.Core.Dal.EF: 18 defects (6 resolved: #3, #7, #15, #16, #17, #82)
 - Hmm.ServiceApi: 25 defects (1 resolved: #12)
-- Hmm.Automobile: 15 defects (2 resolved: #4-partial, #8 - module restored, update fixed)
+- Hmm.Automobile: 15 defects (3 resolved: #4-partial, #8, #20 - module restored, update fixed, static coupling fixed)
 - Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)
 - Hmm.Utility: 14 defects (1 resolved: #5)
 
@@ -908,7 +933,7 @@ IMMEDIATE (Do This Week):
 CRITICAL (Do This Month):
 9. ✓ [COMPLETED] Inject validators instead of "new"
 10. ✓ [COMPLETED] Remove SaveAsync from repositories, implement Unit of Work (#17 fixed)
-11. Fix expression mapper null check issue
+11. ✓ [COMPLETED] Fix expression mapper null check issue (#18 fixed - refactored with caching, property mappings, better error handling)
 12. ✓ [COMPLETED] Refactor HmmNoteManager SRP violation (tag association extracted to NoteTagAssociationManager)
 13. Extract duplicate uniqueness validation
 14. Extract duplicate expression building
@@ -956,8 +981,8 @@ HIGH PRIORITY:
 - ✓ [COMPLETED] src/Hmm.Core/DefaultManager/HmmNoteManager.cs (SRP fixed - tag association extracted)
 - ✓ [COMPLETED] src/Hmm.Core.Dal.EF/Repositories/*.cs (Unit of Work pattern implemented)
 - ✓ [COMPLETED] src/Hmm.Core.Dal.EF/IHmmDataContext.cs (DbSet abstraction fixed, IUnitOfWork implemented)
+- ✓ [COMPLETED] src/Hmm.Core.Map/ExpressionMapper.cs (null checks, caching, property mappings added)
 - src/Hmm.Core/DefaultManager/Validator/*.cs (duplication)
-- src/Hmm.Core.Map/ExpressionMapper.cs (null checks)
 - ✓ [COMPLETED] src/Hmm.Utility/Dal/DataEntity/AbstractEntity.cs (GetHashCode fixed)
 - ✓ [COMPLETED] src/Hmm.ServiceApi/Areas/*/Controllers/*.cs (authorization added, error handling fixed)
 - ✓ [COMPLETED] src/Hmm.ServiceApi/Areas/HmmNoteService/Controllers/*.cs (exception exposure fixed)
