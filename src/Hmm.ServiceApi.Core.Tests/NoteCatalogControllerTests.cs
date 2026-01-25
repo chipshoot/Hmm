@@ -143,11 +143,15 @@ namespace Hmm.ServiceApi.Core.Tests
                 IsDefault = false,
             };
 
+            // Set up validator to return validation error for duplicate name
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<NoteCatalog>()))
+                .ReturnsAsync(ProcessingResult<NoteCatalog>.Invalid("Catalog with name 'Diary' already exists"));
+
             // Act
             var result = await _controller.Post(apiCatalog);
 
             // Assert
-            Assert.IsType<BadRequestResult>(result);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         [Fact]
@@ -223,7 +227,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task UpdateCatalog_ReturnsBadRequest_WhenCatalogNotFound()
+        public async Task UpdateCatalog_ReturnsNotFound_WhenCatalogNotFound()
         {
             // Arrange
             const int catalogId = 1000;
@@ -240,8 +244,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Put(catalogId, apiCatalogForUpdate);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"Note catalog {catalogId} cannot be found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Note catalog {catalogId} cannot be found.", notFoundResult.Value);
         }
 
         [Fact]
@@ -255,7 +259,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var existingCatalog2Result = await _catalogManager.GetEntityByIdAsync(101);
             Assert.True(existingCatalog2Result.Success);
             var existingCatalog2 = existingCatalog2Result.Value;
-            
+
             var apiCatalogForUpdate = new ApiNoteCatalogForUpdate
             {
                 Name = existingCatalog2.Name,
@@ -264,6 +268,10 @@ namespace Hmm.ServiceApi.Core.Tests
                 Schema = "",
                 IsDefault = false
             };
+
+            // Set up validator to return validation error for duplicate name
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<NoteCatalog>()))
+                .ReturnsAsync(ProcessingResult<NoteCatalog>.Invalid($"Catalog with name '{existingCatalog2.Name}' already exists"));
 
             // Act
             var result = await _controller.Put(existingCatalog.Id, apiCatalogForUpdate);
@@ -361,6 +369,10 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.True(existingCatalogResult.Success);
             var existingCatalog = existingCatalogResult.Value;
             patchDoc.Replace(e => e.Name, existingCatalog.Name);
+
+            // Set up validator to return validation error for duplicate name
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<NoteCatalog>()))
+                .ReturnsAsync(ProcessingResult<NoteCatalog>.Invalid($"Catalog with name '{existingCatalog.Name}' already exists"));
 
             // Act
             var result = await _controller.Patch(catalogId + 1, patchDoc);

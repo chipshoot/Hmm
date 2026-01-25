@@ -168,6 +168,10 @@ namespace Hmm.ServiceApi.Core.Tests
                 IsActivated = true
             };
 
+            // Set up validator to return validation error for first name too long
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
+                .ReturnsAsync(ProcessingResult<Contact>.Invalid("First name is too long"));
+
             // Act
             var result = await _controller.Post(apiContact);
 
@@ -235,7 +239,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task UpdateContact_ReturnsBadRequest_WhenContactNotFound()
+        public async Task UpdateContact_ReturnsNotFound_WhenContactNotFound()
         {
             // Arrange
             const int contactId = 1000;
@@ -266,9 +270,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Put(contactId, apiContactForUpdate);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var msg = (badRequestResult.Value as List<ReturnMessage>)?[0].Message;
-            Assert.Equal($"Cannot find contact: {contactId} for updating", msg);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Contact with id {contactId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -280,6 +283,10 @@ namespace Hmm.ServiceApi.Core.Tests
             var existingContact = existingContactResult.Value;
             var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existingContact);
             apiContactForUpdate.LastName = GetRandomString(255);
+
+            // Set up validator to return validation error
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
+                .ReturnsAsync(ProcessingResult<Contact>.Invalid("Last name is too long"));
 
             // Act
             var result = await _controller.Put(existingContact.Id, apiContactForUpdate);
@@ -363,7 +370,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Patch(contactId, patchDoc);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Contact with id {contactId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -373,6 +381,10 @@ namespace Hmm.ServiceApi.Core.Tests
             const int contactId = 100;
             var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
             patchDoc.Replace(e => e.LastName, GetRandomString(255));
+
+            // Set up validator to return validation error
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
+                .ReturnsAsync(ProcessingResult<Contact>.Invalid("Last name is too long"));
 
             // Act
             var result = await _controller.Patch(contactId, patchDoc);

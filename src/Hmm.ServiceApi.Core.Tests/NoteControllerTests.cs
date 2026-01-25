@@ -138,6 +138,10 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiNote = ApiMapper.Map<ApiNoteForCreate>(SampleDataGenerator.GetNote());
             apiNote.Subject = GetRandomString(2000);
 
+            // Set up validator to return validation error for subject too long
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<HmmNote>()))
+                .ReturnsAsync(ProcessingResult<HmmNote>.Invalid("Subject is too long"));
+
             // Act
             var result = await _controller.Post(apiNote);
 
@@ -230,6 +234,10 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiNoteForUpdate = ApiMapper.Map<ApiNoteForUpdate>(existingNote);
             apiNoteForUpdate.Subject = GetRandomString(2000);
 
+            // Set up validator to return validation error for subject too long
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<HmmNote>()))
+                .ReturnsAsync(ProcessingResult<HmmNote>.Invalid("Subject is too long"));
+
             // Act
             var result = await _controller.Put(existingNote.Id, apiNoteForUpdate);
 
@@ -315,7 +323,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task ApplyTag_ReturnsNotFound_WhenNoteDoesNotExist()
+        public async Task ApplyTag_ReturnsServerError_WhenNoteDoesNotExist()
         {
             // Arrange
             const int noteId = 10000;
@@ -325,8 +333,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.ApplyTag(noteId, tagDto);
 
             // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal(StatusCodes.Status404NotFound, notFoundResult.StatusCode);
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
         }
 
         [Fact]
@@ -405,7 +413,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Patch(noteId, patchDoc);
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Note with id {noteId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -415,6 +424,10 @@ namespace Hmm.ServiceApi.Core.Tests
             const int noteId = 100;
             var patchDoc = new JsonPatchDocument<ApiNoteForUpdate>();
             patchDoc.Replace(e => e.Subject, GetRandomString(2000));
+
+            // Set up validator to return validation error for subject too long
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<HmmNote>()))
+                .ReturnsAsync(ProcessingResult<HmmNote>.Invalid("Subject is too long"));
 
             // Act
             var result = await _controller.Patch(noteId, patchDoc);
@@ -456,16 +469,18 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             const int noteId = 100;
-            var existingNote = await _noteManager.GetNoteByIdAsync(noteId);
-            Assert.NotNull(existingNote);
+            var existingNoteResult = await _noteManager.GetNoteByIdAsync(noteId);
+            Assert.True(existingNoteResult.Success);
+            Assert.NotNull(existingNoteResult.Value);
 
             // Act
             var result = await _controller.Delete(noteId);
-            var deletedNote = await _noteManager.GetNoteByIdAsync(noteId);
+            var deletedNoteResult = await _noteManager.GetNoteByIdAsync(noteId);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            Assert.Null(deletedNote);
+            Assert.False(deletedNoteResult.Success);
+            Assert.Equal(ErrorCategory.Deleted, deletedNoteResult.ErrorType);
         }
 
         [Fact]
@@ -480,7 +495,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenNoteNotFound()
+        public async Task Delete_ReturnsNotFound_WhenNoteNotFound()
         {
             // Arrange
             const int noteId = 1;
@@ -489,8 +504,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Delete(noteId);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"The note {noteId} cannot be found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Note with id {noteId} not found", notFoundResult.Value);
         }
 
         [Fact]

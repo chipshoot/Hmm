@@ -127,8 +127,10 @@ namespace Hmm.ServiceApi.Core.Tests
         {
             // Arrange
             var apiTag = new ApiTagForCreate { Name = "TestTag" };
-            var tag = new Tag { Id = 5, Name = "TestTag" };
-            InsertTag(tag);
+
+            // Set up validator to return validation error
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
+                .ReturnsAsync(ProcessingResult<Tag>.Invalid("Tag with name 'TestTag' already exists"));
 
             // Act
             var result = await _controller.Post(apiTag);
@@ -195,7 +197,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task UpdateTag_ReturnsBadRequest_WhenTagNotFound()
+        public async Task UpdateTag_ReturnsNotFound_WhenTagNotFound()
         {
             // Arrange
             var tagId = 1000;
@@ -205,8 +207,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Put(tagId, apiTagForUpdate);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"Tag {tagId} cannot be found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Tag with id {tagId} not found", notFoundResult.Value);
         }
 
         [Fact]
@@ -218,6 +220,10 @@ namespace Hmm.ServiceApi.Core.Tests
             var existingTag2Result = await _tagManager.GetTagByIdAsync(101);
             var existingTag2 = existingTag2Result.Value;
             var apiTagForUpdate = new ApiTagForUpdate { Name = existingTag2.Name };
+
+            // Set up validator to return validation error for duplicate name
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
+                .ReturnsAsync(ProcessingResult<Tag>.Invalid($"Tag with name '{existingTag2.Name}' already exists"));
 
             // Act
             var result = await _controller.Put(existingTag.Id, apiTagForUpdate);
@@ -312,6 +318,10 @@ namespace Hmm.ServiceApi.Core.Tests
             var existingTag = existingTagResult.Value;
             patchDoc.Replace(e => e.Name, existingTag.Name);
 
+            // Set up validator to return validation error for duplicate name
+            _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
+                .ReturnsAsync(ProcessingResult<Tag>.Invalid($"Tag with name '{existingTag.Name}' already exists"));
+
             // Act
             var result = await _controller.Patch(tagId + 1, patchDoc);
 
@@ -377,7 +387,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Delete_ReturnsBadRequest_WhenTagNotFound()
+        public async Task Delete_ReturnsNotFound_WhenTagNotFound()
         {
             // Arrange
             const int tagId = 1;
@@ -386,8 +396,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Delete(tagId);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal($"Tag {tagId} cannot be found.", badRequestResult.Value);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal($"Tag with id {tagId} not found", notFoundResult.Value);
         }
 
         [Fact]
