@@ -45,6 +45,7 @@
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.GasLogControllerTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.GasStationControllerTests&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::AEC4B791-538B-4EE7-84F7-DB85AE771D6B::net10.0::Hmm.ServiceApi.Core.Tests.NoteCatalogControllerTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::B56C30D9-017E-4E0C-BAE2-7A50CA82B484::net10.0::Hmm.Utility.Tests.SpecificationTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	

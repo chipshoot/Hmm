@@ -1,26 +1,56 @@
 ﻿using System;
-using Hmm.Utility.Validation;
+using System.Linq.Expressions;
 
 namespace Hmm.Utility.Specification
 {
+    /// <summary>
+    /// Combines two specifications with a logical AND operation.
+    /// Both specifications must be satisfied for the combined specification to be satisfied.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of entity this specification applies to.</typeparam>
     internal class AndSpecification<TEntity> : ISpecification<TEntity>
     {
+        private readonly ISpecification<TEntity> _spec1;
+        private readonly ISpecification<TEntity> _spec2;
+        private readonly Lazy<Expression<Func<TEntity, bool>>> _combinedExpression;
+        private readonly Lazy<Func<TEntity, bool>> _compiledExpression;
+
         internal AndSpecification(ISpecification<TEntity> spec1, ISpecification<TEntity> spec2)
         {
             ArgumentNullException.ThrowIfNull(spec1);
             ArgumentNullException.ThrowIfNull(spec2);
 
-            Spec1 = spec1;
-            Spec2 = spec2;
+            _spec1 = spec1;
+            _spec2 = spec2;
+            _combinedExpression = new Lazy<Expression<Func<TEntity, bool>>>(CreateCombinedExpression);
+            _compiledExpression = new Lazy<Func<TEntity, bool>>(() => _combinedExpression.Value.Compile());
         }
-
-        protected ISpecification<TEntity> Spec1 { get; }
-
-        protected ISpecification<TEntity> Spec2 { get; }
 
         public bool IsSatisfiedBy(TEntity candidate)
         {
-            return Spec1.IsSatisfiedBy(candidate) && Spec2.IsSatisfiedBy(candidate);
+            return _compiledExpression.Value(candidate);
+        }
+
+        public Expression<Func<TEntity, bool>> ToExpression()
+        {
+            return _combinedExpression.Value;
+        }
+
+        private Expression<Func<TEntity, bool>> CreateCombinedExpression()
+        {
+            var expr1 = _spec1.ToExpression();
+            var expr2 = _spec2.ToExpression();
+
+            // Use the parameter from the first expression
+            var parameter = expr1.Parameters[0];
+
+            // Replace the parameter in the second expression with the first one
+            var body2 = new ParameterReplacer(expr2.Parameters[0], parameter).Visit(expr2.Body);
+
+            // Combine with AndAlso (&&)
+            var combinedBody = Expression.AndAlso(expr1.Body, body2);
+
+            return Expression.Lambda<Func<TEntity, bool>>(combinedBody, parameter);
         }
     }
 }
