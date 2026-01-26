@@ -44,10 +44,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 : await PageList<TagDao>.CreateAsync(entities.Where(query), pageIdx, pageSize);
 
             var processResult = ProcessingResult<PageList<TagDao>>.Ok(result);
-            if (_logger != null)
-            {
-                processResult.LogMessages(_logger);
-            }
+            processResult.LogMessages(_logger);
             return processResult;
         }
 

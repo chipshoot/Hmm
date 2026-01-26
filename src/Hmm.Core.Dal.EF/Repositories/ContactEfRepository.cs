@@ -31,12 +31,7 @@ public class ContactEfRepository : IRepository<ContactDao>
     public async Task<ProcessingResult<PageList<ContactDao>>> GetEntitiesAsync(Expression<Func<ContactDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
     {
         var contactsResult = await _lookupRepository.GetEntitiesAsync<ContactDao>(query, resourceCollectionParameters);
-
-        if (_logger != null && contactsResult.Success)
-        {
-            contactsResult.LogMessages(_logger);
-        }
-
+        contactsResult.LogMessages(_logger);
         return contactsResult;
     }
 

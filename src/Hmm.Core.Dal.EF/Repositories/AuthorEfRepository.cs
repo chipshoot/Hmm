@@ -30,12 +30,7 @@ namespace Hmm.Core.Dal.EF.Repositories
         public async Task<ProcessingResult<PageList<AuthorDao>>> GetEntitiesAsync(Expression<Func<AuthorDao, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
         {
             var authorsResult = await _lookupRepo.GetEntitiesAsync<AuthorDao>(query, resourceCollectionParameters);
-
-            if (_logger != null && authorsResult.Success)
-            {
-                authorsResult.LogMessages(_logger);
-            }
-
+            authorsResult.LogMessages(_logger);
             return authorsResult;
         }
 

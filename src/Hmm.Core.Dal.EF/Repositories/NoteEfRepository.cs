@@ -48,10 +48,7 @@ namespace Hmm.Core.Dal.EF.Repositories
                 : await PageList<HmmNoteDao>.CreateAsync(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
 
             var processResult = ProcessingResult<PageList<HmmNoteDao>>.Ok(result);
-            if (_logger != null)
-            {
-                processResult.LogMessages(_logger);
-            }
+            processResult.LogMessages(_logger);
             return processResult;
         }
 
