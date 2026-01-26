@@ -11,7 +11,7 @@ set -e
 # Configuration
 SA_PASSWORD="Password123!"
 DB_PORT=14330
-SEQ_PORT=8082
+SEQ_PORT=8083
 API_PORT=8080
 
 echo "============================================================"
@@ -28,20 +28,20 @@ fi
 echo "Docker is running."
 echo ""
 
-# Navigate to the repository root (assuming script is in src/Hmm.Docker)
+# Navigate to the repository root (assuming script is in docker/)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/../.."
+cd "$SCRIPT_DIR/.."
 
 echo "Working directory: $(pwd)"
 echo ""
 
 # Check for required files
-if [ ! -f "dockerfiles/sqlserver/init-db.sql" ]; then
-    echo "ERROR: init-db.sql not found at dockerfiles/sqlserver/init-db.sql"
+if [ ! -f "docker/sqlserver/init-db.sql" ]; then
+    echo "ERROR: init-db.sql not found at docker/sqlserver/init-db.sql"
     exit 1
 fi
-if [ ! -f "src/Hmm.Docker/seed-data.sql" ]; then
-    echo "ERROR: seed-data.sql not found at src/Hmm.Docker/seed-data.sql"
+if [ ! -f "docker/test-db/seed-data.sql" ]; then
+    echo "ERROR: seed-data.sql not found at docker/test-db/seed-data.sql"
     exit 1
 fi
 
@@ -74,16 +74,16 @@ echo ""
 
 if [ $BUILD_FRESH -eq 1 ]; then
     echo "Rebuilding images from scratch..."
-    docker-compose -f src/Hmm.Docker/docker-compose.yml down -v
-    docker-compose -f src/Hmm.Docker/docker-compose.yml build --no-cache
+    docker-compose -f docker/docker-compose.test.yml down -v
+    docker-compose -f docker/docker-compose.test.yml build --no-cache
 fi
 
 if [ $START_API -eq 1 ]; then
     echo "Starting database, Seq, and API services..."
-    docker-compose -f src/Hmm.Docker/docker-compose.yml up --build -d
+    docker-compose -f docker/docker-compose.test.yml up --build -d
 else
     echo "Starting database and Seq services only..."
-    docker-compose -f src/Hmm.Docker/docker-compose.yml up --build -d db-test hmm-seq
+    docker-compose -f docker/docker-compose.test.yml up --build -d db-test hmm-seq
 fi
 
 echo ""
@@ -109,7 +109,7 @@ if [ $START_API -eq 1 ]; then
 fi
 echo "============================================================"
 echo "Commands:"
-echo "  Stop:    docker-compose -f src/Hmm.Docker/docker-compose.yml down"
-echo "  Logs:    docker-compose -f src/Hmm.Docker/docker-compose.yml logs -f"
-echo "  Restart: docker-compose -f src/Hmm.Docker/docker-compose.yml restart"
+echo "  Stop:    docker-compose -f docker/docker-compose.test.yml down"
+echo "  Logs:    docker-compose -f docker/docker-compose.test.yml logs -f"
+echo "  Restart: docker-compose -f docker/docker-compose.test.yml restart"
 echo "============================================================"

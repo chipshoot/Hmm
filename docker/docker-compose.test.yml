@@ -3,8 +3,8 @@ version: '3.4'
 services:
   db-test:
     build:
-      context: ../..
-      dockerfile: src/Hmm.Docker/Dockerfile
+      context: ..
+      dockerfile: docker/test-db/Dockerfile
     container_name: hmm-db-test
     environment:
       ACCEPT_EULA: "Y"
@@ -27,14 +27,14 @@ services:
       - ACCEPT_EULA=Y
     ports:
       - 5342:5341
-      - 8082:80
+      - 8083:80
     networks:
       - test-net
 
   # Optional: Run the API connected to this test DB
   api-test:
     build:
-      context: ../..
+      context: ..
       dockerfile: src/Hmm.ServiceApi/Dockerfile
     container_name: hmm-api-test
     environment:

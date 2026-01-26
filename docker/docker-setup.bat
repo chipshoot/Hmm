@@ -11,7 +11,7 @@ setlocal enabledelayedexpansion
 REM Configuration
 set SA_PASSWORD=Password123!
 set DB_PORT=14330
-set SEQ_PORT=8082
+set SEQ_PORT=8083
 set API_PORT=8080
 
 echo ============================================================
@@ -29,19 +29,19 @@ if errorlevel 1 (
 echo Docker is running.
 echo.
 
-REM Navigate to the repository root (assuming script is in src/Hmm.Docker)
-cd /d "%~dp0..\.."
+REM Navigate to the repository root (assuming script is in docker/)
+cd /d "%~dp0.."
 
 echo Working directory: %CD%
 echo.
 
 REM Check for required files
-if not exist "dockerfiles\sqlserver\init-db.sql" (
-    echo ERROR: init-db.sql not found at dockerfiles\sqlserver\init-db.sql
+if not exist "docker\sqlserver\init-db.sql" (
+    echo ERROR: init-db.sql not found at docker\sqlserver\init-db.sql
     exit /b 1
 )
-if not exist "src\Hmm.Docker\seed-data.sql" (
-    echo ERROR: seed-data.sql not found at src\Hmm.Docker\seed-data.sql
+if not exist "docker\test-db\seed-data.sql" (
+    echo ERROR: seed-data.sql not found at docker\test-db\seed-data.sql
     exit /b 1
 )
 
@@ -66,16 +66,16 @@ echo.
 
 if %BUILD_FRESH%==1 (
     echo Rebuilding images from scratch...
-    docker-compose -f src/Hmm.Docker/docker-compose.yml down -v
-    docker-compose -f src/Hmm.Docker/docker-compose.yml build --no-cache
+    docker-compose -f docker/docker-compose.test.yml down -v
+    docker-compose -f docker/docker-compose.test.yml build --no-cache
 )
 
 if %START_API%==1 (
     echo Starting database, Seq, and API services...
-    docker-compose -f src/Hmm.Docker/docker-compose.yml up --build -d
+    docker-compose -f docker/docker-compose.test.yml up --build -d
 ) else (
     echo Starting database and Seq services only...
-    docker-compose -f src/Hmm.Docker/docker-compose.yml up --build -d db-test hmm-seq
+    docker-compose -f docker/docker-compose.test.yml up --build -d db-test hmm-seq
 )
 
 echo.
@@ -101,9 +101,9 @@ if %START_API%==1 (
 )
 echo ============================================================
 echo Commands:
-echo   Stop:    docker-compose -f src/Hmm.Docker/docker-compose.yml down
-echo   Logs:    docker-compose -f src/Hmm.Docker/docker-compose.yml logs -f
-echo   Restart: docker-compose -f src/Hmm.Docker/docker-compose.yml restart
+echo   Stop:    docker-compose -f docker/docker-compose.test.yml down
+echo   Logs:    docker-compose -f docker/docker-compose.test.yml logs -f
+echo   Restart: docker-compose -f docker/docker-compose.test.yml restart
 echo ============================================================
 
 endlocal

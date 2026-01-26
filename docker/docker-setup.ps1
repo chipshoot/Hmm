@@ -41,7 +41,7 @@ param(
 # Configuration
 $SA_PASSWORD = "Password123!"
 $DB_PORT = 14330
-$SEQ_PORT = 8082
+$SEQ_PORT = 8083
 $API_PORT = 8080
 
 Write-Host "============================================================" -ForegroundColor Cyan
@@ -66,19 +66,19 @@ Write-Host ""
 
 # Navigate to the repository root
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RepoRoot = (Get-Item "$ScriptDir\..\..").FullName
+$RepoRoot = (Get-Item "$ScriptDir\..").FullName
 Set-Location $RepoRoot
 
 Write-Host "Working directory: $RepoRoot"
 Write-Host ""
 
 # Check for required files
-if (-not (Test-Path "dockerfiles\sqlserver\init-db.sql")) {
-    Write-Host "ERROR: init-db.sql not found at dockerfiles\sqlserver\init-db.sql" -ForegroundColor Red
+if (-not (Test-Path "docker\sqlserver\init-db.sql")) {
+    Write-Host "ERROR: init-db.sql not found at docker\sqlserver\init-db.sql" -ForegroundColor Red
     exit 1
 }
-if (-not (Test-Path "src\Hmm.Docker\seed-data.sql")) {
-    Write-Host "ERROR: seed-data.sql not found at src\Hmm.Docker\seed-data.sql" -ForegroundColor Red
+if (-not (Test-Path "docker\test-db\seed-data.sql")) {
+    Write-Host "ERROR: seed-data.sql not found at docker\test-db\seed-data.sql" -ForegroundColor Red
     exit 1
 }
 
@@ -88,7 +88,7 @@ Write-Host ""
 # Handle Down parameter
 if ($Down) {
     Write-Host "Stopping and removing containers..." -ForegroundColor Yellow
-    docker-compose -f src/Hmm.Docker/docker-compose.yml down -v
+    docker-compose -f docker/docker-compose.test.yml down -v
     Write-Host "Environment stopped." -ForegroundColor Green
     exit 0
 }
@@ -99,17 +99,17 @@ Write-Host ""
 
 if ($Rebuild) {
     Write-Host "Rebuilding images from scratch..." -ForegroundColor Yellow
-    docker-compose -f src/Hmm.Docker/docker-compose.yml down -v
-    docker-compose -f src/Hmm.Docker/docker-compose.yml build --no-cache
+    docker-compose -f docker/docker-compose.test.yml down -v
+    docker-compose -f docker/docker-compose.test.yml build --no-cache
 }
 
 if ($WithApi) {
     Write-Host "Starting database, Seq, and API services..." -ForegroundColor Yellow
-    docker-compose -f src/Hmm.Docker/docker-compose.yml up --build -d
+    docker-compose -f docker/docker-compose.test.yml up --build -d
 }
 else {
     Write-Host "Starting database and Seq services only..." -ForegroundColor Yellow
-    docker-compose -f src/Hmm.Docker/docker-compose.yml up --build -d db-test hmm-seq
+    docker-compose -f docker/docker-compose.test.yml up --build -d db-test hmm-seq
 }
 
 Write-Host ""
@@ -141,9 +141,9 @@ if ($WithApi) {
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "Commands:" -ForegroundColor Cyan
 Write-Host "  Stop:    " -NoNewline
-Write-Host "docker-compose -f src/Hmm.Docker/docker-compose.yml down" -ForegroundColor DarkGray
+Write-Host "docker-compose -f docker/docker-compose.test.yml down" -ForegroundColor DarkGray
 Write-Host "  Logs:    " -NoNewline
-Write-Host "docker-compose -f src/Hmm.Docker/docker-compose.yml logs -f" -ForegroundColor DarkGray
+Write-Host "docker-compose -f docker/docker-compose.test.yml logs -f" -ForegroundColor DarkGray
 Write-Host "  Restart: " -NoNewline
-Write-Host "docker-compose -f src/Hmm.Docker/docker-compose.yml restart" -ForegroundColor DarkGray
+Write-Host "docker-compose -f docker/docker-compose.test.yml restart" -ForegroundColor DarkGray
 Write-Host "============================================================" -ForegroundColor Cyan

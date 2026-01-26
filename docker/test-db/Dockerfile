@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 # Copy artifacts
 # Note: These paths assume you run the build command from the repository root
-COPY dockerfiles/sqlserver/init-db.sql /init-db.sql
-COPY src/Hmm.Docker/seed-data.sql /seed-data.sql
-COPY src/Hmm.Docker/setup.sql /setup.sql
-COPY src/Hmm.Docker/entrypoint.sh /entrypoint.sh
+COPY docker/sqlserver/init-db.sql /init-db.sql
+COPY docker/test-db/seed-data.sql /seed-data.sql
+COPY docker/test-db/setup.sql /setup.sql
+COPY docker/test-db/entrypoint.sh /entrypoint.sh
 
 # Fix permissions and line endings
 RUN dos2unix /entrypoint.sh && \
