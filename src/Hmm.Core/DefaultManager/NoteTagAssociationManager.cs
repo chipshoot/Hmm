@@ -186,79 +186,81 @@ namespace Hmm.Core.DefaultManager
                 }
                 var hmmNote = hmmNoteResult.Value;
 
+                var tagsList = tags.ToList();
                 var tagsToApply = new List<Tag>();
                 var errors = new List<string>();
 
-                // Process all tags - lookup or create each one
-                foreach (var tag in tags)
-                {
-                    Tag retrievedTag = null;
-                    ProcessingResult<Tag> tagResult = null;
+                // Separate tags by ID vs name lookup
+                var tagsWithIds = tagsList.Where(t => t.Id > 0).ToList();
+                var tagsWithNames = tagsList.Where(t => t.Id <= 0 && !string.IsNullOrWhiteSpace(t.Name)).ToList();
 
-                    if (tag.Id > 0)
+                // Batch retrieve tags by IDs (single query)
+                if (tagsWithIds.Any())
+                {
+                    var ids = tagsWithIds.Select(t => t.Id).Distinct().ToList();
+                    var tagsByIdsResult = await _tagManager.GetTagsByIdsAsync(ids);
+                    if (tagsByIdsResult.Success && tagsByIdsResult.Value != null)
                     {
-                        tagResult = await _tagManager.GetTagByIdAsync(tag.Id);
-                        if (tagResult.Success)
+                        foreach (var tag in tagsWithIds)
                         {
-                            if (tagResult.IsNotFound)
+                            if (tagsByIdsResult.Value.TryGetValue(tag.Id, out var retrievedTag))
                             {
-                                errors.AddRange(tagResult.Messages.Select(m => m.Message));
-                                continue;
-                            }
-                            else
-                            {
-                                retrievedTag = tagResult.Value;
-                            }
-                        }
-                        else
-                        {
-                            errors.AddRange(tagResult.Messages.Select(m => m.Message));
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        tagResult = await _tagManager.GetTagByNameAsync(tag.Name);
-                        if (tagResult.Success)
-                        {
-                            if (tagResult.IsNotFound)
-                            {
-                                var createdTagResult = await _tagManager.CreateAsync(tag);
-                                if (createdTagResult.Success)
+                                if (!hmmNote.Tags.Any(t => t.Id == retrievedTag.Id) &&
+                                    !tagsToApply.Any(t => t.Id == retrievedTag.Id))
                                 {
-                                    retrievedTag = createdTagResult.Value;
+                                    tagsToApply.Add(retrievedTag);
                                 }
                             }
                             else
                             {
-                                retrievedTag = tagResult.Value;
+                                errors.Add($"Tag with ID {tag.Id} not found or deactivated");
+                            }
+                        }
+                    }
+                    else if (!tagsByIdsResult.Success)
+                    {
+                        errors.Add(tagsByIdsResult.ErrorMessage);
+                    }
+                }
+
+                // Batch retrieve tags by names (single query)
+                if (tagsWithNames.Any())
+                {
+                    var names = tagsWithNames.Select(t => t.Name).Distinct().ToList();
+                    var tagsByNamesResult = await _tagManager.GetTagsByNamesAsync(names);
+                    var foundTagsByName = tagsByNamesResult.Success && tagsByNamesResult.Value != null
+                        ? tagsByNamesResult.Value
+                        : new Dictionary<string, Tag>();
+
+                    foreach (var tag in tagsWithNames)
+                    {
+                        var tagNameLower = tag.Name.Trim().ToLower();
+                        if (foundTagsByName.TryGetValue(tagNameLower, out var retrievedTag))
+                        {
+                            // Tag exists, use it
+                            if (!hmmNote.Tags.Any(t => t.Id == retrievedTag.Id) &&
+                                !tagsToApply.Any(t => t.Id == retrievedTag.Id))
+                            {
+                                tagsToApply.Add(retrievedTag);
                             }
                         }
                         else
                         {
-                            errors.AddRange(tagResult.Messages.Select(m => m.Message));
-                            continue;
+                            // Tag doesn't exist, create it
+                            var createdTagResult = await _tagManager.CreateAsync(tag);
+                            if (createdTagResult.Success && createdTagResult.Value != null)
+                            {
+                                if (!tagsToApply.Any(t => t.Id == createdTagResult.Value.Id))
+                                {
+                                    tagsToApply.Add(createdTagResult.Value);
+                                }
+                            }
+                            else
+                            {
+                                errors.Add($"Failed to create tag '{tag.Name}': {createdTagResult.ErrorMessage}");
+                            }
                         }
                     }
-
-                    if (retrievedTag == null)
-                    {
-                        continue;
-                    }
-
-                    // Check if tag is already associated
-                    if (hmmNote.Tags.Any(t => t.Id == retrievedTag.Id))
-                    {
-                        continue; // Skip duplicates silently
-                    }
-
-                    // Check if tag is already added
-                    if (tagsToApply.Any(t => t.Id == retrievedTag.Id))
-                    {
-                        continue; // Skip duplicates silently
-                    }
-
-                    tagsToApply.Add(retrievedTag);
                 }
 
                 // Apply all valid tags at once

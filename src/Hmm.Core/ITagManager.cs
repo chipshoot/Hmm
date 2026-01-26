@@ -2,6 +2,7 @@
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -14,6 +15,20 @@ namespace Hmm.Core
         Task<bool> IsTagExistsAsync(int id);
 
         Task<ProcessingResult<Tag>> GetTagByIdAsync(int id);
+
+        /// <summary>
+        /// Gets multiple tags by their IDs in a single query (batch operation).
+        /// </summary>
+        /// <param name="ids">Collection of tag IDs to retrieve.</param>
+        /// <returns>Dictionary mapping tag IDs to Tag objects for found tags.</returns>
+        Task<ProcessingResult<Dictionary<int, Tag>>> GetTagsByIdsAsync(IEnumerable<int> ids);
+
+        /// <summary>
+        /// Gets multiple tags by their names in a single query (batch operation).
+        /// </summary>
+        /// <param name="names">Collection of tag names to retrieve.</param>
+        /// <returns>Dictionary mapping tag names (lowercase) to Tag objects for found tags.</returns>
+        Task<ProcessingResult<Dictionary<string, Tag>>> GetTagsByNamesAsync(IEnumerable<string> names);
 
         Task<ProcessingResult<Tag>> GetTagByNameAsync(string name);
 

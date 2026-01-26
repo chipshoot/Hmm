@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-25 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #20, #75, #76, #78, #82)
+Last Updated: 2026-01-25 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #20, #33, #34, #75, #76, #78, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (22 resolved, 1 partially resolved)
+Total Defects Found: 107+ (24 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -384,17 +384,34 @@ CODE DUPLICATION (P1 - HIGH MAINTENANCE BURDEN)
 PERFORMANCE ISSUES (P1 - SCALABILITY IMPACT)
 ================================================================================
 
-33. **N+1 QUERY IN APPLYTAG**
-    Location: src/Hmm.Core/DefaultManager/HmmNoteManager.cs:174-249
+33. **[RESOLVED] N+1 QUERY IN APPLYTAG**
+    Status: ✓ FIXED (Verified 2026-01-25)
+    Location: src/Hmm.Core/DefaultManager/NoteTagAssociationManager.cs (extracted from HmmNoteManager)
     Problem: GetNoteByIdAsync + GetTagByIdAsync + UpdateAsync = 3-4 queries per tag
-    Impact: Adding 10 tags = 30-40 queries
-    Fix: Batch tag retrieval, use single update
+    Resolution: Implemented batch retrieval for tags
+    Changes made:
+    - Added GetTagsByIdsAsync(IEnumerable<int> ids) to ITagManager interface
+    - Added GetTagsByNamesAsync(IEnumerable<string> names) to ITagManager interface
+    - Implemented both batch methods in TagManager using single queries
+    - Refactored ApplyMultipleTagsAsync to use batch retrieval:
+      * Separates tags by ID lookup vs name lookup
+      * Single query for all tags by ID
+      * Single query for all tags by name
+      * Only creates new tags that don't exist
+      * Single update at the end for all tags
+    Impact: Adding 10 tags now uses 3-4 queries total instead of 30-40 queries
 
-34. **N+1 QUERY IN GASLOG DESERIALIZATION**
-    Location: src/Hmm.Automobile/NoteSerialize/GasLogXmlNoteSerialize.cs:149
+34. **[RESOLVED] N+1 QUERY IN GASLOG DESERIALIZATION**
+    Status: ✓ FIXED (Verified 2026-01-25)
+    Location: src/Hmm.Automobile/NoteSerialize/GasLogJsonNoteSerialize.cs:324
     Problem: Fetches each discount by ID during deserialization (5 discounts = 6 queries)
-    Impact: Severe performance degradation for large collections
-    Fix: Eager load all related data, or cache discount lookups
+    Resolution: Implemented batch retrieval with two-pass parsing
+    Changes made:
+    - First pass: Parse all discount IDs and amounts from JSON (no DB calls)
+    - Batch retrieve all discount programs in single GetEntitiesAsync call
+    - Create dictionary lookup for O(1) access by discount ID
+    - Second pass: Match parsed data with retrieved discounts
+    Impact: Deserializing gas log with 5 discounts now uses 1 query instead of 5
 
 35. **REDUNDANT DATABASE ROUNDTRIP IN UPDATE**
     Location: All managers (e.g., HmmNoteManager.cs:141, AuthorManager.cs:152)
@@ -894,17 +911,17 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (22 resolved, 1 partially resolved)
+Total Defects Found: 107+ (24 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
-Critical (P1): 40 (7 resolved: #13, #14, #15, #16, #17, #18, #20)
+Critical (P1): 40 (9 resolved: #13, #14, #15, #16, #17, #18, #20, #33, #34)
 Important (P2): 45
 Technical Debt (P3): 16+ (4 resolved: #75, #76, #78, #82)
 
 By Category:
 - Business Logic Bugs: 8
 - Security Issues: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
-- Performance Issues: 9
+- Performance Issues: 9 (2 resolved: #33, #34)
 - Thread Safety: 4
 - Code Duplication: 6
 - SOLID Violations: 15 (7 resolved: #13, #14, #15, #16, #17, #18, #20)
@@ -916,10 +933,10 @@ By Category:
 - Missing Features: 12
 
 By Project:
-- Hmm.Core: 35 defects (3 resolved: #1, #13, #14 - all FIXED)
+- Hmm.Core: 35 defects (4 resolved: #1, #13, #14, #33 - all FIXED)
 - Hmm.Core.Dal.EF: 18 defects (7 resolved: #3, #7, #15, #16, #17, #78, #82)
 - Hmm.ServiceApi: 25 defects (3 resolved: #12, #75, #76)
-- Hmm.Automobile: 15 defects (3 resolved: #4-partial, #8, #20 - module restored, update fixed, static coupling fixed)
+- Hmm.Automobile: 15 defects (4 resolved: #4-partial, #8, #20, #34 - module restored, update fixed, static coupling fixed, N+1 fixed)
 - Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)
 - Hmm.Utility: 14 defects (1 resolved: #5)
 

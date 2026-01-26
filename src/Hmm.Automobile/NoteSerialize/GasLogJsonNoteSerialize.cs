@@ -318,6 +318,7 @@ namespace Hmm.Automobile.NoteSerialize
 
         /// <summary>
         /// Parses discount information from JSON array.
+        /// Uses batch retrieval to avoid N+1 query problem.
         /// </summary>
         /// <param name="discountsElement">The JSON array containing discount objects.</param>
         /// <returns>List of GasDiscountInfo objects.</returns>
@@ -329,6 +330,9 @@ namespace Hmm.Automobile.NoteSerialize
             {
                 return infos;
             }
+
+            // First pass: collect all discount IDs and parse amounts
+            var discountDataList = new List<(int DiscountId, Hmm.Utility.Currency.Money Amount)>();
 
             foreach (var discountElement in discountsElement.EnumerateArray())
             {
@@ -350,23 +354,48 @@ namespace Hmm.Automobile.NoteSerialize
                         continue;
                     }
 
-                    // Resolve discount program entity
-                    var discountResult = await _discountManager.GetEntityByIdAsync(discountId);
-                    if (!discountResult.Success || discountResult.Value == null)
-                    {
-                        Logger.LogWarning("Cannot find discount program with ID: {DiscountId}", discountId);
-                        continue;
-                    }
-
-                    infos.Add(new GasDiscountInfo
-                    {
-                        Amount = money,
-                        Program = discountResult.Value
-                    });
+                    discountDataList.Add((discountId, money));
                 }
                 catch (Exception ex)
                 {
                     Logger.LogWarning(ex, "Error parsing discount info");
+                }
+            }
+
+            if (!discountDataList.Any())
+            {
+                return infos;
+            }
+
+            // Batch retrieve all discount programs in a single query
+            var discountIds = discountDataList.Select(d => d.DiscountId).Distinct().ToList();
+            var allDiscountsResult = await _discountManager.GetEntitiesAsync();
+
+            if (!allDiscountsResult.Success || allDiscountsResult.Value == null)
+            {
+                Logger.LogWarning("Failed to retrieve discount programs");
+                return infos;
+            }
+
+            // Create lookup dictionary for O(1) access
+            var discountLookup = allDiscountsResult.Value
+                .Where(d => discountIds.Contains(d.Id))
+                .ToDictionary(d => d.Id);
+
+            // Second pass: match parsed data with retrieved discounts
+            foreach (var (discountId, amount) in discountDataList)
+            {
+                if (discountLookup.TryGetValue(discountId, out var discountProgram))
+                {
+                    infos.Add(new GasDiscountInfo
+                    {
+                        Amount = amount,
+                        Program = discountProgram
+                    });
+                }
+                else
+                {
+                    Logger.LogWarning("Cannot find discount program with ID: {DiscountId}", discountId);
                 }
             }
 

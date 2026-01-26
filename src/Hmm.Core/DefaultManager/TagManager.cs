@@ -8,6 +8,7 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -98,6 +99,91 @@ namespace Hmm.Core.DefaultManager
             }
 
             return ProcessingResult<Tag>.Ok(tag);
+        }
+
+        public async Task<ProcessingResult<Dictionary<int, Tag>>> GetTagsByIdsAsync(IEnumerable<int> ids)
+        {
+            try
+            {
+                if (ids == null || !ids.Any())
+                {
+                    return ProcessingResult<Dictionary<int, Tag>>.Ok(new Dictionary<int, Tag>());
+                }
+
+                var idList = ids.Distinct().ToList();
+                var tagDaosResult = await _lookup.GetEntitiesAsync<TagDao>(t => idList.Contains(t.Id) && t.IsActivated);
+
+                if (!tagDaosResult.Success)
+                {
+                    return ProcessingResult<Dictionary<int, Tag>>.Fail(tagDaosResult.ErrorMessage, tagDaosResult.ErrorType);
+                }
+
+                var result = new Dictionary<int, Tag>();
+                if (tagDaosResult.Value != null)
+                {
+                    foreach (var tagDao in tagDaosResult.Value)
+                    {
+                        var tag = _mapper.Map<Tag>(tagDao);
+                        if (tag != null)
+                        {
+                            result[tag.Id] = tag;
+                        }
+                    }
+                }
+
+                return ProcessingResult<Dictionary<int, Tag>>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ProcessingResult<Dictionary<int, Tag>>.FromException(ex);
+            }
+        }
+
+        public async Task<ProcessingResult<Dictionary<string, Tag>>> GetTagsByNamesAsync(IEnumerable<string> names)
+        {
+            try
+            {
+                if (names == null || !names.Any())
+                {
+                    return ProcessingResult<Dictionary<string, Tag>>.Ok(new Dictionary<string, Tag>());
+                }
+
+                var nameList = names.Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Select(n => n.Trim().ToLower())
+                    .Distinct()
+                    .ToList();
+
+                if (!nameList.Any())
+                {
+                    return ProcessingResult<Dictionary<string, Tag>>.Ok(new Dictionary<string, Tag>());
+                }
+
+                var tagDaosResult = await _lookup.GetEntitiesAsync<TagDao>(t => nameList.Contains(t.Name.ToLower()) && t.IsActivated);
+
+                if (!tagDaosResult.Success)
+                {
+                    return ProcessingResult<Dictionary<string, Tag>>.Fail(tagDaosResult.ErrorMessage, tagDaosResult.ErrorType);
+                }
+
+                var result = new Dictionary<string, Tag>(StringComparer.OrdinalIgnoreCase);
+                if (tagDaosResult.Value != null)
+                {
+                    foreach (var tagDao in tagDaosResult.Value)
+                    {
+                        var tag = _mapper.Map<Tag>(tagDao);
+                        if (tag != null)
+                        {
+                            result[tag.Name.ToLower()] = tag;
+                        }
+                    }
+                }
+
+                return ProcessingResult<Dictionary<string, Tag>>.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return ProcessingResult<Dictionary<string, Tag>>.FromException(ex);
+            }
         }
 
         public async Task<ProcessingResult<Tag>> GetTagByNameAsync(string name)

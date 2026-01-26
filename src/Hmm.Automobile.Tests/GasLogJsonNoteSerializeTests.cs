@@ -409,6 +409,130 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
+        public async Task GetEntity_ValidNote_ParsesMultipleDiscounts_UsingBatchRetrieval()
+        {
+            // Arrange - This test verifies Issue #34 fix: batch retrieval instead of N+1 queries
+            var discount2 = new GasDiscount
+            {
+                Id = 2,
+                AuthorId = _author.Id,
+                Program = "AirMiles",
+                Amount = new Money(0.05m, CurrencyCodeType.Cad),
+                DiscountType = GasDiscountType.PerLiter,
+                IsActive = true
+            };
+            var discount3 = new GasDiscount
+            {
+                Id = 3,
+                AuthorId = _author.Id,
+                Program = "CIBC Rewards",
+                Amount = new Money(0.03m, CurrencyCodeType.Cad),
+                DiscountType = GasDiscountType.PerLiter,
+                IsActive = true
+            };
+
+            // Setup mock to return all discounts in a single batch query
+            var allDiscounts = new PageList<GasDiscount>(
+                new List<GasDiscount> { _testDiscount, discount2, discount3 }, 3, 1, 100);
+
+            _discountManagerMock.Setup(m => m.GetEntitiesAsync(It.IsAny<ResourceCollectionParameters>()))
+                .ReturnsAsync(ProcessingResult<PageList<GasDiscount>>.Ok(allDiscounts));
+
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>
+            {
+                new GasDiscountInfo { Program = _testDiscount, Amount = new Money(5.00m, CurrencyCodeType.Cad) },
+                new GasDiscountInfo { Program = discount2, Amount = new Money(3.00m, CurrencyCodeType.Cad) },
+                new GasDiscountInfo { Program = discount3, Amount = new Money(2.00m, CurrencyCodeType.Cad) }
+            };
+
+            var json = _serializer.GetNoteSerializationText(gasLog);
+            var note = CreateNote(json, gasLog.AutomobileId);
+
+            // Act - Should use batch retrieval (GetEntitiesAsync) instead of 3 individual queries
+            var result = await _serializer.GetEntity(note);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value.Discounts);
+            Assert.Equal(3, result.Value.Discounts.Count);
+            Assert.Contains(result.Value.Discounts, d => d.Program.Id == _testDiscount.Id);
+            Assert.Contains(result.Value.Discounts, d => d.Program.Id == discount2.Id);
+            Assert.Contains(result.Value.Discounts, d => d.Program.Id == discount3.Id);
+
+            // Verify batch retrieval was called (not individual GetEntityByIdAsync calls for each discount)
+            _discountManagerMock.Verify(m => m.GetEntitiesAsync(It.IsAny<ResourceCollectionParameters>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetEntity_ValidNote_HandlesPartialDiscountMatches()
+        {
+            // Arrange - Test when some discounts don't exist in the database
+            // Create a non-existent discount to include in the gas log
+            var nonExistentDiscount = new GasDiscount
+            {
+                Id = 999, // This ID won't exist in the batch query result
+                AuthorId = _author.Id,
+                Program = "NonExistent",
+                Amount = new Money(0.05m, CurrencyCodeType.Cad),
+                DiscountType = GasDiscountType.PerLiter,
+                IsActive = true
+            };
+
+            // Setup mock to return only the existing test discount (not the non-existent one)
+            var partialDiscounts = new PageList<GasDiscount>(
+                new List<GasDiscount> { _testDiscount }, 1, 1, 100);
+
+            _discountManagerMock.Setup(m => m.GetEntitiesAsync(It.IsAny<ResourceCollectionParameters>()))
+                .ReturnsAsync(ProcessingResult<PageList<GasDiscount>>.Ok(partialDiscounts));
+
+            // Create gas log with both existing and non-existing discounts
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>
+            {
+                new GasDiscountInfo { Program = _testDiscount, Amount = new Money(5.00m, CurrencyCodeType.Cad) },
+                new GasDiscountInfo { Program = nonExistentDiscount, Amount = new Money(3.00m, CurrencyCodeType.Cad) }
+            };
+
+            var json = _serializer.GetNoteSerializationText(gasLog);
+            var note = CreateNote(json, gasLog.AutomobileId);
+
+            // Act
+            var result = await _serializer.GetEntity(note);
+
+            // Assert - Should only include the discount that was found in batch query
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value.Discounts);
+            Assert.Single(result.Value.Discounts);
+            Assert.Equal(_testDiscount.Id, result.Value.Discounts[0].Program.Id);
+        }
+
+        [Fact]
+        public async Task GetEntity_ValidNote_HandlesEmptyDiscountsArray()
+        {
+            // Arrange
+            var emptyDiscounts = new PageList<GasDiscount>(
+                new List<GasDiscount>(), 0, 1, 100);
+
+            _discountManagerMock.Setup(m => m.GetEntitiesAsync(It.IsAny<ResourceCollectionParameters>()))
+                .ReturnsAsync(ProcessingResult<PageList<GasDiscount>>.Ok(emptyDiscounts));
+
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>(); // Empty discounts
+            var json = _serializer.GetNoteSerializationText(gasLog);
+            var note = CreateNote(json, gasLog.AutomobileId);
+
+            // Act
+            var result = await _serializer.GetEntity(note);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            // Discounts should be null or empty since none were in the JSON
+            Assert.True(result.Value.Discounts == null || result.Value.Discounts.Count == 0);
+        }
+
+        [Fact]
         public async Task GetEntity_NullNote_ReturnsError()
         {
             // Arrange & Act

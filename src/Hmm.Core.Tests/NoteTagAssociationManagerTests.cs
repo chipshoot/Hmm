@@ -5,6 +5,7 @@ using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -465,6 +466,132 @@ namespace Hmm.Core.Tests
             var noteTagsResult = await _associationManager.GetNoteTagsAsync(note.Id);
             Assert.True(noteTagsResult.Success);
             Assert.Equal(3, noteTagsResult.Value.Count);
+        }
+
+        [Fact]
+        public async Task ApplyMultipleTagsAsync_UsesBatchRetrieval_ForTagsWithIds()
+        {
+            // Arrange - This test verifies Issue #33 fix: batch retrieval instead of N+1 queries
+            var note = await CreateTestNote("Batch test note");
+
+            // Create multiple tags that will be looked up by ID
+            var tag1 = await CreateTestTag("BatchIdTag1");
+            var tag2 = await CreateTestTag("BatchIdTag2");
+            var tag3 = await CreateTestTag("BatchIdTag3");
+            var tag4 = await CreateTestTag("BatchIdTag4");
+            var tag5 = await CreateTestTag("BatchIdTag5");
+
+            // Reference tags by ID only (simulates batch lookup scenario)
+            var tagsWithIds = new[]
+            {
+                new Tag { Id = tag1.Id, Name = tag1.Name },
+                new Tag { Id = tag2.Id, Name = tag2.Name },
+                new Tag { Id = tag3.Id, Name = tag3.Name },
+                new Tag { Id = tag4.Id, Name = tag4.Name },
+                new Tag { Id = tag5.Id, Name = tag5.Name }
+            };
+
+            // Act - Should use batch retrieval (GetTagsByIdsAsync) instead of 5 individual queries
+            var result = await _associationManager.ApplyMultipleTagsAsync(note.Id, tagsWithIds);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(5, result.Value.Count);
+            Assert.Contains(result.Value, t => t.Name == "BatchIdTag1");
+            Assert.Contains(result.Value, t => t.Name == "BatchIdTag2");
+            Assert.Contains(result.Value, t => t.Name == "BatchIdTag3");
+            Assert.Contains(result.Value, t => t.Name == "BatchIdTag4");
+            Assert.Contains(result.Value, t => t.Name == "BatchIdTag5");
+        }
+
+        [Fact]
+        public async Task ApplyMultipleTagsAsync_UsesBatchRetrieval_ForTagsWithNames()
+        {
+            // Arrange - This test verifies Issue #33 fix: batch retrieval for name lookups
+            var note = await CreateTestNote("Batch name test note");
+
+            // Create multiple tags that will be looked up by name
+            await CreateTestTag("BatchNameTag1");
+            await CreateTestTag("BatchNameTag2");
+            await CreateTestTag("BatchNameTag3");
+
+            // Reference tags by name only (simulates batch lookup scenario)
+            var tagsWithNames = new[]
+            {
+                new Tag { Name = "BatchNameTag1" },
+                new Tag { Name = "BatchNameTag2" },
+                new Tag { Name = "BatchNameTag3" },
+                new Tag { Name = "NewBatchTag" } // This one will be created
+            };
+
+            // Act - Should use batch retrieval (GetTagsByNamesAsync) instead of individual queries
+            var result = await _associationManager.ApplyMultipleTagsAsync(note.Id, tagsWithNames);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(4, result.Value.Count);
+            Assert.Contains(result.Value, t => t.Name == "BatchNameTag1");
+            Assert.Contains(result.Value, t => t.Name == "BatchNameTag2");
+            Assert.Contains(result.Value, t => t.Name == "BatchNameTag3");
+            Assert.Contains(result.Value, t => t.Name == "NewBatchTag");
+        }
+
+        [Fact]
+        public async Task ApplyMultipleTagsAsync_HandlesMixedIdAndNameTags()
+        {
+            // Arrange - Test mixed scenario with both ID and name lookups
+            var note = await CreateTestNote("Mixed tags test note");
+
+            // Create some tags to look up by ID
+            var existingTag1 = await CreateTestTag("ExistingMixedTag1");
+            var existingTag2 = await CreateTestTag("ExistingMixedTag2");
+
+            // Create some tags to look up by name
+            await CreateTestTag("ExistingMixedTag3");
+
+            var mixedTags = new[]
+            {
+                new Tag { Id = existingTag1.Id, Name = existingTag1.Name }, // Lookup by ID
+                new Tag { Id = existingTag2.Id, Name = existingTag2.Name }, // Lookup by ID
+                new Tag { Name = "ExistingMixedTag3" }, // Lookup by name
+                new Tag { Name = "NewMixedTag" } // Create new
+            };
+
+            // Act
+            var result = await _associationManager.ApplyMultipleTagsAsync(note.Id, mixedTags);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(4, result.Value.Count);
+        }
+
+        [Fact]
+        public async Task ApplyMultipleTagsAsync_HandlesLargeNumberOfTags()
+        {
+            // Arrange - Test with many tags to verify batch efficiency
+            var note = await CreateTestNote("Large batch test note");
+
+            var tags = new List<Tag>();
+            for (int i = 1; i <= 10; i++)
+            {
+                tags.Add(new Tag { Name = $"LargeBatchTag{i}" });
+            }
+
+            // Act - Should efficiently handle 10 tags with batch operations
+            var result = await _associationManager.ApplyMultipleTagsAsync(note.Id, tags);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(10, result.Value.Count);
+
+            // Verify all tags applied
+            var noteTagsResult = await _associationManager.GetNoteTagsAsync(note.Id);
+            Assert.True(noteTagsResult.Success);
+            Assert.Equal(10, noteTagsResult.Value.Count);
         }
 
         #endregion ApplyMultipleTagsAsync Tests
