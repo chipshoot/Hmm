@@ -7,12 +7,13 @@
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
     <DockerServiceName>hmm.serviceapi</DockerServiceName>
+    <DockerComposeBaseFilePath>docker\docker-compose</DockerComposeComposeBaseFilePath>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="docker-compose.override.yml">
-      <DependentUpon>docker-compose.yml</DependentUpon>
+    <None Include="docker\docker-compose.override.yml">
+      <DependentUpon>docker\docker-compose.yml</DependentUpon>
     </None>
-    <None Include="docker-compose.yml" />
-    <None Include=".dockerignore" />
+    <None Include="docker\docker-compose.yml" />
+    <None Include="docker\.dockerignore" />
   </ItemGroup>
 </Project>

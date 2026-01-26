@@ -11,5 +11,5 @@ services:
   hmm.serviceapi:
     image: ${DOCKER_REGISTRY-}hmmserviceapi
     build:
-      context: .
+      context: ..
       dockerfile: src/Hmm.ServiceApi/Dockerfile
