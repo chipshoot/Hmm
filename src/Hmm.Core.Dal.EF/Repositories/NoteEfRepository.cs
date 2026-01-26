@@ -4,13 +4,12 @@ using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
-using Hmm.Utility.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace Hmm.Core.Dal.EF.Repositories
 {
@@ -41,8 +40,8 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             var (pageIdx, pageSize) = resourceCollectionParameters.GetPaginationTuple();
             var notes = query == null
-                ? _dataContext.Set<HmmNoteDao>().Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags)
-                : _dataContext.Set<HmmNoteDao>().Include(n => n.Author).Include(n => n.Catalog).Include(n=>n.Tags).Where(query);
+                ? _dataContext.Set<HmmNoteDao>().Include(n => n.Author).Include(n => n.Catalog).Include(n => n.Tags)
+                : _dataContext.Set<HmmNoteDao>().Include(n => n.Author).Include(n => n.Catalog).Include(n => n.Tags).Where(query);
             var result = resourceCollectionParameters == null
                 ? await PageList<HmmNoteDao>.CreateAsync(notes, pageIdx, pageSize)
                 : await PageList<HmmNoteDao>.CreateAsync(notes.ApplySort(resourceCollectionParameters.OrderBy), pageIdx, pageSize);
@@ -57,8 +56,8 @@ namespace Hmm.Core.Dal.EF.Repositories
             try
             {
                 var note = await _dataContext.Set<HmmNoteDao>()
-                    .Include(n=>n.Tags)
-                    .FirstOrDefaultAsync(n=>n.Id == id);
+                    .Include(n => n.Tags)
+                    .FirstOrDefaultAsync(n => n.Id == id);
 
                 if (note == null)
                 {

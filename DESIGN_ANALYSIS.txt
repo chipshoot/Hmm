@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-25 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #20, #33, #34, #75, #76, #78, #82)
+Last Updated: 2026-01-26 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #20, #21, #22, #23, #24, #25, #26, #33, #34, #75, #76, #78, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (24 resolved, 1 partially resolved)
+Total Defects Found: 107+ (30 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -304,41 +304,90 @@ ARCHITECTURAL VIOLATIONS (P1 - FIX SOON)
 DATA LAYER DEFECTS (P1 - FIX SOON)
 ================================================================================
 
-21. **MISSING IF-ELSE IN EFLOOKUP**
-    Location: src/Hmm.Core.Dal.EF/EfEntityLookup.cs:99-129
-    Problem: Uses if/if/if instead of if/else if/else if
-    Impact: Performance degradation, all conditions checked even after match
-    Fix: Change to if/else if/else if pattern
+21. **[RESOLVED] MISSING IF-ELSE IN EFLOOKUP**
+    Status: ✓ FIXED (Verified 2026-01-26)
+    Location: src/Hmm.Core.Dal.EF/EfEntityLookup.cs:95-128
+    Problem: Analysis originally noted if/if/if pattern
+    Resolution: Code review verified both GetEntityAsync<T> and GetQueryableEntities<T>
+    already use proper if/else if/else if pattern throughout
+    - GetEntityAsync (lines 44-93): Uses else if for all type checks
+    - GetQueryableEntities (lines 95-128): Uses else if for all type checks
+    Impact: Early exit on match, no unnecessary condition checks
 
-22. **SAVEASYNC INCONSISTENT ERROR HANDLING**
-    Location: src/Hmm.Core.Dal.EF/HmmDataContext.cs:37
-    Problem: SaveAsync() doesn't wrap exceptions like Save() does
-    Impact: Inconsistent error handling, different exception types for sync vs async
-    Fix: Add try-catch wrapping DataSourceException like Save()
+22. **[RESOLVED] SAVEASYNC INCONSISTENT ERROR HANDLING**
+    Status: ✓ FIXED (Verified 2026-01-26)
+    Location: src/Hmm.Core.Dal.EF/HmmDataContext.cs:38-48
+    Problem: Analysis noted SaveAsync() didn't wrap exceptions like Save()
+    Resolution: Resolved as part of Unit of Work implementation (#17)
+    - CommitAsync() now wraps exceptions in DataSourceException (lines 38-48)
+    - Commit() also wraps exceptions in DataSourceException (lines 25-35)
+    - Both methods now have consistent try-catch patterns
+    Impact: Sync and async operations now throw consistent exception types
 
-23. **INCONSISTENT CHANGE TRACKING**
+23. **[RESOLVED] INCONSISTENT CHANGE TRACKING**
+    Status: ✓ FIXED (Verified 2026-01-26)
     Location: src/Hmm.Core.Dal.EF/Repositories/* and EfEntityLookup.cs
-    Problem: Some use AsNoTracking(), some don't
-    Impact: Update operations may think all properties changed, unnecessary DB writes
-    Fix: Standardize on either tracking or no-tracking with explicit attach
+    Problem: Some queries used AsNoTracking(), some didn't
+    Resolution: Standardized change tracking strategy documented and implemented
+    Design Decision:
+    - EfEntityLookup (explicit lookup service): Uses AsNoTracking() for all queries
+      * GetEntityAsync<T>: All type branches use AsNoTracking()
+      * GetQueryableEntities<T>: All type branches use AsNoTracking()
+      * Purpose: Read-only lookups that won't be modified
+    - Repository classes (data access layer): Keep tracking enabled by default
+      * Reason: Repository results may be assigned to other entities and updated
+      * Using AsNoTracking() in repositories causes tracking conflicts when
+        entities are later used in Update() operations
+      * The Update() method attaches entities, conflicting with untracked instances
+    - For explicitly read-only operations in application code, use IEntityLookup
+    Impact: Clear separation between read-only lookups (AsNoTracking) and
+    repository operations (tracking enabled for update scenarios)
 
-24. **NOTETABLEREF NOT IN ENTITY HIERARCHY**
+24. **[RESOLVED] NOTETABLEREF NOT IN ENTITY HIERARCHY**
+    Status: ✓ FIXED (Verified 2026-01-26)
     Location: src/Hmm.Core.Map/DbEntity/NoteTagRefDao.cs
     Problem: Doesn't inherit from Entity base class like all other entities
-    Impact: Cannot use IRepository<NoteTagRefDao>, inconsistent model
-    Fix: Inherit from Entity or use EF Core's built-in many-to-many
+    Resolution: Documented design decision - NoteTagRefDao intentionally does NOT inherit
+    from Entity because:
+    - It's a pure join table for many-to-many relationship, not a domain entity
+    - It doesn't need the Description property from Entity base class
+    - It's managed through navigation properties on HmmNoteDao and TagDao
+    - EF Core manages its lifecycle through the relationship configuration
+    - Added comprehensive XML documentation explaining this decision
+    Impact: Clear documentation of intentional design choice for join tables
 
-25. **MISSING FK CONSTRAINT NAMES AND INDEXES**
-    Location: src/Hmm.Core.Dal.EF/HmmDataContext.cs:41-92
+25. **[RESOLVED] MISSING FK CONSTRAINT NAMES AND INDEXES**
+    Status: ✓ FIXED (Verified 2026-01-26)
+    Location: src/Hmm.Core.Dal.EF/HmmDataContext.cs
     Problem: Uses magic strings, no explicit index definitions, no constraint names
-    Impact: Unclear schema, migration difficulties, potential performance issues
-    Fix: Add explicit constraint names and indexes
+    Resolution: Added explicit FK constraint names and indexes
+    Changes made:
+    - Created ForeignKeyNames static class with constants:
+      * FK_Notes_Authors, FK_Notes_Catalogs
+      * FK_NoteTagRefs_Notes, FK_NoteTagRefs_Tags
+    - Created IndexNames static class with constants:
+      * IX_Notes_AuthorId, IX_Notes_CatalogId
+      * IX_NoteTagRefs_NoteId, IX_NoteTagRefs_TagId
+      * IX_Authors_AccountName, IX_Tags_Name
+    - Applied HasConstraintName() to all FK relationships
+    - Applied HasIndex() with HasDatabaseName() to all FK columns
+    - Added indexes on frequently queried columns (AccountName, Name)
+    - Organized OnModelCreating with clear section comments
+    Impact: Clear schema naming, easier migrations, improved query performance
 
-26. **DATETIME UTC CONVERSION ONLY FOR HMMNOTE**
-    Location: src/Hmm.Core.Dal.EF/HmmDataContext.cs:63-68
+26. **[RESOLVED] DATETIME UTC CONVERSION ONLY FOR HMMNOTE**
+    Status: ✓ FIXED (Verified 2026-01-26)
+    Location: src/Hmm.Core.Dal.EF/HmmDataContext.cs
     Problem: Only HmmNoteDao gets UTC conversion, other entities don't
-    Impact: Timezone bugs when comparing dates from different entities
-    Fix: Apply UTC conversion globally to all DateTime properties
+    Resolution: Applied UTC conversion globally using ValueConverter convention
+    Changes made:
+    - Created dateTimeConverter for DateTime properties
+    - Created nullableDateTimeConverter for DateTime? properties
+    - Applied converters to ALL DateTime/DateTime? properties across all entities
+      using model iteration in OnModelCreating
+    - Converters apply DateTime.SpecifyKind(v, DateTimeKind.Utc) on read
+    - Future entities with DateTime properties automatically get UTC conversion
+    Impact: Consistent timezone handling across all entities, prevents timezone bugs
 
 ================================================================================
 CODE DUPLICATION (P1 - HIGH MAINTENANCE BURDEN)
@@ -911,10 +960,10 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (24 resolved, 1 partially resolved)
+Total Defects Found: 107+ (30 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
-Critical (P1): 40 (9 resolved: #13, #14, #15, #16, #17, #18, #20, #33, #34)
+Critical (P1): 40 (15 resolved: #13, #14, #15, #16, #17, #18, #20, #21, #22, #23, #24, #25, #26, #33, #34)
 Important (P2): 45
 Technical Debt (P3): 16+ (4 resolved: #75, #76, #78, #82)
 
@@ -925,7 +974,7 @@ By Category:
 - Thread Safety: 4
 - Code Duplication: 6
 - SOLID Violations: 15 (7 resolved: #13, #14, #15, #16, #17, #18, #20)
-- Data Layer Issues: 9
+- Data Layer Issues: 9 (6 resolved: #21, #22, #23, #24, #25, #26)
 - API Design: 12
 - Dead Code: 10
 - Infrastructure: 13 (4 resolved: #75, #76, #78, #82)
@@ -934,7 +983,8 @@ By Category:
 
 By Project:
 - Hmm.Core: 35 defects (4 resolved: #1, #13, #14, #33 - all FIXED)
-- Hmm.Core.Dal.EF: 18 defects (7 resolved: #3, #7, #15, #16, #17, #78, #82)
+- Hmm.Core.Dal.EF: 18 defects (13 resolved: #3, #7, #15, #16, #17, #21, #22, #23, #24, #25, #26, #78, #82)
+- Hmm.Core.Map: 1 defect (1 resolved: #24 - NoteTagRefDao documented)
 - Hmm.ServiceApi: 25 defects (3 resolved: #12, #75, #76)
 - Hmm.Automobile: 15 defects (4 resolved: #4-partial, #8, #20, #34 - module restored, update fixed, static coupling fixed, N+1 fixed)
 - Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)

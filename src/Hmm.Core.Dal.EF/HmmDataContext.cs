@@ -1,12 +1,38 @@
 ﻿using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.DataEntity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hmm.Core.Dal.EF
 {
+    /// <summary>
+    /// Foreign key constraint name constants for explicit naming convention.
+    /// Using constants prevents magic strings and ensures consistency.
+    /// </summary>
+    internal static class ForeignKeyNames
+    {
+        public const string FK_Notes_Authors = "fk_notes_authors";
+        public const string FK_Notes_Catalogs = "fk_notes_catalogs";
+        public const string FK_NoteTagRefs_Notes = "fk_notetagrefs_notes";
+        public const string FK_NoteTagRefs_Tags = "fk_notetagrefs_tags";
+    }
+
+    /// <summary>
+    /// Index name constants for explicit naming convention.
+    /// </summary>
+    internal static class IndexNames
+    {
+        public const string IX_Notes_AuthorId = "ix_notes_authorid";
+        public const string IX_Notes_CatalogId = "ix_notes_catalogid";
+        public const string IX_NoteTagRefs_NoteId = "ix_notetagrefs_noteid";
+        public const string IX_NoteTagRefs_TagId = "ix_notetagrefs_tagid";
+        public const string IX_Authors_AccountName = "ix_authors_accountname";
+        public const string IX_Tags_Name = "ix_tags_name";
+    }
+
     public class HmmDataContext(DbContextOptions options) : DbContext(options), IHmmDataContext
     {
         public DbSet<HmmNoteDao> Notes { get; set; }
@@ -65,7 +91,36 @@ namespace Hmm.Core.Dal.EF
                 modelBuilder.HasPostgresEnum<NoteContentFormatType>("note_content_format_type");
             }
 
+            // Apply UTC conversion globally to all DateTime properties (Issue #26 fix)
+            // This ensures consistent timezone handling across all entities
+            var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+                v => v,
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+            var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(dateTimeConverter);
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(nullableDateTimeConverter);
+                    }
+                }
+            }
+
+            // ============================================================
+            // HmmNoteDao Configuration
+            // ============================================================
             modelBuilder.Entity<HmmNoteDao>().ToTable("notes");
+            modelBuilder.Entity<HmmNoteDao>().HasKey(n => n.Id);
 
             // Configure Version property differently based on provider
             var versionProperty = modelBuilder.Entity<HmmNoteDao>()
@@ -79,51 +134,91 @@ namespace Hmm.Core.Dal.EF
                 versionProperty.HasColumnType("bytea");
             }
 
+            // FK to Author with explicit constraint name and index (Issue #25 fix)
             modelBuilder.Entity<HmmNoteDao>()
-            .HasOne(n => n.Author)
-            .WithMany()
-            .HasForeignKey("authorid")
-            .OnDelete(DeleteBehavior.NoAction);
+                .HasOne(n => n.Author)
+                .WithMany()
+                .HasForeignKey("authorid")
+                .HasConstraintName(ForeignKeyNames.FK_Notes_Authors)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<HmmNoteDao>()
-            .HasOne(n => n.Catalog)
-            .WithMany()
-            .HasForeignKey("catalogid")
-            .OnDelete(DeleteBehavior.NoAction);
+                .HasIndex("authorid")
+                .HasDatabaseName(IndexNames.IX_Notes_AuthorId);
+
+            // FK to Catalog with explicit constraint name and index
+            modelBuilder.Entity<HmmNoteDao>()
+                .HasOne(n => n.Catalog)
+                .WithMany()
+                .HasForeignKey("catalogid")
+                .HasConstraintName(ForeignKeyNames.FK_Notes_Catalogs)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<HmmNoteDao>()
-                .Property(n => n.CreateDate)
-                .HasConversion(v=>v, v=>DateTime.SpecifyKind(v, DateTimeKind.Utc));
-            modelBuilder.Entity<HmmNoteDao>()
-                .Property(n => n.LastModifiedDate)
-                .HasConversion(v=>v, v=>DateTime.SpecifyKind(v, DateTimeKind.Utc));
+                .HasIndex("catalogid")
+                .HasDatabaseName(IndexNames.IX_Notes_CatalogId);
 
-
-            modelBuilder.Entity<HmmNoteDao>()
-                .HasKey(n => n.Id);
-
+            // ============================================================
+            // AuthorDao Configuration
+            // ============================================================
             modelBuilder.Entity<AuthorDao>().ToTable("authors");
+
+            // Index on AccountName for faster lookups
+            modelBuilder.Entity<AuthorDao>()
+                .HasIndex(a => a.AccountName)
+                .HasDatabaseName(IndexNames.IX_Authors_AccountName);
+
+            // ============================================================
+            // ContactDao Configuration
+            // ============================================================
             modelBuilder.Entity<ContactDao>().ToTable("contacts");
 
-            // Configure Schema property - use xml type only for PostgreSQL
+            // ============================================================
+            // NoteCatalogDao Configuration
+            // ============================================================
             var catalogEntity = modelBuilder.Entity<NoteCatalogDao>().ToTable("notecatalogs");
             if (isPostgres)
             {
                 catalogEntity.Property(e => e.Schema).HasColumnType("xml");
             }
 
+            // ============================================================
+            // TagDao Configuration
+            // ============================================================
             modelBuilder.Entity<TagDao>().ToTable("tags");
 
-            modelBuilder.Entity<NoteTagRefDao>().ToTable("notetagrefs")
-                .HasKey(nt => nt.Id);
+            // Index on Name for faster lookups
+            modelBuilder.Entity<TagDao>()
+                .HasIndex(t => t.Name)
+                .HasDatabaseName(IndexNames.IX_Tags_Name);
+
+            // ============================================================
+            // NoteTagRefDao Configuration (Join Table)
+            // ============================================================
+            modelBuilder.Entity<NoteTagRefDao>().ToTable("notetagrefs");
+            modelBuilder.Entity<NoteTagRefDao>().HasKey(nt => nt.Id);
+
+            // FK to Note with explicit constraint name and index
             modelBuilder.Entity<NoteTagRefDao>()
                 .HasOne(nt => nt.Note)
                 .WithMany(n => n.Tags)
-                .HasForeignKey(nt => nt.NoteId);
+                .HasForeignKey(nt => nt.NoteId)
+                .HasConstraintName(ForeignKeyNames.FK_NoteTagRefs_Notes);
+
+            modelBuilder.Entity<NoteTagRefDao>()
+                .HasIndex(nt => nt.NoteId)
+                .HasDatabaseName(IndexNames.IX_NoteTagRefs_NoteId);
+
+            // FK to Tag with explicit constraint name and index
             modelBuilder.Entity<NoteTagRefDao>()
                 .HasOne(nt => nt.Tag)
                 .WithMany(t => t.Notes)
-                .HasForeignKey(nt => nt.TagId);
+                .HasForeignKey(nt => nt.TagId)
+                .HasConstraintName(ForeignKeyNames.FK_NoteTagRefs_Tags);
+
+            modelBuilder.Entity<NoteTagRefDao>()
+                .HasIndex(nt => nt.TagId)
+                .HasDatabaseName(IndexNames.IX_NoteTagRefs_TagId);
         }
     }
 }
