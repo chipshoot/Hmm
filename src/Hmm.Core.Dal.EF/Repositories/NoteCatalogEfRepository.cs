@@ -4,6 +4,7 @@ using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -104,6 +105,15 @@ namespace Hmm.Core.Dal.EF.Repositories
                     var invalidResult = ProcessingResult<NoteCatalogDao>.Invalid($"Cannot update NoteCatalog with invalid id {entity.Id}");
                     invalidResult.LogMessages(_logger);
                     return invalidResult;
+                }
+
+                // Check if the catalog exists (use AsNoTracking to avoid tracking conflicts)
+                var existingCatalog = await _dataContext.Set<NoteCatalogDao>().AsNoTracking().FirstOrDefaultAsync(c => c.Id == entity.Id);
+                if (existingCatalog == null)
+                {
+                    var notFoundResult = ProcessingResult<NoteCatalogDao>.NotFound($"NoteCatalog with ID {entity.Id} not found");
+                    notFoundResult.LogMessages(_logger);
+                    return notFoundResult;
                 }
 
                 _dataContext.Set<NoteCatalogDao>().Update(entity);

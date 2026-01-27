@@ -155,12 +155,6 @@ public class ContactManager : IContactManager
                 return ProcessingResult<Contact>.Fail("Cannot convert Contact to ContactDao");
             }
 
-            var savedContactResult = await _lookup.GetEntityAsync<ContactDao>(contactInfo.Id);
-            if (!savedContactResult.Success)
-            {
-                return ProcessingResult<Contact>.NotFound($"Cannot update contact: {contactInfo.Id}, because system cannot find it in data source");
-            }
-
             var updatedContactDaoResult = await _contactDaoRepository.UpdateAsync(contactDao);
             if (!updatedContactDaoResult.Success)
             {

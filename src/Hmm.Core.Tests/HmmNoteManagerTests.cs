@@ -62,9 +62,11 @@ namespace Hmm.Core.Tests
             var crtTime = new DateTime(2021, 4, 4, 8, 15, 0);
             var mdfTime = new DateTime(2021, 4, 4, 8, 30, 0);
             CurrentTime = crtTime;
-            await _noteManager.CreateAsync(note);
-            var savedNoteResult = await _noteManager.GetNoteByIdAsync(note.Id);
-            Assert.Equal(savedNoteResult.Value.Version, note.Version);
+            var createdNoteResult = await _noteManager.CreateAsync(note);
+            Assert.True(createdNoteResult.Success);
+            var savedNoteResult = await _noteManager.GetNoteByIdAsync(createdNoteResult.Value.Id);
+            Assert.True(savedNoteResult.Success);
+            Assert.Equal(savedNoteResult.Value.Version, createdNoteResult.Value.Version);
 
             // Act
             CurrentTime = mdfTime;
@@ -78,8 +80,8 @@ namespace Hmm.Core.Tests
             Assert.Equal("new note subject", updatedNoteResult.Value.Subject);
             Assert.Equal(updatedNoteResult.Value.CreateDate, crtTime);
             Assert.Equal(updatedNoteResult.Value.LastModifiedDate, mdfTime);
-            Assert.NotEqual(updatedNoteResult.Value.Version, note.Version);
-            Assert.False(note.IsDeleted);
+            Assert.NotEqual(updatedNoteResult.Value.Version, createdNoteResult.Value.Version);
+            Assert.False(createdNoteResult.Value.IsDeleted);
         }
 
         [Fact]
@@ -95,9 +97,9 @@ namespace Hmm.Core.Tests
                 Content = "<root><time>2017-08-01</time></root>"
             };
             CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
-            var result = await _noteManager.CreateAsync(note);
+            var createdResult = await _noteManager.CreateAsync(note);
 
-            Assert.True(result.Success);
+            Assert.True(createdResult.Success);
             var savedDaosResult = await NoteRepository.GetEntitiesAsync();
             var savedDao = savedDaosResult.Value.FirstOrDefault();
             Assert.NotNull(savedDao);
@@ -106,10 +108,11 @@ namespace Hmm.Core.Tests
             // change the note author
             var newUser = await GetTestAuthor("jfang");
             Assert.NotNull(newUser);
-            note.Author = newUser;
+            var noteToUpdate = createdResult.Value;
+            noteToUpdate.Author = newUser;
 
             // Act
-            var savedNoteResult = await _noteManager.UpdateAsync(note);
+            var savedNoteResult = await _noteManager.UpdateAsync(noteToUpdate);
 
             // Assert
             Assert.False(savedNoteResult.Success);

@@ -4,6 +4,7 @@ using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq.Expressions;
@@ -103,6 +104,15 @@ namespace Hmm.Core.Dal.EF.Repositories
                     var invalidResult = ProcessingResult<AuthorDao>.Invalid($"Cannot update author with invalid id {entity.Id}");
                     invalidResult.LogMessages(_logger);
                     return invalidResult;
+                }
+
+                // Check if the author exists (use AsNoTracking to avoid tracking conflicts)
+                var existingAuthor = await _dataContext.Set<AuthorDao>().AsNoTracking().FirstOrDefaultAsync(a => a.Id == entity.Id);
+                if (existingAuthor == null)
+                {
+                    var notFoundResult = ProcessingResult<AuthorDao>.NotFound($"Author with ID {entity.Id} not found");
+                    notFoundResult.LogMessages(_logger);
+                    return notFoundResult;
                 }
 
                 // Check for duplicate AccountName (excluding the current entity)

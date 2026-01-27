@@ -4,6 +4,7 @@ using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq.Expressions;
@@ -92,6 +93,15 @@ public class ContactEfRepository : IRepository<ContactDao>
                 var invalidResult = ProcessingResult<ContactDao>.Invalid($"Cannot update contact with invalid id {entity.Id}");
                 invalidResult.LogMessages(_logger);
                 return invalidResult;
+            }
+
+            // Check if the contact exists (use AsNoTracking to avoid tracking conflicts)
+            var existingContact = await _dataContext.Set<ContactDao>().AsNoTracking().FirstOrDefaultAsync(c => c.Id == entity.Id);
+            if (existingContact == null)
+            {
+                var notFoundResult = ProcessingResult<ContactDao>.NotFound($"Contact with ID {entity.Id} not found");
+                notFoundResult.LogMessages(_logger);
+                return notFoundResult;
             }
 
             _dataContext.Set<ContactDao>().Update(entity);

@@ -143,13 +143,6 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<HmmNote>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                // Make sure not to update note which is cached in current session
-                var curNoteResult = await GetNoteByIdAsync(note.Id);
-                if (!curNoteResult.Success)
-                {
-                    return ProcessingResult<HmmNote>.NotFound($"Cannot update note: {note.Id}, because system cannot find it in data source");
-                }
-
                 var noteDao = _mapper.Map<HmmNoteDao>(note);
                 if (noteDao == null)
                 {

@@ -39,8 +39,9 @@ services:
     container_name: hmm-api-test
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__HmmNoteConnection=Server=db-test;Database=hmm;User Id=sa;Password=Password123!;TrustServerCertificate=True
-      - Serilog__WriteTo__1__Args__serverUrl=http://hmm-seq:5341
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=db-test;Database=hmm;User Id=sa;Password=Password123!;TrustServerCertificate=True
+      - Serilog__WriteTo__0__Args__serverUrl=http://hmm-seq:5341
     ports:
       - "8080:80"
     depends_on:

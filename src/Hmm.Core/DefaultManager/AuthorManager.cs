@@ -164,12 +164,6 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Author>.Fail("Cannot convert Author to AuthorDao");
                 }
 
-                var savedAuthorDaoResult = await _lookup.GetEntityAsync<AuthorDao>(authorInfo.Id);
-                if (!savedAuthorDaoResult.Success)
-                {
-                    return ProcessingResult<Author>.NotFound($"Cannot update author: {authorInfo.AccountName}, because system cannot find it in data source");
-                }
-
                 var updatedUserDaoResult = await _authorRepository.UpdateAsync(authorDao);
                 if (!updatedUserDaoResult.Success)
                 {

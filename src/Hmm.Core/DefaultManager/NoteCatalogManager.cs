@@ -124,12 +124,6 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalog to NoteCatalogDao");
                 }
 
-                var savedCatalogResult = await _lookup.GetEntityAsync<NoteCatalogDao>(catalog.Id);
-                if (!savedCatalogResult.Success)
-                {
-                    return ProcessingResult<NoteCatalog>.NotFound($"Cannot update catalog: {catalog.Name}, because system cannot find it in data source");
-                }
-
                 var updatedCatalogDaoResult = await _catalogRepository.UpdateAsync(catalogDao);
                 if (!updatedCatalogDaoResult.Success)
                 {

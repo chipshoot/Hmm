@@ -32,15 +32,16 @@ using System.IO;
 
 namespace Hmm.ServiceApi
 {
-    public class Startup(IConfiguration configuration)
+    public class Startup(IConfiguration configuration, IWebHostEnvironment env)
     {
         private const string AllowCorsPolicy = "AllowCors";
         private InvalidModelStateConfig _invalidModelStateConfig;
 
         private IConfiguration Configuration { get; } = configuration;
+        private IWebHostEnvironment Environment { get; } = env;
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services, IWebHostEnvironment env)
+        public void ConfigureServices(IServiceCollection services)
         {
             var configSection = SetupConfiguration(services);
             var appSetting = configSection.Get<AppSettings>();
@@ -130,13 +131,14 @@ namespace Hmm.ServiceApi
                 .AddDbContext<HmmDataContext>(opt =>
                 {
                     opt.UseNpgsql(dataSource);
-                    if (env.IsDevelopment())
+                    if (Environment.IsDevelopment())
                     {
                         opt.EnableSensitiveDataLogging();
                     }
                 })
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
                 .AddScoped<IHmmDataContext, HmmDataContext>()
+                .AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<IHmmDataContext>())
                 .AddScoped<IVersionRepository<HmmNoteDao>, NoteEfRepository>()
                 .AddScoped<ICompositeEntityRepository<TagDao, HmmNoteDao>, TagEfRepository>()
                 .AddScoped<IEntityLookup, EfEntityLookup>()
@@ -193,7 +195,7 @@ namespace Hmm.ServiceApi
 
         private IConfigurationSection SetupConfiguration(IServiceCollection services)
         {
-            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var environmentName = Environment.EnvironmentName;
 
             _invalidModelStateConfig = new InvalidModelStateConfig();
             Configuration.Bind("InvalidModelState", _invalidModelStateConfig);

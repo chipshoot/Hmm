@@ -158,6 +158,15 @@ namespace Hmm.Core.Dal.EF.Repositories
                     return invalidResult;
                 }
 
+                // Check if the tag exists (use AsNoTracking to avoid tracking conflicts)
+                var existingTag = await _dataContext.Set<TagDao>().AsNoTracking().FirstOrDefaultAsync(t => t.Id == entity.Id);
+                if (existingTag == null)
+                {
+                    var notFoundResult = ProcessingResult<TagDao>.NotFound($"Tag with ID {entity.Id} not found");
+                    notFoundResult.LogMessages(_logger);
+                    return notFoundResult;
+                }
+
                 // Check for duplicate tag name (excluding current entity)
                 var existingTagsResult = await _lookupRepository.GetEntitiesAsync<TagDao>(
                     t => t.Name == entity.Name && t.Id != entity.Id);

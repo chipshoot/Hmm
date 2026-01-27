@@ -286,12 +286,6 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Tag>.Fail("Cannot convert Tag to TagDao");
                 }
 
-                var savedTagResult = await _lookup.GetEntityAsync<TagDao>(tag.Id);
-                if (!savedTagResult.Success)
-                {
-                    return ProcessingResult<Tag>.NotFound($"Cannot update tag: {tag.Name}, because system cannot find it in data source");
-                }
-
                 var updatedTagDaoResult = await _tagRepository.UpdateAsync(tagDao);
                 if (!updatedTagDaoResult.Success)
                 {
