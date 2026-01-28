@@ -25,7 +25,7 @@ services:
     container_name: hmm-seq-test
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORDHASH="Password123!"
+      - SEQ_FIRSTRUN_ADMINPASSWORD=Password123!
     ports:
       - 5342:5341
       - 8083:80

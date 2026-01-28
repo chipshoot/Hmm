@@ -19,7 +19,7 @@ services:
     container_name: hmm-seq
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORDHASH=
+      - SEQ_FIRSTRUN_ADMINPASSWORD=Password123!
     ports:
       - 5341:5341
       - 8081:80
