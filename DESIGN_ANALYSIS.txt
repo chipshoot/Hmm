@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-26 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #33, #34, #75, #76, #78, #82)
+Last Updated: 2026-01-27 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #33, #34, #35, #75, #76, #78, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (31 resolved, 1 partially resolved)
+Total Defects Found: 107+ (32 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -480,11 +480,21 @@ PERFORMANCE ISSUES (P1 - SCALABILITY IMPACT)
     - Second pass: Match parsed data with retrieved discounts
     Impact: Deserializing gas log with 5 discounts now uses 1 query instead of 5
 
-35. **REDUNDANT DATABASE ROUNDTRIP IN UPDATE**
-    Location: All managers (e.g., HmmNoteManager.cs:141, AuthorManager.cs:152)
+35. **[RESOLVED] REDUNDANT DATABASE ROUNDTRIP IN UPDATE**
+    Status: ✓ FIXED (Verified 2026-01-27)
+    Location: All managers (e.g., HmmNoteManager.cs, AuthorManager.cs)
     Problem: UpdateAsync calls GetByIdAsync before repository.UpdateAsync
-    Impact: 2× database calls for every update operation
-    Fix: Repository already checks existence, remove redundant Get
+    Resolution: Core managers optimized to not call GetByIdAsync before UpdateAsync
+    Changes verified:
+    - HmmNoteManager.UpdateAsync: Validates → Maps → Repository.UpdateAsync (no redundant Get)
+    - AuthorManager.UpdateAsync: Validates → Maps → Repository.UpdateAsync (no redundant Get)
+    - TagManager.UpdateAsync: Validates → Maps → Repository.UpdateAsync (no redundant Get)
+    - ContactManager.UpdateAsync: Validates → Maps → Repository.UpdateAsync (no redundant Get)
+    - NoteCatalogManager.UpdateAsync: Validates → Maps → Repository.UpdateAsync (no redundant Get)
+    Note on Automobile managers: AutomobileManager and GasLogManager DO call GetEntityByIdAsync
+    before update, but this is required for their merge pattern (fetching existing entity to
+    copy properties onto). This is legitimate usage, not redundant.
+    Impact: Core managers now use optimal 1 DB call for update (repository existence check + update)
 
 36. **RUNTIME EXPRESSION BUILDING WITHOUT CACHING**
     Location: All GetEntitiesAsync methods (AuthorManager.cs:38-55)
@@ -978,7 +988,7 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (31 resolved, 1 partially resolved)
+Total Defects Found: 107+ (32 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
 Critical (P1): 40 (16 resolved: #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #33, #34)
@@ -988,7 +998,7 @@ Technical Debt (P3): 16+ (4 resolved: #75, #76, #78, #82)
 By Category:
 - Business Logic Bugs: 8
 - Security Issues: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
-- Performance Issues: 9 (2 resolved: #33, #34)
+- Performance Issues: 9 (3 resolved: #33, #34, #35)
 - Thread Safety: 4
 - Code Duplication: 6
 - SOLID Violations: 15 (8 resolved: #13, #14, #15, #16, #17, #18, #19, #20)
