@@ -30,6 +30,7 @@ timeout /t 30 /nobreak
 REM Run the Seq container for logging
 docker run --name %SEQ_CONTAINER_NAME% ^
   -e "ACCEPT_EULA=Y" ^
+  -e "SEQ_FIRSTRUN_ADMINPASSWORDHASH=Password123!" ^
   -p 5341:5341 ^
   -p 8081:80 ^
   --network %NETWORK_NAME% ^
