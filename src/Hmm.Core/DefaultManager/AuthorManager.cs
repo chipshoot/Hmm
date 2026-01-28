@@ -44,24 +44,8 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                Expression<Func<AuthorDao, bool>> isActivatedExpression = t => t.IsActivated;
-                Expression<Func<AuthorDao, bool>> daoQuery = null;
-                if (query != null)
-                {
-                    var mappedQuery = ExpressionMapper<Author, AuthorDao>.MapExpression(query);
-
-                    // Combine the mapped query with the IsActivated expression
-                    var parameter = Expression.Parameter(typeof(AuthorDao), "a");
-                    var body = Expression.AndAlso(
-                        Expression.Invoke(mappedQuery, parameter),
-                        Expression.Invoke(isActivatedExpression, parameter)
-                    );
-                    daoQuery = Expression.Lambda<Func<AuthorDao, bool>>(body, parameter);
-                }
-                else
-                {
-                    daoQuery = isActivatedExpression;
-                }
+                // Use cached expression helper to combine query with IsActivated filter
+                var daoQuery = ExpressionHelper.CombineWithIsActivated<Author, AuthorDao>(query);
 
                 var authorDaosResult = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
                 if (!authorDaosResult.Success)

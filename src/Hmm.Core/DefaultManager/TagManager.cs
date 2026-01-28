@@ -37,24 +37,8 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                Expression<Func<TagDao, bool>> isActivatedExpression = t => t.IsActivated;
-                Expression<Func<TagDao, bool>> daoQuery;
-                if (query != null)
-                {
-                    var mappedQuery = ExpressionMapper<Tag, TagDao>.MapExpression(query);
-
-                    // Combine the mapped query with the IsActivated expression
-                    var parameter = Expression.Parameter(typeof(TagDao), "t");
-                    var body = Expression.AndAlso(
-                        Expression.Invoke(mappedQuery, parameter),
-                        Expression.Invoke(isActivatedExpression, parameter)
-                    );
-                    daoQuery = Expression.Lambda<Func<TagDao, bool>>(body, parameter);
-                }
-                else
-                {
-                    daoQuery = isActivatedExpression;
-                }
+                // Use cached expression helper to combine query with IsActivated filter
+                var daoQuery = ExpressionHelper.CombineWithIsActivated<Tag, TagDao>(query);
 
                 var tagDaosResult = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
                 if (!tagDaosResult.Success)

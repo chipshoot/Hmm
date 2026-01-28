@@ -37,24 +37,8 @@ public class ContactManager : IContactManager
     {
         try
         {
-            Expression<Func<ContactDao, bool>> isActivatedExpression = t => t.IsActivated;
-            Expression<Func<ContactDao, bool>> daoQuery = null;
-            if (query != null)
-            {
-                var mappedQuery = ExpressionMapper<Contact, ContactDao>.MapExpression(query);
-
-                // Combine the mapped query with the IsActivated expression
-                var parameter = Expression.Parameter(typeof(ContactDao), "c");
-                var body = Expression.AndAlso(
-                    Expression.Invoke(mappedQuery, parameter),
-                    Expression.Invoke(isActivatedExpression, parameter)
-                );
-                daoQuery = Expression.Lambda<Func<ContactDao, bool>>(body, parameter);
-            }
-            else
-            {
-                daoQuery = isActivatedExpression;
-            }
+            // Use cached expression helper to combine query with IsActivated filter
+            var daoQuery = ExpressionHelper.CombineWithIsActivated<Contact, ContactDao>(query);
 
             var contactDaosResult = await _contactDaoRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
             if (!contactDaosResult.Success)
