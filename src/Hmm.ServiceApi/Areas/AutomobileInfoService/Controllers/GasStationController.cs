@@ -42,8 +42,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/gasstations
         [HttpGet(Name = "GetGasStations")]
-        [GasStationsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(GasStationsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<ActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var result = await _stationManager.GetEntitiesAsync(resourceCollectionParameters);
@@ -63,8 +63,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/gasstations/active
         [HttpGet("active", Name = "GetActiveGasStations")]
-        [GasStationsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(GasStationsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<ActionResult> GetActive([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var result = await _stationManager.GetActiveStationsAsync(resourceCollectionParameters);
@@ -84,7 +84,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/gasstations/1
         [HttpGet("{id:int}", Name = "GetGasStationById")]
-        [GasStationResultFilter]
+        [TypeFilter(typeof(GasStationResultFilter))]
         public async Task<IActionResult> Get(int id)
         {
             var result = await _stationManager.GetEntityByIdAsync(id);
@@ -102,7 +102,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/gasstations/byname/{name}
         [HttpGet("byname/{name}", Name = "GetGasStationByName")]
-        [GasStationResultFilter]
+        [TypeFilter(typeof(GasStationResultFilter))]
         public async Task<IActionResult> GetByName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -125,7 +125,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // POST api/automobiles/gasstations
         [HttpPost(Name = "AddGasStation")]
-        [GasStationResultFilter]
+        [TypeFilter(typeof(GasStationResultFilter))]
         public async Task<ActionResult> Post(ApiGasStationForCreate apiStation)
         {
             if (apiStation == null)

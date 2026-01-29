@@ -1,44 +1,42 @@
 using AutoMapper;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.ServiceApi.Filters;
+using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using System.Threading.Tasks;
-using Hmm.Utility.Dal.Query;
 
-namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
+namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
+
+/// <summary>
+/// Result filter that transforms a PageList of GasDiscount to PageList of ApiDiscount.
+/// Apply using [TypeFilter(typeof(GasDiscountsResultFilter))].
+/// </summary>
+public class GasDiscountsResultFilter : ResultFilterBase
 {
-    public class GasDiscountsResultFilterAttribute : ResultFilterAttribute
+    public GasDiscountsResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is PageList<GasDiscount> discounts && discounts.Any())
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
+            var result = Mapper.Map<PageList<GasDiscount>, PageList<ApiDiscount>>(discounts);
+            foreach (var discount in result)
             {
-                await next();
-                return;
+                discount.CreateLinks(context, LinkGenerator);
             }
-
-            if (resultFromAction.Value is PageList<GasDiscount> discounts && discounts.Any())
-            {
-                var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-                var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-
-                if (mapper != null)
-                {
-                    var result = mapper.Map<PageList<GasDiscount>, PageList<ApiDiscount>>(discounts);
-                    foreach (var discount in result)
-                    {
-                        discount.CreateLinks(context, linkGen);
-                    }
-                    resultFromAction.Value = result;
-                }
-            }
-            await next();
+            resultFromAction.Value = result;
         }
+
+        return next();
     }
 }

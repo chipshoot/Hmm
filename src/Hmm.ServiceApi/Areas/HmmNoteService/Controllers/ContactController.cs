@@ -48,8 +48,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         #endregion constructor
 
         [HttpGet(Name = "GetContacts")]
-        [ContactsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(ContactsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var contactsResult = await _contactManager.GetContactsAsync(null, resourceCollectionParameters);
@@ -68,7 +68,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet("{id:int}", Name = "GetContactById")]
-        [ContactResultFilter]
+        [TypeFilter(typeof(ContactResultFilter))]
         public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
@@ -92,7 +92,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // POST api/contacts
         [HttpPost(Name = "AddContact")]
-        [ContactResultFilter]
+        [TypeFilter(typeof(ContactResultFilter))]
         public async Task<IActionResult> Post(ApiContactForCreate contact)
         {
             try

@@ -1,36 +1,37 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 
-namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
+namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+
+/// <summary>
+/// Result filter that transforms a single Tag to ApiTag.
+/// Apply using [TypeFilter(typeof(TagResultFilter))].
+/// </summary>
+public class TagResultFilter : ResultFilterBase
 {
-    public class TagResultFilterAttribute : ResultFilterAttribute
+    public TagResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is Tag tag)
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
-            {
-                await next();
-                return;
-            }
-
-            var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-            var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-            if (mapper != null)
-            {
-                var newApiTag = mapper.Map<Tag, ApiTag>(resultFromAction.Value as Tag);
-                newApiTag.CreateLinks(context, linkGen);
-                resultFromAction.Value = newApiTag;
-            }
-
-            await next();
+            var apiTag = Mapper.Map<Tag, ApiTag>(tag);
+            apiTag.CreateLinks(context, LinkGenerator);
+            resultFromAction.Value = apiTag;
         }
+
+        return next();
     }
 }

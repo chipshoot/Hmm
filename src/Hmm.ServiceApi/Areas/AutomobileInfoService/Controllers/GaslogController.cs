@@ -65,8 +65,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/1/gaslogs
         [HttpGet(Name = "GetGasLogs")]
-        [GasLogsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(GasLogsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<ActionResult> Get(int autoId, [FromQuery] GasLogResourceParameters resourceParameters)
         {
             if (!string.IsNullOrEmpty(resourceParameters.OrderBy))
@@ -110,7 +110,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/1/gaslogs/5
         [HttpGet("{id:int}", Name = "GetGasLogById")]
-        [GasLogResultFilter]
+        [TypeFilter(typeof(GasLogResultFilter))]
         public async Task<ActionResult> Get(int autoId, int id, string fields)
         {
             var checkResult = _propertyCheckService.TypeHasProperties<ApiGasLog>(fields);
@@ -140,7 +140,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // POST api/automobiles/1/gaslogs/historyLog
         [HttpPost("historylog", Name = "AddHistoryGasLog")]
-        [GasLogResultFilter]
+        [TypeFilter(typeof(GasLogResultFilter))]
         public async Task<ActionResult> HistoryLog(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
         {
             if (apiGasLog == null)
@@ -190,7 +190,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // POST api/automobiles/1/gaslogs
         [HttpPost(Name = "AddGasLog")]
-        [GasLogResultFilter]
+        [TypeFilter(typeof(GasLogResultFilter))]
         public async Task<ActionResult> Post(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
         {
             if (apiGasLog == null)

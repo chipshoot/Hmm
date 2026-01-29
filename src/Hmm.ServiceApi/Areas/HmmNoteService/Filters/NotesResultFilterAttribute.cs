@@ -1,44 +1,43 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.Filters;
 using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
+namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+
+/// <summary>
+/// Result filter that transforms a PageList of HmmNote to PageList of ApiNote.
+/// Apply using [TypeFilter(typeof(NotesResultFilter))].
+/// </summary>
+public class NotesResultFilter : ResultFilterBase
 {
-    public class NotesResultFilterAttribute : ResultFilterAttribute
+    public NotesResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is PageList<HmmNote> notes && notes.Any())
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
+            var result = Mapper.Map<PageList<HmmNote>, PageList<ApiNote>>(notes);
+            foreach (var note in result)
             {
-                await next();
-                return;
+                note.CreateLinks(context, LinkGenerator);
             }
 
-            if (resultFromAction.Value is PageList<HmmNote> notes && notes.Any())
-            {
-                var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-                var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-                if (mapper != null)
-                {
-                    var result = mapper.Map<PageList<HmmNote>, PageList<ApiNote>>(notes);
-                    foreach (var note in result)
-                    {
-                        note.CreateLinks(context, linkGen);
-                    }
-
-                    resultFromAction.Value = result;
-                }
-            }
-            await next();
+            resultFromAction.Value = result;
         }
+
+        return next();
     }
 }

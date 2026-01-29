@@ -2,27 +2,33 @@ using AutoMapper;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.ServiceApi.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
-{
-    public class GasLogResultFilterAttribute : ResultFilterAttribute
-    {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
-        {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
-            {
-                await next();
-                return;
-            }
+namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 
+/// <summary>
+/// Result filter that transforms a single GasLog to ApiGasLog with data shaping.
+/// Apply using [TypeFilter(typeof(GasLogResultFilter))].
+/// </summary>
+public class GasLogResultFilter : ResultFilterBase
+{
+    public GasLogResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
+    {
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is GasLog gasLog)
+        {
             // Get resource collection parameter
             var paraDesc = context.ActionDescriptor.Parameters.FirstOrDefault(t => t.Name.IsFieldsParameter());
             var fields = string.Empty;
@@ -31,18 +37,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
                 fields = context.HttpContext.Request.Query[paraDesc.Name].ToString();
             }
 
-            var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-            var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-            if (mapper != null)
-            {
-                var gasLog = resultFromAction.Value as GasLog;
-                var newApiGasLog = mapper.Map<GasLog, ApiGasLog>(gasLog);
-                newApiGasLog.CreateLinks(context, linkGen, gasLog.Car.Id);
-                var links = newApiGasLog.Links;
-                resultFromAction.Value = new { value = newApiGasLog.ShapeData(fields), links };
-            }
-
-            await next();
+            var apiGasLog = Mapper.Map<GasLog, ApiGasLog>(gasLog);
+            apiGasLog.CreateLinks(context, LinkGenerator, gasLog.Car.Id);
+            var links = apiGasLog.Links;
+            resultFromAction.Value = new { value = apiGasLog.ShapeData(fields), links };
         }
+
+        return next();
     }
 }

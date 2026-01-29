@@ -42,8 +42,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/gaslogs/discounts
         [HttpGet(Name = "GetGasDiscounts")]
-        [GasDiscountsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(GasDiscountsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<ActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var result = await _discountManager.GetEntitiesAsync(resourceCollectionParameters);
@@ -63,7 +63,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles/gaslogs/discounts/1
         [HttpGet("{id:int}", Name = "GetGasDiscountById")]
-        [GasDiscountResultFilter]
+        [TypeFilter(typeof(GasDiscountResultFilter))]
         public async Task<IActionResult> Get(int id)
         {
             var result = await _discountManager.GetEntityByIdAsync(id);
@@ -81,7 +81,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // POST api/automobiles/gaslogs/discounts
         [HttpPost(Name = "AddGasDiscount")]
-        [GasDiscountResultFilter]
+        [TypeFilter(typeof(GasDiscountResultFilter))]
         public async Task<ActionResult> Post(ApiDiscountForCreate apiDiscount)
         {
             var discount = _mapper.Map<GasDiscount>(apiDiscount);

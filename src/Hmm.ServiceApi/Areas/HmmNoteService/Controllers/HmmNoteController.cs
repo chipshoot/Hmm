@@ -41,8 +41,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet(Name = "GetNotes")]
-        [NotesResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(NotesResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var noteListResult = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);
@@ -62,7 +62,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet("{id:int}", Name = "GetNoteById")]
-        [NoteResultFilter]
+        [TypeFilter(typeof(NoteResultFilter))]
         public async Task<IActionResult> Get(int id)
         {
             var noteResult = await _noteManager.GetNoteByIdAsync(id);
@@ -82,7 +82,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // POST api/notes
         [HttpPost(Name = "AddNote")]
-        [NoteResultFilter]
+        [TypeFilter(typeof(NoteResultFilter))]
         public async Task<IActionResult> Post([FromBody] ApiNoteForCreate note)
         {
             try

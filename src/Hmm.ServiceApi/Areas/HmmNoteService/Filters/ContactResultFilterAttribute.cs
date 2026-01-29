@@ -1,36 +1,37 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
-using Hmm.Core.Map.DomainEntity;
 
-namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
+namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+
+/// <summary>
+/// Result filter that transforms a single Contact to ApiContact.
+/// Apply using [TypeFilter(typeof(ContactResultFilter))].
+/// </summary>
+public class ContactResultFilter : ResultFilterBase
 {
-    public class ContactResultFilterAttribute : ResultFilterAttribute
+    public ContactResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is Contact contact)
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
-            {
-                await next();
-                return;
-            }
-
-            var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-            var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-            if (mapper != null)
-            {
-                var newApiContact = mapper.Map<Contact, ApiContact>(resultFromAction.Value as Contact);
-                newApiContact.CreateLinks(context, linkGen);
-                resultFromAction.Value = newApiContact;
-            }
-
-            await next();
+            var apiContact = Mapper.Map<Contact, ApiContact>(contact);
+            apiContact.CreateLinks(context, LinkGenerator);
+            resultFromAction.Value = apiContact;
         }
+
+        return next();
     }
 }

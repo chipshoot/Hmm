@@ -46,8 +46,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         #endregion constructor
 
         [HttpGet(Name = "GetTags")]
-        [TagsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(TagsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var tagsResult = await _tagManager.GetEntitiesAsync(null, resourceCollectionParameters);
@@ -66,7 +66,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet("{id:int}", Name = "GetTagById")]
-        [TagResultFilter]
+        [TypeFilter(typeof(TagResultFilter))]
         public async Task<IActionResult> Get(int id)
         {
             var tagResult = await _tagManager.GetTagByIdAsync(id);
@@ -84,7 +84,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet("{name}", Name = "GetTagByName")]
-        [TagResultFilter]
+        [TypeFilter(typeof(TagResultFilter))]
         public async Task<IActionResult> Get(string name)
         {
             var tagResult = await _tagManager.GetTagByNameAsync(name);
@@ -103,7 +103,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // POST api/tags
         [HttpPost(Name = "AddTag")]
-        [TagResultFilter]
+        [TypeFilter(typeof(TagResultFilter))]
         public async Task<IActionResult> Post([FromBody] ApiTagForCreate apiTag)
         {
             try

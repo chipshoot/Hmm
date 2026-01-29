@@ -44,8 +44,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // GET api/automobiles
         [HttpGet(Name = "GetAutomobiles")]
-        [AutomobilesResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(AutomobilesResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<IActionResult> GetMobiles([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var result = await _automobileManager.GetEntitiesAsync(resourceCollectionParameters);
@@ -66,7 +66,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/1
         [HttpGet("{id:int}", Name = "GetAutomobileById")]
         [HttpHead]
-        [AutomobileResultFilter]
+        [TypeFilter(typeof(AutomobileResultFilter))]
         public async Task<IActionResult> GetAutomobileById(int id)
         {
             var result = await _automobileManager.GetEntityByIdAsync(id);
@@ -84,7 +84,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // POST api/automobiles
         [HttpPost(Name = "AddAutomobile")]
-        [AutomobileResultFilter]
+        [TypeFilter(typeof(AutomobileResultFilter))]
         public async Task<ActionResult> CreateAutomobile(ApiAutomobileForCreate apiCar)
         {
             var car = _mapper.Map<AutomobileInfo>(apiCar);

@@ -51,8 +51,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         #endregion constructor
 
         [HttpGet(Name = "GetAuthors")]
-        [AuthorsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(AuthorsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var authorsResult = await _authorManager.GetEntitiesAsync(null, resourceCollectionParameters);
@@ -71,7 +71,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet("{id:int}", Name = "GetAuthorById")]
-        [AuthorResultFilter]
+        [TypeFilter(typeof(AuthorResultFilter))]
         public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
@@ -134,7 +134,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // POST api/authors
         [HttpPost(Name = "AddAuthor")]
-        [AuthorResultFilter]
+        [TypeFilter(typeof(AuthorResultFilter))]
         public async Task<IActionResult> Post(ApiAuthorForCreate author)
         {
             try

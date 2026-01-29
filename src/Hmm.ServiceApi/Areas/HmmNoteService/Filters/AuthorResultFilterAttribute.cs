@@ -1,36 +1,37 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
-using Hmm.Core.Map.DomainEntity;
 
-namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
+namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+
+/// <summary>
+/// Result filter that transforms a single Author to ApiAuthor.
+/// Apply using [TypeFilter(typeof(AuthorResultFilter))].
+/// </summary>
+public class AuthorResultFilter : ResultFilterBase
 {
-    public class AuthorResultFilterAttribute : ResultFilterAttribute
+    public AuthorResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is Author author)
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
-            {
-                await next();
-                return;
-            }
-
-            var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-            var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-            if (mapper != null)
-            {
-                var newApiAuthor = mapper.Map<Author, ApiAuthor>(resultFromAction.Value as Author);
-                newApiAuthor.CreateLinks(context, linkGen);
-                resultFromAction.Value = newApiAuthor;
-            }
-
-            await next();
+            var apiAuthor = Mapper.Map<Author, ApiAuthor>(author);
+            apiAuthor.CreateLinks(context, LinkGenerator);
+            resultFromAction.Value = apiAuthor;
         }
+
+        return next();
     }
 }

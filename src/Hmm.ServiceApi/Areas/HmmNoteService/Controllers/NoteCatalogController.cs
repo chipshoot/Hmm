@@ -46,8 +46,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         #endregion constructor
 
         [HttpGet(Name = "GetNoteCatalogs")]
-        [NoteCatalogsResultFilter]
-        [CollectionResultFilter]
+        [TypeFilter(typeof(NoteCatalogsResultFilter))]
+        [TypeFilter(typeof(CollectionResultFilter))]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var noteCatalogsResult = await _catalogManager.GetEntitiesAsync(null, resourceCollectionParameters);
@@ -66,7 +66,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         }
 
         [HttpGet("{id:int}", Name = "GetNoteCatalogById")]
-        [NoteCatalogResultFilter]
+        [TypeFilter(typeof(NoteCatalogResultFilter))]
         public async Task<IActionResult> Get(int id)
         {
             var catalogResult = await _catalogManager.GetEntityByIdAsync(id);
@@ -85,7 +85,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // POST api/notecatalogs
         [HttpPost(Name = "AddNoteCatalog")]
-        [NoteCatalogResultFilter]
+        [TypeFilter(typeof(NoteCatalogResultFilter))]
         public async Task<IActionResult> Post([FromBody] ApiNoteCatalogForCreate catalog)
         {
             try

@@ -1,36 +1,37 @@
 using AutoMapper;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.ServiceApi.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 
-namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
+namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
+
+/// <summary>
+/// Result filter that transforms a single AutomobileInfo to ApiAutomobile.
+/// Apply using [TypeFilter(typeof(AutomobileResultFilter))].
+/// </summary>
+public class AutomobileResultFilter : ResultFilterBase
 {
-    public class AutomobileResultFilterAttribute : ResultFilterAttribute
+    public AutomobileResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is AutomobileInfo auto)
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
-            {
-                await next();
-                return;
-            }
-
-            var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-            var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-            if (mapper != null)
-            {
-                var newApiAuto = mapper.Map<AutomobileInfo, ApiAutomobile>(resultFromAction.Value as AutomobileInfo);
-                newApiAuto.CreateLinks(context, linkGen);
-                resultFromAction.Value = newApiAuto;
-            }
-
-            await next();
+            var apiAuto = Mapper.Map<AutomobileInfo, ApiAutomobile>(auto);
+            apiAuto.CreateLinks(context, LinkGenerator);
+            resultFromAction.Value = apiAuto;
         }
+
+        return next();
     }
 }

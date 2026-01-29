@@ -1,44 +1,42 @@
 using AutoMapper;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.ServiceApi.Filters;
+using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using System.Threading.Tasks;
-using Hmm.Utility.Dal.Query;
 
-namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters
+namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
+
+/// <summary>
+/// Result filter that transforms a PageList of GasStation to PageList of ApiGasStation.
+/// Apply using [TypeFilter(typeof(GasStationsResultFilter))].
+/// </summary>
+public class GasStationsResultFilter : ResultFilterBase
 {
-    public class GasStationsResultFilterAttribute : ResultFilterAttribute
+    public GasStationsResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is PageList<GasStation> stations && stations.Any())
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
+            var result = Mapper.Map<PageList<GasStation>, PageList<ApiGasStation>>(stations);
+            foreach (var station in result)
             {
-                await next();
-                return;
+                station.CreateLinks(context, LinkGenerator);
             }
-
-            if (resultFromAction.Value is PageList<GasStation> stations && stations.Any())
-            {
-                var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-                var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-
-                if (mapper != null)
-                {
-                    var result = mapper.Map<PageList<GasStation>, PageList<ApiGasStation>>(stations);
-                    foreach (var station in result)
-                    {
-                        station.CreateLinks(context, linkGen);
-                    }
-                    resultFromAction.Value = result;
-                }
-            }
-            await next();
+            resultFromAction.Value = result;
         }
+
+        return next();
     }
 }

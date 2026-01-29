@@ -1,44 +1,43 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.Filters;
 using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
+namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+
+/// <summary>
+/// Result filter that transforms a PageList of Contact to PageList of ApiContact.
+/// Apply using [TypeFilter(typeof(ContactsResultFilter))].
+/// </summary>
+public class ContactsResultFilter : ResultFilterBase
 {
-    public class ContactsResultFilterAttribute : ResultFilterAttribute
+    public ContactsResultFilter(IMapper mapper, LinkGenerator linkGenerator)
+        : base(mapper, linkGenerator)
     {
-        public override async Task OnResultExecutionAsync(ResultExecutingContext context, ResultExecutionDelegate next)
+    }
+
+    protected override Task TransformResultAsync(
+        ResultExecutingContext context,
+        ObjectResult resultFromAction,
+        ResultExecutionDelegate next)
+    {
+        if (resultFromAction.Value is PageList<Contact> contacts && contacts.Any())
         {
-            var resultFromAction = context.Result as ObjectResult;
-            if (resultFromAction?.Value == null ||
-                resultFromAction.StatusCode is < 200 or >= 300)
+            var result = Mapper.Map<PageList<Contact>, PageList<ApiContact>>(contacts);
+            foreach (var contact in result)
             {
-                await next();
-                return;
+                contact.CreateLinks(context, LinkGenerator);
             }
 
-            if (resultFromAction.Value is PageList<Contact> contacts && contacts.Any())
-            {
-                var mapper = context.HttpContext.RequestServices.GetRequiredService<IMapper>();
-                var linkGen = context.HttpContext.RequestServices.GetRequiredService<LinkGenerator>();
-                if (mapper != null)
-                {
-                    var result = mapper.Map<PageList<Contact>, PageList<ApiContact>>(contacts);
-                    foreach (var contact in result)
-                    {
-                        contact.CreateLinks(context, linkGen);
-                    }
-
-                    resultFromAction.Value = result;
-                }
-            }
-            await next();
+            resultFromAction.Value = result;
         }
+
+        return next();
     }
 }
