@@ -431,12 +431,24 @@ CODE DUPLICATION (P1 - HIGH MAINTENANCE BURDEN)
     - Added 11 unit tests in UniqueNameValidationHelperTests.cs
     Impact: ~80 lines of duplicate validation logic consolidated into single reusable helper
 
-28. **DUPLICATE EXPRESSION BUILDING (~60 lines × 3)**
-    Location: AuthorManager.cs:39-56
-             TagManager.cs:38-55
-             ContactManager.cs:39-56
-    Problem: Complex expression building for IsActivated filtering
-    Fix: Create ExpressionHelper.CombineWithIsActivated<T>()
+28. **[RESOLVED] DUPLICATE EXPRESSION BUILDING (~60 lines × 3)**
+    Status: FIXED (Verified 2026-01-28)
+    Location: AuthorManager.cs, TagManager.cs, ContactManager.cs
+    Problem: Complex expression building for IsActivated filtering was duplicated
+    Resolution: Created ExpressionHelper static class with cached expression building
+    Changes made:
+    - Created src/Hmm.Core.Map/ExpressionHelper.cs:
+      * GetCachedParameter<T>() - cached parameter expressions
+      * GetIsActivatedExpression<T>() - cached IsActivated filter expressions
+      * CombineWithIsActivated<TSource, TDest>() - combines query with IsActivated filter
+      * CombineExpressions<T>() - combines two expressions with AndAlso
+      * ParameterReplacer - expression visitor for parameter unification
+    - Refactored managers to use ExpressionHelper:
+      * AuthorManager.GetEntitiesAsync: uses CombineWithIsActivated<Author, AuthorDao>
+      * TagManager.GetEntitiesAsync: uses CombineWithIsActivated<Tag, TagDao>
+      * ContactManager.GetContactsAsync: uses CombineWithIsActivated<Contact, ContactDao>
+    - Added 11 unit tests in ExpressionHelperTests.cs
+    Impact: ~60 lines of duplicate expression building consolidated; expressions cached for performance
 
 29. **[RESOLVED] DUPLICATE DEACTIVATE IMPLEMENTATION (~30 lines × 3)**
     Status: FIXED (Verified 2026-01-28)
