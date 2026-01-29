@@ -77,13 +77,7 @@ namespace Hmm.Core.DefaultManager
                 return ProcessingResult<Author>.Deleted($"Author with ID {id} has been deactivated");
             }
 
-            var author = _mapper.Map<Author>(authorDao);
-            if (author == null)
-            {
-                return ProcessingResult<Author>.Fail("Cannot convert AuthorDao to Author");
-            }
-
-            return ProcessingResult<Author>.Ok(author);
+            return _mapper.MapWithNullCheck<AuthorDao, Author>(authorDao);
         }
 
         public async Task<bool> IsAuthorExistsAsync(int id)
@@ -109,13 +103,13 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Author>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                var userDao = _mapper.Map<AuthorDao>(authorInfo);
-                if (userDao == null)
+                var userDaoResult = _mapper.MapWithNullCheck<Author, AuthorDao>(authorInfo);
+                if (!userDaoResult.Success)
                 {
-                    return ProcessingResult<Author>.Fail("Cannot convert Author to AuthorDao");
+                    return ProcessingResult<Author>.Fail(userDaoResult.ErrorMessage);
                 }
 
-                var addedUsrDaoResult = await _authorRepository.AddAsync(userDao);
+                var addedUsrDaoResult = await _authorRepository.AddAsync(userDaoResult.Value);
                 if (!addedUsrDaoResult.Success)
                 {
                     return ProcessingResult<Author>.Fail(addedUsrDaoResult.ErrorMessage, addedUsrDaoResult.ErrorType);
@@ -142,13 +136,13 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Author>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                var authorDao = _mapper.Map<AuthorDao>(authorInfo);
-                if (authorDao == null)
+                var authorDaoResult = _mapper.MapWithNullCheck<Author, AuthorDao>(authorInfo);
+                if (!authorDaoResult.Success)
                 {
-                    return ProcessingResult<Author>.Fail("Cannot convert Author to AuthorDao");
+                    return ProcessingResult<Author>.Fail(authorDaoResult.ErrorMessage);
                 }
 
-                var updatedUserDaoResult = await _authorRepository.UpdateAsync(authorDao);
+                var updatedUserDaoResult = await _authorRepository.UpdateAsync(authorDaoResult.Value);
                 if (!updatedUserDaoResult.Success)
                 {
                     return ProcessingResult<Author>.Fail(updatedUserDaoResult.ErrorMessage, updatedUserDaoResult.ErrorType);
@@ -156,13 +150,7 @@ namespace Hmm.Core.DefaultManager
 
                 await _unitOfWork.CommitAsync();
 
-                var updatedUser = _mapper.Map<Author>(updatedUserDaoResult.Value);
-                if (updatedUser == null)
-                {
-                    return ProcessingResult<Author>.Fail("Cannot convert AuthorDao to Author");
-                }
-
-                return ProcessingResult<Author>.Ok(updatedUser);
+                return _mapper.MapWithNullCheck<AuthorDao, Author>(updatedUserDaoResult.Value);
             }
             catch (Exception ex)
             {

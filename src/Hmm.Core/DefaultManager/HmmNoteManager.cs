@@ -89,13 +89,7 @@ namespace Hmm.Core.DefaultManager
                 return ProcessingResult<HmmNote>.Deleted($"Note with ID {id} has been deleted");
             }
 
-            var note = _mapper.Map<HmmNote>(noteDao);
-            if (note == null)
-            {
-                return ProcessingResult<HmmNote>.Fail("Cannot convert HmmNoteDao to HmmNote");
-            }
-
-            return ProcessingResult<HmmNote>.Ok(note);
+            return _mapper.MapWithNullCheck<HmmNoteDao, HmmNote>(noteDao);
         }
 
         public async Task<ProcessingResult<HmmNote>> CreateAsync(HmmNote note)
@@ -110,13 +104,13 @@ namespace Hmm.Core.DefaultManager
 
                 note.CreateDate = _dateProvider.UtcNow;
                 note.LastModifiedDate = _dateProvider.UtcNow;
-                var noteDao = _mapper.Map<HmmNoteDao>(note);
-                if (noteDao == null)
+                var noteDaoResult = _mapper.MapWithNullCheck<HmmNote, HmmNoteDao>(note, $"Cannot convert note {note.Subject} to NoteDao");
+                if (!noteDaoResult.Success)
                 {
-                    return ProcessingResult<HmmNote>.Fail($"Cannot convert note {note.Subject} to NoteDao");
+                    return ProcessingResult<HmmNote>.Fail(noteDaoResult.ErrorMessage);
                 }
 
-                var addedNoteDaoResult = await _noteRepository.AddAsync(noteDao);
+                var addedNoteDaoResult = await _noteRepository.AddAsync(noteDaoResult.Value);
                 if (!addedNoteDaoResult.Success)
                 {
                     return ProcessingResult<HmmNote>.Fail(addedNoteDaoResult.ErrorMessage, addedNoteDaoResult.ErrorType);
@@ -143,12 +137,13 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<HmmNote>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                var noteDao = _mapper.Map<HmmNoteDao>(note);
-                if (noteDao == null)
+                var noteDaoResult = _mapper.MapWithNullCheck<HmmNote, HmmNoteDao>(note, $"Cannot convert note {note.Subject} to NoteDao");
+                if (!noteDaoResult.Success)
                 {
-                    return ProcessingResult<HmmNote>.Fail($"Cannot convert note {note.Subject} to NoteDao");
+                    return ProcessingResult<HmmNote>.Fail(noteDaoResult.ErrorMessage);
                 }
 
+                var noteDao = noteDaoResult.Value;
                 noteDao.LastModifiedDate = _dateProvider.UtcNow;
                 var updatedNoteDaoResult = await _noteRepository.UpdateAsync(noteDao);
                 if (!updatedNoteDaoResult.Success)
@@ -158,13 +153,7 @@ namespace Hmm.Core.DefaultManager
 
                 await _unitOfWork.CommitAsync();
 
-                var updatedNote = _mapper.Map<HmmNote>(updatedNoteDaoResult.Value);
-                if (updatedNote == null)
-                {
-                    return ProcessingResult<HmmNote>.Fail("Cannot convert NoteDao to HmmNote");
-                }
-
-                return ProcessingResult<HmmNote>.Ok(updatedNote);
+                return _mapper.MapWithNullCheck<HmmNoteDao, HmmNote>(updatedNoteDaoResult.Value);
             }
             catch (Exception ex)
             {

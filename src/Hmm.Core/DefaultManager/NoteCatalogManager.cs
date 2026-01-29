@@ -67,14 +67,7 @@ namespace Hmm.Core.DefaultManager
                 return ProcessingResult<NoteCatalog>.Fail(catalogDaoResult.ErrorMessage, catalogDaoResult.ErrorType);
             }
 
-            var catalogDao = catalogDaoResult.Value;
-            var catalog = _mapper.Map<NoteCatalog>(catalogDao);
-            if (catalog == null)
-            {
-                return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalogDao to NoteCatalog");
-            }
-
-            return ProcessingResult<NoteCatalog>.Ok(catalog);
+            return _mapper.MapWithNullCheck<NoteCatalogDao, NoteCatalog>(catalogDaoResult.Value);
         }
 
         public async Task<ProcessingResult<NoteCatalog>> CreateAsync(NoteCatalog catalog)
@@ -87,13 +80,13 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<NoteCatalog>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                var catalogDao = _mapper.Map<NoteCatalogDao>(catalog);
-                if (catalogDao == null)
+                var catalogDaoResult = _mapper.MapWithNullCheck<NoteCatalog, NoteCatalogDao>(catalog);
+                if (!catalogDaoResult.Success)
                 {
-                    return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalog to NoteCatalogDao");
+                    return ProcessingResult<NoteCatalog>.Fail(catalogDaoResult.ErrorMessage);
                 }
 
-                var addedCatalogDaoResult = await _catalogRepository.AddAsync(catalogDao);
+                var addedCatalogDaoResult = await _catalogRepository.AddAsync(catalogDaoResult.Value);
                 if (!addedCatalogDaoResult.Success)
                 {
                     return ProcessingResult<NoteCatalog>.Fail(addedCatalogDaoResult.ErrorMessage, addedCatalogDaoResult.ErrorType);
@@ -118,25 +111,19 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<NoteCatalog>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                var catalogDao = _mapper.Map<NoteCatalogDao>(catalog);
-                if (catalogDao == null)
+                var catalogDaoResult = _mapper.MapWithNullCheck<NoteCatalog, NoteCatalogDao>(catalog);
+                if (!catalogDaoResult.Success)
                 {
-                    return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalog to NoteCatalogDao");
+                    return ProcessingResult<NoteCatalog>.Fail(catalogDaoResult.ErrorMessage);
                 }
 
-                var updatedCatalogDaoResult = await _catalogRepository.UpdateAsync(catalogDao);
+                var updatedCatalogDaoResult = await _catalogRepository.UpdateAsync(catalogDaoResult.Value);
                 if (!updatedCatalogDaoResult.Success)
                 {
                     return ProcessingResult<NoteCatalog>.Fail(updatedCatalogDaoResult.ErrorMessage, updatedCatalogDaoResult.ErrorType);
                 }
 
-                var updatedCatalog = _mapper.Map<NoteCatalog>(updatedCatalogDaoResult.Value);
-                if (updatedCatalog == null)
-                {
-                    return ProcessingResult<NoteCatalog>.Fail("Cannot convert NoteCatalogDao to NoteCatalog");
-                }
-
-                return ProcessingResult<NoteCatalog>.Ok(updatedCatalog);
+                return _mapper.MapWithNullCheck<NoteCatalogDao, NoteCatalog>(updatedCatalogDaoResult.Value);
             }
             catch (Exception ex)
             {

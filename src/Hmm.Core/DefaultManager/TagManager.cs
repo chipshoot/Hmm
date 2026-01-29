@@ -76,13 +76,7 @@ namespace Hmm.Core.DefaultManager
                 return ProcessingResult<Tag>.Deleted($"Tag with ID {id} has been deactivated");
             }
 
-            var tag = _mapper.Map<Tag>(tagDao);
-            if (tag == null)
-            {
-                return ProcessingResult<Tag>.Fail("Cannot convert TagDao to Tag");
-            }
-
-            return ProcessingResult<Tag>.Ok(tag);
+            return _mapper.MapWithNullCheck<TagDao, Tag>(tagDao);
         }
 
         public async Task<ProcessingResult<Dictionary<int, Tag>>> GetTagsByIdsAsync(IEnumerable<int> ids)
@@ -201,13 +195,7 @@ namespace Hmm.Core.DefaultManager
                 return ProcessingResult<Tag>.Deleted($"Tag with name '{name}' has been deactivated");
             }
 
-            var tag = _mapper.Map<Tag>(tagDao);
-            if (tag == null)
-            {
-                return ProcessingResult<Tag>.Fail("Cannot convert TagDao to Tag");
-            }
-
-            return ProcessingResult<Tag>.Ok(tag);
+            return _mapper.MapWithNullCheck<TagDao, Tag>(tagDao);
         }
 
         public async Task<bool> IsTagExistsAsync(int id)
@@ -233,13 +221,13 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Tag>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                var tagDao = _mapper.Map<TagDao>(tag);
-                if (tagDao == null)
+                var tagDaoResult = _mapper.MapWithNullCheck<Tag, TagDao>(tag);
+                if (!tagDaoResult.Success)
                 {
-                    return ProcessingResult<Tag>.Fail("Cannot convert Tag to TagDao");
+                    return ProcessingResult<Tag>.Fail(tagDaoResult.ErrorMessage);
                 }
 
-                var addedTagDaoResult = await _tagRepository.AddAsync(tagDao);
+                var addedTagDaoResult = await _tagRepository.AddAsync(tagDaoResult.Value);
                 if (!addedTagDaoResult.Success)
                 {
                     return ProcessingResult<Tag>.Fail(addedTagDaoResult.ErrorMessage, addedTagDaoResult.ErrorType);
@@ -264,25 +252,19 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Tag>.Invalid(validationResult.GetWholeMessage());
                 }
 
-                var tagDao = _mapper.Map<TagDao>(tag);
-                if (tagDao == null)
+                var tagDaoResult = _mapper.MapWithNullCheck<Tag, TagDao>(tag);
+                if (!tagDaoResult.Success)
                 {
-                    return ProcessingResult<Tag>.Fail("Cannot convert Tag to TagDao");
+                    return ProcessingResult<Tag>.Fail(tagDaoResult.ErrorMessage);
                 }
 
-                var updatedTagDaoResult = await _tagRepository.UpdateAsync(tagDao);
+                var updatedTagDaoResult = await _tagRepository.UpdateAsync(tagDaoResult.Value);
                 if (!updatedTagDaoResult.Success)
                 {
                     return ProcessingResult<Tag>.Fail(updatedTagDaoResult.ErrorMessage, updatedTagDaoResult.ErrorType);
                 }
 
-                var updatedTag = _mapper.Map<Tag>(updatedTagDaoResult.Value);
-                if (updatedTag == null)
-                {
-                    return ProcessingResult<Tag>.Fail("Cannot convert TagDao to Tag");
-                }
-
-                return ProcessingResult<Tag>.Ok(updatedTag);
+                return _mapper.MapWithNullCheck<TagDao, Tag>(updatedTagDaoResult.Value);
             }
             catch (Exception ex)
             {

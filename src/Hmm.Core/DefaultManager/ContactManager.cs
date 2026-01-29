@@ -70,13 +70,7 @@ public class ContactManager : IContactManager
             return ProcessingResult<Contact>.Deleted($"Contact with ID {id} has been deactivated");
         }
 
-        var contact = _mapper.Map<Contact>(contactDao);
-        if (contact == null)
-        {
-            return ProcessingResult<Contact>.Fail("Cannot convert ContactDao to Contact");
-        }
-
-        return ProcessingResult<Contact>.Ok(contact);
+        return _mapper.MapWithNullCheck<ContactDao, Contact>(contactDao);
     }
 
     public async Task<bool> IsContactExistsAsync(int id)
@@ -102,13 +96,13 @@ public class ContactManager : IContactManager
                 return ProcessingResult<Contact>.Invalid(validationResult.GetWholeMessage());
             }
 
-            var contactDao = _mapper.Map<ContactDao>(contactInfo);
-            if (contactDao == null)
+            var contactDaoResult = _mapper.MapWithNullCheck<Contact, ContactDao>(contactInfo);
+            if (!contactDaoResult.Success)
             {
-                return ProcessingResult<Contact>.Fail("Cannot convert Contact to ContactDao");
+                return ProcessingResult<Contact>.Fail(contactDaoResult.ErrorMessage);
             }
 
-            var addedContactDaoResult = await _contactDaoRepository.AddAsync(contactDao);
+            var addedContactDaoResult = await _contactDaoRepository.AddAsync(contactDaoResult.Value);
             if (!addedContactDaoResult.Success)
             {
                 return ProcessingResult<Contact>.Fail(addedContactDaoResult.ErrorMessage, addedContactDaoResult.ErrorType);
@@ -133,25 +127,19 @@ public class ContactManager : IContactManager
                 return ProcessingResult<Contact>.Invalid(validationResult.GetWholeMessage());
             }
 
-            var contactDao = _mapper.Map<ContactDao>(contactInfo);
-            if (contactDao == null)
+            var contactDaoResult = _mapper.MapWithNullCheck<Contact, ContactDao>(contactInfo);
+            if (!contactDaoResult.Success)
             {
-                return ProcessingResult<Contact>.Fail("Cannot convert Contact to ContactDao");
+                return ProcessingResult<Contact>.Fail(contactDaoResult.ErrorMessage);
             }
 
-            var updatedContactDaoResult = await _contactDaoRepository.UpdateAsync(contactDao);
+            var updatedContactDaoResult = await _contactDaoRepository.UpdateAsync(contactDaoResult.Value);
             if (!updatedContactDaoResult.Success)
             {
                 return ProcessingResult<Contact>.Fail(updatedContactDaoResult.ErrorMessage, updatedContactDaoResult.ErrorType);
             }
 
-            var updatedContact = _mapper.Map<Contact>(updatedContactDaoResult.Value);
-            if (updatedContact == null)
-            {
-                return ProcessingResult<Contact>.Fail("Cannot convert ContactDao to Contact");
-            }
-
-            return ProcessingResult<Contact>.Ok(updatedContact);
+            return _mapper.MapWithNullCheck<ContactDao, Contact>(updatedContactDaoResult.Value);
         }
         catch (Exception ex)
         {
