@@ -1,0 +1,1080 @@
+### Hmm.ServiceApi - HTTP Request Collection
+### This file contains test requests for functional testing of the Hmm.ServiceApi
+
+### ============================================================
+### VARIABLES
+### ============================================================
+@baseUrl = https://localhost:5001
+@apiVersion = 1.0
+
+# ============================================================
+# AUTHENTICATION TOKENS
+# The API supports multiple identity providers. Use the appropriate token below.
+# ============================================================
+
+# Internal Hmm.Idp token - Get from https://localhost:5001 (or configured IDP URL)
+@hmmIdpToken = YOUR_HMM_IDP_TOKEN_HERE
+
+# Firebase token - Get from Firebase Auth SDK or REST API
+# POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=YOUR_API_KEY
+# Body: { "email": "user@example.com", "password": "password", "returnSecureToken": true }
+@firebaseToken = YOUR_FIREBASE_TOKEN_HERE
+
+# Auth0 token - Get from Auth0 Authentication API
+# POST https://YOUR_DOMAIN.auth0.com/oauth/token
+# Body: { "grant_type": "password", "client_id": "...", "username": "...", "password": "...", "audience": "..." }
+@auth0Token = YOUR_AUTH0_TOKEN_HERE
+
+# Azure AD token - Get from Microsoft Identity Platform
+# POST https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token
+@azureAdToken = YOUR_AZURE_AD_TOKEN_HERE
+
+# Active token - Change this to switch between providers for testing
+@token = {{hmmIdpToken}}
+
+### ============================================================
+### HEALTH CHECK
+### ============================================================
+
+### Check if API is running (Swagger)
+GET {{baseUrl}}/swagger/index.html
+
+### ============================================================
+### AUTHORS
+### ============================================================
+
+### Get all authors
+GET {{baseUrl}}/v{{apiVersion}}/authors
+Authorization: Bearer {{token}}
+
+### Get all authors with pagination
+GET {{baseUrl}}/v{{apiVersion}}/authors?PageNumber=1&PageSize=10
+Authorization: Bearer {{token}}
+
+### Get author by ID
+GET {{baseUrl}}/v{{apiVersion}}/authors/1
+Authorization: Bearer {{token}}
+
+### Create a new author
+POST {{baseUrl}}/v{{apiVersion}}/authors
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "accountName": "testuser",
+  "role": "Author",
+  "isActivated": true,
+  "description": "Test user for API testing",
+  "contact": {
+    "firstName": "Test",
+    "lastName": "User",
+    "emails": [
+      {
+        "address": "test@example.com",
+        "isPrimary": true
+      }
+    ],
+    "phones": [
+      {
+        "number": "555-123-4567",
+        "isPrimary": true
+      }
+    ]
+  }
+}
+
+### Update an author (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/authors/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "accountName": "updateduser",
+  "role": "Author",
+  "isActivated": true,
+  "description": "Updated test user"
+}
+
+### Patch an author (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/authors/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/description",
+    "value": "Patched description"
+  }
+]
+
+### Delete (deactivate) an author
+DELETE {{baseUrl}}/v{{apiVersion}}/authors/1
+Authorization: Bearer {{token}}
+
+### ============================================================
+### TAGS
+### ============================================================
+
+### Get all tags
+GET {{baseUrl}}/v{{apiVersion}}/tags
+Authorization: Bearer {{token}}
+
+### Get all tags with pagination
+GET {{baseUrl}}/v{{apiVersion}}/tags?PageNumber=1&PageSize=10
+Authorization: Bearer {{token}}
+
+### Get tag by ID
+GET {{baseUrl}}/v{{apiVersion}}/tags/1
+Authorization: Bearer {{token}}
+
+### Get tag by name
+GET {{baseUrl}}/v{{apiVersion}}/tags/work
+Authorization: Bearer {{token}}
+
+### Create a new tag
+POST {{baseUrl}}/v{{apiVersion}}/tags
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "work",
+  "description": "Work-related notes"
+}
+
+### Create another tag
+POST {{baseUrl}}/v{{apiVersion}}/tags
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "personal",
+  "description": "Personal notes"
+}
+
+### Create tag for automobile
+POST {{baseUrl}}/v{{apiVersion}}/tags
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "vehicle",
+  "description": "Vehicle maintenance and gas logs"
+}
+
+### Update a tag (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/tags/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "updated-tag",
+  "description": "Updated tag description"
+}
+
+### Patch a tag (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/tags/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/description",
+    "value": "Patched tag description"
+  }
+]
+
+### Delete (deactivate) a tag
+DELETE {{baseUrl}}/v{{apiVersion}}/tags/1
+Authorization: Bearer {{token}}
+
+### ============================================================
+### NOTE CATALOGS
+### ============================================================
+
+### Get all note catalogs
+GET {{baseUrl}}/v{{apiVersion}}/notecatalogs
+Authorization: Bearer {{token}}
+
+### Get all note catalogs with pagination
+GET {{baseUrl}}/v{{apiVersion}}/notecatalogs?PageNumber=1&PageSize=10
+Authorization: Bearer {{token}}
+
+### Get note catalog by ID
+GET {{baseUrl}}/v{{apiVersion}}/notecatalogs/1
+Authorization: Bearer {{token}}
+
+### Create a default plain text note catalog
+POST {{baseUrl}}/v{{apiVersion}}/notecatalogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Default",
+  "formatType": 0,
+  "schema": "",
+  "isDefault": true,
+  "description": "Default plain text note catalog"
+}
+
+### Create a JSON note catalog
+POST {{baseUrl}}/v{{apiVersion}}/notecatalogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "JsonNotes",
+  "formatType": 2,
+  "schema": "{\"type\": \"object\", \"properties\": {\"title\": {\"type\": \"string\"}, \"body\": {\"type\": \"string\"}}}",
+  "isDefault": false,
+  "description": "JSON formatted note catalog"
+}
+
+### Create a Markdown note catalog
+POST {{baseUrl}}/v{{apiVersion}}/notecatalogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "MarkdownNotes",
+  "formatType": 3,
+  "schema": "",
+  "isDefault": false,
+  "description": "Markdown formatted note catalog"
+}
+
+### Update a note catalog (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/notecatalogs/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "UpdatedCatalog",
+  "formatType": 0,
+  "schema": "",
+  "isDefault": true,
+  "description": "Updated note catalog"
+}
+
+### Patch a note catalog (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/notecatalogs/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/description",
+    "value": "Patched note catalog description"
+  }
+]
+
+### ============================================================
+### NOTES
+### ============================================================
+
+### Get all notes
+GET {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{token}}
+
+### Get all notes with pagination
+GET {{baseUrl}}/v{{apiVersion}}/notes?PageNumber=1&PageSize=10
+Authorization: Bearer {{token}}
+
+### Get all notes with sorting
+GET {{baseUrl}}/v{{apiVersion}}/notes?PageNumber=1&PageSize=10&OrderBy=CreateDate desc
+Authorization: Bearer {{token}}
+
+### Get note by ID
+GET {{baseUrl}}/v{{apiVersion}}/notes/1
+Authorization: Bearer {{token}}
+
+### Create a new note
+# Note: Ensure AuthorId and CatalogId exist before running this
+POST {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "subject": "My First Note",
+  "content": "This is the content of my first test note.",
+  "authorId": 1,
+  "catalogId": 1,
+  "description": "A test note for API testing"
+}
+
+### Create another note
+POST {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "subject": "Meeting Notes",
+  "content": "## Meeting Summary\n\n- Discussed project timeline\n- Assigned tasks\n- Next meeting scheduled for Friday",
+  "authorId": 1,
+  "catalogId": 1,
+  "description": "Weekly team meeting notes"
+}
+
+### Create a JSON formatted note
+POST {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "subject": "API Test Data",
+  "content": "{\"testKey\": \"testValue\", \"items\": [1, 2, 3]}",
+  "authorId": 1,
+  "catalogId": 2,
+  "description": "JSON formatted test data"
+}
+
+### Update a note (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/notes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "subject": "Updated Note Subject",
+  "content": "Updated note content goes here.",
+  "description": "Updated description"
+}
+
+### Patch a note (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/notes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/subject",
+    "value": "Patched Note Subject"
+  },
+  {
+    "op": "replace",
+    "path": "/content",
+    "value": "Patched note content"
+  }
+]
+
+### Apply a tag to a note
+PUT {{baseUrl}}/v{{apiVersion}}/notes/1/applyTag
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "work"
+}
+
+### Apply another tag to a note
+PUT {{baseUrl}}/v{{apiVersion}}/notes/1/applyTag
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "personal"
+}
+
+### Delete (soft delete) a note
+DELETE {{baseUrl}}/v{{apiVersion}}/notes/1
+Authorization: Bearer {{token}}
+
+### ============================================================
+### AUTOMOBILES
+### ============================================================
+
+### Get all automobiles
+GET {{baseUrl}}/v{{apiVersion}}/automobiles
+Authorization: Bearer {{token}}
+
+### Get all automobiles with pagination
+GET {{baseUrl}}/v{{apiVersion}}/automobiles?PageNumber=1&PageSize=10
+Authorization: Bearer {{token}}
+
+### Get automobile by ID
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/1
+Authorization: Bearer {{token}}
+
+### Create a new automobile (Honda Civic)
+POST {{baseUrl}}/v{{apiVersion}}/automobiles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vin": "1HGBH41JXMN109186",
+  "maker": "Honda",
+  "brand": "Honda",
+  "model": "Civic",
+  "trim": "EX",
+  "year": 2023,
+  "color": "Silver",
+  "plate": "ABC-1234",
+  "engineType": "Gasoline",
+  "fuelType": "Regular",
+  "fuelTankCapacity": 12.4,
+  "cityMPG": 31,
+  "highwayMPG": 40,
+  "combinedMPG": 35,
+  "meterReading": 15000,
+  "purchaseMeterReading": 0,
+  "purchaseDate": "2023-01-15",
+  "purchasePrice": 28500.00,
+  "ownershipStatus": "Owned",
+  "registrationExpiryDate": "2025-01-15",
+  "insuranceExpiryDate": "2025-06-15",
+  "insuranceProvider": "State Farm",
+  "insurancePolicyNumber": "SF-12345678",
+  "notes": "Primary family vehicle"
+}
+
+### Create another automobile (Toyota RAV4)
+POST {{baseUrl}}/v{{apiVersion}}/automobiles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vin": "2T3RFREV5JW123456",
+  "maker": "Toyota",
+  "brand": "Toyota",
+  "model": "RAV4",
+  "trim": "XLE",
+  "year": 2022,
+  "color": "Blue",
+  "plate": "XYZ-5678",
+  "engineType": "Hybrid",
+  "fuelType": "Regular",
+  "fuelTankCapacity": 14.5,
+  "cityMPG": 41,
+  "highwayMPG": 38,
+  "combinedMPG": 40,
+  "meterReading": 25000,
+  "purchaseMeterReading": 5000,
+  "purchaseDate": "2022-06-01",
+  "purchasePrice": 35000.00,
+  "ownershipStatus": "Owned",
+  "registrationExpiryDate": "2025-06-01",
+  "insuranceExpiryDate": "2025-06-01",
+  "insuranceProvider": "Geico",
+  "insurancePolicyNumber": "G-87654321",
+  "notes": "Commuter vehicle"
+}
+
+### Create electric vehicle (Tesla Model 3)
+POST {{baseUrl}}/v{{apiVersion}}/automobiles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vin": "5YJ3E1EA8KF123456",
+  "maker": "Tesla",
+  "brand": "Tesla",
+  "model": "Model 3",
+  "trim": "Long Range",
+  "year": 2024,
+  "color": "White",
+  "plate": "EV-9999",
+  "engineType": "Electric",
+  "fuelType": "Electric",
+  "fuelTankCapacity": 0,
+  "cityMPG": 0,
+  "highwayMPG": 0,
+  "combinedMPG": 0,
+  "meterReading": 5000,
+  "purchaseMeterReading": 0,
+  "purchaseDate": "2024-03-01",
+  "purchasePrice": 45000.00,
+  "ownershipStatus": "Leased",
+  "registrationExpiryDate": "2026-03-01",
+  "insuranceExpiryDate": "2025-03-01",
+  "insuranceProvider": "Progressive",
+  "insurancePolicyNumber": "P-11223344",
+  "notes": "Electric vehicle - charging at home"
+}
+
+### Update an automobile (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/automobiles/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vin": "1HGBH41JXMN109186",
+  "maker": "Honda",
+  "brand": "Honda",
+  "model": "Civic",
+  "trim": "EX",
+  "year": 2023,
+  "color": "Silver",
+  "plate": "ABC-1234",
+  "engineType": "Gasoline",
+  "fuelType": "Regular",
+  "fuelTankCapacity": 12.4,
+  "cityMPG": 31,
+  "highwayMPG": 40,
+  "combinedMPG": 35,
+  "meterReading": 18000,
+  "notes": "Updated mileage after road trip"
+}
+
+### Patch an automobile (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/meterReading",
+    "value": 20000
+  },
+  {
+    "op": "replace",
+    "path": "/notes",
+    "value": "Updated via patch"
+  }
+]
+
+### ============================================================
+### GAS LOGS
+### ============================================================
+
+### Get all gas logs for an automobile
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+Authorization: Bearer {{token}}
+
+### Get gas logs with pagination and sorting
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs?PageNumber=1&PageSize=10&OrderBy=Date desc
+Authorization: Bearer {{token}}
+
+### Get gas log by ID
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+Authorization: Bearer {{token}}
+
+### Create a new gas log
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2024-01-15T10:30:00",
+  "automobileId": 1,
+  "odometer": 15500,
+  "odometerUnit": "Mile",
+  "distance": 350,
+  "distanceUnit": "Mile",
+  "fuel": 10.5,
+  "fuelUnit": "Gallon",
+  "fuelGrade": "Regular",
+  "isFullTank": true,
+  "isFirstFillUp": false,
+  "totalPrice": 35.50,
+  "unitPrice": 3.38,
+  "currency": "CAD",
+  "stationId": null,
+  "location": "Shell Station - Main Street",
+  "cityDrivingPercentage": 60,
+  "highwayDrivingPercentage": 40,
+  "receiptNumber": "R-20240115-001",
+  "comment": "Regular fill-up"
+}
+
+### Create another gas log
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2024-01-22T14:15:00",
+  "automobileId": 1,
+  "odometer": 15850,
+  "odometerUnit": "Mile",
+  "distance": 350,
+  "distanceUnit": "Mile",
+  "fuel": 10.2,
+  "fuelUnit": "Gallon",
+  "fuelGrade": "Regular",
+  "isFullTank": true,
+  "isFirstFillUp": false,
+  "totalPrice": 33.66,
+  "unitPrice": 3.30,
+  "currency": "CAD",
+  "location": "Costco Gas - Highway 7",
+  "cityDrivingPercentage": 40,
+  "highwayDrivingPercentage": 60,
+  "comment": "Highway trip to Toronto"
+}
+
+### Create gas log with discount
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2024-01-29T09:00:00",
+  "automobileId": 1,
+  "odometer": 16200,
+  "odometerUnit": "Mile",
+  "distance": 350,
+  "distanceUnit": "Mile",
+  "fuel": 10.8,
+  "fuelUnit": "Gallon",
+  "fuelGrade": "Regular",
+  "isFullTank": true,
+  "isFirstFillUp": false,
+  "totalPrice": 32.40,
+  "unitPrice": 3.00,
+  "currency": "CAD",
+  "discountInfos": [
+    {
+      "discountId": 1,
+      "amount": 0.10
+    }
+  ],
+  "location": "Petro Canada - Downtown",
+  "comment": "Used loyalty card discount"
+}
+
+### Create history gas log (for importing past records)
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/historylog
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2023-12-15T08:00:00",
+  "automobileId": 1,
+  "odometer": 14500,
+  "odometerUnit": "Mile",
+  "distance": 320,
+  "distanceUnit": "Mile",
+  "fuel": 9.8,
+  "fuelUnit": "Gallon",
+  "fuelGrade": "Regular",
+  "isFullTank": true,
+  "isFirstFillUp": false,
+  "totalPrice": 32.34,
+  "unitPrice": 3.30,
+  "currency": "CAD",
+  "location": "Esso - Oak Street",
+  "comment": "Historical record import"
+}
+
+### Update a gas log (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2024-01-15T10:30:00",
+  "odometer": 15500,
+  "odometerUnit": "Mile",
+  "distance": 350,
+  "distanceUnit": "Mile",
+  "fuel": 10.5,
+  "fuelUnit": "Gallon",
+  "fuelGrade": "Regular",
+  "isFullTank": true,
+  "totalPrice": 35.50,
+  "unitPrice": 3.38,
+  "currency": "CAD",
+  "location": "Shell Station - Main Street (Updated)",
+  "comment": "Updated comment"
+}
+
+### Patch a gas log (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/comment",
+    "value": "Patched via JSON Patch"
+  }
+]
+
+### Delete (soft delete) a gas log
+DELETE {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+Authorization: Bearer {{token}}
+
+### ============================================================
+### GAS DISCOUNTS
+### Route: /v{version}/automobiles/gaslogs/discounts
+### ============================================================
+
+### Get all gas discounts
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+Authorization: Bearer {{token}}
+
+### Get gas discount by ID
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+Authorization: Bearer {{token}}
+
+### Create a loyalty card discount
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "program": "Petro Points",
+  "discountType": "CentsPerLiter",
+  "amount": 0.03,
+  "currency": "CAD",
+  "isActive": true,
+  "comment": "Petro Canada loyalty program - 3 cents per liter"
+}
+
+### Create a credit card discount
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "program": "Costco Mastercard",
+  "discountType": "Percentage",
+  "amount": 2.0,
+  "currency": "CAD",
+  "isActive": true,
+  "comment": "2% cashback on gas purchases"
+}
+
+### Create a membership discount
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "program": "CAA Member Discount",
+  "discountType": "CentsPerLiter",
+  "amount": 0.05,
+  "currency": "CAD",
+  "isActive": true,
+  "comment": "CAA membership gas discount"
+}
+
+### Update a gas discount (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "program": "Petro Points Plus",
+  "discountType": "CentsPerLiter",
+  "amount": 0.05,
+  "currency": "CAD",
+  "isActive": true,
+  "comment": "Updated discount amount"
+}
+
+### Patch a gas discount (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/isActive",
+    "value": false
+  }
+]
+
+### Delete (deactivate) a gas discount
+DELETE {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+Authorization: Bearer {{token}}
+
+### ============================================================
+### GAS STATIONS
+### Route: /v{version}/automobiles/gasstations
+### ============================================================
+
+### Get all gas stations
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+Authorization: Bearer {{token}}
+
+### Get active gas stations only
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/active
+Authorization: Bearer {{token}}
+
+### Get gas station by ID
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+Authorization: Bearer {{token}}
+
+### Get gas station by name
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/byname/Shell
+Authorization: Bearer {{token}}
+
+### Create a gas station (Shell)
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Shell - Main Street",
+  "address": "123 Main Street",
+  "city": "Toronto",
+  "state": "ON",
+  "zipCode": "M5V 1A1",
+  "description": "24 hour gas station with convenience store",
+  "isActive": true
+}
+
+### Create another gas station (Costco)
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Costco Gas - Highway 7",
+  "address": "500 Highway 7 East",
+  "city": "Richmond Hill",
+  "state": "ON",
+  "zipCode": "L4B 1J1",
+  "description": "Members only gas station",
+  "isActive": true
+}
+
+### Create Petro Canada station
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Petro Canada - Downtown",
+  "address": "200 King Street West",
+  "city": "Toronto",
+  "state": "ON",
+  "zipCode": "M5H 1K4",
+  "description": "Downtown location with car wash",
+  "isActive": true
+}
+
+### Create Esso station
+POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Esso - Oak Street",
+  "address": "456 Oak Street",
+  "city": "Mississauga",
+  "state": "ON",
+  "zipCode": "L5B 2C3",
+  "description": "Near highway entrance",
+  "isActive": true
+}
+
+### Update a gas station (PUT)
+PUT {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Shell - Main Street (24 Hours)",
+  "address": "123 Main Street",
+  "city": "Toronto",
+  "state": "ON",
+  "zipCode": "M5V 1A1",
+  "description": "Updated: Now open 24 hours",
+  "isActive": true
+}
+
+### Patch a gas station (PATCH)
+PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+Authorization: Bearer {{token}}
+Content-Type: application/json-patch+json
+
+[
+  {
+    "op": "replace",
+    "path": "/description",
+    "value": "Patched description"
+  }
+]
+
+### Delete (deactivate) a gas station
+DELETE {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+Authorization: Bearer {{token}}
+
+### ============================================================
+### CONTACTS (for Authors)
+### ============================================================
+
+### Get all contacts
+GET {{baseUrl}}/v{{apiVersion}}/contacts
+Authorization: Bearer {{token}}
+
+### Get contact by ID
+GET {{baseUrl}}/v{{apiVersion}}/contacts/1
+Authorization: Bearer {{token}}
+
+### ============================================================
+### PAGINATION & FILTERING EXAMPLES
+### ============================================================
+
+### Notes with pagination
+GET {{baseUrl}}/v{{apiVersion}}/notes?PageNumber=1&PageSize=5
+Authorization: Bearer {{token}}
+
+### Notes with sorting (ascending)
+GET {{baseUrl}}/v{{apiVersion}}/notes?OrderBy=Subject
+Authorization: Bearer {{token}}
+
+### Notes with sorting (descending)
+GET {{baseUrl}}/v{{apiVersion}}/notes?OrderBy=CreateDate desc
+Authorization: Bearer {{token}}
+
+### Authors with pagination and sorting
+GET {{baseUrl}}/v{{apiVersion}}/authors?PageNumber=1&PageSize=10&OrderBy=AccountName
+Authorization: Bearer {{token}}
+
+### Gas logs with multiple sorting fields
+GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs?OrderBy=Date desc,TotalPrice
+Authorization: Bearer {{token}}
+
+### ============================================================
+### ERROR HANDLING TEST CASES
+### ============================================================
+
+### Get non-existent note (should return 404)
+GET {{baseUrl}}/v{{apiVersion}}/notes/99999
+Authorization: Bearer {{token}}
+
+### Get non-existent author (should return 404)
+GET {{baseUrl}}/v{{apiVersion}}/authors/99999
+Authorization: Bearer {{token}}
+
+### Create note with invalid authorId (should return 400)
+POST {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "subject": "Invalid Note",
+  "content": "This note has an invalid author ID",
+  "authorId": 99999,
+  "catalogId": 1
+}
+
+### Request without authorization (should return 401)
+GET {{baseUrl}}/v{{apiVersion}}/notes
+
+### Invalid JSON (should return 400)
+POST {{baseUrl}}/v{{apiVersion}}/authors
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "accountName": "test",
+  invalid json here
+}
+
+### ============================================================
+### MULTI-PROVIDER AUTHENTICATION TESTS
+### Use these to verify different identity providers work correctly
+### ============================================================
+
+### Test with Hmm.Idp token
+GET {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{hmmIdpToken}}
+
+### Test with Firebase token
+GET {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{firebaseToken}}
+
+### Test with Auth0 token
+GET {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{auth0Token}}
+
+### Test with Azure AD token
+GET {{baseUrl}}/v{{apiVersion}}/notes
+Authorization: Bearer {{azureAdToken}}
+
+### ============================================================
+### FIREBASE AUTHENTICATION EXAMPLES
+### ============================================================
+
+### Firebase: Sign in with email/password (get token)
+# @name firebaseSignIn
+# Replace YOUR_FIREBASE_API_KEY with your Firebase Web API Key
+# POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=YOUR_FIREBASE_API_KEY
+# Content-Type: application/json
+#
+# {
+#   "email": "test@example.com",
+#   "password": "your-password",
+#   "returnSecureToken": true
+# }
+
+### Firebase: Sign up new user
+# @name firebaseSignUp
+# POST https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=YOUR_FIREBASE_API_KEY
+# Content-Type: application/json
+#
+# {
+#   "email": "newuser@example.com",
+#   "password": "secure-password-123",
+#   "returnSecureToken": true
+# }
+
+### Firebase: Refresh token
+# POST https://securetoken.googleapis.com/v1/token?key=YOUR_FIREBASE_API_KEY
+# Content-Type: application/x-www-form-urlencoded
+#
+# grant_type=refresh_token&refresh_token=YOUR_REFRESH_TOKEN
+
+### ============================================================
+### AUTH0 AUTHENTICATION EXAMPLES
+### ============================================================
+
+### Auth0: Get token with Resource Owner Password Grant
+# @name auth0Token
+# POST https://YOUR_DOMAIN.auth0.com/oauth/token
+# Content-Type: application/json
+#
+# {
+#   "grant_type": "password",
+#   "client_id": "YOUR_CLIENT_ID",
+#   "client_secret": "YOUR_CLIENT_SECRET",
+#   "username": "user@example.com",
+#   "password": "password",
+#   "audience": "YOUR_API_IDENTIFIER",
+#   "scope": "openid profile email"
+# }
+
+### Auth0: Get token with Client Credentials (machine-to-machine)
+# POST https://YOUR_DOMAIN.auth0.com/oauth/token
+# Content-Type: application/json
+#
+# {
+#   "grant_type": "client_credentials",
+#   "client_id": "YOUR_CLIENT_ID",
+#   "client_secret": "YOUR_CLIENT_SECRET",
+#   "audience": "YOUR_API_IDENTIFIER"
+# }
+
+### ============================================================
+### AZURE AD AUTHENTICATION EXAMPLES
+### ============================================================
+
+### Azure AD: Get token with Resource Owner Password Grant
+# @name azureAdToken
+# POST https://login.microsoftonline.com/YOUR_TENANT_ID/oauth2/v2.0/token
+# Content-Type: application/x-www-form-urlencoded
+#
+# grant_type=password
+# &client_id=YOUR_CLIENT_ID
+# &client_secret=YOUR_CLIENT_SECRET
+# &username=user@yourdomain.com
+# &password=your-password
+# &scope=api://YOUR_CLIENT_ID/.default
+
+### Azure AD: Get token with Client Credentials
+# POST https://login.microsoftonline.com/YOUR_TENANT_ID/oauth2/v2.0/token
+# Content-Type: application/x-www-form-urlencoded
+#
+# grant_type=client_credentials
+# &client_id=YOUR_CLIENT_ID
+# &client_secret=YOUR_CLIENT_SECRET
+# &scope=api://YOUR_CLIENT_ID/.default

@@ -18,6 +18,11 @@ public class AppSettings
     /// </summary>
     public string[] CorsOrigins { get; set; }
 
+    /// <summary>
+    /// External authentication provider settings (Firebase, Auth0, etc.)
+    /// </summary>
+    public ExternalAuthSettings ExternalAuth { get; set; }
+
     public AutomobileSetting Automobile { get; set; }
 
     public class AutomobileSetting
@@ -40,4 +45,50 @@ public class AppSettings
 
         public string SeedingDataFile { get; set; }
     }
+}
+
+/// <summary>
+/// Configuration for external authentication providers
+/// </summary>
+public class ExternalAuthSettings
+{
+    /// <summary>
+    /// Enable Firebase authentication
+    /// </summary>
+    public bool EnableFirebase { get; set; }
+
+    /// <summary>
+    /// Firebase project ID (found in Firebase Console > Project Settings)
+    /// </summary>
+    public string FirebaseProjectId { get; set; }
+
+    /// <summary>
+    /// Enable Auth0 authentication
+    /// </summary>
+    public bool EnableAuth0 { get; set; }
+
+    /// <summary>
+    /// Auth0 domain (e.g., "your-tenant.auth0.com")
+    /// </summary>
+    public string Auth0Domain { get; set; }
+
+    /// <summary>
+    /// Auth0 API audience/identifier
+    /// </summary>
+    public string Auth0Audience { get; set; }
+
+    /// <summary>
+    /// Enable Azure AD authentication
+    /// </summary>
+    public bool EnableAzureAd { get; set; }
+
+    /// <summary>
+    /// Azure AD tenant ID
+    /// </summary>
+    public string AzureAdTenantId { get; set; }
+
+    /// <summary>
+    /// Azure AD application (client) ID
+    /// </summary>
+    public string AzureAdClientId { get; set; }
 }

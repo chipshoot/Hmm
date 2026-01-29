@@ -7,7 +7,6 @@ using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Configuration;
-using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.ServiceApi.Middleware;
@@ -76,16 +75,7 @@ namespace Hmm.ServiceApi
                                     };
                                 };
                             });
-            services.AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", opt =>
-                {
-                    opt.Authority = appSetting.IdpBaseUrl;
-                    opt.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateAudience = true,
-                        ValidAudience = appSetting.ApiAudience
-                    };
-                });
+            ConfigureAuthentication(services, appSetting);
             services.AddApiVersioning(setup =>
             {
                 setup.DefaultApiVersion = new ApiVersion(1, 0);
@@ -211,6 +201,116 @@ namespace Hmm.ServiceApi
             services.Configure<AppSettings>(appSettingsSection);
 
             return appSettingsSection;
+        }
+
+        /// <summary>
+        /// Configures authentication with support for multiple identity providers.
+        /// Supports: Hmm.Idp (internal), Firebase, Auth0, and Azure AD.
+        /// </summary>
+        private static void ConfigureAuthentication(IServiceCollection services, AppSettings appSetting)
+        {
+            var externalAuth = appSetting.ExternalAuth;
+            var hasExternalProviders = externalAuth != null &&
+                (externalAuth.EnableFirebase || externalAuth.EnableAuth0 || externalAuth.EnableAzureAd);
+
+            if (!hasExternalProviders)
+            {
+                // Simple single-provider configuration (backward compatible)
+                services.AddAuthentication("Bearer")
+                    .AddJwtBearer("Bearer", opt =>
+                    {
+                        opt.Authority = appSetting.IdpBaseUrl;
+                        opt.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateAudience = true,
+                            ValidAudience = appSetting.ApiAudience
+                        };
+                    });
+                return;
+            }
+
+            // Multi-provider configuration
+            var authBuilder = services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = MultiAuthSchemeSelector.MultiAuthScheme;
+                options.DefaultChallengeScheme = MultiAuthSchemeSelector.MultiAuthScheme;
+            });
+
+            // Always add the internal Hmm.Idp scheme
+            authBuilder.AddJwtBearer(MultiAuthSchemeSelector.HmmIdpScheme, opt =>
+            {
+                opt.Authority = appSetting.IdpBaseUrl;
+                opt.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = true,
+                    ValidAudience = appSetting.ApiAudience,
+                    ValidateIssuer = true,
+                    ValidateLifetime = true
+                };
+            });
+
+            // Add Firebase authentication if enabled
+            if (externalAuth.EnableFirebase && !string.IsNullOrEmpty(externalAuth.FirebaseProjectId))
+            {
+                authBuilder.AddJwtBearer(MultiAuthSchemeSelector.FirebaseScheme, opt =>
+                {
+                    var projectId = externalAuth.FirebaseProjectId;
+                    opt.Authority = $"https://securetoken.google.com/{projectId}";
+                    opt.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = $"https://securetoken.google.com/{projectId}",
+                        ValidateAudience = true,
+                        ValidAudience = projectId,
+                        ValidateLifetime = true
+                    };
+                });
+            }
+
+            // Add Auth0 authentication if enabled
+            if (externalAuth.EnableAuth0 &&
+                !string.IsNullOrEmpty(externalAuth.Auth0Domain) &&
+                !string.IsNullOrEmpty(externalAuth.Auth0Audience))
+            {
+                authBuilder.AddJwtBearer(MultiAuthSchemeSelector.Auth0Scheme, opt =>
+                {
+                    opt.Authority = $"https://{externalAuth.Auth0Domain}/";
+                    opt.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = $"https://{externalAuth.Auth0Domain}/",
+                        ValidateAudience = true,
+                        ValidAudience = externalAuth.Auth0Audience,
+                        ValidateLifetime = true
+                    };
+                });
+            }
+
+            // Add Azure AD authentication if enabled
+            if (externalAuth.EnableAzureAd &&
+                !string.IsNullOrEmpty(externalAuth.AzureAdTenantId) &&
+                !string.IsNullOrEmpty(externalAuth.AzureAdClientId))
+            {
+                authBuilder.AddJwtBearer(MultiAuthSchemeSelector.AzureAdScheme, opt =>
+                {
+                    opt.Authority = $"https://login.microsoftonline.com/{externalAuth.AzureAdTenantId}/v2.0";
+                    opt.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = $"https://login.microsoftonline.com/{externalAuth.AzureAdTenantId}/v2.0",
+                        ValidateAudience = true,
+                        ValidAudience = externalAuth.AzureAdClientId,
+                        ValidateLifetime = true
+                    };
+                });
+            }
+
+            // Add the policy scheme that selects the appropriate auth scheme based on token
+            authBuilder.AddPolicyScheme(MultiAuthSchemeSelector.MultiAuthScheme, "Multi-provider Authentication", options =>
+            {
+                options.ForwardDefaultSelector = context =>
+                    MultiAuthSchemeSelector.SelectScheme(context, externalAuth);
+            });
         }
     }
 }
