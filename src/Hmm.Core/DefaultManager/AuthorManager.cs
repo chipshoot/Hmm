@@ -158,38 +158,14 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<ProcessingResult<Unit>> DeActivateAsync(int id)
+        public Task<ProcessingResult<Unit>> DeActivateAsync(int id)
         {
-            try
-            {
-                var userResult = await _lookup.GetEntityAsync<AuthorDao>(id);
-                if (!userResult.Success)
-                {
-                    return ProcessingResult<Unit>.NotFound($"Cannot find user with id: {id}");
-                }
-
-                var user = userResult.Value;
-                if (!user.IsActivated)
-                {
-                    return ProcessingResult<Unit>.Ok(Unit.Value, $"User with id {id} is already deactivated");
-                }
-
-                user.IsActivated = false;
-                var updatedResult = await _authorRepository.UpdateAsync(user);
-
-                if (!updatedResult.Success)
-                {
-                    return ProcessingResult<Unit>.Fail(updatedResult.ErrorMessage, updatedResult.ErrorType);
-                }
-
-                await _unitOfWork.CommitAsync();
-
-                return ProcessingResult<Unit>.Ok(Unit.Value, $"User with id {id} has been deactivated");
-            }
-            catch (Exception ex)
-            {
-                return ProcessingResult<Unit>.FromException(ex);
-            }
+            return DeactivationHelper.DeactivateAsync(
+                _lookup,
+                _authorRepository,
+                id,
+                "author",
+                () => _unitOfWork.CommitAsync());
         }
     }
 }

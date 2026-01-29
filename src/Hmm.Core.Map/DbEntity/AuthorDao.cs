@@ -6,7 +6,7 @@ using Hmm.Utility.Dal.DataEntity;
 
 namespace Hmm.Core.Map.DbEntity
 {
-    public class AuthorDao : Entity
+    public class AuthorDao : Entity, IActivatable
     {
         [Column("accountname")]
         [StringLength(256)]

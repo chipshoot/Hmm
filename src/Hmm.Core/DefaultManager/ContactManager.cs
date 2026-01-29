@@ -147,35 +147,11 @@ public class ContactManager : IContactManager
         }
     }
 
-    public async Task<ProcessingResult<Unit>> DeActivateAsync(int id)
+    public Task<ProcessingResult<Unit>> DeActivateAsync(int id)
     {
-        try
-        {
-            var contactResult = await _contactDaoRepository.GetEntityAsync(id);
-            if (!contactResult.Success)
-            {
-                return ProcessingResult<Unit>.NotFound($"Cannot find contact with id: {id}");
-            }
-
-            var contact = contactResult.Value;
-            if (!contact.IsActivated)
-            {
-                return ProcessingResult<Unit>.Ok(Unit.Value, $"Contact with id {id} is already deactivated");
-            }
-
-            contact.IsActivated = false;
-            var updatedResult = await _contactDaoRepository.UpdateAsync(contact);
-
-            if (!updatedResult.Success)
-            {
-                return ProcessingResult<Unit>.Fail("Failed to deactivate contact");
-            }
-
-            return ProcessingResult<Unit>.Ok(Unit.Value, $"Contact with id {id} has been deactivated");
-        }
-        catch (Exception ex)
-        {
-            return ProcessingResult<Unit>.FromException(ex);
-        }
+        return DeactivationHelper.DeactivateAsync(
+            _contactDaoRepository,
+            id,
+            "contact");
     }
 }

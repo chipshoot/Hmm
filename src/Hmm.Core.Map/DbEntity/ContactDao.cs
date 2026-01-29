@@ -5,7 +5,7 @@ using Hmm.Utility.Dal.DataEntity;
 
 namespace Hmm.Core.Map.DbEntity;
 
-public class ContactDao : Entity
+public class ContactDao : Entity, IActivatable
 {
     [Column("contact")]
     public string Contact { get; set; }

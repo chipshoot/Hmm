@@ -272,36 +272,13 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<ProcessingResult<Unit>> DeActivateAsync(int id)
+        public Task<ProcessingResult<Unit>> DeActivateAsync(int id)
         {
-            try
-            {
-                var tagResult = await _lookup.GetEntityAsync<TagDao>(id);
-                if (!tagResult.Success)
-                {
-                    return ProcessingResult<Unit>.NotFound($"Cannot find tag with id: {id}");
-                }
-
-                var tag = tagResult.Value;
-                if (!tag.IsActivated)
-                {
-                    return ProcessingResult<Unit>.Ok(Unit.Value, $"Tag with id {id} is already deactivated");
-                }
-
-                tag.IsActivated = false;
-                var updatedResult = await _tagRepository.UpdateAsync(tag);
-
-                if (!updatedResult.Success)
-                {
-                    return ProcessingResult<Unit>.Fail("Failed to deactivate tag");
-                }
-
-                return ProcessingResult<Unit>.Ok(Unit.Value, $"Tag with id {id} has been deactivated");
-            }
-            catch (Exception ex)
-            {
-                return ProcessingResult<Unit>.FromException(ex);
-            }
+            return DeactivationHelper.DeactivateAsync(
+                _lookup,
+                _tagRepository,
+                id,
+                "tag");
         }
     }
 }

@@ -6,7 +6,7 @@ using Hmm.Utility.Dal.DataEntity;
 
 namespace Hmm.Core.Map.DbEntity;
 
-public class TagDao : Entity
+public class TagDao : Entity, IActivatable
 {
     [Column("name")]
     [MaxLength(200)]
