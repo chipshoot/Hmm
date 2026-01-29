@@ -18,7 +18,7 @@ namespace Hmm.Core.Tests
         }
 
         [Theory]
-        [InlineData("jfang", false, "AccountName : Duplicated account name")]
+        [InlineData("jfang", false, "AccountName: Duplicated account name")]
         [InlineData("luck", true, "")]
         public async Task Cannot_Add_Duplicated_AccountName(string accountName, bool expectValid, string errorMessage)
         {

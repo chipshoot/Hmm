@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
@@ -28,35 +27,13 @@ namespace Hmm.Core.DefaultManager.Validator
 
         private async Task<bool> CatalogNameUnique(NoteCatalog catalog, string catalogName, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(catalogName))
-            {
-                return false;
-            }
-
-            var savedCatalogResult = await _catalogRepository.GetEntityAsync(catalog.Id);
-
-            // create new catalog, make sure catalog name is unique
-            var cname = catalogName.Trim().ToLower();
-            if (!savedCatalogResult.Success || savedCatalogResult.Value == null)
-            {
-                // Creating new catalog - check for existing catalog names
-                var sameNameCatalogsResult = await _catalogRepository.GetEntitiesAsync(c => c.Name.ToLower() == cname);
-                if (sameNameCatalogsResult.Success && !sameNameCatalogsResult.IsNotFound)
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                // Updating existing catalog - check for conflicts with other catalogs
-                var catalogWithNamesResult = await _catalogRepository.GetEntitiesAsync(c => c.Name.ToLower() == cname && c.Id != catalog.Id);
-                if (catalogWithNamesResult.Success && !catalogWithNamesResult.IsNotFound)
-                {
-                    return !catalogWithNamesResult.Value.Any();
-                }
-            }
-
-            return true;
+            // NoteCatalog doesn't have IsActivated filter - all catalogs are checked
+            return await UniqueNameValidationHelper.IsNameUniqueAsync<NoteCatalog, NoteCatalogDao>(
+                _catalogRepository,
+                catalog.Id,
+                catalogName,
+                dao => dao.Name,
+                additionalFilter: null);
         }
     }
 }
