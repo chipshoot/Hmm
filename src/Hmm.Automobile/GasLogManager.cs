@@ -12,6 +12,10 @@ using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
+    /// <summary>
+    /// Manager for gas log entities. Overrides CreateAsync to handle automobile meter reading updates.
+    /// Uses base class for GetEntitiesAsync and GetEntityByIdAsync.
+    /// </summary>
     public class GasLogManager : EntityManagerBase<GasLog>, IGasLogManager
     {
         private readonly IDateTimeProvider _dateProvider;
@@ -37,6 +41,12 @@ namespace Hmm.Automobile
 
         public override INoteSerializer<GasLog> NoteSerializer { get; }
 
+        // GetEntitiesAsync - uses base class implementation
+        // GetEntityByIdAsync - uses base class implementation
+
+        /// <summary>
+        /// Gets gas logs for a specific automobile.
+        /// </summary>
         public async Task<ProcessingResult<PageList<GasLog>>> GetGasLogsAsync(
             int automobileId,
             ResourceCollectionParameters resourceCollectionParameters = null)
@@ -69,47 +79,9 @@ namespace Hmm.Automobile
             }
         }
 
-        public override async Task<ProcessingResult<PageList<GasLog>>> GetEntitiesAsync(
-            ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            try
-            {
-                var notesResult = await GetNotesAsync(new GasLog(), null, resourceCollectionParameters);
-
-                if (!notesResult.Success)
-                {
-                    return ProcessingResult<PageList<GasLog>>.Fail(notesResult.ErrorMessage, notesResult.ErrorType);
-                }
-
-                var notes = notesResult.Value;
-                var logTasks = notes.Select(async note =>
-                {
-                    var entityResult = await NoteSerializer.GetEntity(note);
-                    return entityResult.Success ? entityResult.Value : null;
-                });
-                var logs = await Task.WhenAll(logTasks);
-                var logList = logs.Where(log => log != null);
-
-                var result = new PageList<GasLog>(logList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
-                return ProcessingResult<PageList<GasLog>>.Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return ProcessingResult<PageList<GasLog>>.FromException(ex);
-            }
-        }
-
-        public override async Task<ProcessingResult<GasLog>> GetEntityByIdAsync(int id)
-        {
-            var noteResult = await GetNoteAsync(id, new GasLog());
-            if (!noteResult.Success)
-            {
-                return ProcessingResult<GasLog>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
-            }
-
-            return await NoteSerializer.GetEntity(noteResult.Value);
-        }
-
+        /// <summary>
+        /// Logs a historical gas entry without updating the automobile's meter reading.
+        /// </summary>
         public async Task<ProcessingResult<GasLog>> LogHistoryAsync(GasLog entity)
         {
             if (entity == null)

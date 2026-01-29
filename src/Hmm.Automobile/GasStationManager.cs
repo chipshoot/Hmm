@@ -1,6 +1,5 @@
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
-using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
@@ -10,6 +9,10 @@ using System.Threading.Tasks;
 
 namespace Hmm.Automobile
 {
+    /// <summary>
+    /// Manager for gas station entities. Uses base class for common CRUD operations.
+    /// Only UpdateAsync is overridden to handle GasStation-specific property copying.
+    /// </summary>
     public class GasStationManager : EntityManagerBase<GasStation>
     {
         public GasStationManager(
@@ -26,118 +29,25 @@ namespace Hmm.Automobile
 
         public override INoteSerializer<GasStation> NoteSerializer { get; }
 
-        public override async Task<ProcessingResult<PageList<GasStation>>> GetEntitiesAsync(
-            ResourceCollectionParameters resourceCollectionParameters = null)
-        {
-            try
-            {
-                var notesResult = await GetNotesAsync(new GasStation(), null, resourceCollectionParameters);
-                if (!notesResult.Success)
-                {
-                    return ProcessingResult<PageList<GasStation>>.Fail(notesResult.ErrorMessage, notesResult.ErrorType);
-                }
+        // GetEntitiesAsync - uses base class implementation
+        // GetEntityByIdAsync - uses base class implementation
+        // CreateAsync - uses base class implementation
 
-                var notes = notesResult.Value;
-                var stationTasks = notes.Select(async note =>
+        public override Task<ProcessingResult<GasStation>> UpdateAsync(GasStation entity)
+        {
+            return UpdateEntityAsync(
+                entity,
+                "Cannot find gas station in data source",
+                (existing, updated) =>
                 {
-                    var entityResult = await NoteSerializer.GetEntity(note);
-                    return entityResult.Success ? entityResult.Value : null;
+                    existing.Name = updated.Name;
+                    existing.Address = updated.Address;
+                    existing.City = updated.City;
+                    existing.State = updated.State;
+                    existing.ZipCode = updated.ZipCode;
+                    existing.Description = updated.Description;
+                    existing.IsActive = updated.IsActive;
                 });
-
-                var stations = await Task.WhenAll(stationTasks);
-                var stationList = stations.Where(station => station != null);
-
-                var result = new PageList<GasStation>(stationList, notes.TotalCount, notes.CurrentPage, notes.PageSize);
-                return ProcessingResult<PageList<GasStation>>.Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return ProcessingResult<PageList<GasStation>>.FromException(ex);
-            }
-        }
-
-        public override async Task<ProcessingResult<GasStation>> GetEntityByIdAsync(int id)
-        {
-            var noteResult = await GetNoteAsync(id, new GasStation());
-            if (!noteResult.Success)
-            {
-                return ProcessingResult<GasStation>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
-            }
-
-            return await NoteSerializer.GetEntity(noteResult.Value);
-        }
-
-        public override async Task<ProcessingResult<GasStation>> CreateAsync(GasStation entity)
-        {
-            if (entity == null)
-            {
-                return ProcessingResult<GasStation>.Invalid("Entity cannot be null");
-            }
-
-            entity.AuthorId = DefaultAuthor.Id;
-
-            var validationResult = await Validator.ValidateEntityAsync(entity);
-            if (!validationResult.Success)
-            {
-                return ProcessingResult<GasStation>.Invalid(validationResult.ErrorMessage);
-            }
-
-            var noteResult = await NoteSerializer.GetNote(entity);
-            if (!noteResult.Success)
-            {
-                return ProcessingResult<GasStation>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
-            }
-
-            var note = noteResult.Value;
-            note.Author = DefaultAuthor;
-
-            var createdNoteResult = await NoteManager.CreateAsync(note);
-            if (!createdNoteResult.Success)
-            {
-                return ProcessingResult<GasStation>.Fail(createdNoteResult.ErrorMessage, createdNoteResult.ErrorType);
-            }
-
-            return await GetEntityByIdAsync(createdNoteResult.Value.Id);
-        }
-
-        public override async Task<ProcessingResult<GasStation>> UpdateAsync(GasStation entity)
-        {
-            if (entity == null)
-            {
-                return ProcessingResult<GasStation>.Invalid("Entity cannot be null");
-            }
-
-            var curStationResult = await GetEntityByIdAsync(entity.Id);
-            if (!curStationResult.Success)
-            {
-                return ProcessingResult<GasStation>.NotFound("Cannot find gas station in data source");
-            }
-
-            var curStation = curStationResult.Value;
-            curStation.Name = entity.Name;
-            curStation.Address = entity.Address;
-            curStation.City = entity.City;
-            curStation.State = entity.State;
-            curStation.ZipCode = entity.ZipCode;
-            curStation.Description = entity.Description;
-            curStation.IsActive = entity.IsActive;
-
-            var noteResult = await NoteSerializer.GetNote(curStation);
-            if (!noteResult.Success)
-            {
-                return ProcessingResult<GasStation>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
-            }
-
-            var note = noteResult.Value;
-            note.Author = DefaultAuthor;
-
-            var updatedNoteResult = await NoteManager.UpdateAsync(note);
-            if (!updatedNoteResult.Success)
-            {
-                return ProcessingResult<GasStation>.Fail(updatedNoteResult.ErrorMessage, updatedNoteResult.ErrorType);
-            }
-
-            return await GetEntityByIdAsync(curStation.Id);
         }
 
         /// <summary>
