@@ -6,9 +6,14 @@ using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -616,6 +621,43 @@ namespace Hmm.Utility.TestHelp
 			mockUow.Setup(u => u.CommitAsync(It.IsAny<CancellationToken>())).ReturnsAsync(0);
             return mockUow.Object;
         }
+
+        #region Controller Helpers
+
+        /// <summary>
+        /// Configures a controller with validation support for unit tests.
+        /// This sets up the ObjectValidator to use DataAnnotation validation.
+        /// </summary>
+        protected static void ConfigureControllerForValidation(Controller controller)
+        {
+            var objectValidator = new Mock<IObjectModelValidator>();
+            objectValidator.Setup(o => o.Validate(
+                It.IsAny<ActionContext>(),
+                It.IsAny<ValidationStateDictionary>(),
+                It.IsAny<string>(),
+                It.IsAny<object>()))
+                .Callback<ActionContext, ValidationStateDictionary, string, object>((actionContext, validationState, prefix, model) =>
+                {
+                    if (model == null) return;
+
+                    var validationContext = new ValidationContext(model);
+                    var validationResults = new List<ValidationResult>();
+                    Validator.TryValidateObject(model, validationContext, validationResults, validateAllProperties: true);
+
+                    foreach (var result in validationResults)
+                    {
+                        foreach (var memberName in result.MemberNames)
+                        {
+                            var key = string.IsNullOrEmpty(prefix) ? memberName : $"{prefix}.{memberName}";
+                            actionContext.ModelState.AddModelError(key, result.ErrorMessage ?? string.Empty);
+                        }
+                    }
+                });
+
+            controller.ObjectValidator = objectValidator.Object;
+        }
+
+        #endregion Controller Helpers
 
         #region Reset data
 

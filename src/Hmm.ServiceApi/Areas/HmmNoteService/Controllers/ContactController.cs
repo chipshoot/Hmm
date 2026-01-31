@@ -184,7 +184,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 }
 
                 var contact2Update = _mapper.Map<ApiContactForUpdate>(curContactResult.Value);
-                patchDoc.ApplyTo(contact2Update);
+                patchDoc.ApplyTo(contact2Update, ModelState);
+                if (!TryValidateModel(contact2Update))
+                {
+                    return BadRequest(ProblemDetailsHelper.ValidationError(ModelState, HttpContext));
+                }
                 _mapper.Map(contact2Update, curContactResult.Value);
 
                 var updateResult = await _contactManager.UpdateAsync(curContactResult.Value);

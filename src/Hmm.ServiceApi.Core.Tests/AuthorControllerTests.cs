@@ -35,6 +35,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(_controller);
         }
 
         private AuthorController CreateControllerWithMockedManager(Mock<IAuthorManager> mockManager)
@@ -44,6 +45,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(controller);
             return controller;
         }
 
@@ -367,6 +369,25 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
             var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
             Assert.Equal("An unexpected error occurred while patching the author.", problemDetails.Detail);
+        }
+
+        [Fact]
+        public async Task PatchAuthor_ReturnsBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            const int authorId = 100;
+            var patchDoc = new JsonPatchDocument<ApiAuthorForUpdate>();
+            // Set AccountName to null which violates the [Required] validation
+            patchDoc.Replace(e => e.AccountName, null);
+
+            // Act
+            var result = await _controller.Patch(authorId, patchDoc);
+
+            // Assert - should return BadRequest because AccountName is required
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Validation Error", problemDetails.Title);
+            Assert.Contains("AccountName", problemDetails.Detail);
         }
 
         #endregion Patch author

@@ -206,7 +206,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 }
 
                 var tag2Update = _mapper.Map<ApiTagForUpdate>(curTagResult.Value);
-                patchDoc.ApplyTo(tag2Update);
+                patchDoc.ApplyTo(tag2Update, ModelState);
+                if (!TryValidateModel(tag2Update))
+                {
+                    return BadRequest(ProblemDetailsHelper.ValidationError(ModelState, HttpContext));
+                }
                 _mapper.Map(tag2Update, curTagResult.Value);
 
                 var updateResult = await _tagManager.UpdateAsync(curTagResult.Value);

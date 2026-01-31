@@ -33,6 +33,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(_controller);
         }
 
         private TagController CreateControllerWithMockedManager(Mock<ITagManager> mockManager)
@@ -42,6 +43,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(controller);
             return controller;
         }
 
@@ -364,6 +366,25 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
             var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
             Assert.Equal("An unexpected error occurred while patching the tag.", problemDetails.Detail);
+        }
+
+        [Fact]
+        public async Task PatchTag_ReturnsBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            const int tagId = 100;
+            var patchDoc = new JsonPatchDocument<ApiTagForUpdate>();
+            // Set Name to null which violates the [Required] validation
+            patchDoc.Replace(e => e.Name, null);
+
+            // Act
+            var result = await _controller.Patch(tagId, patchDoc);
+
+            // Assert - should return BadRequest because Name is required
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Validation Error", problemDetails.Title);
+            Assert.Contains("Name", problemDetails.Detail);
         }
 
         #endregion Patch tag

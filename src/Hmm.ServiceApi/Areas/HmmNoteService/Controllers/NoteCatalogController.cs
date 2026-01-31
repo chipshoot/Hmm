@@ -187,7 +187,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 }
 
                 var catalog2Update = _mapper.Map<ApiNoteCatalogForUpdate>(curCatalogResult.Value);
-                patchDoc.ApplyTo(catalog2Update);
+                patchDoc.ApplyTo(catalog2Update, ModelState);
+                if (!TryValidateModel(catalog2Update))
+                {
+                    return BadRequest(ProblemDetailsHelper.ValidationError(ModelState, HttpContext));
+                }
                 _mapper.Map(catalog2Update, curCatalogResult.Value);
 
                 var updateResult = await _catalogManager.UpdateAsync(curCatalogResult.Value);

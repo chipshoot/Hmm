@@ -39,6 +39,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(_controller);
         }
 
         private HmmNoteController CreateControllerWithMockedManager(Mock<IHmmNoteManager> mockManager)
@@ -48,6 +49,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(controller);
             return controller;
         }
 
@@ -235,17 +237,18 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task UpdateNote_ReturnsBadRequest_WhenUpdateFails()
+        public async Task UpdateNote_ReturnsBadRequest_WhenBusinessValidationFails()
         {
             // Arrange
             var existingNoteResult = await _noteManager.GetNoteByIdAsync(100);
             var existingNote = existingNoteResult.Value;
             var apiNoteForUpdate = ApiMapper.Map<ApiNoteForUpdate>(existingNote);
-            apiNoteForUpdate.Subject = GetRandomString(2000);
+            // Use a value that passes basic validation but fails business validation
+            apiNoteForUpdate.Subject = "Invalid Subject Value";
 
-            // Set up validator to return validation error for subject too long
+            // Set up validator to return validation error for business rule violation
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<HmmNote>()))
-                .ReturnsAsync(ProcessingResult<HmmNote>.Invalid("Subject is too long"));
+                .ReturnsAsync(ProcessingResult<HmmNote>.Invalid("Subject violates business rule"));
 
             // Act
             var result = await _controller.Put(existingNote.Id, apiNoteForUpdate);
@@ -253,7 +256,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
-            Assert.Contains("Subject is too long", problemDetails.Detail);
+            Assert.Contains("Subject violates business rule", problemDetails.Detail);
         }
 
         [Fact]
@@ -434,16 +437,17 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task PatchNote_ReturnsBadRequest_WhenUpdateFails()
+        public async Task PatchNote_ReturnsBadRequest_WhenBusinessValidationFails()
         {
             // Arrange
             const int noteId = 100;
             var patchDoc = new JsonPatchDocument<ApiNoteForUpdate>();
-            patchDoc.Replace(e => e.Subject, GetRandomString(2000));
+            // Use a value that passes ModelState validation (<=200 chars) but fails business validation
+            patchDoc.Replace(e => e.Subject, "Invalid Subject Value");
 
-            // Set up validator to return validation error for subject too long
+            // Set up validator to return validation error for business rule violation
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<HmmNote>()))
-                .ReturnsAsync(ProcessingResult<HmmNote>.Invalid("Subject is too long"));
+                .ReturnsAsync(ProcessingResult<HmmNote>.Invalid("Subject violates business rule"));
 
             // Act
             var result = await _controller.Patch(noteId, patchDoc);
@@ -451,7 +455,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
-            Assert.Contains("Subject is too long", problemDetails.Detail);
+            Assert.Contains("Subject violates business rule", problemDetails.Detail);
         }
 
         [Fact]
@@ -476,6 +480,25 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
             var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
             Assert.Equal("An unexpected error occurred while updating the note.", problemDetails.Detail);
+        }
+
+        [Fact]
+        public async Task PatchNote_ReturnsBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            const int noteId = 100;
+            var patchDoc = new JsonPatchDocument<ApiNoteForUpdate>();
+            // Set Subject to null which violates the [Required] validation
+            patchDoc.Replace(e => e.Subject, null);
+
+            // Act
+            var result = await _controller.Patch(noteId, patchDoc);
+
+            // Assert - should return BadRequest because Subject is required
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Validation Error", problemDetails.Title);
+            Assert.Contains("Subject", problemDetails.Detail);
         }
 
         #endregion Patch note

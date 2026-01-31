@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-01-31 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #27, #28, #29, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39, #40, #41, #42, #43, #44, #45, #46, #75, #76, #78, #79, #82)
+Last Updated: 2026-01-31 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #27, #28, #29, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47, #75, #76, #78, #79, #82)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (50 resolved, 1 partially resolved)
+Total Defects Found: 107+ (51 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -778,11 +778,27 @@ API DESIGN DEFECTS (P2 - POOR CLIENT EXPERIENCE)
     - Updated test files to verify OkObjectResult with empty PageList instead of NotFoundObjectResult
     Impact: Empty collections now properly return HTTP 200 OK with empty array, conforming to REST standards
 
-47. **PATCH MISSING MODELSTATE VALIDATION**
-    Location: HmmNoteController.cs:205, TagController.cs:189
+47. **[RESOLVED] PATCH MISSING MODELSTATE VALIDATION**
+    Status: ✓ FIXED (Verified 2026-01-31)
+    Location: All PATCH endpoints in HmmNoteService controllers
     Problem: patchDoc.ApplyTo() not followed by TryValidateModel()
-    Impact: Invalid patches succeed and propagate to business layer
-    Fix: Add ModelState validation after ApplyTo
+    Resolution: Added ModelState validation after ApplyTo for all 5 controllers
+    Changes made:
+    - HmmNoteController.cs: Added TryValidateModel after ApplyTo, returns ValidationError ProblemDetails
+    - AuthorController.cs: Added TryValidateModel after ApplyTo, returns ValidationError ProblemDetails
+    - TagController.cs: Added TryValidateModel after ApplyTo, returns ValidationError ProblemDetails
+    - NoteCatalogController.cs: Added TryValidateModel after ApplyTo, returns ValidationError ProblemDetails
+    - ContactController.cs: Added TryValidateModel after ApplyTo, returns ValidationError ProblemDetails
+    - Created ProblemDetailsHelper.ValidationError() method for consistent validation error responses
+    - Added DataAnnotation validation attributes to all DTO Update classes:
+      * ApiNoteForUpdate: [Required] on Subject (max 200 chars)
+      * ApiAuthorForUpdate: [Required] on AccountName (max 100 chars)
+      * ApiTagForUpdate: [Required] on Name (max 100 chars)
+      * ApiNoteCatalogForUpdate: [Required] on Name (max 100 chars)
+      * ApiContactForUpdate: [StringLength] on FirstName, LastName (max 100 chars)
+    - Updated CoreTestFixtureBase with ConfigureControllerForValidation() helper for unit tests
+    - Added unit tests for ModelState validation in all 5 controller test classes
+    Impact: Invalid patches now properly rejected at API layer with 400 Bad Request and RFC 7807 ProblemDetails
 
 48. **AMBIGUOUS ROUTE CONFLICT**
     Location: src/Hmm.ServiceApi/Areas/HmmNoteService/Controllers/TagController.cs
@@ -1200,7 +1216,7 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (50 resolved, 1 partially resolved)
+Total Defects Found: 107+ (51 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
 Critical (P1): 40 (16 resolved: #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #33, #34)
@@ -1215,7 +1231,7 @@ By Category:
 - Code Duplication: 6 (6 resolved: #27 uniqueness validation, #28 expression building, #29 deactivation logic, #30 automobile manager CRUD, #31 mapper null checks, #32 result filter service locator)
 - SOLID Violations: 15 (8 resolved: #13, #14, #15, #16, #17, #18, #19, #20)
 - Data Layer Issues: 9 (6 resolved: #21, #22, #23, #24, #25, #26)
-- API Design: 12 (2 resolved: #44 - empty Location URI, #46 - empty collection 404 fixed)
+- API Design: 12 (4 resolved: #44 - empty Location URI, #45 - inconsistent error formats, #46 - empty collection 404, #47 - PATCH ModelState validation)
 - Dead Code: 10
 - Infrastructure: 13 (5 resolved: #75, #76, #78, #79, #82)
 - Testing Issues: 6

@@ -1,5 +1,7 @@
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Hmm.ServiceApi.Models
 {
@@ -9,6 +11,7 @@ namespace Hmm.ServiceApi.Models
     public static class ProblemDetailsHelper
     {
         private const string BadRequestType = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
+        private const string ValidationErrorType = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
         private const string NotFoundType = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
         private const string ConflictType = "https://tools.ietf.org/html/rfc7231#section-6.5.8";
         private const string InternalServerErrorType = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
@@ -61,6 +64,31 @@ namespace Hmm.ServiceApi.Models
                 StatusCodes.Status500InternalServerError,
                 "Internal Server Error",
                 InternalServerErrorType,
+                detail,
+                httpContext);
+        }
+
+        /// <summary>
+        /// Creates a 400 Bad Request ProblemDetails response from ModelState validation errors.
+        /// </summary>
+        public static ProblemDetails ValidationError(ModelStateDictionary modelState, HttpContext httpContext)
+        {
+            var errors = modelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .SelectMany(e => e.Value!.Errors.Select(err =>
+                    string.IsNullOrEmpty(e.Key)
+                        ? err.ErrorMessage
+                        : $"{e.Key}: {err.ErrorMessage}"))
+                .ToList();
+
+            var detail = errors.Count > 0
+                ? string.Join("; ", errors)
+                : "One or more validation errors occurred.";
+
+            return CreateProblemDetails(
+                StatusCodes.Status400BadRequest,
+                "Validation Error",
+                ValidationErrorType,
                 detail,
                 httpContext);
         }

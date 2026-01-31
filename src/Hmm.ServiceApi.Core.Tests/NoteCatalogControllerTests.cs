@@ -34,6 +34,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(_controller);
         }
 
         private NoteCatalogController CreateControllerWithMockedManager(Mock<INoteCatalogManager> mockManager)
@@ -43,6 +44,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(controller);
             return controller;
         }
 
@@ -417,6 +419,25 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
             var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
             Assert.Equal("An unexpected error occurred while patching the note catalog.", problemDetails.Detail);
+        }
+
+        [Fact]
+        public async Task PatchCatalog_ReturnsBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            const int catalogId = 100;
+            var patchDoc = new JsonPatchDocument<ApiNoteCatalogForUpdate>();
+            // Set Name to null which violates the [Required] validation
+            patchDoc.Replace(e => e.Name, null);
+
+            // Act
+            var result = await _controller.Patch(catalogId, patchDoc);
+
+            // Assert - should return BadRequest because Name is required
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Validation Error", problemDetails.Title);
+            Assert.Contains("Name", problemDetails.Detail);
         }
 
         #endregion Patch catalog

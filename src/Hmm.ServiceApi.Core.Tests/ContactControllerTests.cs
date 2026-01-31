@@ -36,6 +36,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(_controller);
         }
 
         private ContactController CreateControllerWithMockedManager(Mock<IContactManager> mockManager)
@@ -45,6 +46,7 @@ namespace Hmm.ServiceApi.Core.Tests
             {
                 HttpContext = new DefaultHttpContext()
             };
+            ConfigureControllerForValidation(controller);
             return controller;
         }
 
@@ -291,11 +293,11 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.True(existingContactResult.Success);
             var existingContact = existingContactResult.Value;
             var apiContactForUpdate = ApiMapper.Map<ApiContactForUpdate>(existingContact);
-            apiContactForUpdate.LastName = GetRandomString(255);
+            apiContactForUpdate.LastName = "InvalidLastName";
 
-            // Set up validator to return validation error
+            // Set up validator to return validation error for business logic validation
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
-                .ReturnsAsync(ProcessingResult<Contact>.Invalid("Last name is too long"));
+                .ReturnsAsync(ProcessingResult<Contact>.Invalid("Last name validation failed"));
 
             // Act
             var result = await _controller.Put(existingContact.Id, apiContactForUpdate);
@@ -303,7 +305,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
-            Assert.Contains("Last name is too long", problemDetails.Detail);
+            Assert.Contains("Last name validation failed", problemDetails.Detail);
         }
 
         [Fact]
@@ -392,11 +394,11 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             const int contactId = 100;
             var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
-            patchDoc.Replace(e => e.LastName, GetRandomString(255));
+            patchDoc.Replace(e => e.LastName, "InvalidLastName");
 
-            // Set up validator to return validation error
+            // Set up validator to return validation error for business logic validation
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
-                .ReturnsAsync(ProcessingResult<Contact>.Invalid("Last name is too long"));
+                .ReturnsAsync(ProcessingResult<Contact>.Invalid("Last name validation failed"));
 
             // Act
             var result = await _controller.Patch(contactId, patchDoc);
@@ -404,7 +406,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
-            Assert.Contains("Last name is too long", problemDetails.Detail);
+            Assert.Contains("Last name validation failed", problemDetails.Detail);
         }
 
         [Fact]
@@ -428,6 +430,25 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
             var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
             Assert.Equal("An unexpected error occurred while patching the contact.", problemDetails.Detail);
+        }
+
+        [Fact]
+        public async Task PatchContact_ReturnsBadRequest_WhenModelStateIsInvalid()
+        {
+            // Arrange
+            const int contactId = 100;
+            var patchDoc = new JsonPatchDocument<ApiContactForUpdate>();
+            // Set FirstName to a string that exceeds the 100 character limit
+            patchDoc.Replace(e => e.FirstName, GetRandomString(150));
+
+            // Act
+            var result = await _controller.Patch(contactId, patchDoc);
+
+            // Assert - should return BadRequest because FirstName exceeds max length
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Validation Error", problemDetails.Title);
+            Assert.Contains("FirstName", problemDetails.Detail);
         }
 
         #endregion Patch contact

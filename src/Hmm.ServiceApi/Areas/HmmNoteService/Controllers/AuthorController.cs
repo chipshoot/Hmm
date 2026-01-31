@@ -187,7 +187,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 }
 
                 var author2Update = _mapper.Map<ApiAuthorForUpdate>(curUsrResult.Value);
-                patchDoc.ApplyTo(author2Update);
+                patchDoc.ApplyTo(author2Update, ModelState);
+                if (!TryValidateModel(author2Update))
+                {
+                    return BadRequest(ProblemDetailsHelper.ValidationError(ModelState, HttpContext));
+                }
                 _mapper.Map(author2Update, curUsrResult.Value);
 
                 var updateResult = await _authorManager.UpdateAsync(curUsrResult.Value);
