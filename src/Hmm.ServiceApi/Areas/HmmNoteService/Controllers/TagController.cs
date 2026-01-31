@@ -81,17 +81,25 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(tagResult.Value);
         }
 
-        [HttpGet("{name}", Name = "GetTagByName")]
+        [HttpGet("by-name/{name}", Name = "GetTagByName")]
         [TypeFilter(typeof(TagResultFilter))]
-        public async Task<IActionResult> Get(string name)
+        public async Task<IActionResult> GetByName(string name)
         {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return BadRequest(ProblemDetailsHelper.BadRequest("Tag name is required", HttpContext));
+            }
+
             var tagResult = await _tagManager.GetTagByNameAsync(name);
+
+            // Check IsNotFound first (handles both EmptyOk and NotFound cases)
+            if (tagResult.IsNotFound)
+            {
+                return NotFound(ProblemDetailsHelper.NotFound($"The tag with name '{name}' not found.", HttpContext));
+            }
+
             if (!tagResult.Success)
             {
-                if (tagResult.IsNotFound)
-                {
-                    return NotFound(ProblemDetailsHelper.NotFound($"The tag : {name} not found.", HttpContext));
-                }
                 _logger.LogError("Failed to retrieve tag with name {Name}. Error: {ErrorMessage}. TraceId: {TraceId}", name, tagResult.ErrorMessage, HttpContext.TraceIdentifier);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the tag.", HttpContext));

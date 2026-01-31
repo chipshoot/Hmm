@@ -109,6 +109,68 @@ namespace Hmm.ServiceApi.Core.Tests
 
         #endregion Get tag by Id
 
+        #region Get tag by name
+
+        [Fact]
+        public async Task GetTagByName_ReturnsOkResult_WithTag()
+        {
+            // Arrange
+            var existingTagResult = await _tagManager.GetTagByIdAsync(100);
+            Assert.True(existingTagResult.Success);
+            var existingTag = existingTagResult.Value;
+
+            // Act
+            var result = await _controller.GetByName(existingTag.Name);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnTag = Assert.IsType<Tag>(okResult.Value);
+            Assert.Equal(existingTag.Name, returnTag.Name);
+        }
+
+        [Fact]
+        public async Task GetTagByName_ReturnsNotFound_WhenTagNotFound()
+        {
+            // Arrange
+            const string tagName = "NonExistentTag";
+
+            // Act
+            var result = await _controller.GetByName(tagName);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"The tag with name '{tagName}' not found.", problemDetails.Detail);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        public async Task GetTagByName_ReturnsBadRequest_WhenNameIsEmptyOrWhitespace(string name)
+        {
+            // Act
+            var result = await _controller.GetByName(name);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Tag name is required", problemDetails.Detail);
+        }
+
+        [Fact]
+        public async Task GetTagByName_ReturnsBadRequest_WhenNameIsNull()
+        {
+            // Act
+            var result = await _controller.GetByName(null!);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Tag name is required", problemDetails.Detail);
+        }
+
+        #endregion Get tag by name
+
         #region Add a new tag
 
         [Fact]
