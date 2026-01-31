@@ -16,14 +16,23 @@ namespace Hmm.Utility.Misc
 
     /// <summary>
     /// Immutable result pattern for all operations.
-    /// Thread-safe and prevents race conditions through immutability.
-    /// Eliminates the need for "return null" and makes error handling explicit.
+    ///
+    /// Thread-Safety Guarantees:
+    /// - This class is fully immutable and thread-safe for concurrent reads
+    /// - All state is set during construction via private constructor
+    /// - All properties are read-only (no public setters)
+    /// - Methods like WithWarning, WithInfo, WithError, and Combine return NEW instances
+    /// - The Messages collection is stored as IReadOnlyList and cannot be modified
+    /// - Safe to share instances across threads without synchronization
+    ///
+    /// Note: Thread-safety applies to ProcessingResult instances themselves.
+    /// The Value property (of type T) is not guaranteed to be thread-safe unless T is immutable.
     ///
     /// Use Result&lt;T&gt; where T is the return type.
     /// For operations with no return value, use Result&lt;Unit&gt;.
     /// </summary>
     /// <typeparam name="T">The type of value returned on success, or Unit if no value is needed</typeparam>
-    public class ProcessingResult<T>
+    public sealed class ProcessingResult<T>
     {
         private readonly IReadOnlyList<ReturnMessage> _messages;
 

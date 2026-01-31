@@ -1,6 +1,10 @@
 using Hmm.Utility.Misc;
 using Xunit;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hmm.Utility.Tests
 {
@@ -335,5 +339,199 @@ namespace Hmm.Utility.Tests
             Assert.IsAssignableFrom<System.Collections.Generic.IReadOnlyList<ReturnMessage>>(result.Messages);
             Assert.Single(result.Messages);
         }
+
+        #region Thread-Safety Tests
+
+        [Fact]
+        public async Task ConcurrentReads_DoNotThrow()
+        {
+            // Arrange
+            var result = ProcessingResult<int>.Ok(42)
+                .WithInfo("Info 1")
+                .WithWarning("Warning 1");
+
+            var tasks = new List<Task>();
+            var readCount = 1000;
+
+            // Act - Multiple concurrent reads
+            for (int i = 0; i < readCount; i++)
+            {
+                tasks.Add(Task.Run(() =>
+                {
+                    _ = result.Success;
+                    _ = result.Value;
+                    _ = result.Messages.Count;
+                    _ = result.ErrorMessage;
+                    _ = result.HasInfo;
+                    _ = result.HasWarning;
+                    _ = result.HasError;
+                    _ = result.GetWholeMessage();
+                }));
+            }
+
+            // Assert - No exceptions thrown
+            await Task.WhenAll(tasks);
+        }
+
+        [Fact]
+        public async Task ConcurrentWithOperations_CreateIndependentInstances()
+        {
+            // Arrange
+            var original = ProcessingResult<int>.Ok(42);
+            var results = new List<ProcessingResult<int>>();
+            var lockObj = new object();
+            var taskCount = 100;
+
+            // Act - Multiple concurrent modifications (each creates new instance)
+            var tasks = Enumerable.Range(0, taskCount).Select(i => Task.Run(() =>
+            {
+                var newResult = original.WithInfo($"Info {i}");
+                lock (lockObj)
+                {
+                    results.Add(newResult);
+                }
+            }));
+
+            await Task.WhenAll(tasks);
+
+            // Assert
+            Assert.Equal(taskCount, results.Count);
+            // Original unchanged
+            Assert.Empty(original.Messages);
+            // Each result has exactly one message
+            Assert.All(results, r => Assert.Single(r.Messages));
+            // All results are distinct instances
+            Assert.All(results, r => Assert.NotSame(original, r));
+        }
+
+        [Fact]
+        public async Task ConcurrentCombine_CreatesIndependentResults()
+        {
+            // Arrange
+            var result1 = ProcessingResult<string>.Ok("test").WithInfo("Base");
+            var result2 = ProcessingResult<string>.Ok("test").WithWarning("Other");
+            var combinedResults = new List<ProcessingResult<string>>();
+            var lockObj = new object();
+            var taskCount = 100;
+
+            // Act - Multiple concurrent combines
+            var tasks = Enumerable.Range(0, taskCount).Select(_ => Task.Run(() =>
+            {
+                var combined = result1.Combine(result2);
+                lock (lockObj)
+                {
+                    combinedResults.Add(combined);
+                }
+            }));
+
+            await Task.WhenAll(tasks);
+
+            // Assert
+            Assert.Equal(taskCount, combinedResults.Count);
+            // Original results unchanged
+            Assert.Single(result1.Messages);
+            Assert.Single(result2.Messages);
+            // All combined results have 2 messages
+            Assert.All(combinedResults, r => Assert.Equal(2, r.Messages.Count));
+        }
+
+        [Fact]
+        public async Task SharedResult_RemainsImmutableUnderConcurrentAccess()
+        {
+            // Arrange - Create a shared result
+            var sharedResult = ProcessingResult<int>.Ok(42).WithInfo("Shared");
+            var exceptions = new List<Exception>();
+            var lockObj = new object();
+
+            // Act - Hammer it with concurrent operations
+            var tasks = Enumerable.Range(0, 500).Select(i => Task.Run(() =>
+            {
+                try
+                {
+                    // Read operations
+                    var success = sharedResult.Success;
+                    var value = sharedResult.Value;
+                    var messages = sharedResult.Messages;
+                    var count = messages.Count;
+                    var hasInfo = sharedResult.HasInfo;
+
+                    // Verify immutability - these create new instances
+                    var withWarning = sharedResult.WithWarning($"Warning {i}");
+                    var withError = sharedResult.WithError($"Error {i}");
+
+                    // Original should be unchanged
+                    Assert.Single(sharedResult.Messages);
+                    Assert.True(sharedResult.Success);
+                    Assert.Equal(42, sharedResult.Value);
+                }
+                catch (Exception ex)
+                {
+                    lock (lockObj)
+                    {
+                        exceptions.Add(ex);
+                    }
+                }
+            }));
+
+            await Task.WhenAll(tasks);
+
+            // Assert - No exceptions during concurrent access
+            Assert.Empty(exceptions);
+            // Original still unchanged
+            Assert.Single(sharedResult.Messages);
+            Assert.True(sharedResult.Success);
+        }
+
+        [Fact]
+        public void OriginalInstance_UnchangedAfterWithOperations()
+        {
+            // Arrange
+            var original = ProcessingResult<int>.Ok(100);
+
+            // Act
+            var withInfo = original.WithInfo("Info");
+            var withWarning = original.WithWarning("Warning");
+            var withError = original.WithError("Error");
+
+            // Assert - Original unchanged
+            Assert.True(original.Success);
+            Assert.Empty(original.Messages);
+            Assert.Equal(100, original.Value);
+
+            // New instances have modifications
+            Assert.True(withInfo.Success);
+            Assert.Single(withInfo.Messages);
+
+            Assert.True(withWarning.Success);
+            Assert.Single(withWarning.Messages);
+
+            Assert.False(withError.Success); // WithError changes success to false
+            Assert.Single(withError.Messages);
+        }
+
+        [Fact]
+        public void ChainedWithOperations_CreateDistinctInstances()
+        {
+            // Arrange
+            var original = ProcessingResult<string>.Ok("test");
+
+            // Act
+            var step1 = original.WithInfo("Step 1");
+            var step2 = step1.WithWarning("Step 2");
+            var step3 = step2.WithInfo("Step 3");
+
+            // Assert - Each instance is distinct
+            Assert.NotSame(original, step1);
+            Assert.NotSame(step1, step2);
+            Assert.NotSame(step2, step3);
+
+            // Each has correct message count
+            Assert.Empty(original.Messages);
+            Assert.Single(step1.Messages);
+            Assert.Equal(2, step2.Messages.Count);
+            Assert.Equal(3, step3.Messages.Count);
+        }
+
+        #endregion
     }
 }

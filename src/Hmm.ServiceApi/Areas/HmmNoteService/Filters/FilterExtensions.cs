@@ -4,6 +4,7 @@ using Hmm.Utility.Dal.Query;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -13,6 +14,37 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
 {
     public static class FilterExtensions
     {
+        /// <summary>
+        /// Cache for all public properties per type. Used by ShapeData methods.
+        /// Key: Type, Value: Array of all public instance PropertyInfo
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> AllPropertiesCache = new();
+
+        /// <summary>
+        /// Cache for individual property lookups per type.
+        /// Key: (Type, PropertyName lowercase), Value: PropertyInfo or null if not found
+        /// </summary>
+        private static readonly ConcurrentDictionary<(Type, string), PropertyInfo> PropertyCache = new();
+
+        /// <summary>
+        /// Gets all public instance properties for a type, using cache for performance.
+        /// </summary>
+        private static PropertyInfo[] GetCachedProperties(Type type)
+        {
+            return AllPropertiesCache.GetOrAdd(type, t =>
+                t.GetProperties(BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance));
+        }
+
+        /// <summary>
+        /// Gets a specific property by name for a type, using cache for performance.
+        /// </summary>
+        private static PropertyInfo GetCachedProperty(Type type, string propertyName)
+        {
+            var key = (type, propertyName.ToLowerInvariant());
+            return PropertyCache.GetOrAdd(key, k =>
+                k.Item1.GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance));
+        }
+
         public static void CreateLinks(this ApiAuthor author, ActionContext context, LinkGenerator linkGen)
         {
             if (context == null || linkGen == null)
@@ -265,20 +297,14 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             // create a list to hold our ExpandoObjects
             var expandoObjectList = new List<ExpandoObject>();
 
-            // create a list with PropertyInfo objects on TSource.  Reflection is
-            // expensive, so rather than doing it for each object in the list, we do
-            // it once and reuse the results.  After all, part of the reflection is on the
-            // type of the object (TSource), not on the instance
+            // Get PropertyInfo objects using cached reflection for performance
             var propertyInfoList = new List<PropertyInfo>();
+            var sourceType = typeof(T);
 
             if (string.IsNullOrWhiteSpace(fields))
             {
-                // all public properties should be in the ExpandoObject
-                var propertyInfos = typeof(T)
-                        .GetProperties(BindingFlags.IgnoreCase
-                        | BindingFlags.Public | BindingFlags.Instance);
-
-                propertyInfoList.AddRange(propertyInfos);
+                // all public properties should be in the ExpandoObject (using cache)
+                propertyInfoList.AddRange(GetCachedProperties(sourceType));
             }
             else
             {
@@ -292,24 +318,20 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                     // so use another var.
                     var propertyName = field.Trim();
 
-                    // use reflection to get the property on the source object
-                    // we need to include public and instance, b/c specifying a binding
-                    // flag overwrites the already-existing binding flags.
-                    var propertyInfo = typeof(T)
-                        .GetProperty(propertyName, BindingFlags.IgnoreCase |
-                        BindingFlags.Public | BindingFlags.Instance);
+                    // use cached reflection to get the property on the source object
+                    var propertyInfo = GetCachedProperty(sourceType, propertyName);
 
                     if (propertyInfo == null)
                     {
-                        throw new Exception($"Property {propertyName} wasn't found on {typeof(T)}");
+                        throw new Exception($"Property {propertyName} wasn't found on {sourceType}");
                     }
 
                     // add propertyInfo to list
                     propertyInfoList.Add(propertyInfo);
                 }
 
-                // check if source contains links property
-                var linksInfo = typeof(T).GetProperty(nameof(ApiEntity.Links), BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                // check if source contains links property (using cache)
+                var linksInfo = GetCachedProperty(sourceType, nameof(ApiEntity.Links));
                 if (linksInfo != null)
                 {
                     propertyInfoList.Add(linksInfo);
@@ -340,7 +362,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             }
 
             // return the Page list
-            return new PageList<ExpandoObject>(expandoObjectList.AsEnumerable(), source.Count, source.CurrentPage, source.PageSize);
+            // Use TotalCount (not Count) to preserve pagination metadata correctly
+            return new PageList<ExpandoObject>(expandoObjectList.AsEnumerable(), source.TotalCount, source.CurrentPage, source.PageSize);
         }
 
         public static ExpandoObject ShapeData<T>(this T source, string fields)
@@ -351,11 +374,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
             }
 
             var dataShapedObject = new ExpandoObject();
+            var sourceType = typeof(T);
 
             if (string.IsNullOrWhiteSpace(fields))
             {
-                // all public properties should be in the ExpandoObject
-                var propertyInfos = typeof(T).GetProperties(BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                // all public properties should be in the ExpandoObject (using cache)
+                var propertyInfos = GetCachedProperties(sourceType);
 
                 foreach (var propertyInfo in propertyInfos)
                 {
@@ -385,14 +409,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Filters
                 // so use another var.
                 var propertyName = field.Trim();
 
-                // use reflection to get the property on the source object
-                // we need to include public and instance, b/c specifying a
-                // binding flag overwrites the already-existing binding flags.
-                var propertyInfo = typeof(T).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                // use cached reflection to get the property on the source object
+                var propertyInfo = GetCachedProperty(sourceType, propertyName);
 
                 if (propertyInfo == null)
                 {
-                    throw new Exception($"Property {propertyName} wasn't found on {typeof(T)}");
+                    throw new Exception($"Property {propertyName} wasn't found on {sourceType}");
                 }
 
                 // get the value of the property on the source object
