@@ -103,7 +103,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the note catalog.");
                 }
 
-                return Created("", newCatalogResult.Value);
+                return CreatedAtRoute("GetNoteCatalogById", new { id = newCatalogResult.Value.Id, version = "1.0" }, newCatalogResult.Value);
             }
             catch (Exception ex)
             {

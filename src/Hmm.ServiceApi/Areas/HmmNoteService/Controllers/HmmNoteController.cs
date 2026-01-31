@@ -101,7 +101,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the note.");
                 }
 
-                return Created("", newNoteResult.Value);
+                return CreatedAtRoute("GetNoteById", new { id = newNoteResult.Value.Id, version = "1.0" }, newNoteResult.Value);
             }
             catch (Exception ex)
             {

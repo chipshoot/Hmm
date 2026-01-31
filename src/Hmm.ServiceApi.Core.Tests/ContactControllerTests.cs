@@ -138,9 +138,12 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Post(apiContact);
 
             // Assert
-            var createdResult = Assert.IsType<CreatedResult>(result);
+            var createdResult = Assert.IsType<CreatedAtRouteResult>(result);
+            Assert.Equal("GetContactById", createdResult.RouteName);
+            Assert.Equal("1.0", createdResult.RouteValues?["version"]);
             var returnContact = Assert.IsType<Contact>(createdResult.Value);
             Assert.Equal(5, returnContact.Id);
+            Assert.Equal(returnContact.Id, createdResult.RouteValues?["id"]);
         }
 
         [Fact]

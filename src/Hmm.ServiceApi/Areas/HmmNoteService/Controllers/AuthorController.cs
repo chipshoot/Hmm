@@ -153,7 +153,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the author.");
                 }
 
-                return Created("", newAuthorResult.Value);
+                return CreatedAtRoute("GetAuthorById", new { id = newAuthorResult.Value.Id, version = "1.0" }, newAuthorResult.Value);
             }
             catch (Exception ex)
             {

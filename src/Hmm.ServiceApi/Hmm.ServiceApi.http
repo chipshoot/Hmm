@@ -4,7 +4,18 @@
 ### ============================================================
 ### VARIABLES
 ### ============================================================
+
+# Choose your environment by uncommenting ONE of the following:
+
+# IIS Express
+# @baseUrl = https://localhost:44349
+
+# Kestrel (Project mode)
 @baseUrl = https://localhost:5001
+
+# Docker
+# @baseUrl = https://localhost:5001
+
 @apiVersion = 1.0
 
 # ============================================================

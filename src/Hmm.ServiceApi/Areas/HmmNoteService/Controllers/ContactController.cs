@@ -111,7 +111,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the contact.");
                 }
 
-                return Created("", newContactResult.Value);
+                return CreatedAtRoute("GetContactById", new { id = newContactResult.Value.Id, version = "1.0" }, newContactResult.Value);
             }
             catch (Exception ex)
             {

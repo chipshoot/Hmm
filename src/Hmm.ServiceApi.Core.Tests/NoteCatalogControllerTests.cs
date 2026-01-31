@@ -125,9 +125,12 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Post(apiCatalog);
 
             // Assert
-            var createdResult = Assert.IsType<CreatedResult>(result);
+            var createdResult = Assert.IsType<CreatedAtRouteResult>(result);
+            Assert.Equal("GetNoteCatalogById", createdResult.RouteName);
+            Assert.Equal("1.0", createdResult.RouteValues?["version"]);
             var returnCatalog = Assert.IsType<NoteCatalog>(createdResult.Value);
             Assert.Equal(5, returnCatalog.Id);
+            Assert.Equal(returnCatalog.Id, createdResult.RouteValues?["id"]);
         }
 
         [Fact]

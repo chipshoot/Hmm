@@ -121,7 +121,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the tag.");
                 }
 
-                return Created("", newTagResult.Value);
+                return CreatedAtRoute("GetTagById", new { id = newTagResult.Value.Id, version = "1.0" }, newTagResult.Value);
             }
             catch (Exception ex)
             {

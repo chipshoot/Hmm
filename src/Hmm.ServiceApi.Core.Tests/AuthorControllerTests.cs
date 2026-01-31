@@ -119,9 +119,12 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Post(apiAuthor);
 
             // Assert
-            var createdResult = Assert.IsType<CreatedResult>(result);
+            var createdResult = Assert.IsType<CreatedAtRouteResult>(result);
+            Assert.Equal("GetAuthorById", createdResult.RouteName);
+            Assert.Equal("1.0", createdResult.RouteValues?["version"]);
             var returnAuthor = Assert.IsType<Author>(createdResult.Value);
             Assert.Equal(author.Id, returnAuthor.Id);
+            Assert.Equal(returnAuthor.Id, createdResult.RouteValues?["id"]);
         }
 
         [Fact]

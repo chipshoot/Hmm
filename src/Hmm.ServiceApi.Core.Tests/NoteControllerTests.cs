@@ -126,9 +126,12 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Post(apiNote);
 
             // Assert
-            var createdResult = Assert.IsType<CreatedResult>(result);
+            var createdResult = Assert.IsType<CreatedAtRouteResult>(result);
+            Assert.Equal("GetNoteById", createdResult.RouteName);
+            Assert.Equal("1.0", createdResult.RouteValues?["version"]);
             var returnNote = Assert.IsType<HmmNote>(createdResult.Value);
             Assert.Equal(6, returnNote.Id);
+            Assert.Equal(returnNote.Id, createdResult.RouteValues?["id"]);
         }
 
         [Fact]

@@ -117,9 +117,12 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Post(apiTag);
 
             // Assert
-            var createdResult = Assert.IsType<CreatedResult>(result);
+            var createdResult = Assert.IsType<CreatedAtRouteResult>(result);
+            Assert.Equal("GetTagById", createdResult.RouteName);
+            Assert.Equal("1.0", createdResult.RouteValues?["version"]);
             var returnTag = Assert.IsType<Tag>(createdResult.Value);
             Assert.Equal(tag.Id, returnTag.Id);
+            Assert.Equal(returnTag.Id, createdResult.RouteValues?["id"]);
         }
 
         [Fact]
