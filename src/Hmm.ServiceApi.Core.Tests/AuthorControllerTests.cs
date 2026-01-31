@@ -71,7 +71,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Get(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("No authors found.", problemDetails.Detail);
         }
 
         [Theory]
@@ -101,7 +103,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"The author {authorId} cannot be found.", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"The author {authorId} cannot be found.", problemDetails.Detail);
         }
 
         #endregion Get Author by Id
@@ -157,6 +160,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while creating the author.", problemDetails.Detail);
         }
 
         #endregion Add a new author
@@ -197,8 +202,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Author information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Author information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -213,7 +218,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Author with id {authorId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Author with id {authorId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -232,8 +238,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Validation error occurred", problemDetails.Detail);
         }
 
         [Fact]
@@ -253,6 +259,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while updating the author.", problemDetails.Detail);
         }
 
         #endregion Update author
@@ -294,8 +302,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Patch information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Patch information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -310,7 +318,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Author with id {authorId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Author with id {authorId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -333,8 +342,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Validation error occurred", problemDetails.Detail);
         }
 
         [Fact]
@@ -356,6 +365,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while patching the author.", problemDetails.Detail);
         }
 
         #endregion Patch author
@@ -388,7 +399,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("Author with id 0 not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("Author with id 0 not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -402,7 +414,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Author with id {authorId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Author with id {authorId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -422,6 +435,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while deactivating the author.", problemDetails.Detail);
         }
 
         #endregion Delete Author

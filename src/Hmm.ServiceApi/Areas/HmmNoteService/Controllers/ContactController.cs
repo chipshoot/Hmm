@@ -56,12 +56,13 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             if (!contactsResult.Success)
             {
                 _logger.LogError("Failed to retrieve contacts. Error: {ErrorMessage}. TraceId: {TraceId}", contactsResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving contacts.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving contacts.", HttpContext));
             }
 
             if (contactsResult.Value == null || !contactsResult.Value.Any())
             {
-                return NotFound();
+                return NotFound(ProblemDetailsHelper.NotFound("No contacts found.", HttpContext));
             }
 
             return Ok(contactsResult.Value);
@@ -73,7 +74,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (id <= 0)
             {
-                return BadRequest("Invalid contact id");
+                return BadRequest(ProblemDetailsHelper.BadRequest("Invalid contact id", HttpContext));
             }
 
             var contactResult = await _contactManager.GetContactByIdAsync(id);
@@ -81,10 +82,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 if (contactResult.IsNotFound)
                 {
-                    return NotFound($"The contact : {id} not found.");
+                    return NotFound(ProblemDetailsHelper.NotFound($"The contact : {id} not found.", HttpContext));
                 }
                 _logger.LogError("Failed to retrieve contact with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, contactResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the contact.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the contact.", HttpContext));
             }
 
             return Ok(contactResult.Value);
@@ -105,10 +107,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (newContactResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(newContactResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(newContactResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to create contact. Error: {ErrorMessage}. TraceId: {TraceId}", newContactResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the contact.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while creating the contact.", HttpContext));
                 }
 
                 return CreatedAtRoute("GetContactById", new { id = newContactResult.Value.Id, version = "1.0" }, newContactResult.Value);
@@ -116,7 +119,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while creating contact. TraceId: {TraceId}", HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while creating the contact.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while creating the contact.", HttpContext));
             }
         }
 
@@ -126,7 +130,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (contact == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Contact information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Contact information is null or invalid id found", HttpContext));
             }
 
             try
@@ -139,14 +143,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.IsNotFound)
                     {
-                        return NotFound($"Contact with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Contact with id {id} not found", HttpContext));
                     }
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to update contact with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the contact.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while updating the contact.", HttpContext));
                 }
 
                 return NoContent();
@@ -154,7 +159,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while updating contact with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while updating the contact.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while updating the contact.", HttpContext));
             }
         }
 
@@ -164,7 +170,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (patchDoc == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Patch information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Patch information is null or invalid id found", HttpContext));
             }
 
             try
@@ -174,10 +180,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (curContactResult.IsNotFound)
                     {
-                        return NotFound($"Contact with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Contact with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to retrieve contact with id {Id} for patching. Error: {ErrorMessage}. TraceId: {TraceId}", id, curContactResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the contact for update.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the contact for update.", HttpContext));
                 }
 
                 var contact2Update = _mapper.Map<ApiContactForUpdate>(curContactResult.Value);
@@ -189,10 +196,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to patch contact with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while patching the contact.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while patching the contact.", HttpContext));
                 }
 
                 return NoContent();
@@ -200,7 +208,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while patching contact with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while patching the contact.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while patching the contact.", HttpContext));
             }
         }
 
@@ -216,10 +225,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (deleteResult.IsNotFound)
                     {
-                        return NotFound($"Contact with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Contact with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to deactivate contact with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, deleteResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while deactivating the contact.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while deactivating the contact.", HttpContext));
                 }
 
                 return NoContent();
@@ -227,7 +237,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while deactivating contact with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while deactivating the contact.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while deactivating the contact.", HttpContext));
             }
         }
     }

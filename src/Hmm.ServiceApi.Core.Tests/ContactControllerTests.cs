@@ -72,7 +72,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Get(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("No contacts found.", problemDetails.Detail);
         }
 
         [Theory]
@@ -102,7 +104,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"The contact : {contactId} not found.", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"The contact : {contactId} not found.", problemDetails.Detail);
         }
 
         #endregion Get contact by Id
@@ -197,6 +200,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while creating the contact.", problemDetails.Detail);
         }
 
         #endregion Add a new contact
@@ -237,8 +242,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Contact information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Contact information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -274,7 +279,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Contact with id {contactId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Contact with id {contactId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -296,8 +302,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Contains("Last name is too long", problemDetails.Detail);
         }
 
         [Fact]
@@ -319,6 +325,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while updating the contact.", problemDetails.Detail);
         }
 
         #endregion Update contact
@@ -358,8 +366,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Patch information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Patch information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -374,7 +382,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Contact with id {contactId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Contact with id {contactId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -394,8 +403,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Contains("Last name is too long", problemDetails.Detail);
         }
 
         [Fact]
@@ -417,6 +426,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while patching the contact.", problemDetails.Detail);
         }
 
         #endregion Patch contact
@@ -449,7 +460,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("Contact with id 0 not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("Contact with id 0 not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -463,7 +475,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Contact with id {contactId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Contact with id {contactId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -481,6 +494,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while deactivating the contact.", problemDetails.Detail);
         }
 
         #endregion Delete contact

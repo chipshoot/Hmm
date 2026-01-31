@@ -75,7 +75,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Get(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("No notes found.", problemDetails.Detail);
         }
 
         [Theory]
@@ -105,7 +107,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"The note {noteId} not found.", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"The note {noteId} not found.", problemDetails.Detail);
         }
 
         #endregion Get note by Id
@@ -167,6 +170,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while creating the note.", problemDetails.Detail);
         }
 
         #endregion Add a new note
@@ -206,8 +211,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Note information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Note information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -225,7 +230,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Note with id {noteId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Note with id {noteId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -246,8 +252,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Contains("Subject is too long", problemDetails.Detail);
         }
 
         [Fact]
@@ -268,6 +274,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while updating the note.", problemDetails.Detail);
         }
 
         #endregion Update note
@@ -355,7 +363,11 @@ namespace Hmm.ServiceApi.Core.Tests
             var noteTagAssociationManagerMock = new Mock<INoteTagAssociationManager>();
             noteTagAssociationManagerMock.Setup(m => m.ApplyTagToNoteAsync(noteId, It.IsAny<Tag>())).ReturnsAsync(ProcessingResult<List<Tag>>.Invalid("something went wrong"));
 
-            var controller =  new HmmNoteController(noteManagerMock.Object, noteTagAssociationManagerMock.Object, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            var controller = new HmmNoteController(noteManagerMock.Object, noteTagAssociationManagerMock.Object, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
 
             // Act
             var result = await controller.ApplyTag(noteId, tagDto);
@@ -401,8 +413,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Patch information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Patch information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -417,7 +429,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Note with id {noteId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Note with id {noteId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -437,8 +450,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Contains("Subject is too long", problemDetails.Detail);
         }
 
         [Fact]
@@ -461,6 +474,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while updating the note.", problemDetails.Detail);
         }
 
         #endregion Patch note
@@ -494,7 +509,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("Note with id 0 not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("Note with id 0 not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -508,7 +524,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Note with id {noteId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Note with id {noteId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -528,6 +545,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while deleting the note.", problemDetails.Detail);
         }
 
         #endregion Delete note

@@ -71,7 +71,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Get(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal("No note catalogs found.", problemDetails.Detail);
         }
 
         [Theory]
@@ -101,7 +103,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"The note catalog: {catalogId} not found.", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"The note catalog: {catalogId} not found.", problemDetails.Detail);
         }
 
         #endregion Get catalog by Id
@@ -179,6 +182,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while creating the note catalog.", problemDetails.Detail);
         }
 
         #endregion Add a new catalog
@@ -225,8 +230,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Note catalog information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Note catalog information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -248,7 +253,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Note catalog {catalogId} cannot be found.", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Note catalog {catalogId} cannot be found.", problemDetails.Detail);
         }
 
         [Fact]
@@ -281,8 +287,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Contains($"Catalog with name '{existingCatalog2.Name}' already exists", problemDetails.Detail);
         }
 
         [Fact]
@@ -303,6 +309,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while updating the note catalog.", problemDetails.Detail);
         }
 
         #endregion Update catalog
@@ -343,8 +351,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Patch information is null or invalid id found", (badRequestResult.Value as ApiBadRequestResponse)?.Errors.FirstOrDefault());
-            Assert.Equal("Bad request data", (badRequestResult.Value as ApiBadRequestResponse)?.Message);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Equal("Patch information is null or invalid id found", problemDetails.Detail);
         }
 
         [Fact]
@@ -359,7 +367,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal($"Note catalog with id {catalogId} not found", notFoundResult.Value);
+            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
+            Assert.Equal($"Note catalog with id {catalogId} not found", problemDetails.Detail);
         }
 
         [Fact]
@@ -382,8 +391,8 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var apiResponse = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
-            Assert.NotEmpty(apiResponse.Errors);
+            var problemDetails = Assert.IsType<ProblemDetails>(badRequestResult.Value);
+            Assert.Contains($"Catalog with name '{existingCatalog.Name}' already exists", problemDetails.Detail);
         }
 
         [Fact]
@@ -406,6 +415,8 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+            Assert.Equal("An unexpected error occurred while patching the note catalog.", problemDetails.Detail);
         }
 
         #endregion Patch catalog

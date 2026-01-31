@@ -59,12 +59,13 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             if (!authorsResult.Success)
             {
                 _logger.LogError("Failed to retrieve authors. Error: {ErrorMessage}. TraceId: {TraceId}", authorsResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving authors.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving authors.", HttpContext));
             }
 
             if (authorsResult.Value == null || !authorsResult.Value.Any())
             {
-                return NotFound();
+                return NotFound(ProblemDetailsHelper.NotFound("No authors found.", HttpContext));
             }
 
             return Ok(authorsResult.Value);
@@ -76,7 +77,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (id <= 0)
             {
-                return BadRequest("Invalid author id");
+                return BadRequest(ProblemDetailsHelper.BadRequest("Invalid author id", HttpContext));
             }
 
             var authorResult = await _authorManager.GetAuthorByIdAsync(id);
@@ -84,53 +85,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 if (authorResult.IsNotFound)
                 {
-                    return NotFound($"The author {id} cannot be found.");
+                    return NotFound(ProblemDetailsHelper.NotFound($"The author {id} cannot be found.", HttpContext));
                 }
                 _logger.LogError("Failed to retrieve author with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, authorResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the author.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the author.", HttpContext));
             }
 
             return Ok(authorResult.Value);
         }
-
-        //        //[HttpGet("{subject}", Name = "GetAuthorBySubject")]
-        //        //public async Task<IActionResult> Get(string subject)
-        //        //{
-        //        //    var id = new Guid(subject);
-        //        //    var author = _authorManager.GetEntities().FirstOrDefault(u => u.Id == id);
-        //        //    if (author == null)
-        //        //    {
-        //        //        // subject must come from token
-        //        //        var subjectFromToken = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-        //        //        if (subjectFromToken == null)
-        //        //        {
-        //        //            var error = "null user subject found";
-        //        //            Log.Logger.Error(error);
-        //        //            return BadRequest(new ApiBadRequestResponse(error));
-        //        //        }
-
-        //        //        var httpClient = _httpClientFactory.CreateClient(HmmServiceApiConstants.HttpClient.Idp);
-        //        //        var userName = await IdpUserProfileProvider.GetUserClaimAsync("name", HttpContext, httpClient);
-        //        //        if (string.IsNullOrEmpty(userName))
-        //        //        {
-        //        //            Log.Logger.Error($"Cannot get username for subject {subjectFromToken}");
-        //        //            return StatusCode(StatusCodes.Status500InternalServerError);
-        //        //        }
-
-        //        //        var authorToCreate = new Author
-        //        //        {
-        //        //            Id = new Guid(subjectFromToken),
-        //        //            AccountName = userName,
-        //        //            Role = AuthorRoleType.Guest,
-        //        //            IsActivated = true
-        //        //        };
-
-        //        //        author = _authorManager.Create(authorToCreate);
-        //        //    }
-
-        //        //    var ret = _mapper.Map<Author, ApiAuthor>(author);
-        //        //    return Ok(ret);
-        //        //}
 
         // POST api/authors
         [HttpPost(Name = "AddAuthor")]
@@ -147,10 +110,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (newAuthorResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(newAuthorResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(newAuthorResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to create author. Error: {ErrorMessage}. TraceId: {TraceId}", newAuthorResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the author.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while creating the author.", HttpContext));
                 }
 
                 return CreatedAtRoute("GetAuthorById", new { id = newAuthorResult.Value.Id, version = "1.0" }, newAuthorResult.Value);
@@ -158,7 +122,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while creating author. TraceId: {TraceId}", HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while creating the author.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while creating the author.", HttpContext));
             }
         }
 
@@ -168,7 +133,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (author == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Author information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Author information is null or invalid id found", HttpContext));
             }
 
             try
@@ -181,14 +146,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.IsNotFound)
                     {
-                        return NotFound($"Author with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Author with id {id} not found", HttpContext));
                     }
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to update author with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the author.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while updating the author.", HttpContext));
                 }
 
                 return NoContent();
@@ -196,7 +162,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while updating author with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while updating the author.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while updating the author.", HttpContext));
             }
         }
 
@@ -206,7 +173,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (patchDoc == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Patch information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Patch information is null or invalid id found", HttpContext));
             }
 
             try
@@ -216,10 +183,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (curUsrResult.IsNotFound)
                     {
-                        return NotFound($"Author with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Author with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to retrieve author with id {Id} for patching. Error: {ErrorMessage}. TraceId: {TraceId}", id, curUsrResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the author for update.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the author for update.", HttpContext));
                 }
 
                 var author2Update = _mapper.Map<ApiAuthorForUpdate>(curUsrResult.Value);
@@ -231,10 +199,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to patch author with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while patching the author.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while patching the author.", HttpContext));
                 }
 
                 return NoContent();
@@ -242,7 +211,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while patching author with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while patching the author.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while patching the author.", HttpContext));
             }
         }
 
@@ -258,10 +228,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (deleteResult.IsNotFound)
                     {
-                        return NotFound($"Author with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Author with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to deactivate author with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, deleteResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while deactivating the author.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while deactivating the author.", HttpContext));
                 }
 
                 return NoContent();
@@ -269,7 +240,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while deactivating author with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while deactivating the author.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while deactivating the author.", HttpContext));
             }
         }
     }

@@ -54,12 +54,13 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             if (!tagsResult.Success)
             {
                 _logger.LogError("Failed to retrieve tags. Error: {ErrorMessage}. TraceId: {TraceId}", tagsResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving tags.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving tags.", HttpContext));
             }
 
             if (tagsResult.Value == null || !tagsResult.Value.Any())
             {
-                return NotFound();
+                return NotFound(ProblemDetailsHelper.NotFound("No tags found.", HttpContext));
             }
 
             return Ok(tagsResult.Value);
@@ -74,10 +75,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 if (tagResult.IsNotFound)
                 {
-                    return NotFound($"The tag : {id} not found.");
+                    return NotFound(ProblemDetailsHelper.NotFound($"The tag : {id} not found.", HttpContext));
                 }
                 _logger.LogError("Failed to retrieve tag with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, tagResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the tag.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the tag.", HttpContext));
             }
 
             return Ok(tagResult.Value);
@@ -92,10 +94,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 if (tagResult.IsNotFound)
                 {
-                    return NotFound($"The tag : {name} not found.");
+                    return NotFound(ProblemDetailsHelper.NotFound($"The tag : {name} not found.", HttpContext));
                 }
                 _logger.LogError("Failed to retrieve tag with name {Name}. Error: {ErrorMessage}. TraceId: {TraceId}", name, tagResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the tag.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the tag.", HttpContext));
             }
 
             return Ok(tagResult.Value);
@@ -115,10 +118,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (newTagResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(newTagResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(newTagResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to create tag. Error: {ErrorMessage}. TraceId: {TraceId}", newTagResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the tag.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while creating the tag.", HttpContext));
                 }
 
                 return CreatedAtRoute("GetTagById", new { id = newTagResult.Value.Id, version = "1.0" }, newTagResult.Value);
@@ -126,7 +130,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while creating tag. TraceId: {TraceId}", HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while creating the tag.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while creating the tag.", HttpContext));
             }
         }
 
@@ -136,7 +141,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (tag == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Tag information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Tag information is null or invalid id found", HttpContext));
             }
 
             try
@@ -146,10 +151,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (curTagResult.IsNotFound)
                     {
-                        return NotFound($"Tag with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Tag with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to retrieve tag with id {Id} for updating. Error: {ErrorMessage}. TraceId: {TraceId}", id, curTagResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the tag for update.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the tag for update.", HttpContext));
                 }
 
                 var curTag = _mapper.Map(tag, curTagResult.Value);
@@ -159,14 +165,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.IsNotFound)
                     {
-                        return NotFound($"Tag with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Tag with id {id} not found", HttpContext));
                     }
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to update tag with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the tag.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while updating the tag.", HttpContext));
                 }
 
                 return NoContent();
@@ -174,7 +181,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while updating tag with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while updating the tag.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while updating the tag.", HttpContext));
             }
         }
 
@@ -184,7 +192,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (patchDoc == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Patch information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Patch information is null or invalid id found", HttpContext));
             }
 
             try
@@ -194,10 +202,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (curTagResult.IsNotFound)
                     {
-                        return NotFound($"Tag with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Tag with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to retrieve tag with id {Id} for patching. Error: {ErrorMessage}. TraceId: {TraceId}", id, curTagResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the tag for update.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the tag for update.", HttpContext));
                 }
 
                 var tag2Update = _mapper.Map<ApiTagForUpdate>(curTagResult.Value);
@@ -209,10 +218,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to patch tag with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while patching the tag.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while patching the tag.", HttpContext));
                 }
 
                 return NoContent();
@@ -220,7 +230,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while patching tag with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while patching the tag.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while patching the tag.", HttpContext));
             }
         }
 
@@ -236,10 +247,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (deleteResult.IsNotFound)
                     {
-                        return NotFound($"Tag with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Tag with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to deactivate tag with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, deleteResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while deactivating the tag.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while deactivating the tag.", HttpContext));
                 }
 
                 return NoContent();
@@ -247,7 +259,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while deactivating tag with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while deactivating the tag.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while deactivating the tag.", HttpContext));
             }
         }
     }

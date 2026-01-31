@@ -54,12 +54,13 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             if (!noteCatalogsResult.Success)
             {
                 _logger.LogError("Failed to retrieve note catalogs. Error: {ErrorMessage}. TraceId: {TraceId}", noteCatalogsResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving note catalogs.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving note catalogs.", HttpContext));
             }
 
             if (noteCatalogsResult.Value == null || !noteCatalogsResult.Value.Any())
             {
-                return NotFound();
+                return NotFound(ProblemDetailsHelper.NotFound("No note catalogs found.", HttpContext));
             }
 
             return Ok(noteCatalogsResult.Value);
@@ -74,10 +75,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             {
                 if (catalogResult.IsNotFound)
                 {
-                    return NotFound($"The note catalog: {id} not found.");
+                    return NotFound(ProblemDetailsHelper.NotFound($"The note catalog: {id} not found.", HttpContext));
                 }
                 _logger.LogError("Failed to retrieve note catalog with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, catalogResult.ErrorMessage, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note catalog.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the note catalog.", HttpContext));
             }
 
             return Ok(catalogResult.Value);
@@ -97,10 +99,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (newCatalogResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(newCatalogResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(newCatalogResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to create note catalog. Error: {ErrorMessage}. TraceId: {TraceId}", newCatalogResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while creating the note catalog.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while creating the note catalog.", HttpContext));
                 }
 
                 return CreatedAtRoute("GetNoteCatalogById", new { id = newCatalogResult.Value.Id, version = "1.0" }, newCatalogResult.Value);
@@ -108,7 +111,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while creating note catalog. TraceId: {TraceId}", HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while creating the note catalog.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while creating the note catalog.", HttpContext));
             }
         }
 
@@ -118,7 +122,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (catalog == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Note catalog information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Note catalog information is null or invalid id found", HttpContext));
             }
 
             try
@@ -128,10 +132,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (curCatalogResult.IsNotFound)
                     {
-                        return NotFound($"Note catalog {id} cannot be found.");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Note catalog {id} cannot be found.", HttpContext));
                     }
                     _logger.LogError("Failed to retrieve note catalog with id {Id} for updating. Error: {ErrorMessage}. TraceId: {TraceId}", id, curCatalogResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note catalog for update.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the note catalog for update.", HttpContext));
                 }
 
                 var curCatalog = _mapper.Map(catalog, curCatalogResult.Value);
@@ -141,14 +146,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.IsNotFound)
                     {
-                        return NotFound($"Note catalog with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Note catalog with id {id} not found", HttpContext));
                     }
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to update note catalog with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the note catalog.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while updating the note catalog.", HttpContext));
                 }
 
                 return NoContent();
@@ -156,7 +162,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while updating note catalog with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while updating the note catalog.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while updating the note catalog.", HttpContext));
             }
         }
 
@@ -166,7 +173,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         {
             if (patchDoc == null || id <= 0)
             {
-                return BadRequest(new ApiBadRequestResponse("Patch information is null or invalid id found"));
+                return BadRequest(ProblemDetailsHelper.BadRequest("Patch information is null or invalid id found", HttpContext));
             }
 
             try
@@ -176,10 +183,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (curCatalogResult.IsNotFound)
                     {
-                        return NotFound($"Note catalog with id {id} not found");
+                        return NotFound(ProblemDetailsHelper.NotFound($"Note catalog with id {id} not found", HttpContext));
                     }
                     _logger.LogError("Failed to retrieve note catalog with id {Id} for patching. Error: {ErrorMessage}. TraceId: {TraceId}", id, curCatalogResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the note catalog for update.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while retrieving the note catalog for update.", HttpContext));
                 }
 
                 var catalog2Update = _mapper.Map<ApiNoteCatalogForUpdate>(curCatalogResult.Value);
@@ -191,10 +199,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                 {
                     if (updateResult.ErrorType == ErrorCategory.ValidationError)
                     {
-                        return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+                        return BadRequest(ProblemDetailsHelper.BadRequest(updateResult.ErrorMessage, HttpContext));
                     }
                     _logger.LogError("Failed to patch note catalog with id {Id}. Error: {ErrorMessage}. TraceId: {TraceId}", id, updateResult.ErrorMessage, HttpContext.TraceIdentifier);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while patching the note catalog.");
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        ProblemDetailsHelper.InternalServerError("An error occurred while patching the note catalog.", HttpContext));
                 }
 
                 return NoContent();
@@ -202,7 +211,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred while patching note catalog with id {Id}. TraceId: {TraceId}", id, HttpContext.TraceIdentifier);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred while patching the note catalog.");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError("An unexpected error occurred while patching the note catalog.", HttpContext));
             }
         }
     }
