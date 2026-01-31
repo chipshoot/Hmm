@@ -1,8 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Exceptions;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -238,6 +239,16 @@ namespace Hmm.Core.DefaultManager
             }
             catch (Exception ex)
             {
+                // Handle unique constraint violations (Issue #43 fix)
+                // This catches race conditions where two requests pass validation simultaneously
+                // but only one can succeed at the database level
+                if (UniqueConstraintViolationHelper.IsUniqueConstraintViolation(ex))
+                {
+                    var errorMessage = UniqueConstraintViolationHelper.CreateDuplicateErrorMessage(
+                        "Tag", "Name", tag?.Name ?? "unknown");
+                    return ProcessingResult<Tag>.Conflict(errorMessage);
+                }
+
                 return ProcessingResult<Tag>.FromException(ex);
             }
         }
@@ -268,6 +279,14 @@ namespace Hmm.Core.DefaultManager
             }
             catch (Exception ex)
             {
+                // Handle unique constraint violations (Issue #43 fix)
+                if (UniqueConstraintViolationHelper.IsUniqueConstraintViolation(ex))
+                {
+                    var errorMessage = UniqueConstraintViolationHelper.CreateDuplicateErrorMessage(
+                        "Tag", "Name", tag?.Name ?? "unknown");
+                    return ProcessingResult<Tag>.Conflict(errorMessage);
+                }
+
                 return ProcessingResult<Tag>.FromException(ex);
             }
         }

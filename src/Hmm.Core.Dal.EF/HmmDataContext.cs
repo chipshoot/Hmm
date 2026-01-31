@@ -31,6 +31,11 @@ namespace Hmm.Core.Dal.EF
         public const string IX_NoteTagRefs_TagId = "ix_notetagrefs_tagid";
         public const string IX_Authors_AccountName = "ix_authors_accountname";
         public const string IX_Tags_Name = "ix_tags_name";
+
+        // Unique constraint names (Issue #43 fix - prevent race conditions in uniqueness validation)
+        public const string UQ_Authors_AccountName = "uq_authors_accountname";
+        public const string UQ_Tags_Name = "uq_tags_name";
+        public const string UQ_NoteCatalogs_Name = "uq_notecatalogs_name";
     }
 
     public class HmmDataContext(DbContextOptions options) : DbContext(options), IHmmDataContext
@@ -163,10 +168,13 @@ namespace Hmm.Core.Dal.EF
             // ============================================================
             modelBuilder.Entity<AuthorDao>().ToTable("authors");
 
-            // Index on AccountName for faster lookups
+            // Unique constraint on AccountName (Issue #43 fix - prevents race conditions)
+            // This database-level constraint ensures uniqueness even when concurrent requests
+            // pass the application-level validation check simultaneously
             modelBuilder.Entity<AuthorDao>()
                 .HasIndex(a => a.AccountName)
-                .HasDatabaseName(IndexNames.IX_Authors_AccountName);
+                .IsUnique()
+                .HasDatabaseName(IndexNames.UQ_Authors_AccountName);
 
             // ============================================================
             // ContactDao Configuration
@@ -187,10 +195,13 @@ namespace Hmm.Core.Dal.EF
             // ============================================================
             modelBuilder.Entity<TagDao>().ToTable("tags");
 
-            // Index on Name for faster lookups
+            // Unique constraint on Name (Issue #43 fix - prevents race conditions)
+            // This database-level constraint ensures uniqueness even when concurrent requests
+            // pass the application-level validation check simultaneously
             modelBuilder.Entity<TagDao>()
                 .HasIndex(t => t.Name)
-                .HasDatabaseName(IndexNames.IX_Tags_Name);
+                .IsUnique()
+                .HasDatabaseName(IndexNames.UQ_Tags_Name);
 
             // ============================================================
             // NoteTagRefDao Configuration (Join Table)
