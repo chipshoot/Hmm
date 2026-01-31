@@ -63,12 +63,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     ProblemDetailsHelper.InternalServerError("An error occurred while retrieving authors.", HttpContext));
             }
 
-            if (authorsResult.Value == null || !authorsResult.Value.Any())
-            {
-                return NotFound(ProblemDetailsHelper.NotFound("No authors found.", HttpContext));
-            }
-
-            return Ok(authorsResult.Value);
+            // Return 200 OK with empty array when no results (REST best practice)
+            return Ok(authorsResult.Value ?? new PageList<Author>());
         }
 
         [HttpGet("{id:int}", Name = "GetAuthorById")]

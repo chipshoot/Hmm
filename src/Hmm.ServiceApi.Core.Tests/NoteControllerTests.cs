@@ -67,17 +67,17 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Get_ReturnsNotFound_WhenNoNoteFound()
+        public async Task Get_ReturnsOkResult_WithEmptyList_WhenNoNoteFound()
         {
             // Arrange
             ResetDataSource(ElementType.Note);
             // Act
             var result = await _controller.Get(new ResourceCollectionParameters());
 
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            var problemDetails = Assert.IsType<ProblemDetails>(notFoundResult.Value);
-            Assert.Equal("No notes found.", problemDetails.Detail);
+            // Assert - REST best practice: empty collection returns 200 OK with empty array
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnNotes = Assert.IsType<PageList<HmmNote>>(okResult.Value);
+            Assert.Empty(returnNotes);
         }
 
         [Theory]

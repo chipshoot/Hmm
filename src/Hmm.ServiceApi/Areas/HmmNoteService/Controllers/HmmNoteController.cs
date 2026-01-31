@@ -54,12 +54,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     ProblemDetailsHelper.InternalServerError("An error occurred while retrieving notes.", HttpContext));
             }
 
-            if (noteListResult.Value == null || !noteListResult.Value.Any())
-            {
-                return NotFound(ProblemDetailsHelper.NotFound("No notes found.", HttpContext));
-            }
-
-            return Ok(noteListResult.Value);
+            // Return 200 OK with empty array when no results (REST best practice)
+            return Ok(noteListResult.Value ?? new PageList<HmmNote>());
         }
 
         [HttpGet("{id:int}", Name = "GetNoteById")]

@@ -58,12 +58,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     ProblemDetailsHelper.InternalServerError("An error occurred while retrieving note catalogs.", HttpContext));
             }
 
-            if (noteCatalogsResult.Value == null || !noteCatalogsResult.Value.Any())
-            {
-                return NotFound(ProblemDetailsHelper.NotFound("No note catalogs found.", HttpContext));
-            }
-
-            return Ok(noteCatalogsResult.Value);
+            // Return 200 OK with empty array when no results (REST best practice)
+            return Ok(noteCatalogsResult.Value ?? new PageList<NoteCatalog>());
         }
 
         [HttpGet("{id:int}", Name = "GetNoteCatalogById")]

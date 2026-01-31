@@ -58,12 +58,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     ProblemDetailsHelper.InternalServerError("An error occurred while retrieving tags.", HttpContext));
             }
 
-            if (tagsResult.Value == null || !tagsResult.Value.Any())
-            {
-                return NotFound(ProblemDetailsHelper.NotFound("No tags found.", HttpContext));
-            }
-
-            return Ok(tagsResult.Value);
+            // Return 200 OK with empty array when no results (REST best practice)
+            return Ok(tagsResult.Value ?? new PageList<Tag>());
         }
 
         [HttpGet("{id:int}", Name = "GetTagById")]

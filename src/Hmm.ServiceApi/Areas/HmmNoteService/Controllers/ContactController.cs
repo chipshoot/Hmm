@@ -60,12 +60,8 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
                     ProblemDetailsHelper.InternalServerError("An error occurred while retrieving contacts.", HttpContext));
             }
 
-            if (contactsResult.Value == null || !contactsResult.Value.Any())
-            {
-                return NotFound(ProblemDetailsHelper.NotFound("No contacts found.", HttpContext));
-            }
-
-            return Ok(contactsResult.Value);
+            // Return 200 OK with empty array when no results (REST best practice)
+            return Ok(contactsResult.Value ?? new PageList<Contact>());
         }
 
         [HttpGet("{id:int}", Name = "GetContactById")]
