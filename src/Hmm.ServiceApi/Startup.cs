@@ -141,11 +141,15 @@ namespace Hmm.ServiceApi
                 .AddScoped<INoteCatalogManager, NoteCatalogManager>()
                 .AddScoped<ITagManager, TagManager>()
                 .AddScoped<INoteTagAssociationManager, NoteTagAssociationManager>()
-                .AddScoped<IHmmValidator<Author>, AuthorValidator>()
-                .AddScoped<IHmmValidator<NoteCatalog>, NoteCatalogValidator>()
-                .AddScoped<IHmmValidator<HmmNote>, NoteValidator>()
-                .AddScoped<IHmmValidator<Tag>, TagValidator>()
-                .AddScoped<IHmmValidator<Contact>, ContactValidator>()
+                // Validators registered as Transient for thread-safety:
+                // - Each validation operation gets a fresh validator instance
+                // - Prevents any potential state leakage between concurrent validations
+                // - FluentValidation's async rules are safest with transient lifetime
+                .AddTransient<IHmmValidator<Author>, AuthorValidator>()
+                .AddTransient<IHmmValidator<NoteCatalog>, NoteCatalogValidator>()
+                .AddTransient<IHmmValidator<HmmNote>, NoteValidator>()
+                .AddTransient<IHmmValidator<Tag>, TagValidator>()
+                .AddTransient<IHmmValidator<Contact>, ContactValidator>()
                 //.AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
                 .AddAutoMapper(cfg =>
