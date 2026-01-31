@@ -364,3 +364,5 @@ FodyWeavers.xsd
 
 # Docker database local data directory
 data/
+
+nul
