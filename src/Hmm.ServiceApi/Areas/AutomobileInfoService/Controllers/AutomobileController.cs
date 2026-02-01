@@ -21,7 +21,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [ApiController]
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
-    [Route("/v{version:apiVersion}/automobiles")]
+    [Route("/api/v{version:apiVersion}/automobiles")]
     public class AutomobileController : Controller
     {
         private readonly IAutoEntityManager<AutomobileInfo> _automobileManager;

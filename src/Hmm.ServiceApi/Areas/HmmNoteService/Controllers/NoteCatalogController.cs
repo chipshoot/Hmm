@@ -19,7 +19,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
     [Authorize]
     [ApiVersion("1.0")]
-    [Route("/v{version:apiVersion}/notecatalogs")]
+    [Route("/api/v{version:apiVersion}/notecatalogs")]
     public class NoteCatalogController : Controller
     {
         #region private fields

@@ -25,7 +25,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [ApiController]
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
-    [Route("/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
+    [Route("/api/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
     [ValidationModel]
     public class GasLogController : Controller
     {

@@ -19,7 +19,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
     [Authorize]
     [ApiVersion("1.0")]
-    [Route("/v{version:apiVersion}/tags")]
+    [Route("/api/v{version:apiVersion}/tags")]
     public class TagController : Controller
     {
         #region private fields

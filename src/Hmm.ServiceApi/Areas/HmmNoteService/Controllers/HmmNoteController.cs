@@ -19,7 +19,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
     [Authorize]
     [ApiVersion("1.0")]
-    [Route("/v{version:apiVersion}/notes")]
+    [Route("/api/v{version:apiVersion}/notes")]
     public class HmmNoteController : Controller
     {
         private readonly IHmmNoteManager _noteManager;

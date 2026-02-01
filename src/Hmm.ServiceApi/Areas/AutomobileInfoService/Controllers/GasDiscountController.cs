@@ -19,7 +19,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/v{version:apiVersion}/automobiles/gaslogs/discounts")]
+    [Route("/api/v{version:apiVersion}/automobiles/gaslogs/discounts")]
     public class GasDiscountController : Controller
     {
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
