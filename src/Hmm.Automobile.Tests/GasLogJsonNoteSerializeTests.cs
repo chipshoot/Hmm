@@ -1002,6 +1002,13 @@ namespace Hmm.Automobile.Tests
             _discountManagerMock = new Mock<IAutoEntityManager<GasDiscount>>();
             _discountManagerMock.Setup(m => m.GetEntityByIdAsync(_testDiscount.Id))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Ok(_testDiscount));
+            // Setup batch retrieval for GetEntitiesAsync (used by discount parsing after Issue #34 fix)
+            var discountsList = new PageList<GasDiscount>(
+                new List<GasDiscount> { _testDiscount }, 1, 1, 100);
+            _discountManagerMock.Setup(m => m.GetEntitiesAsync(It.IsAny<ResourceCollectionParameters>()))
+                .ReturnsAsync(ProcessingResult<PageList<GasDiscount>>.Ok(discountsList));
+            _discountManagerMock.Setup(m => m.GetEntitiesAsync())
+                .ReturnsAsync(ProcessingResult<PageList<GasDiscount>>.Ok(discountsList));
 
             _stationManagerMock = new Mock<IAutoEntityManager<GasStation>>();
             _stationManagerMock.Setup(m => m.GetEntityByIdAsync(_testStation.Id))

@@ -6,6 +6,7 @@ using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
 using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.ServiceApi.DtoEntity.Services;
@@ -202,9 +203,9 @@ namespace Hmm.ServiceApi
                 });
             services.AddExceptionHandler<GlobalExceptionHandler>();
 
-            //var automobileStartup = new AutomobileInfoServiceStartup(services);
-            //automobileStartup.ConfigureServices();
-            //services.AddControllers();
+            // Register Automobile module services (managers, validators, serializers)
+            var automobileStartup = new AutomobileInfoServiceStartup(services);
+            automobileStartup.ConfigureServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
