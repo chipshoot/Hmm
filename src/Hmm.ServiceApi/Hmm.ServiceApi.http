@@ -55,19 +55,19 @@ GET {{baseUrl}}/swagger/index.html
 ### ============================================================
 
 ### Get all authors
-GET {{baseUrl}}/v{{apiVersion}}/authors
+GET {{baseUrl}}/api/v{{apiVersion}}/authors
 Authorization: Bearer {{token}}
 
 ### Get all authors with pagination
-GET {{baseUrl}}/v{{apiVersion}}/authors?PageNumber=1&PageSize=10
+GET {{baseUrl}}/api/v{{apiVersion}}/authors?PageNumber=1&PageSize=10
 Authorization: Bearer {{token}}
 
 ### Get author by ID
-GET {{baseUrl}}/v{{apiVersion}}/authors/1
+GET {{baseUrl}}/api/v{{apiVersion}}/authors/1
 Authorization: Bearer {{token}}
 
 ### Create a new author
-POST {{baseUrl}}/v{{apiVersion}}/authors
+POST {{baseUrl}}/api/v{{apiVersion}}/authors
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -95,7 +95,7 @@ Content-Type: application/json
 }
 
 ### Update an author (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/authors/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/authors/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -107,7 +107,7 @@ Content-Type: application/json
 }
 
 ### Patch an author (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/authors/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/authors/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -120,7 +120,7 @@ Content-Type: application/json-patch+json
 ]
 
 ### Delete (deactivate) an author
-DELETE {{baseUrl}}/v{{apiVersion}}/authors/1
+DELETE {{baseUrl}}/api/v{{apiVersion}}/authors/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
@@ -128,23 +128,23 @@ Authorization: Bearer {{token}}
 ### ============================================================
 
 ### Get all tags
-GET {{baseUrl}}/v{{apiVersion}}/tags
+GET {{baseUrl}}/api/v{{apiVersion}}/tags
 Authorization: Bearer {{token}}
 
 ### Get all tags with pagination
-GET {{baseUrl}}/v{{apiVersion}}/tags?PageNumber=1&PageSize=10
+GET {{baseUrl}}/api/v{{apiVersion}}/tags?PageNumber=1&PageSize=10
 Authorization: Bearer {{token}}
 
 ### Get tag by ID
-GET {{baseUrl}}/v{{apiVersion}}/tags/1
+GET {{baseUrl}}/api/v{{apiVersion}}/tags/1
 Authorization: Bearer {{token}}
 
 ### Get tag by name
-GET {{baseUrl}}/v{{apiVersion}}/tags/work
+GET {{baseUrl}}/api/v{{apiVersion}}/tags/work
 Authorization: Bearer {{token}}
 
 ### Create a new tag
-POST {{baseUrl}}/v{{apiVersion}}/tags
+POST {{baseUrl}}/api/v{{apiVersion}}/tags
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -154,7 +154,7 @@ Content-Type: application/json
 }
 
 ### Create another tag
-POST {{baseUrl}}/v{{apiVersion}}/tags
+POST {{baseUrl}}/api/v{{apiVersion}}/tags
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -164,7 +164,7 @@ Content-Type: application/json
 }
 
 ### Create tag for automobile
-POST {{baseUrl}}/v{{apiVersion}}/tags
+POST {{baseUrl}}/api/v{{apiVersion}}/tags
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -174,7 +174,7 @@ Content-Type: application/json
 }
 
 ### Update a tag (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/tags/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/tags/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -184,7 +184,7 @@ Content-Type: application/json
 }
 
 ### Patch a tag (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/tags/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/tags/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -197,7 +197,7 @@ Content-Type: application/json-patch+json
 ]
 
 ### Delete (deactivate) a tag
-DELETE {{baseUrl}}/v{{apiVersion}}/tags/1
+DELETE {{baseUrl}}/api/v{{apiVersion}}/tags/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
@@ -205,19 +205,19 @@ Authorization: Bearer {{token}}
 ### ============================================================
 
 ### Get all note catalogs
-GET {{baseUrl}}/v{{apiVersion}}/notecatalogs
+GET {{baseUrl}}/api/v{{apiVersion}}/notecatalogs
 Authorization: Bearer {{token}}
 
 ### Get all note catalogs with pagination
-GET {{baseUrl}}/v{{apiVersion}}/notecatalogs?PageNumber=1&PageSize=10
+GET {{baseUrl}}/api/v{{apiVersion}}/notecatalogs?PageNumber=1&PageSize=10
 Authorization: Bearer {{token}}
 
 ### Get note catalog by ID
-GET {{baseUrl}}/v{{apiVersion}}/notecatalogs/1
+GET {{baseUrl}}/api/v{{apiVersion}}/notecatalogs/1
 Authorization: Bearer {{token}}
 
 ### Create a default plain text note catalog
-POST {{baseUrl}}/v{{apiVersion}}/notecatalogs
+POST {{baseUrl}}/api/v{{apiVersion}}/notecatalogs
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -230,7 +230,7 @@ Content-Type: application/json
 }
 
 ### Create a JSON note catalog
-POST {{baseUrl}}/v{{apiVersion}}/notecatalogs
+POST {{baseUrl}}/api/v{{apiVersion}}/notecatalogs
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -243,7 +243,7 @@ Content-Type: application/json
 }
 
 ### Create a Markdown note catalog
-POST {{baseUrl}}/v{{apiVersion}}/notecatalogs
+POST {{baseUrl}}/api/v{{apiVersion}}/notecatalogs
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -256,7 +256,7 @@ Content-Type: application/json
 }
 
 ### Update a note catalog (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/notecatalogs/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/notecatalogs/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -269,7 +269,7 @@ Content-Type: application/json
 }
 
 ### Patch a note catalog (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/notecatalogs/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/notecatalogs/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -286,24 +286,24 @@ Content-Type: application/json-patch+json
 ### ============================================================
 
 ### Get all notes
-GET {{baseUrl}}/v{{apiVersion}}/notes
+GET {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{token}}
 
 ### Get all notes with pagination
-GET {{baseUrl}}/v{{apiVersion}}/notes?PageNumber=1&PageSize=10
+GET {{baseUrl}}/api/v{{apiVersion}}/notes?PageNumber=1&PageSize=10
 Authorization: Bearer {{token}}
 
 ### Get all notes with sorting
-GET {{baseUrl}}/v{{apiVersion}}/notes?PageNumber=1&PageSize=10&OrderBy=CreateDate desc
+GET {{baseUrl}}/api/v{{apiVersion}}/notes?PageNumber=1&PageSize=10&OrderBy=CreateDate desc
 Authorization: Bearer {{token}}
 
 ### Get note by ID
-GET {{baseUrl}}/v{{apiVersion}}/notes/1
+GET {{baseUrl}}/api/v{{apiVersion}}/notes/1
 Authorization: Bearer {{token}}
 
 ### Create a new note
 # Note: Ensure AuthorId and CatalogId exist before running this
-POST {{baseUrl}}/v{{apiVersion}}/notes
+POST {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -316,7 +316,7 @@ Content-Type: application/json
 }
 
 ### Create another note
-POST {{baseUrl}}/v{{apiVersion}}/notes
+POST {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -329,7 +329,7 @@ Content-Type: application/json
 }
 
 ### Create a JSON formatted note
-POST {{baseUrl}}/v{{apiVersion}}/notes
+POST {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -342,7 +342,7 @@ Content-Type: application/json
 }
 
 ### Update a note (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/notes/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/notes/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -353,7 +353,7 @@ Content-Type: application/json
 }
 
 ### Patch a note (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/notes/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/notes/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -371,7 +371,7 @@ Content-Type: application/json-patch+json
 ]
 
 ### Apply a tag to a note
-PUT {{baseUrl}}/v{{apiVersion}}/notes/1/applyTag
+PUT {{baseUrl}}/api/v{{apiVersion}}/notes/1/applyTag
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -380,7 +380,7 @@ Content-Type: application/json
 }
 
 ### Apply another tag to a note
-PUT {{baseUrl}}/v{{apiVersion}}/notes/1/applyTag
+PUT {{baseUrl}}/api/v{{apiVersion}}/notes/1/applyTag
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -389,7 +389,7 @@ Content-Type: application/json
 }
 
 ### Delete (soft delete) a note
-DELETE {{baseUrl}}/v{{apiVersion}}/notes/1
+DELETE {{baseUrl}}/api/v{{apiVersion}}/notes/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
@@ -397,19 +397,19 @@ Authorization: Bearer {{token}}
 ### ============================================================
 
 ### Get all automobiles
-GET {{baseUrl}}/v{{apiVersion}}/automobiles
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles
 Authorization: Bearer {{token}}
 
 ### Get all automobiles with pagination
-GET {{baseUrl}}/v{{apiVersion}}/automobiles?PageNumber=1&PageSize=10
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles?PageNumber=1&PageSize=10
 Authorization: Bearer {{token}}
 
 ### Get automobile by ID
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/1
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/1
 Authorization: Bearer {{token}}
 
 ### Create a new automobile (Honda Civic)
-POST {{baseUrl}}/v{{apiVersion}}/automobiles
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -441,7 +441,7 @@ Content-Type: application/json
 }
 
 ### Create another automobile (Toyota RAV4)
-POST {{baseUrl}}/v{{apiVersion}}/automobiles
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -473,7 +473,7 @@ Content-Type: application/json
 }
 
 ### Create electric vehicle (Tesla Model 3)
-POST {{baseUrl}}/v{{apiVersion}}/automobiles
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -505,7 +505,7 @@ Content-Type: application/json
 }
 
 ### Update an automobile (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/automobiles/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/automobiles/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -529,7 +529,7 @@ Content-Type: application/json
 }
 
 ### Patch an automobile (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/automobiles/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -551,19 +551,19 @@ Content-Type: application/json-patch+json
 ### ============================================================
 
 ### Get all gas logs for an automobile
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs
 Authorization: Bearer {{token}}
 
 ### Get gas logs with pagination and sorting
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs?PageNumber=1&PageSize=10&OrderBy=Date desc
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs?PageNumber=1&PageSize=10&OrderBy=Date desc
 Authorization: Bearer {{token}}
 
 ### Get gas log by ID
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs/1
 Authorization: Bearer {{token}}
 
 ### Create a new gas log
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -591,7 +591,7 @@ Content-Type: application/json
 }
 
 ### Create another gas log
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -617,7 +617,7 @@ Content-Type: application/json
 }
 
 ### Create gas log with discount
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -647,7 +647,7 @@ Content-Type: application/json
 }
 
 ### Create history gas log (for importing past records)
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/historylog
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs/historylog
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -671,7 +671,7 @@ Content-Type: application/json
 }
 
 ### Update a gas log (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -693,7 +693,7 @@ Content-Type: application/json
 }
 
 ### Patch a gas log (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -706,24 +706,24 @@ Content-Type: application/json-patch+json
 ]
 
 ### Delete (soft delete) a gas log
-DELETE {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs/1
+DELETE {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
 ### GAS DISCOUNTS
-### Route: /v{version}/automobiles/gaslogs/discounts
+### Route: /api/v{version}/automobiles/gaslogs/discounts
 ### ============================================================
 
 ### Get all gas discounts
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts
 Authorization: Bearer {{token}}
 
 ### Get gas discount by ID
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts/1
 Authorization: Bearer {{token}}
 
 ### Create a loyalty card discount
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -737,7 +737,7 @@ Content-Type: application/json
 }
 
 ### Create a credit card discount
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -751,7 +751,7 @@ Content-Type: application/json
 }
 
 ### Create a membership discount
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -765,7 +765,7 @@ Content-Type: application/json
 }
 
 ### Update a gas discount (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -779,7 +779,7 @@ Content-Type: application/json
 }
 
 ### Patch a gas discount (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -792,32 +792,32 @@ Content-Type: application/json-patch+json
 ]
 
 ### Delete (deactivate) a gas discount
-DELETE {{baseUrl}}/v{{apiVersion}}/automobiles/gaslogs/discounts/1
+DELETE {{baseUrl}}/api/v{{apiVersion}}/automobiles/gaslogs/discounts/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
 ### GAS STATIONS
-### Route: /v{version}/automobiles/gasstations
+### Route: /api/v{version}/automobiles/gasstations
 ### ============================================================
 
 ### Get all gas stations
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations
 Authorization: Bearer {{token}}
 
 ### Get active gas stations only
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/active
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations/active
 Authorization: Bearer {{token}}
 
 ### Get gas station by ID
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations/1
 Authorization: Bearer {{token}}
 
 ### Get gas station by name
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/byname/Shell
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations/byname/Shell
 Authorization: Bearer {{token}}
 
 ### Create a gas station (Shell)
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -832,7 +832,7 @@ Content-Type: application/json
 }
 
 ### Create another gas station (Costco)
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -847,7 +847,7 @@ Content-Type: application/json
 }
 
 ### Create Petro Canada station
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -862,7 +862,7 @@ Content-Type: application/json
 }
 
 ### Create Esso station
-POST {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations
+POST {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -877,7 +877,7 @@ Content-Type: application/json
 }
 
 ### Update a gas station (PUT)
-PUT {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+PUT {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -892,7 +892,7 @@ Content-Type: application/json
 }
 
 ### Patch a gas station (PATCH)
-PATCH {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+PATCH {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations/1
 Authorization: Bearer {{token}}
 Content-Type: application/json-patch+json
 
@@ -905,7 +905,7 @@ Content-Type: application/json-patch+json
 ]
 
 ### Delete (deactivate) a gas station
-DELETE {{baseUrl}}/v{{apiVersion}}/automobiles/gasstations/1
+DELETE {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
@@ -913,11 +913,11 @@ Authorization: Bearer {{token}}
 ### ============================================================
 
 ### Get all contacts
-GET {{baseUrl}}/v{{apiVersion}}/contacts
+GET {{baseUrl}}/api/v{{apiVersion}}/contacts
 Authorization: Bearer {{token}}
 
 ### Get contact by ID
-GET {{baseUrl}}/v{{apiVersion}}/contacts/1
+GET {{baseUrl}}/api/v{{apiVersion}}/contacts/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
@@ -925,23 +925,23 @@ Authorization: Bearer {{token}}
 ### ============================================================
 
 ### Notes with pagination
-GET {{baseUrl}}/v{{apiVersion}}/notes?PageNumber=1&PageSize=5
+GET {{baseUrl}}/api/v{{apiVersion}}/notes?PageNumber=1&PageSize=5
 Authorization: Bearer {{token}}
 
 ### Notes with sorting (ascending)
-GET {{baseUrl}}/v{{apiVersion}}/notes?OrderBy=Subject
+GET {{baseUrl}}/api/v{{apiVersion}}/notes?OrderBy=Subject
 Authorization: Bearer {{token}}
 
 ### Notes with sorting (descending)
-GET {{baseUrl}}/v{{apiVersion}}/notes?OrderBy=CreateDate desc
+GET {{baseUrl}}/api/v{{apiVersion}}/notes?OrderBy=CreateDate desc
 Authorization: Bearer {{token}}
 
 ### Authors with pagination and sorting
-GET {{baseUrl}}/v{{apiVersion}}/authors?PageNumber=1&PageSize=10&OrderBy=AccountName
+GET {{baseUrl}}/api/v{{apiVersion}}/authors?PageNumber=1&PageSize=10&OrderBy=AccountName
 Authorization: Bearer {{token}}
 
 ### Gas logs with multiple sorting fields
-GET {{baseUrl}}/v{{apiVersion}}/automobiles/1/gaslogs?OrderBy=Date desc,TotalPrice
+GET {{baseUrl}}/api/v{{apiVersion}}/automobiles/1/gaslogs?OrderBy=Date desc,TotalPrice
 Authorization: Bearer {{token}}
 
 ### ============================================================
@@ -949,15 +949,15 @@ Authorization: Bearer {{token}}
 ### ============================================================
 
 ### Get non-existent note (should return 404)
-GET {{baseUrl}}/v{{apiVersion}}/notes/99999
+GET {{baseUrl}}/api/v{{apiVersion}}/notes/99999
 Authorization: Bearer {{token}}
 
 ### Get non-existent author (should return 404)
-GET {{baseUrl}}/v{{apiVersion}}/authors/99999
+GET {{baseUrl}}/api/v{{apiVersion}}/authors/99999
 Authorization: Bearer {{token}}
 
 ### Create note with invalid authorId (should return 400)
-POST {{baseUrl}}/v{{apiVersion}}/notes
+POST {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -969,10 +969,10 @@ Content-Type: application/json
 }
 
 ### Request without authorization (should return 401)
-GET {{baseUrl}}/v{{apiVersion}}/notes
+GET {{baseUrl}}/api/v{{apiVersion}}/notes
 
 ### Invalid JSON (should return 400)
-POST {{baseUrl}}/v{{apiVersion}}/authors
+POST {{baseUrl}}/api/v{{apiVersion}}/authors
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -987,19 +987,19 @@ Content-Type: application/json
 ### ============================================================
 
 ### Test with Hmm.Idp token
-GET {{baseUrl}}/v{{apiVersion}}/notes
+GET {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{hmmIdpToken}}
 
 ### Test with Firebase token
-GET {{baseUrl}}/v{{apiVersion}}/notes
+GET {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{firebaseToken}}
 
 ### Test with Auth0 token
-GET {{baseUrl}}/v{{apiVersion}}/notes
+GET {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{auth0Token}}
 
 ### Test with Azure AD token
-GET {{baseUrl}}/v{{apiVersion}}/notes
+GET {{baseUrl}}/api/v{{apiVersion}}/notes
 Authorization: Bearer {{azureAdToken}}
 
 ### ============================================================
