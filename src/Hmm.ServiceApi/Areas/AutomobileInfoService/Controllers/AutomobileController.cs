@@ -3,6 +3,7 @@ using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -22,6 +23,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/automobiles")]
+    [Produces("application/json")]
     public class AutomobileController : Controller
     {
         private readonly IAutoEntityManager<AutomobileInfo> _automobileManager;
@@ -46,6 +48,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         [HttpGet(Name = "GetAutomobiles")]
         [TypeFilter(typeof(AutomobilesResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
+        [ProducesResponseType(typeof(ApiEntityCollection<ApiAutomobile>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetMobiles([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var result = await _automobileManager.GetEntitiesAsync(resourceCollectionParameters);
@@ -67,6 +73,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         [HttpGet("{id:int}", Name = "GetAutomobileById")]
         [HttpHead]
         [TypeFilter(typeof(AutomobileResultFilter))]
+        [ProducesResponseType(typeof(ApiAutomobile), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAutomobileById(int id)
         {
             var result = await _automobileManager.GetEntityByIdAsync(id);
@@ -85,6 +95,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // POST api/automobiles
         [HttpPost(Name = "AddAutomobile")]
         [TypeFilter(typeof(AutomobileResultFilter))]
+        [ProducesResponseType(typeof(ApiAutomobile), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> CreateAutomobile(ApiAutomobileForCreate apiCar)
         {
             var car = _mapper.Map<AutomobileInfo>(apiCar);
@@ -101,6 +114,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PUT api/automobiles/4
         [HttpPut("{id:int}", Name = "UpdateAutomobile")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateAutomobile(int id, [FromBody] ApiAutomobileForUpdate apiCar)
         {
             if (apiCar == null)
@@ -132,6 +149,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PATCH api/automobiles/4
         [HttpPatch("{id:int}", Name = "PatchAutomobile")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<ApiAutomobileForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)
@@ -173,6 +195,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // DELETE api/automobiles/5
         [HttpDelete("{id:int}", Name = "DeleteAutomobile")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status501NotImplemented)]
         public IActionResult Delete(int id)
         {
             throw new NotImplementedException();

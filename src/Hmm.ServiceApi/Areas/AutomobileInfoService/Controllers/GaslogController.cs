@@ -4,6 +4,7 @@ using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.ServiceApi.Models;
@@ -27,6 +28,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
     [ValidationModel]
+    [Produces("application/json")]
     public class GasLogController : Controller
     {
         private readonly IGasLogManager _gasLogManager;
@@ -67,6 +69,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         [HttpGet(Name = "GetGasLogs")]
         [TypeFilter(typeof(GasLogsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
+        [ProducesResponseType(typeof(ApiEntityCollection<ApiGasLog>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult> Get(int autoId, [FromQuery] GasLogResourceParameters resourceParameters)
         {
             if (!string.IsNullOrEmpty(resourceParameters.OrderBy))
@@ -111,6 +117,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/1/gaslogs/5
         [HttpGet("{id:int}", Name = "GetGasLogById")]
         [TypeFilter(typeof(GasLogResultFilter))]
+        [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult> Get(int autoId, int id, string fields)
         {
             var checkResult = _propertyCheckService.TypeHasProperties<ApiGasLog>(fields);
@@ -141,6 +151,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // POST api/automobiles/1/gaslogs/historyLog
         [HttpPost("historylog", Name = "AddHistoryGasLog")]
         [TypeFilter(typeof(GasLogResultFilter))]
+        [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> HistoryLog(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
         {
             if (apiGasLog == null)
@@ -191,6 +205,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // POST api/automobiles/1/gaslogs
         [HttpPost(Name = "AddGasLog")]
         [TypeFilter(typeof(GasLogResultFilter))]
+        [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Post(int autoId, [FromBody] ApiGasLogForCreation apiGasLog)
         {
             if (apiGasLog == null)
@@ -240,6 +258,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PUT api/automobiles/1/gaslogs/5
         [HttpPut("{id:int}", Name = "UpdateGasLog")]
+        [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult> Put(int id, [FromBody] ApiGasLogForUpdate apiGasLog)
         {
             if (apiGasLog == null)
@@ -272,6 +294,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PATCH api/automobiles/1/gaslogs/4
         [HttpPatch("{id:int}", Name = "PatchGasLog")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Patch(int autoId, int id, [FromBody] JsonPatchDocument<ApiGasLogForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)
@@ -318,6 +345,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // DELETE api/automobiles/1/gaslogs/5
         [HttpDelete("{id:int}", Name = "DeleteGasLog")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Delete(int id)
         {
             var getResult = await _gasLogManager.GetEntityByIdAsync(id);

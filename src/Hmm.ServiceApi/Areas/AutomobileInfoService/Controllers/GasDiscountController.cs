@@ -3,6 +3,7 @@ using Hmm.Automobile;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Filters;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
@@ -20,6 +21,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/automobiles/gaslogs/discounts")]
+    [Produces("application/json")]
     public class GasDiscountController : Controller
     {
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
@@ -44,6 +46,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         [HttpGet(Name = "GetGasDiscounts")]
         [TypeFilter(typeof(GasDiscountsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
+        [ProducesResponseType(typeof(ApiEntityCollection<ApiDiscount>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var result = await _discountManager.GetEntitiesAsync(resourceCollectionParameters);
@@ -64,6 +69,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // GET api/automobiles/gaslogs/discounts/1
         [HttpGet("{id:int}", Name = "GetGasDiscountById")]
         [TypeFilter(typeof(GasDiscountResultFilter))]
+        [ProducesResponseType(typeof(ApiDiscount), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(int id)
         {
             var result = await _discountManager.GetEntityByIdAsync(id);
@@ -82,6 +91,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         // POST api/automobiles/gaslogs/discounts
         [HttpPost(Name = "AddGasDiscount")]
         [TypeFilter(typeof(GasDiscountResultFilter))]
+        [ProducesResponseType(typeof(ApiDiscount), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> Post(ApiDiscountForCreate apiDiscount)
         {
             var discount = _mapper.Map<GasDiscount>(apiDiscount);
@@ -98,6 +110,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PUT api/automobiles/gaslogs/discount/5
         [HttpPut("{id:int}", Name = "UpdateGasDiscount")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Put(int id, ApiDiscountForUpdate apiDiscount)
         {
             if (apiDiscount == null)
@@ -129,6 +145,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // PATCH api/automobiles/gaslogs/discounts/1
         [HttpPatch("{id:int}", Name = "PatchGasDiscount")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<ActionResult> Patch(int id, JsonPatchDocument<ApiDiscountForUpdate> patchDocument)
         {
             if (patchDocument == null || id <= 0)
@@ -168,6 +188,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
         // DELETE api/automobiles/gaslogs/discounts/1
         [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(int id)
         {
             try

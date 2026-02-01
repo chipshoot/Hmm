@@ -2,6 +2,7 @@ using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
@@ -22,6 +23,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/authors")]
+    [Produces("application/json")]
     public class AuthorController : Controller
     {
         #region private fields
@@ -53,6 +55,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpGet(Name = "GetAuthors")]
         [TypeFilter(typeof(AuthorsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
+        [ProducesResponseType(typeof(ApiEntityCollection<ApiAuthor>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var authorsResult = await _authorManager.GetEntitiesAsync(null, resourceCollectionParameters);
@@ -69,6 +74,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet("{id:int}", Name = "GetAuthorById")]
         [TypeFilter(typeof(AuthorResultFilter))]
+        [ProducesResponseType(typeof(ApiAuthor), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
@@ -94,6 +104,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         // POST api/authors
         [HttpPost(Name = "AddAuthor")]
         [TypeFilter(typeof(AuthorResultFilter))]
+        [ProducesResponseType(typeof(ApiAuthor), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Post(ApiAuthorForCreate author)
         {
             try
@@ -125,6 +139,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PUT api/authors/5
         [HttpPut("{id:int}", Name = "UpdateAuthor")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Put(int id, ApiAuthorForUpdate author)
         {
             if (author == null || id <= 0)
@@ -165,6 +184,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PATCH api/authors/5
         [HttpPatch("{id:int}", Name = "PatchAuthor")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Patch(int id, JsonPatchDocument<ApiAuthorForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)
@@ -218,6 +242,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // DELETE api/authors/5
         [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Delete(int id)
         {
             try

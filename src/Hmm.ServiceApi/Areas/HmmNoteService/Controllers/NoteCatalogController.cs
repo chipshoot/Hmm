@@ -2,6 +2,7 @@ using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
@@ -18,8 +19,10 @@ using System.Threading.Tasks;
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
     [Authorize]
+    [ApiController]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/notecatalogs")]
+    [Produces("application/json")]
     public class NoteCatalogController : Controller
     {
         #region private fields
@@ -48,6 +51,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpGet(Name = "GetNoteCatalogs")]
         [TypeFilter(typeof(NoteCatalogsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
+        [ProducesResponseType(typeof(ApiEntityCollection<ApiNoteCatalog>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var noteCatalogsResult = await _catalogManager.GetEntitiesAsync(null, resourceCollectionParameters);
@@ -64,6 +70,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet("{id:int}", Name = "GetNoteCatalogById")]
         [TypeFilter(typeof(NoteCatalogResultFilter))]
+        [ProducesResponseType(typeof(ApiNoteCatalog), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get(int id)
         {
             var catalogResult = await _catalogManager.GetEntityByIdAsync(id);
@@ -84,6 +94,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         // POST api/notecatalogs
         [HttpPost(Name = "AddNoteCatalog")]
         [TypeFilter(typeof(NoteCatalogResultFilter))]
+        [ProducesResponseType(typeof(ApiNoteCatalog), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Post([FromBody] ApiNoteCatalogForCreate catalog)
         {
             try
@@ -114,6 +128,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PUT api/notecatalogs/{id}
         [HttpPut("{id:int}", Name = "UpdateNoteCatalog")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Put(int id, [FromBody] ApiNoteCatalogForUpdate catalog)
         {
             if (catalog == null || id <= 0)
@@ -165,6 +184,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PATCH api/notecatalogs/{id}
         [HttpPatch("{id:int}", Name = "PatchNoteCatalog")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<ApiNoteCatalogForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)

@@ -2,6 +2,7 @@ using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
@@ -22,6 +23,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/contacts")]
+    [Produces("application/json")]
     public class ContactController : Controller
     {
         #region private fields
@@ -50,6 +52,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpGet(Name = "GetContacts")]
         [TypeFilter(typeof(ContactsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
+        [ProducesResponseType(typeof(ApiEntityCollection<ApiContact>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var contactsResult = await _contactManager.GetContactsAsync(null, resourceCollectionParameters);
@@ -66,6 +71,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet("{id:int}", Name = "GetContactById")]
         [TypeFilter(typeof(ContactResultFilter))]
+        [ProducesResponseType(typeof(ApiContact), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get(int id)
         {
             if (id <= 0)
@@ -91,6 +101,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         // POST api/contacts
         [HttpPost(Name = "AddContact")]
         [TypeFilter(typeof(ContactResultFilter))]
+        [ProducesResponseType(typeof(ApiContact), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Post(ApiContactForCreate contact)
         {
             try
@@ -122,6 +136,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PUT api/contacts/{id}
         [HttpPut("{id:int}", Name = "UpdateContact")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Put(int id, ApiContactForUpdate contact)
         {
             if (contact == null || id <= 0)
@@ -162,6 +181,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PATCH api/contacts/{id}
         [HttpPatch("{id:int}", Name = "PatchContact")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Patch(int id, JsonPatchDocument<ApiContactForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)
@@ -215,6 +239,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // DELETE api/contacts/{id}
         [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Delete(int id)
         {
             try

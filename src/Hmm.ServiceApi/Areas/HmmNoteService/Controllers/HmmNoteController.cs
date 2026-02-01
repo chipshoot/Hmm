@@ -2,6 +2,7 @@ using AutoMapper;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.HmmNoteService.Filters;
+using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Dal.Query;
@@ -18,8 +19,10 @@ using System.Threading.Tasks;
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
     [Authorize]
+    [ApiController]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/notes")]
+    [Produces("application/json")]
     public class HmmNoteController : Controller
     {
         private readonly IHmmNoteManager _noteManager;
@@ -43,6 +46,9 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [HttpGet(Name = "GetNotes")]
         [TypeFilter(typeof(NotesResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
+        [ProducesResponseType(typeof(ApiEntityCollection<ApiNote>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
         {
             var noteListResult = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);
@@ -60,6 +66,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         [HttpGet("{id:int}", Name = "GetNoteById")]
         [TypeFilter(typeof(NoteResultFilter))]
+        [ProducesResponseType(typeof(ApiNote), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Get(int id)
         {
             var noteResult = await _noteManager.GetNoteByIdAsync(id);
@@ -81,6 +91,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         // POST api/notes
         [HttpPost(Name = "AddNote")]
         [TypeFilter(typeof(NoteResultFilter))]
+        [ProducesResponseType(typeof(ApiNote), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Post([FromBody] ApiNoteForCreate note)
         {
             try
@@ -112,6 +126,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PUT api/notes/5
         [HttpPut("{id:int}", Name = "UpdateNote")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Put(int id, [FromBody] ApiNoteForUpdate note)
         {
             if (note == null || id <= 0)
@@ -165,6 +184,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PUT api/notes/5/applyTag
         [HttpPut("{id:int}/applyTag", Name = "ApplyTagToNote")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ApplyTag(int id, [FromBody] ApiTagForApply tag)
         {
             if (tag == null || string.IsNullOrWhiteSpace(tag.Name))
@@ -201,6 +224,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // PATCH api/notes/5
         [HttpPatch("{id:int}", Name = "PatchNote")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<ApiNoteForUpdate> patchDoc)
         {
             if (patchDoc == null || id <= 0)
@@ -256,6 +284,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         // DELETE api/notes/5
         [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> Delete(int id)
         {
             try
