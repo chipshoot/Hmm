@@ -10,7 +10,6 @@ using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.ServiceApi.Middleware;
-
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -25,9 +24,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi;
 using Npgsql;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace Hmm.ServiceApi
 {
@@ -114,7 +116,7 @@ namespace Hmm.ServiceApi
             // Configure NpgsqlDataSource with enum mapping
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-            dataSourceBuilder.MapEnum<Hmm.Core.Map.DbEntity.NoteContentFormatType>();
+            dataSourceBuilder.MapEnum<Core.Map.DbEntity.NoteContentFormatType>();
             var dataSource = dataSourceBuilder.Build();
 
             services
@@ -157,7 +159,47 @@ namespace Hmm.ServiceApi
                     cfg.AddProfile<ApiMappingProfile>();
                     cfg.AddProfile<HmmMappingProfile>();
                 })
-                .AddSwaggerGen();
+                .AddSwaggerGen(options =>
+                {
+                    options.SwaggerDoc("v1", new OpenApiInfo
+                    {
+                        Title = "HomeMadeMessage API",
+                        Version = "v1",
+                        Description = "RESTful API for HomeMadeMessage - Note management, automobile tracking, and calendar services.",
+                        Contact = new OpenApiContact
+                        {
+                            Name = "HomeMadeMessage Support",
+                            Email = "support@homemademessage.com"
+                        },
+                        License = new OpenApiLicense
+                        {
+                            Name = "MIT License"
+                        }
+                    });
+
+                    // Add JWT Bearer authentication
+                    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                    {
+                        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"",
+                        Name = "Authorization",
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey,
+                        Scheme = "Bearer"
+                    });
+
+                    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+                    });
+
+                    // Include XML comments for API documentation
+                    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+                    if (File.Exists(xmlPath))
+                    {
+                        options.IncludeXmlComments(xmlPath);
+                    }
+                });
             services.AddExceptionHandler<GlobalExceptionHandler>();
 
             //var automobileStartup = new AutomobileInfoServiceStartup(services);
