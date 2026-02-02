@@ -82,6 +82,9 @@ internal static class HostingExtensions
         // Add the user management service
         builder.Services.AddScoped<UserManagementService>();
 
+        // Add seed data service
+        builder.Services.AddScoped<SeedDataService>();
+
         return builder.Build();
     }
 
@@ -128,7 +131,16 @@ internal static class HostingExtensions
             var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
             context.Database.Migrate();
 
-            if (builder is WebApplication app && app.Environment.IsDevelopment())
+            // Check if we should seed data (Development or Docker environment)
+            var shouldSeed = false;
+            if (builder is WebApplication app)
+            {
+                shouldSeed = app.Environment.IsDevelopment() ||
+                             app.Environment.EnvironmentName == "Docker" ||
+                             Environment.GetEnvironmentVariable("SEED_DATA") == "true";
+            }
+
+            if (shouldSeed)
             {
                 // Seed API Scopes
                 if (!context.ApiScopes.Any())
@@ -138,6 +150,7 @@ internal static class HostingExtensions
                         context.ApiScopes.Add(scope.ToEntity());
                     }
                     context.SaveChanges();
+                    Log.Information("Seeded {Count} API scopes", Config.ApiScopes.Count());
                 }
 
                 // Seed API Resources
@@ -148,6 +161,7 @@ internal static class HostingExtensions
                         context.ApiResources.Add(resource.ToEntity());
                     }
                     context.SaveChanges();
+                    Log.Information("Seeded {Count} API resources", Config.ApiResources.Count());
                 }
 
                 // Seed Identity Resources
@@ -158,6 +172,7 @@ internal static class HostingExtensions
                         context.IdentityResources.Add(resource.ToEntity());
                     }
                     context.SaveChanges();
+                    Log.Information("Seeded {Count} identity resources", Config.IdentityResources.Count());
                 }
 
                 // Seed Clients
@@ -168,7 +183,13 @@ internal static class HostingExtensions
                         context.Clients.Add(client.ToEntity());
                     }
                     context.SaveChanges();
+                    Log.Information("Seeded {Count} clients", Config.Clients.Count());
                 }
+
+                // Seed Users
+                var seedDataService = serviceScope.ServiceProvider.GetRequiredService<SeedDataService>();
+                seedDataService.SeedAsync().GetAwaiter().GetResult();
+                Log.Information("User seeding completed");
             }
         }
         catch (Exception ex)

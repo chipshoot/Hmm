@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
@@ -14,40 +14,33 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app ./
 
-# Copy Entity Framework Core tools
-COPY --from=build /src/*.csproj ./
+# Copy Entity Framework Core migrations
 COPY --from=build /src/Data/Migrations ./Data/Migrations
 
-# Install the EF Core tools and network utilities
-RUN apt-get update && apt-get install -y curl netcat-openbsd
+# Copy initialization scripts
+COPY DockerFiles/scripts ./scripts
 
-# Create entrypoint script
-RUN echo '#!/bin/bash \n\
-    # Wait for the database to be ready \n\
-    echo "Waiting for SQL Server to be ready..." \n\
-    for i in {1..120}; do \n\
-    echo "Checking SQL Server connection attempt $i/120..." \n\
-    if nc -z sqlserver 1433; then \n\
-    echo "SQL Server is up and running!" \n\
-    sleep 5 \n\
-    break \n\
-    fi \n\
-    sleep 2 \n\
-    if [ $i -eq 120 ]; then \n\
-    echo "Timed out waiting for SQL Server, but continuing anyway..." \n\
-    fi \n\
-    done \n\
-    \n\
-    # Start the application \n\
-    echo "Starting the application..." \n\
-    exec dotnet Hmm.Idp.dll \n\
-    ' > /app/entrypoint.sh
+# Install network utilities for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN chmod +x /app/entrypoint.sh
+# Make entrypoint script executable
+RUN chmod +x /app/scripts/entrypoint.sh
 
 # Set environment variables
-ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_ENVIRONMENT=Docker
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+ENV SEED_DATA=true
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:80/.well-known/openid-configuration || exit 1
+
+# Expose ports
+EXPOSE 80
+EXPOSE 443
 
 # Entry point
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]

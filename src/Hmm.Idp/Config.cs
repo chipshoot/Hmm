@@ -108,6 +108,30 @@ public static class Config
             },
             AllowOfflineAccess = true,
             UpdateAccessTokenClaimsOnRefresh = true
+        },
+
+        // Hmm.ServiceApi Client - For API token validation and introspection
+        // Use this for the ServiceApi to validate tokens
+        new Client
+        {
+            ClientId = "hmm.serviceapi",
+            ClientName = "Hmm Service API",
+            AllowedGrantTypes = GrantTypes.ClientCredentials,
+            RequireClientSecret = true,
+            ClientSecrets =
+            {
+                new Secret("ServiceApiSecret!@#456".Sha256())
+            },
+            AllowedScopes =
+            {
+                "hmmapi"
+            },
+            AccessTokenLifetime = 3600,
+            // Allow this client to introspect tokens
+            Properties =
+            {
+                { "AllowTokenIntrospection", "true" }
+            }
         }
     ];
 }

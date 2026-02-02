@@ -1,44 +1,50 @@
-﻿services:
-  # SQL Server Database
+services:
+  # SQL Server Database for Hmm.Idp
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
+    container_name: hmm-idp-sqlserver
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Password1!
       - MSSQL_PID=Express
-      - MSSQL_GID=0
-      - MSSQL_UID=0
     ports:
       - "14333:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
     networks:
-      - app-network
-    restart: always
-    user: "0:0"
-    command: /opt/mssql/bin/sqlservr
+      - idp-network
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Password1!" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
 
-  # .NET 9 Razor Pages Application (Hmm.Idp)
+  # Hmm.Idp - Identity Provider
   hmm-idp:
     build:
       context: ..
       dockerfile: DockerFiles/Dockerfile
     container_name: hmm-idp
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
+      - SEED_DATA=true
+      - DB_HOST=sqlserver
+      - DB_PORT=1433
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=HmmIdp;User Id=sa;Password=Password1!;TrustServerCertificate=True;
     ports:
-      - "5080:80"
+      - "5001:80"
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
     networks:
-      - app-network
-    restart: always
+      - idp-network
+    restart: unless-stopped
 
 networks:
-  app-network:
+  idp-network:
     driver: bridge
 
 volumes:
