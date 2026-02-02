@@ -7,23 +7,55 @@
 
 # Choose your environment by uncommenting ONE of the following:
 
-# IIS Express
+# ---- Environment 1: IIS Express + Docker SQL Server ----
+# Start infrastructure: .\scripts\Start-FuncTestInfra.ps1
+# Run with: Visual Studio "IIS Express SqlServer" profile
 # @baseUrl = https://localhost:44349
 
-# Kestrel (Project mode)
+# ---- Environment 2: Kestrel + Docker SQL Server ----
+# Start infrastructure: .\scripts\Start-FuncTestInfra.ps1
+# Run with: dotnet run --launch-profile "Hmm.ServiceApi SqlServer"
 @baseUrl = https://localhost:5001
 
-# Docker
+# ---- Environment 3: Full Docker Stack (API + SQL Server + Seq) ----
+# Start all: .\scripts\Start-FuncTestFull.ps1 -Build
+# @baseUrl = https://localhost:5001
+
+# ---- Legacy: PostgreSQL Development ----
+# Start with: docker-compose up (root docker-compose.yml)
 # @baseUrl = https://localhost:5001
 
 @apiVersion = 1.0
+@idpUrl = https://localhost:5001
+
+# ============================================================
+# AUTHENTICATION - GET TOKEN
+# Run this request first to get a token, then use it below
+# ============================================================
+
+### Get Access Token (Resource Owner Password Grant)
+# @name getToken
+POST {{idpUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=hmm.functest&client_secret=FuncTestSecret123!&username=testuser@hmm.local&password=TestPassword123!&scope=openid profile email hmmapi
+
+### Get Access Token (Client Credentials - Machine to Machine)
+# @name getM2MToken
+POST {{idpUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=hmm.m2m&client_secret=M2MSecret456!&scope=hmmapi
 
 # ============================================================
 # AUTHENTICATION TOKENS
 # The API supports multiple identity providers. Use the appropriate token below.
 # ============================================================
 
-# Internal Hmm.Idp token - Get from https://localhost:5001 (or configured IDP URL)
+# Dynamic token from getToken request above (VS Code REST Client / Rider)
+# @hmmIdpToken = {{getToken.response.body.access_token}}
+
+# Or paste your token here manually:
 @hmmIdpToken = YOUR_HMM_IDP_TOKEN_HERE
 
 # Firebase token - Get from Firebase Auth SDK or REST API

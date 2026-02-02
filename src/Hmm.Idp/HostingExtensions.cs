@@ -130,13 +130,43 @@ internal static class HostingExtensions
 
             if (builder is WebApplication app && app.Environment.IsDevelopment())
             {
+                // Seed API Scopes
+                if (!context.ApiScopes.Any())
+                {
+                    foreach (var scope in Config.ApiScopes)
+                    {
+                        context.ApiScopes.Add(scope.ToEntity());
+                    }
+                    context.SaveChanges();
+                }
+
+                // Seed API Resources
+                if (!context.ApiResources.Any())
+                {
+                    foreach (var resource in Config.ApiResources)
+                    {
+                        context.ApiResources.Add(resource.ToEntity());
+                    }
+                    context.SaveChanges();
+                }
+
+                // Seed Identity Resources
+                if (!context.IdentityResources.Any())
+                {
+                    foreach (var resource in Config.IdentityResources)
+                    {
+                        context.IdentityResources.Add(resource.ToEntity());
+                    }
+                    context.SaveChanges();
+                }
+
+                // Seed Clients
                 if (!context.Clients.Any())
                 {
                     foreach (var client in Config.Clients)
                     {
                         context.Clients.Add(client.ToEntity());
                     }
-
                     context.SaveChanges();
                 }
             }

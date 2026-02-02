@@ -1,0 +1,48 @@
+# Docker Compose for Infrastructure Only (SQL Server + Seq)
+# Use this for functional testing with IIS Express or Kestrel running locally
+#
+# Start: docker-compose -f docker/docker-compose.infra.yml up -d
+# Stop:  docker-compose -f docker/docker-compose.infra.yml down
+# Logs:  docker-compose -f docker/docker-compose.infra.yml logs -f
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hmm-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Shcdlhgm1!"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    networks:
+      - hmm-network
+    volumes:
+      - sqlserver-data:/var/opt/mssql/data
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Shcdlhgm1!" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  seq:
+    image: datalust/seq:latest
+    container_name: hmm-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:5341"    # Ingestion API
+      - "8081:80"      # Web UI
+    networks:
+      - hmm-network
+    volumes:
+      - seq-data:/data
+
+networks:
+  hmm-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
+  seq-data:
