@@ -16,6 +16,7 @@ namespace Hmm.Automobile.Tests
     {
         protected readonly XNamespace XmlNamespace = @"http://schema.hmm.com/2020";
         private IApplication _app;
+        private INoteCatalogProvider _catalogProvider;
         private bool _automobileCatalogsAdded;
         private static Author _testDefaultAuthor;
 
@@ -23,6 +24,7 @@ namespace Hmm.Automobile.Tests
             "<?xml version=\"1.0\" encoding=\"utf-16\" ?><Note xmlns=\"{0}\"><Content>{1}</Content></Note>";
 
         protected IApplication Application => _app ??= GetApplication();
+        protected INoteCatalogProvider CatalogProvider => _catalogProvider ??= GetCatalogProvider();
 
         /// <summary>
         /// Gets the default author used for automobile tests.
@@ -163,13 +165,20 @@ namespace Hmm.Automobile.Tests
         {
             var fakeApplication = new Mock<IApplication>();
 
-            fakeApplication.Setup(app => app.GetCatalogAsync(It.IsAny<NoteCatalogType>(), It.IsAny<IEntityLookup>()))
-                .ReturnsAsync((NoteCatalogType type, IEntityLookup lookupRepo) => GetCatalogForType(type));
-
             fakeApplication.Setup(app => app.RegisterAsync(It.IsAny<IEntityLookup>()))
                 .ReturnsAsync(ProcessingResult<bool>.Ok(true));
 
             return fakeApplication.Object;
+        }
+
+        private INoteCatalogProvider GetCatalogProvider()
+        {
+            var fakeCatalogProvider = new Mock<INoteCatalogProvider>();
+
+            fakeCatalogProvider.Setup(cp => cp.GetCatalogAsync(It.IsAny<NoteCatalogType>()))
+                .ReturnsAsync((NoteCatalogType type) => GetCatalogForType(type));
+
+            return fakeCatalogProvider.Object;
         }
 
         private static NoteCatalog GetCatalogForType(NoteCatalogType type)

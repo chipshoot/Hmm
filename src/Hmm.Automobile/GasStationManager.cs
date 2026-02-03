@@ -33,7 +33,7 @@ namespace Hmm.Automobile
         // GetEntityByIdAsync - uses base class implementation
         // CreateAsync - uses base class implementation
 
-        public override Task<ProcessingResult<GasStation>> UpdateAsync(GasStation entity)
+        public override Task<ProcessingResult<GasStation>> UpdateAsync(GasStation entity, bool commitChanges = true)
         {
             return UpdateEntityAsync(
                 entity,
@@ -47,7 +47,8 @@ namespace Hmm.Automobile
                     existing.ZipCode = updated.ZipCode;
                     existing.Description = updated.Description;
                     existing.IsActive = updated.IsActive;
-                });
+                },
+                commitChanges);
         }
 
         /// <summary>

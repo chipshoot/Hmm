@@ -1,4 +1,3 @@
-using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using System.Threading.Tasks;
@@ -6,8 +5,12 @@ using System.Threading.Tasks;
 namespace Hmm.Automobile
 {
     /// <summary>
-    /// Defines the contract for automobile module registration and catalog management.
+    /// Defines the contract for automobile module registration.
     /// </summary>
+    /// <remarks>
+    /// For catalog lookups, use <see cref="INoteCatalogProvider"/> instead.
+    /// This separation avoids circular dependencies in the DI container.
+    /// </remarks>
     public interface IApplication
     {
         /// <summary>
@@ -16,13 +19,5 @@ namespace Hmm.Automobile
         /// <param name="lookupRepo">Repository for entity lookups.</param>
         /// <returns>A ProcessingResult indicating success or failure of the registration.</returns>
         Task<ProcessingResult<bool>> RegisterAsync(IEntityLookup lookupRepo);
-
-        /// <summary>
-        /// Asynchronously retrieves a NoteCatalog for the specified entity type.
-        /// </summary>
-        /// <param name="entityType">The type of entity for which to retrieve the catalog.</param>
-        /// <param name="lookupRepo">Repository for entity lookups.</param>
-        /// <returns>The NoteCatalog for the specified entity type, or null if not found.</returns>
-        Task<NoteCatalog> GetCatalogAsync(NoteCatalogType entityType, IEntityLookup lookupRepo);
     }
 }

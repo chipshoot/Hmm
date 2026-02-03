@@ -293,9 +293,8 @@ namespace Hmm.Automobile.Tests
             InsertSeedRecords();
 
             var noteSerializer = new AutomobileJsonNoteSerialize(
-                Application,
-                new NullLogger<AutomobileInfo>(),
-                LookupRepository);
+                CatalogProvider,
+                new NullLogger<AutomobileInfo>());
 
             var noteManager = CreateNoteManager();
 
@@ -314,8 +313,8 @@ namespace Hmm.Automobile.Tests
             var noteIdCounter = 1;
 
             // Setup CreateAsync
-            mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>()))
-                .ReturnsAsync((HmmNote note) =>
+            mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>()))
+                .ReturnsAsync((HmmNote note, bool _) =>
                 {
                     note.Id = noteIdCounter++;
                     notes.Add(note);
@@ -323,8 +322,8 @@ namespace Hmm.Automobile.Tests
                 });
 
             // Setup UpdateAsync
-            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>()))
-                .ReturnsAsync((HmmNote note) =>
+            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>()))
+                .ReturnsAsync((HmmNote note, bool _) =>
                 {
                     var existing = notes.FirstOrDefault(n => n.Id == note.Id);
                     if (existing != null)

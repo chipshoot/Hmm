@@ -171,7 +171,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockAutomobileManager
-                .Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>()))
+                .Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<AutomobileInfo>.Ok(createdCar));
 
             // Act
@@ -190,7 +190,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiCar = new ApiAutomobileForCreate { Maker = "Test" };
 
             _mockAutomobileManager
-                .Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>()))
+                .Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<AutomobileInfo>.Invalid("Validation failed"));
 
             // Act
@@ -220,7 +220,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockAutomobileManager
-                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<AutomobileInfo>.Ok(_automobiles[0]));
 
             // Act
@@ -271,7 +271,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiCar = new ApiAutomobileForUpdate { Plate = "TEST123" };
 
             _mockAutomobileManager
-                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<AutomobileInfo>.Invalid("Update failed"));
 
             // Act
@@ -295,7 +295,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(a => a.Color, "Updated Color");
 
             _mockAutomobileManager
-                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<AutomobileInfo>.Ok(_automobiles[0]));
 
             // Act
@@ -361,7 +361,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(a => a.Color, "Test");
 
             _mockAutomobileManager
-                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
                 .ThrowsAsync(new Exception("Unexpected error"));
 
             // Act

@@ -259,7 +259,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockGasLogManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasLog>.Ok(createdGasLog));
 
             // Act
@@ -321,7 +321,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockGasLogManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasLog>.Invalid("Validation failed"));
 
             // Act
@@ -344,7 +344,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockGasLogManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ThrowsAsync(new Exception("Unexpected error"));
 
             // Act
@@ -433,7 +433,7 @@ namespace Hmm.ServiceApi.Core.Tests
             updatedGasLog.Comment = "Updated comment";
 
             _mockGasLogManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasLog>.Ok(updatedGasLog));
 
             // Act
@@ -485,7 +485,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiGasLog = new ApiGasLogForUpdate { Comment = "Test" };
 
             _mockGasLogManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasLog>.Invalid("Update failed"));
 
             // Act
@@ -528,7 +528,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockGasLogManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasLog>.Ok(_gasLogs[0]));
 
             // Act
@@ -612,7 +612,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(g => g.Comment, "Test");
 
             _mockGasLogManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ThrowsAsync(new Exception("Unexpected error"));
 
             // Act
@@ -634,7 +634,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int logId = 1;
 
             _mockGasLogManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasLog>.Ok(_gasLogs[0]));
 
             // Act
@@ -687,7 +687,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int logId = 1;
 
             _mockGasLogManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasLog>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasLog>.Invalid("Update failed"));
 
             // Act

@@ -1016,12 +1016,11 @@ namespace Hmm.Automobile.Tests
 
             // Create serializer with mocked dependencies
             _serializer = new GasLogJsonNoteSerialize(
-                Application,
+                CatalogProvider,
                 new NullLogger<GasLog>(),
                 _autoManagerMock.Object,
                 _discountManagerMock.Object,
-                _stationManagerMock.Object,
-                LookupRepository);
+                _stationManagerMock.Object);
         }
 
         #endregion

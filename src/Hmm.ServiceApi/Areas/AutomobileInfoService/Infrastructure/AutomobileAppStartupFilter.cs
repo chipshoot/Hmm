@@ -21,8 +21,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
-            var app = _serviceProvider.GetService<IApplication>();
             using var scope = _serviceProvider.CreateScope();
+            var app = scope.ServiceProvider.GetService<IApplication>();
             var lookupRepo = scope.ServiceProvider.GetService<IEntityLookup>();
 
             if (app != null && lookupRepo != null)

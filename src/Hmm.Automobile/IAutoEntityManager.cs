@@ -24,9 +24,25 @@ namespace Hmm.Automobile
 
         Task<ProcessingResult<PageList<T>>> GetEntitiesAsync(ResourceCollectionParameters resourceCollectionParameter = null);
 
-        Task<ProcessingResult<T>> CreateAsync(T entity);
+        /// <summary>
+        /// Creates a new entity in the data source.
+        /// </summary>
+        /// <param name="entity">The entity to create.</param>
+        /// <param name="commitChanges">
+        /// If true (default), changes are committed immediately.
+        /// If false, changes are tracked but not committed - caller must use IUnitOfWork.CommitAsync() to persist.
+        /// </param>
+        Task<ProcessingResult<T>> CreateAsync(T entity, bool commitChanges = true);
 
-        Task<ProcessingResult<T>> UpdateAsync(T entity);
+        /// <summary>
+        /// Updates an existing entity in the data source.
+        /// </summary>
+        /// <param name="entity">The entity with updated values.</param>
+        /// <param name="commitChanges">
+        /// If true (default), changes are committed immediately.
+        /// If false, changes are tracked but not committed - caller must use IUnitOfWork.CommitAsync() to persist.
+        /// </param>
+        Task<ProcessingResult<T>> UpdateAsync(T entity, bool commitChanges = true);
 
         Task<bool> IsEntityOwnerAsync(int id);
     }

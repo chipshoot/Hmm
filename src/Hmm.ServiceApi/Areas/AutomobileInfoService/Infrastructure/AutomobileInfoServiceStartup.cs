@@ -32,18 +32,21 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
                 _services
                     // Author providers:
-                    // - DefaultAuthorProvider: Singleton for background/service operations
+                    // - DefaultAuthorProvider: Scoped (depends on IAuthorManager which is Scoped)
                     // - CurrentUserAuthorProvider: Scoped for HTTP requests (uses authenticated user)
                     // - IAuthorProvider: Resolves to CurrentUserAuthorProvider for managers (uses current user)
-                    .AddSingleton<IDefaultAuthorProvider, DefaultAuthorProvider>()
+                    .AddScoped<IDefaultAuthorProvider, DefaultAuthorProvider>()
                     .AddScoped<ICurrentUserAuthorProvider, CurrentUserAuthorProvider>()
                     .AddScoped<IAuthorProvider>(sp => sp.GetRequiredService<ICurrentUserAuthorProvider>())
 
-                    // Seeding service
-                    .AddSingleton<ISeedingService, AutomobileSeedingService>()
+                    // Note catalog provider (Scoped - depends on IEntityLookup which is Scoped)
+                    .AddScoped<INoteCatalogProvider, NoteCatalogProvider>()
 
-                    // Application registration
-                    .AddSingleton<IApplication, ApplicationRegister>()
+                    // Seeding service (Scoped - depends on IAutoEntityManager which is Scoped)
+                    .AddScoped<ISeedingService, AutomobileSeedingService>()
+
+                    // Application registration (Scoped - depends on ISeedingService and IDefaultAuthorProvider which are Scoped)
+                    .AddScoped<IApplication, ApplicationRegister>()
 
                     // Validators
                     .AddScoped<IHmmValidator<AutomobileInfo>, AutomobileValidator>()
@@ -61,7 +64,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     .AddScoped<IAutoEntityManager<AutomobileInfo>, AutomobileManager>()
                     .AddScoped<IAutoEntityManager<GasDiscount>, DiscountManager>()
                     .AddScoped<IGasLogManager, GasLogManager>()
-                    .AddScoped<GasStationManager>()
+                    .AddScoped<IAutoEntityManager<GasStation>, GasStationManager>()
 
                     // Startup filter
                     .AddTransient<IStartupFilter, AutomobileAppStartupFilter>();

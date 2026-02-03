@@ -163,7 +163,7 @@ namespace Hmm.ServiceApi.Core.Tests
             // Arrange
             var apiNote = new ApiNoteForCreate { Subject = "TestNote" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
-            mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
+            mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>())).Throws(new Exception());
             var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act
@@ -268,7 +268,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var mockNoteManager = new Mock<IHmmNoteManager>();
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
-            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
+            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>())).Throws(new Exception());
             var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act
@@ -469,7 +469,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
-            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
+            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>())).Throws(new Exception());
             var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act
@@ -559,7 +559,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var note = new HmmNote { Id = noteId, Subject = "Exists Note" };
             var mockNoteManager = new Mock<IHmmNoteManager>();
             mockNoteManager.Setup(a => a.GetNoteByIdAsync(It.IsAny<int>(), false)).ReturnsAsync(ProcessingResult<HmmNote>.Ok(note));
-            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>())).Throws(new Exception());
+            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>())).Throws(new Exception());
             var controller = CreateControllerWithMockedManager(mockNoteManager);
 
             // Act

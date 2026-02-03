@@ -2,6 +2,7 @@ using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
@@ -23,7 +24,8 @@ namespace Hmm.Automobile
             IHmmValidator<T> validator,
             IHmmNoteManager noteManager,
             IEntityLookup lookupRepo,
-            IAuthorProvider authorProvider)
+            IAuthorProvider authorProvider,
+            IUnitOfWork unitOfWork = null)
         {
             ArgumentNullException.ThrowIfNull(validator);
             ArgumentNullException.ThrowIfNull(noteManager);
@@ -34,6 +36,7 @@ namespace Hmm.Automobile
             NoteManager = noteManager;
             LookupRepo = lookupRepo;
             AuthorProvider = authorProvider;
+            UnitOfWork = unitOfWork;
         }
 
         public IHmmValidator<T> Validator { get; }
@@ -41,6 +44,12 @@ namespace Hmm.Automobile
         protected IHmmNoteManager NoteManager { get; }
 
         protected IEntityLookup LookupRepo { get; }
+
+        /// <summary>
+        /// Gets the unit of work for managing transaction boundaries.
+        /// May be null if not injected - in that case, commits happen immediately after each operation.
+        /// </summary>
+        protected IUnitOfWork UnitOfWork { get; }
 
         /// <summary>
         /// Gets the author provider for resolving the author used in automobile operations.
@@ -164,7 +173,12 @@ namespace Hmm.Automobile
         /// serialization, and note creation with proper error handling.
         /// Override in derived classes for custom creation logic (e.g., GasLogManager).
         /// </summary>
-        public virtual async Task<ProcessingResult<T>> CreateAsync(T entity)
+        /// <param name="entity">The entity to create.</param>
+        /// <param name="commitChanges">
+        /// If true (default), changes are committed immediately.
+        /// If false, changes are tracked but not committed - caller must use IUnitOfWork.CommitAsync() to persist.
+        /// </param>
+        public virtual async Task<ProcessingResult<T>> CreateAsync(T entity, bool commitChanges = true)
         {
             if (entity == null)
             {
@@ -188,7 +202,7 @@ namespace Hmm.Automobile
             var note = noteResult.Value;
             note.Author = DefaultAuthor;
 
-            var createdNoteResult = await NoteManager.CreateAsync(note);
+            var createdNoteResult = await NoteManager.CreateAsync(note, commitChanges);
             if (!createdNoteResult.Success)
             {
                 return ProcessingResult<T>.Fail(createdNoteResult.ErrorMessage, createdNoteResult.ErrorType);
@@ -201,7 +215,12 @@ namespace Hmm.Automobile
         /// Updates an existing entity. Each entity type has different properties to copy,
         /// so this must be implemented by derived classes.
         /// </summary>
-        public abstract Task<ProcessingResult<T>> UpdateAsync(T entity);
+        /// <param name="entity">The entity with updated values.</param>
+        /// <param name="commitChanges">
+        /// If true (default), changes are committed immediately.
+        /// If false, changes are tracked but not committed - caller must use IUnitOfWork.CommitAsync() to persist.
+        /// </param>
+        public abstract Task<ProcessingResult<T>> UpdateAsync(T entity, bool commitChanges = true);
 
         /// <summary>
         /// Helper method for UpdateAsync implementations. Handles common update logic:
@@ -210,10 +229,15 @@ namespace Hmm.Automobile
         /// <param name="entity">The entity with updated values</param>
         /// <param name="notFoundMessage">Error message if entity not found</param>
         /// <param name="applyUpdates">Action to copy properties from entity to existing</param>
+        /// <param name="commitChanges">
+        /// If true (default), changes are committed immediately.
+        /// If false, changes are tracked but not committed - caller must use IUnitOfWork.CommitAsync() to persist.
+        /// </param>
         protected async Task<ProcessingResult<T>> UpdateEntityAsync(
             T entity,
             string notFoundMessage,
-            Action<T, T> applyUpdates)
+            Action<T, T> applyUpdates,
+            bool commitChanges = true)
         {
             if (entity == null)
             {
@@ -238,7 +262,7 @@ namespace Hmm.Automobile
             var note = noteResult.Value;
             note.Author = DefaultAuthor;
 
-            var updatedNoteResult = await NoteManager.UpdateAsync(note);
+            var updatedNoteResult = await NoteManager.UpdateAsync(note, commitChanges);
             if (!updatedNoteResult.Success)
             {
                 return ProcessingResult<T>.Fail(updatedNoteResult.ErrorMessage, updatedNoteResult.ErrorType);

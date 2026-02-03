@@ -764,7 +764,7 @@ namespace Hmm.Automobile.Tests
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _serializer = new AutomobileJsonNoteSerialize(Application, new NullLogger<AutomobileInfo>(), LookupRepository);
+            _serializer = new AutomobileJsonNoteSerialize(CatalogProvider, new NullLogger<AutomobileInfo>());
             _author = TestDefaultAuthor;
         }
 

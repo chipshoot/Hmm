@@ -2,6 +2,7 @@ using Hmm.Automobile.DomainEntity;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
+using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.MeasureUnit;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
@@ -15,6 +16,8 @@ namespace Hmm.Automobile
     /// <summary>
     /// Manager for gas log entities. Overrides CreateAsync to handle automobile meter reading updates.
     /// Uses base class for GetEntitiesAsync and GetEntityByIdAsync.
+    /// CreateAsync uses the Unit of Work pattern to ensure transactional consistency between
+    /// the automobile meter reading update and gas log creation.
     /// </summary>
     public class GasLogManager : EntityManagerBase<GasLog>, IGasLogManager
     {
@@ -28,8 +31,9 @@ namespace Hmm.Automobile
             IAutoEntityManager<AutomobileInfo> autoManager,
             IEntityLookup lookupRepo,
             IAuthorProvider authorProvider,
-            IDateTimeProvider dateProvider)
-            : base(validator, noteManager, lookupRepo, authorProvider)
+            IDateTimeProvider dateProvider,
+            IUnitOfWork unitOfWork = null)
+            : base(validator, noteManager, lookupRepo, authorProvider, unitOfWork)
         {
             ArgumentNullException.ThrowIfNull(autoManager);
             ArgumentNullException.ThrowIfNull(noteSerializer);
@@ -116,7 +120,17 @@ namespace Hmm.Automobile
             return await GetEntityByIdAsync(createdNoteResult.Value.Id);
         }
 
-        public override async Task<ProcessingResult<GasLog>> CreateAsync(GasLog entity)
+        /// <summary>
+        /// Creates a new gas log entry and updates the automobile's meter reading.
+        /// This operation is transactional - both the automobile update and gas log creation
+        /// are committed together, or neither is committed if any step fails.
+        /// </summary>
+        /// <param name="entity">The gas log to create.</param>
+        /// <param name="commitChanges">
+        /// If true (default), changes are committed immediately after both operations succeed.
+        /// If false, changes are tracked but not committed - caller must use IUnitOfWork.CommitAsync() to persist.
+        /// </param>
+        public override async Task<ProcessingResult<GasLog>> CreateAsync(GasLog entity, bool commitChanges = true)
         {
             if (entity == null)
             {
@@ -145,9 +159,10 @@ namespace Hmm.Automobile
                 return ProcessingResult<GasLog>.Invalid(validationError);
             }
 
-            // Update automobile meter reader
+            // Update automobile meter reading WITHOUT committing
+            // This is part of the transaction that will be committed after gas log creation
             auto.MeterReading = (long)entity.Odometer.TotalKilometre;
-            var updatedAutoResult = await _autoManager.UpdateAsync(auto);
+            var updatedAutoResult = await _autoManager.UpdateAsync(auto, commitChanges: false);
             if (!updatedAutoResult.Success)
             {
                 return ProcessingResult<GasLog>.Fail(updatedAutoResult.ErrorMessage, updatedAutoResult.ErrorType);
@@ -156,16 +171,25 @@ namespace Hmm.Automobile
             var noteResult = await NoteSerializer.GetNote(entity);
             if (!noteResult.Success)
             {
+                // No commit has happened yet, so no rollback needed
                 return ProcessingResult<GasLog>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
 
             var note = noteResult.Value;
             note.Author = DefaultAuthor;
 
-            var createdNoteResult = await NoteManager.CreateAsync(note);
+            // Create gas log note WITHOUT committing
+            var createdNoteResult = await NoteManager.CreateAsync(note, commitChanges: false);
             if (!createdNoteResult.Success)
             {
+                // No commit has happened yet, so no rollback needed
                 return ProcessingResult<GasLog>.Fail(createdNoteResult.ErrorMessage, createdNoteResult.ErrorType);
+            }
+
+            // Both operations succeeded - now commit them together atomically
+            if (commitChanges && UnitOfWork != null)
+            {
+                await UnitOfWork.CommitAsync();
             }
 
             var result = await GetEntityByIdAsync(createdNoteResult.Value.Id);
@@ -179,7 +203,7 @@ namespace Hmm.Automobile
             return result;
         }
 
-        public override async Task<ProcessingResult<GasLog>> UpdateAsync(GasLog entity)
+        public override async Task<ProcessingResult<GasLog>> UpdateAsync(GasLog entity, bool commitChanges = true)
         {
             if (entity == null)
             {
@@ -195,7 +219,7 @@ namespace Hmm.Automobile
             var curLog = curLogResult.Value;
             var curNote = await GetUpdateLogNoteAsync(curLog, entity);
 
-            var updatedNoteResult = await NoteManager.UpdateAsync(curNote);
+            var updatedNoteResult = await NoteManager.UpdateAsync(curNote, commitChanges);
             if (!updatedNoteResult.Success)
             {
                 return ProcessingResult<GasLog>.Fail(updatedNoteResult.ErrorMessage, updatedNoteResult.ErrorType);

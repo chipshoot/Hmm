@@ -237,8 +237,8 @@ namespace Hmm.Automobile.Tests
         public async Task SeedDataAsync_WithValidAutomobileData_SeedsSuccessfully()
         {
             // Arrange
-            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>()))
-                .ReturnsAsync((AutomobileInfo auto) => ProcessingResult<AutomobileInfo>.Ok(auto));
+            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .ReturnsAsync((AutomobileInfo auto, bool _) => ProcessingResult<AutomobileInfo>.Ok(auto));
 
             var service = new AutomobileSeedingService(
                 _automobileManagerMock.Object,
@@ -289,8 +289,8 @@ namespace Hmm.Automobile.Tests
         public async Task SeedDataAsync_WithValidDiscountData_SeedsSuccessfully()
         {
             // Arrange
-            _discountManagerMock.Setup(m => m.CreateAsync(It.IsAny<GasDiscount>()))
-                .ReturnsAsync((GasDiscount discount) => ProcessingResult<GasDiscount>.Ok(discount));
+            _discountManagerMock.Setup(m => m.CreateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
+                .ReturnsAsync((GasDiscount discount, bool _) => ProcessingResult<GasDiscount>.Ok(discount));
 
             var service = new AutomobileSeedingService(
                 _automobileManagerMock.Object,
@@ -335,10 +335,10 @@ namespace Hmm.Automobile.Tests
         public async Task SeedDataAsync_WithMixedData_SeedsBothTypes()
         {
             // Arrange
-            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>()))
-                .ReturnsAsync((AutomobileInfo auto) => ProcessingResult<AutomobileInfo>.Ok(auto));
-            _discountManagerMock.Setup(m => m.CreateAsync(It.IsAny<GasDiscount>()))
-                .ReturnsAsync((GasDiscount discount) => ProcessingResult<GasDiscount>.Ok(discount));
+            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .ReturnsAsync((AutomobileInfo auto, bool _) => ProcessingResult<AutomobileInfo>.Ok(auto));
+            _discountManagerMock.Setup(m => m.CreateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
+                .ReturnsAsync((GasDiscount discount, bool _) => ProcessingResult<GasDiscount>.Ok(discount));
 
             var service = new AutomobileSeedingService(
                 _automobileManagerMock.Object,
@@ -394,8 +394,8 @@ namespace Hmm.Automobile.Tests
         public async Task SeedDataAsync_WithMultipleAutomobiles_SeedsAll()
         {
             // Arrange
-            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>()))
-                .ReturnsAsync((AutomobileInfo auto) => ProcessingResult<AutomobileInfo>.Ok(auto));
+            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .ReturnsAsync((AutomobileInfo auto, bool _) => ProcessingResult<AutomobileInfo>.Ok(auto));
 
             var service = new AutomobileSeedingService(
                 _automobileManagerMock.Object,
@@ -452,9 +452,9 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             // Setup mock to succeed for valid VIN and fail for empty VIN
-            _automobileManagerMock.Setup(m => m.CreateAsync(It.Is<AutomobileInfo>(a => !string.IsNullOrEmpty(a.VIN))))
-                .ReturnsAsync((AutomobileInfo auto) => ProcessingResult<AutomobileInfo>.Ok(auto));
-            _automobileManagerMock.Setup(m => m.CreateAsync(It.Is<AutomobileInfo>(a => string.IsNullOrEmpty(a.VIN))))
+            _automobileManagerMock.Setup(m => m.CreateAsync(It.Is<AutomobileInfo>(a => !string.IsNullOrEmpty(a.VIN)), It.IsAny<bool>()))
+                .ReturnsAsync((AutomobileInfo auto, bool _) => ProcessingResult<AutomobileInfo>.Ok(auto));
+            _automobileManagerMock.Setup(m => m.CreateAsync(It.Is<AutomobileInfo>(a => string.IsNullOrEmpty(a.VIN)), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<AutomobileInfo>.Invalid("VIN is required"));
 
             var service = new AutomobileSeedingService(
@@ -549,8 +549,8 @@ namespace Hmm.Automobile.Tests
         public async Task SeedDataAsync_WithJsonComments_ParsesSuccessfully()
         {
             // Arrange
-            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>()))
-                .ReturnsAsync((AutomobileInfo auto) => ProcessingResult<AutomobileInfo>.Ok(auto));
+            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .ReturnsAsync((AutomobileInfo auto, bool _) => ProcessingResult<AutomobileInfo>.Ok(auto));
 
             var service = new AutomobileSeedingService(
                 _automobileManagerMock.Object,
@@ -598,8 +598,8 @@ namespace Hmm.Automobile.Tests
         public async Task SeedDataAsync_LogsAppropriateMessages()
         {
             // Arrange
-            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>()))
-                .ReturnsAsync((AutomobileInfo auto) => ProcessingResult<AutomobileInfo>.Ok(auto));
+            _automobileManagerMock.Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .ReturnsAsync((AutomobileInfo auto, bool _) => ProcessingResult<AutomobileInfo>.Ok(auto));
 
             var service = new AutomobileSeedingService(
                 _automobileManagerMock.Object,

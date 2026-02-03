@@ -32,7 +32,7 @@ namespace Hmm.Automobile
         // GetEntityByIdAsync - uses base class implementation
         // CreateAsync - uses base class implementation
 
-        public override Task<ProcessingResult<AutomobileInfo>> UpdateAsync(AutomobileInfo entity)
+        public override Task<ProcessingResult<AutomobileInfo>> UpdateAsync(AutomobileInfo entity, bool commitChanges = true)
         {
             return UpdateEntityAsync(
                 entity,
@@ -45,7 +45,8 @@ namespace Hmm.Automobile
                     existing.Year = updated.Year;
                     existing.Color = updated.Color;
                     existing.Plate = updated.Plate;
-                });
+                },
+                commitChanges);
         }
     }
 }

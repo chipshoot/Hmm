@@ -92,7 +92,7 @@ namespace Hmm.Core.DefaultManager
             return _mapper.MapWithNullCheck<HmmNoteDao, HmmNote>(noteDao);
         }
 
-        public async Task<ProcessingResult<HmmNote>> CreateAsync(HmmNote note)
+        public async Task<ProcessingResult<HmmNote>> CreateAsync(HmmNote note, bool commitChanges = true)
         {
             try
             {
@@ -116,7 +116,10 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<HmmNote>.Fail(addedNoteDaoResult.ErrorMessage, addedNoteDaoResult.ErrorType);
                 }
 
-                await _unitOfWork.CommitAsync();
+                if (commitChanges)
+                {
+                    await _unitOfWork.CommitAsync();
+                }
 
                 var createdNote = _mapper.Map<HmmNote>(addedNoteDaoResult.Value);
                 return ProcessingResult<HmmNote>.Ok(createdNote);
@@ -127,7 +130,7 @@ namespace Hmm.Core.DefaultManager
             }
         }
 
-        public async Task<ProcessingResult<HmmNote>> UpdateAsync(HmmNote note)
+        public async Task<ProcessingResult<HmmNote>> UpdateAsync(HmmNote note, bool commitChanges = true)
         {
             try
             {
@@ -151,7 +154,10 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<HmmNote>.Fail(updatedNoteDaoResult.ErrorMessage, updatedNoteDaoResult.ErrorType);
                 }
 
-                await _unitOfWork.CommitAsync();
+                if (commitChanges)
+                {
+                    await _unitOfWork.CommitAsync();
+                }
 
                 return _mapper.MapWithNullCheck<HmmNoteDao, HmmNote>(updatedNoteDaoResult.Value);
             }

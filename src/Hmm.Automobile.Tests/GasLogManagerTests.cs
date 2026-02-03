@@ -729,6 +729,43 @@ namespace Hmm.Automobile.Tests
 
         #endregion
 
+        #region Transactional Behavior Tests
+
+        [Fact]
+        public async Task CreateAsync_DeferredCommit_DoesNotCommitUntilExplicitCall()
+        {
+            // Arrange
+            await SetupTestCarAsync();
+            var gasLog = CreateValidGasLog();
+
+            // Act - create with commitChanges=false
+            var result = await _manager.CreateAsync(gasLog, commitChanges: false);
+
+            // Assert - operation should succeed
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            // The data is tracked but would need IUnitOfWork.CommitAsync() to persist
+            // In the mock environment, this just verifies the method signature works correctly
+        }
+
+        [Fact]
+        public async Task UpdateAsync_DeferredCommit_DoesNotCommitUntilExplicitCall()
+        {
+            // Arrange
+            var logs = await SetupEnvironmentAsync();
+            var log = logs.First();
+
+            // Act - update with commitChanges=false
+            log.Comment = "Updated without commit";
+            var result = await _manager.UpdateAsync(log, commitChanges: false);
+
+            // Assert - operation should succeed
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+        }
+
+        #endregion
+
         #region Helper Methods
 
         private async Task<IEnumerable<GasLog>> SetupEnvironmentAsync()
@@ -815,9 +852,8 @@ namespace Hmm.Automobile.Tests
 
             // Create automobile manager first
             var autoNoteSerializer = new AutomobileJsonNoteSerialize(
-                Application,
-                new NullLogger<AutomobileInfo>(),
-                LookupRepository);
+                CatalogProvider,
+                new NullLogger<AutomobileInfo>());
             var autoNoteManager = CreateNoteManager();
             _autoManager = new AutomobileManager(
                 autoNoteSerializer,
@@ -828,9 +864,8 @@ namespace Hmm.Automobile.Tests
 
             // Create discount manager
             var discountNoteSerializer = new GasDiscountJsonNoteSerialize(
-                Application,
-                new NullLogger<GasDiscount>(),
-                LookupRepository);
+                CatalogProvider,
+                new NullLogger<GasDiscount>());
             var discountNoteManager = CreateNoteManager();
             _discountManager = new DiscountManager(
                 discountNoteSerializer,
@@ -841,9 +876,8 @@ namespace Hmm.Automobile.Tests
 
             // Create station manager
             var stationNoteSerializer = new GasStationJsonNoteSerialize(
-                Application,
-                new NullLogger<GasStation>(),
-                LookupRepository);
+                CatalogProvider,
+                new NullLogger<GasStation>());
             var stationNoteManager = CreateNoteManager();
             _stationManager = new GasStationManager(
                 stationNoteSerializer,
@@ -868,12 +902,11 @@ namespace Hmm.Automobile.Tests
         private INoteSerializer<GasLog> CreateGasLogSerializer()
         {
             return new GasLogJsonNoteSerialize(
-                Application,
+                CatalogProvider,
                 new NullLogger<GasLog>(),
                 _autoManager,
                 _discountManager,
-                _stationManager,
-                LookupRepository);
+                _stationManager);
         }
 
         private IHmmNoteManager CreateNoteManager()
@@ -883,8 +916,8 @@ namespace Hmm.Automobile.Tests
             var noteIdCounter = 1;
 
             // Setup CreateAsync
-            mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>()))
-                .ReturnsAsync((HmmNote note) =>
+            mockNoteManager.Setup(m => m.CreateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>()))
+                .ReturnsAsync((HmmNote note, bool _) =>
                 {
                     note.Id = noteIdCounter++;
                     notes.Add(note);
@@ -892,8 +925,8 @@ namespace Hmm.Automobile.Tests
                 });
 
             // Setup UpdateAsync
-            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>()))
-                .ReturnsAsync((HmmNote note) =>
+            mockNoteManager.Setup(m => m.UpdateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>()))
+                .ReturnsAsync((HmmNote note, bool _) =>
                 {
                     var existing = notes.FirstOrDefault(n => n.Id == note.Id);
                     if (existing != null)

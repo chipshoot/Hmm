@@ -711,7 +711,7 @@ namespace Hmm.Automobile.Tests
         private void SetupTestEnv()
         {
             InsertSeedRecords();
-            _serializer = new GasDiscountJsonNoteSerialize(Application, new NullLogger<GasDiscount>(), LookupRepository);
+            _serializer = new GasDiscountJsonNoteSerialize(CatalogProvider, new NullLogger<GasDiscount>());
             _author = TestDefaultAuthor;
         }
 

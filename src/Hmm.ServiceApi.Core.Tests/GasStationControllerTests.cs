@@ -281,7 +281,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockStationManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Ok(createdStation));
 
             // Act
@@ -313,7 +313,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiStation = new ApiGasStationForCreate { Name = "Test" };
 
             _mockStationManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Invalid("Validation failed"));
 
             // Act
@@ -332,7 +332,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiStation = new ApiGasStationForCreate { Name = "Test" };
 
             _mockStationManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ThrowsAsync(new Exception("Unexpected error"));
 
             // Act
@@ -359,7 +359,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockStationManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Ok(_stations[0]));
 
             // Act
@@ -410,7 +410,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiStation = new ApiGasStationForUpdate { Name = "Test" };
 
             _mockStationManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Invalid("Update failed"));
 
             // Act
@@ -434,7 +434,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(s => s.Description, "Patched description");
 
             _mockStationManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Ok(_stations[0]));
 
             // Act
@@ -500,7 +500,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(s => s.Description, "Test");
 
             _mockStationManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Invalid("Update failed"));
 
             // Act
@@ -522,7 +522,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int stationId = 1;
 
             _mockStationManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Ok(_stations[0]));
 
             // Act
@@ -574,7 +574,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int stationId = 1;
 
             _mockStationManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasStation>.Invalid("Update failed"));
 
             // Act

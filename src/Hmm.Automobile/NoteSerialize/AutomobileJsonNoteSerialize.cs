@@ -1,6 +1,5 @@
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core.Map.DomainEntity;
-using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,20 +15,16 @@ namespace Hmm.Automobile.NoteSerialize
     /// </summary>
     public class AutomobileJsonNoteSerialize : EntityJsonNoteSerializeBase<AutomobileInfo>
     {
-        private readonly IApplication _app;
-        private readonly IEntityLookup _lookupRepo;
+        private readonly INoteCatalogProvider _catalogProvider;
 
         public AutomobileJsonNoteSerialize(
-            IApplication app,
-            ILogger<AutomobileInfo> logger,
-            IEntityLookup lookupRepo)
+            INoteCatalogProvider catalogProvider,
+            ILogger<AutomobileInfo> logger)
             : base(logger)
         {
-            ArgumentNullException.ThrowIfNull(app);
-            ArgumentNullException.ThrowIfNull(lookupRepo);
+            ArgumentNullException.ThrowIfNull(catalogProvider);
 
-            _app = app;
-            _lookupRepo = lookupRepo;
+            _catalogProvider = catalogProvider;
         }
 
         public override Task<ProcessingResult<AutomobileInfo>> GetEntity(HmmNote note)
@@ -226,7 +221,7 @@ namespace Hmm.Automobile.NoteSerialize
 
         protected override Task<NoteCatalog> GetCatalogAsync()
         {
-            return _app.GetCatalogAsync(NoteCatalogType.Automobile, _lookupRepo);
+            return _catalogProvider.GetCatalogAsync(NoteCatalogType.Automobile);
         }
 
         #region Helper Methods for Nullable Types

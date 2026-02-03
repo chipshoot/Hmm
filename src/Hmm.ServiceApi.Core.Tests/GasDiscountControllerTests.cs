@@ -186,7 +186,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockDiscountManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Ok(createdDiscount));
 
             // Act
@@ -205,7 +205,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiDiscount = new ApiDiscountForCreate { Program = "Test" };
 
             _mockDiscountManager
-                .Setup(m => m.CreateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.CreateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Invalid("Validation failed"));
 
             // Act
@@ -233,7 +233,7 @@ namespace Hmm.ServiceApi.Core.Tests
             };
 
             _mockDiscountManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Ok(_discounts[0]));
 
             // Act
@@ -284,7 +284,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiDiscount = new ApiDiscountForUpdate { Program = "Test" };
 
             _mockDiscountManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Invalid("Update failed"));
 
             // Act
@@ -308,7 +308,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(d => d.Comment, "Patched comment");
 
             _mockDiscountManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Ok(_discounts[0]));
 
             // Act
@@ -374,7 +374,7 @@ namespace Hmm.ServiceApi.Core.Tests
             patchDoc.Replace(d => d.Comment, "Test");
 
             _mockDiscountManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Invalid("Update failed"));
 
             // Act
@@ -396,7 +396,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int discountId = 1;
 
             _mockDiscountManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Ok(_discounts[0]));
 
             // Act
@@ -448,7 +448,7 @@ namespace Hmm.ServiceApi.Core.Tests
             const int discountId = 1;
 
             _mockDiscountManager
-                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>()))
+                .Setup(m => m.UpdateAsync(It.IsAny<GasDiscount>(), It.IsAny<bool>()))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Invalid("Update failed"));
 
             // Act

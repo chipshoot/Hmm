@@ -1,4 +1,3 @@
-using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,33 +16,29 @@ namespace Hmm.Automobile.NoteSerialize
     /// </summary>
     public class GasLogJsonNoteSerialize : EntityJsonNoteSerializeBase<GasLog>
     {
-        private readonly IApplication _app;
+        private readonly INoteCatalogProvider _catalogProvider;
         private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
         private readonly IAutoEntityManager<GasStation> _stationManager;
-        private readonly IEntityLookup _lookupRepo;
         private readonly GasStationXRefSerializer _stationSerializer;
 
         public GasLogJsonNoteSerialize(
-            IApplication app,
+            INoteCatalogProvider catalogProvider,
             ILogger<GasLog> logger,
             IAutoEntityManager<AutomobileInfo> autoManager,
             IAutoEntityManager<GasDiscount> discountManager,
-            IAutoEntityManager<GasStation> stationManager,
-            IEntityLookup lookupRepo)
+            IAutoEntityManager<GasStation> stationManager)
             : base(logger)
         {
-            ArgumentNullException.ThrowIfNull(app);
+            ArgumentNullException.ThrowIfNull(catalogProvider);
             ArgumentNullException.ThrowIfNull(autoManager);
             ArgumentNullException.ThrowIfNull(discountManager);
             ArgumentNullException.ThrowIfNull(stationManager);
-            ArgumentNullException.ThrowIfNull(lookupRepo);
 
-            _app = app;
+            _catalogProvider = catalogProvider;
             _autoManager = autoManager;
             _discountManager = discountManager;
             _stationManager = stationManager;
-            _lookupRepo = lookupRepo;
 
             // Initialize station serializer for cross-references
             _stationSerializer = new GasStationXRefSerializer(stationManager, logger, JsonOptions);
@@ -404,7 +399,7 @@ namespace Hmm.Automobile.NoteSerialize
 
         protected override Task<NoteCatalog> GetCatalogAsync()
         {
-            return _app.GetCatalogAsync(NoteCatalogType.GasLog, _lookupRepo);
+            return _catalogProvider.GetCatalogAsync(NoteCatalogType.GasLog);
         }
     }
 }
