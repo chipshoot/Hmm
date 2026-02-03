@@ -8,8 +8,6 @@
     <Compile Remove="DefaultManager\Validator\ExistsElementValidator.cs" />
     <Compile Remove="DefaultManager\Validator\ExistsUserValidator.cs" />
     <Compile Remove="DefaultManager\Validator\HmmNoteValidator.cs" />
-    <Compile Remove="JsonSchemaValidator.cs" />
-    <Compile Remove="NoteSerializerBase.cs" />
   </ItemGroup>
 
   <ItemGroup>
