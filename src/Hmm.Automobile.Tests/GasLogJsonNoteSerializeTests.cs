@@ -176,6 +176,116 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
+        public void GetNoteSerializationText_DiscountWithNullAmount_ReturnsEmptyString()
+        {
+            // Arrange - Issue #56 fix: serialization should fail fast on invalid data
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>
+            {
+                new GasDiscountInfo
+                {
+                    Program = _testDiscount,
+                    Amount = null // Invalid: Amount is required
+                }
+            };
+
+            // Act
+            var json = _serializer.GetNoteSerializationText(gasLog);
+
+            // Assert - Serialization should fail (return empty string) rather than silently lose data
+            Assert.Empty(json);
+        }
+
+        [Fact]
+        public void GetNoteSerializationText_DiscountWithNullProgram_ReturnsEmptyString()
+        {
+            // Arrange - Issue #56 fix: serialization should fail fast on invalid data
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>
+            {
+                new GasDiscountInfo
+                {
+                    Program = null, // Invalid: Program is required
+                    Amount = new Money(5.00m, CurrencyCodeType.Cad)
+                }
+            };
+
+            // Act
+            var json = _serializer.GetNoteSerializationText(gasLog);
+
+            // Assert - Serialization should fail (return empty string) rather than silently lose data
+            Assert.Empty(json);
+        }
+
+        [Fact]
+        public void GetNoteSerializationText_MultipleDiscounts_OneNullAmount_ReturnsEmptyString()
+        {
+            // Arrange - Issue #56 fix: fail fast even when only one discount is invalid
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>
+            {
+                new GasDiscountInfo
+                {
+                    Program = _testDiscount,
+                    Amount = new Money(5.00m, CurrencyCodeType.Cad) // Valid
+                },
+                new GasDiscountInfo
+                {
+                    Program = _testDiscount,
+                    Amount = null // Invalid
+                }
+            };
+
+            // Act
+            var json = _serializer.GetNoteSerializationText(gasLog);
+
+            // Assert - Entire serialization should fail, not just skip the invalid discount
+            Assert.Empty(json);
+        }
+
+        [Fact]
+        public async Task GetNote_DiscountWithNullAmount_ReturnsError()
+        {
+            // Arrange - Issue #56 fix: GetNote should return failure when serialization fails
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>
+            {
+                new GasDiscountInfo
+                {
+                    Program = _testDiscount,
+                    Amount = null // Invalid
+                }
+            };
+
+            // Act
+            var result = await _serializer.GetNote(gasLog);
+
+            // Assert - Should fail because serialization fails
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async Task GetNote_DiscountWithNullProgram_ReturnsError()
+        {
+            // Arrange - Issue #56 fix: GetNote should return failure when serialization fails
+            var gasLog = CreateValidGasLog();
+            gasLog.Discounts = new List<GasDiscountInfo>
+            {
+                new GasDiscountInfo
+                {
+                    Program = null, // Invalid
+                    Amount = new Money(5.00m, CurrencyCodeType.Cad)
+                }
+            };
+
+            // Act
+            var result = await _serializer.GetNote(gasLog);
+
+            // Assert - Should fail because serialization fails
+            Assert.False(result.Success);
+        }
+
+        [Fact]
         public void GetNoteSerializationText_IncludesOptionalDrivingContext()
         {
             // Arrange

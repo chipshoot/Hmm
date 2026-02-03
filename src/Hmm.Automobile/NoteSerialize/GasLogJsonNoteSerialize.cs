@@ -268,15 +268,23 @@ namespace Hmm.Automobile.NoteSerialize
                     gasLogData["location"] = entity.Location;
                 }
 
-                // Add discounts array
+                // Add discounts array - fail fast if any discount has invalid data
                 var discountsList = new List<object>();
                 if (entity.Discounts != null && entity.Discounts.Any())
                 {
                     foreach (var discount in entity.Discounts)
                     {
-                        if (discount.Amount == null || discount.Program == null)
+                        // Validate discount data - fail serialization if incomplete
+                        if (discount.Amount == null)
                         {
-                            continue;
+                            Logger.LogError("Cannot serialize GasLog: discount has null Amount");
+                            return string.Empty; // Triggers failure in GetNote base class
+                        }
+
+                        if (discount.Program == null)
+                        {
+                            Logger.LogError("Cannot serialize GasLog: discount has null Program");
+                            return string.Empty; // Triggers failure in GetNote base class
                         }
 
                         discountsList.Add(new
