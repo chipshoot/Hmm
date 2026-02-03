@@ -2,6 +2,7 @@
 using AutoMapper;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Dal.Query;
 
 namespace Hmm.Core.Map;
 
@@ -9,6 +10,18 @@ public class HmmMappingProfile : Profile
 {
     public HmmMappingProfile()
     {
+        // PageList mappings - required because PageList implements IReadOnlyList<T> not List<T>
+        CreateMap<PageList<AuthorDao>, PageList<Author>>()
+            .ConvertUsing(new PageListConverter<AuthorDao, Author>());
+        CreateMap<PageList<ContactDao>, PageList<Contact>>()
+            .ConvertUsing(new PageListConverter<ContactDao, Contact>());
+        CreateMap<PageList<NoteCatalogDao>, PageList<NoteCatalog>>()
+            .ConvertUsing(new PageListConverter<NoteCatalogDao, NoteCatalog>());
+        CreateMap<PageList<TagDao>, PageList<Tag>>()
+            .ConvertUsing(new PageListConverter<TagDao, Tag>());
+        CreateMap<PageList<HmmNoteDao>, PageList<HmmNote>>()
+            .ConvertUsing(new PageListConverter<HmmNoteDao, HmmNote>());
+
         CreateMap<ContactDao, Contact>()
             .ConvertUsing((src, dest) =>
             {
