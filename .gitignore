@@ -366,3 +366,6 @@ FodyWeavers.xsd
 data/
 
 nul
+
+# Claude Code local settings
+.claude/
