@@ -6,6 +6,7 @@ using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
+using Hmm.Utility.Specification;
 using Hmm.Utility.Validation;
 using System;
 using System.Collections.Generic;
@@ -37,10 +38,10 @@ public class ContactManager : IContactManager
     {
         try
         {
-            // Use cached expression helper to combine query with IsActivated filter
-            var daoQuery = ExpressionHelper.CombineWithIsActivated<Contact, ContactDao>(query);
+            // Use specification pattern to combine query with IsActivated filter
+            var spec = ExpressionHelper.GetIsActivatedSpec<Contact, ContactDao>(query);
 
-            var contactDaosResult = await _contactDaoRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+            var contactDaosResult = await _contactDaoRepository.GetEntitiesAsync(spec, resourceCollectionParameters);
             if (!contactDaosResult.Success)
             {
                 return ProcessingResult<PageList<Contact>>.Fail(contactDaosResult.ErrorMessage, contactDaosResult.ErrorType);

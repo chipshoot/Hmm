@@ -11,6 +11,9 @@ using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+// Specification pattern support
+using Hmm.Utility.Specification;
+
 namespace Hmm.Core.DefaultManager
 {
     public class AuthorManager : IAuthorManager
@@ -45,10 +48,10 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                // Use cached expression helper to combine query with IsActivated filter
-                var daoQuery = ExpressionHelper.CombineWithIsActivated<Author, AuthorDao>(query);
+                // Use specification pattern to combine query with IsActivated filter
+                var spec = ExpressionHelper.GetIsActivatedSpec<Author, AuthorDao>(query);
 
-                var authorDaosResult = await _authorRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                var authorDaosResult = await _authorRepository.GetEntitiesAsync(spec, resourceCollectionParameters);
                 if (!authorDaosResult.Success)
                 {
                     return ProcessingResult<PageList<Author>>.Fail(authorDaosResult.ErrorMessage, authorDaosResult.ErrorType);

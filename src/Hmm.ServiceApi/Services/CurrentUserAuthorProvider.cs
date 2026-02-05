@@ -1,6 +1,7 @@
 using Hmm.Automobile;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Core.Specifications;
 using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -99,7 +100,8 @@ namespace Hmm.ServiceApi.Services
             _logger?.LogDebug("Resolving author for user subject: {Subject}", subject);
 
             // Try to find existing author by account name (which stores the subject)
-            var authorsResult = await _authorManager.GetEntitiesAsync(a => a.AccountName == subject);
+            var spec = new AuthorByAccountNameSpecification(subject);
+            var authorsResult = await _authorManager.GetEntitiesAsync(spec.ToExpression());
             if (!authorsResult.Success)
             {
                 _logger?.LogError("Failed to query for user author: {Error}", authorsResult.ErrorMessage);

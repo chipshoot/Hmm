@@ -1,6 +1,8 @@
+using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Specification;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Xunit;
 
@@ -357,6 +359,154 @@ namespace Hmm.Utility.Tests
             Assert.Equal(2, filtered.Count);
             Assert.Contains(filtered, e => e.Id == 1);
             Assert.Contains(filtered, e => e.Id == 3);
+        }
+
+        #endregion
+
+        #region IsActivatedSpecification Tests
+
+        private class ActivatableEntity : Entity, IActivatable
+        {
+            [StringLength(100)]
+            public string Name { get; set; }
+            public bool IsActivated { get; set; }
+        }
+
+        [Fact]
+        public void IsActivatedSpecification_SatisfiedByActivatedEntity()
+        {
+            // Arrange
+            var spec = new IsActivatedSpecification<ActivatableEntity>();
+            var entity = new ActivatableEntity { IsActivated = true };
+
+            // Act & Assert
+            Assert.True(spec.IsSatisfiedBy(entity));
+        }
+
+        [Fact]
+        public void IsActivatedSpecification_NotSatisfiedByDeactivatedEntity()
+        {
+            // Arrange
+            var spec = new IsActivatedSpecification<ActivatableEntity>();
+            var entity = new ActivatableEntity { IsActivated = false };
+
+            // Act & Assert
+            Assert.False(spec.IsSatisfiedBy(entity));
+        }
+
+        [Fact]
+        public void IsActivatedSpecification_ToExpression_FiltersDeactivated()
+        {
+            // Arrange
+            var spec = new IsActivatedSpecification<ActivatableEntity>();
+            var entities = new List<ActivatableEntity>
+            {
+                new() { Id = 1, IsActivated = true },
+                new() { Id = 2, IsActivated = false },
+                new() { Id = 3, IsActivated = true }
+            }.AsQueryable();
+
+            // Act
+            var filtered = entities.Where(spec.ToExpression()).ToList();
+
+            // Assert
+            Assert.Equal(2, filtered.Count);
+            Assert.All(filtered, e => Assert.True(e.IsActivated));
+        }
+
+        [Fact]
+        public void IsActivatedSpecification_ComposesWithAndSpecification()
+        {
+            // Arrange
+            var isActivated = new IsActivatedSpecification<ActivatableEntity>();
+            var hasName = new Specification<ActivatableEntity>(e => e.Name == "Test");
+            var combined = isActivated.And(hasName);
+
+            // Act & Assert
+            Assert.True(combined.IsSatisfiedBy(new ActivatableEntity { IsActivated = true, Name = "Test" }));
+            Assert.False(combined.IsSatisfiedBy(new ActivatableEntity { IsActivated = true, Name = "Other" }));
+            Assert.False(combined.IsSatisfiedBy(new ActivatableEntity { IsActivated = false, Name = "Test" }));
+        }
+
+        #endregion
+
+        #region NameMatchSpecification Tests
+
+        private class NamedEntity : Entity
+        {
+            [StringLength(200)]
+            public string Name { get; set; }
+            public bool IsActivated { get; set; }
+        }
+
+        [Fact]
+        public void NameMatchSpecification_MatchesByNameCaseInsensitive()
+        {
+            // Arrange
+            var spec = new NameMatchSpecification<NamedEntity>(e => e.Name, "test");
+
+            // Act & Assert
+            Assert.True(spec.IsSatisfiedBy(new NamedEntity { Name = "Test" }));
+            Assert.True(spec.IsSatisfiedBy(new NamedEntity { Name = "TEST" }));
+            Assert.True(spec.IsSatisfiedBy(new NamedEntity { Name = "test" }));
+            Assert.False(spec.IsSatisfiedBy(new NamedEntity { Name = "other" }));
+        }
+
+        [Fact]
+        public void NameMatchSpecification_WithAdditionalFilter_CombinesBothConditions()
+        {
+            // Arrange
+            var spec = new NameMatchSpecification<NamedEntity>(
+                e => e.Name,
+                "test",
+                e => e.IsActivated);
+
+            // Act & Assert
+            Assert.True(spec.IsSatisfiedBy(new NamedEntity { Name = "Test", IsActivated = true }));
+            Assert.False(spec.IsSatisfiedBy(new NamedEntity { Name = "Test", IsActivated = false }));
+            Assert.False(spec.IsSatisfiedBy(new NamedEntity { Name = "Other", IsActivated = true }));
+        }
+
+        [Fact]
+        public void NameMatchSpecification_ToExpression_WorksWithLinq()
+        {
+            // Arrange
+            var spec = new NameMatchSpecification<NamedEntity>(e => e.Name, "target");
+            var entities = new List<NamedEntity>
+            {
+                new() { Id = 1, Name = "Target" },
+                new() { Id = 2, Name = "Other" },
+                new() { Id = 3, Name = "TARGET" }
+            }.AsQueryable();
+
+            // Act
+            var filtered = entities.Where(spec.ToExpression()).ToList();
+
+            // Assert
+            Assert.Equal(2, filtered.Count);
+        }
+
+        [Fact]
+        public void NameMatchSpecification_ComposesWithIdExclusion()
+        {
+            // Arrange - name match AND id != 5 (simulates update validation)
+            var nameSpec = new NameMatchSpecification<NamedEntity>(e => e.Name, "test");
+            var excludeId = new Specification<NamedEntity>(e => e.Id != 5);
+            var combined = nameSpec.And(excludeId);
+
+            var entities = new List<NamedEntity>
+            {
+                new() { Id = 5, Name = "Test" },   // excluded by ID
+                new() { Id = 10, Name = "Test" },   // matches
+                new() { Id = 15, Name = "Other" }   // excluded by name
+            }.AsQueryable();
+
+            // Act
+            var filtered = entities.Where(combined.ToExpression()).ToList();
+
+            // Assert
+            Assert.Single(filtered);
+            Assert.Equal(10, filtered[0].Id);
         }
 
         #endregion

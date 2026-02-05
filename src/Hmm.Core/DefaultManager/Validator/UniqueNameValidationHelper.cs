@@ -1,6 +1,7 @@
 using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
+using Hmm.Utility.Specification;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
@@ -44,13 +45,13 @@ namespace Hmm.Core.DefaultManager.Validator
             var existingEntityResult = await repository.GetEntityAsync(entityId);
             var isNewEntity = !existingEntityResult.Success || existingEntityResult.IsNotFound;
 
-            // Build the query for finding matching names
-            var matchingNamesQuery = BuildNameMatchQuery(nameSelector, normalizedName, additionalFilter);
+            // Build the specification for finding matching names
+            var nameMatchSpec = new NameMatchSpecification<TDao>(nameSelector, normalizedName, additionalFilter);
 
             if (isNewEntity)
             {
                 // Creating new entity - check if any entity has this name
-                var existingResult = await repository.GetEntitiesAsync(matchingNamesQuery);
+                var existingResult = await repository.GetEntitiesAsync(nameMatchSpec);
                 if (existingResult.Success && !existingResult.IsNotFound && existingResult.Value?.Any() == true)
                 {
                     return false;
@@ -59,8 +60,9 @@ namespace Hmm.Core.DefaultManager.Validator
             else
             {
                 // Updating existing entity - check for conflicts with OTHER entities
-                var conflictQuery = CombineWithIdExclusion(matchingNamesQuery, entityId);
-                var conflictResult = await repository.GetEntitiesAsync(conflictQuery);
+                var excludeIdSpec = new Specification<TDao>(e => e.Id != entityId);
+                var conflictSpec = nameMatchSpec.And(excludeIdSpec);
+                var conflictResult = await repository.GetEntitiesAsync(conflictSpec);
                 if (conflictResult.Success && !conflictResult.IsNotFound && conflictResult.Value?.Any() == true)
                 {
                     return false;
@@ -91,73 +93,5 @@ namespace Hmm.Core.DefaultManager.Validator
                 additionalFilter);
         }
 
-        /// <summary>
-        /// Builds an expression that checks if the name matches (case-insensitive).
-        /// </summary>
-        private static Expression<Func<TDao, bool>> BuildNameMatchQuery<TDao>(
-            Expression<Func<TDao, string>> nameSelector,
-            string normalizedName,
-            Expression<Func<TDao, bool>> additionalFilter)
-            where TDao : Entity
-        {
-            // Build: entity => entity.Name.ToLower() == normalizedName
-            var parameter = nameSelector.Parameters[0];
-            var nameAccess = nameSelector.Body;
-            var toLowerCall = Expression.Call(nameAccess, typeof(string).GetMethod("ToLower", Type.EmptyTypes)!);
-            var comparison = Expression.Equal(toLowerCall, Expression.Constant(normalizedName));
-
-            Expression finalBody = comparison;
-
-            // Add additional filter if provided (e.g., IsActivated)
-            if (additionalFilter != null)
-            {
-                var additionalBody = ReplaceParameter(additionalFilter.Body, additionalFilter.Parameters[0], parameter);
-                finalBody = Expression.AndAlso(comparison, additionalBody);
-            }
-
-            return Expression.Lambda<Func<TDao, bool>>(finalBody, parameter);
-        }
-
-        /// <summary>
-        /// Combines the name match query with an ID exclusion for update scenarios.
-        /// </summary>
-        private static Expression<Func<TDao, bool>> CombineWithIdExclusion<TDao>(
-            Expression<Func<TDao, bool>> baseQuery,
-            int entityIdToExclude)
-            where TDao : Entity
-        {
-            // Build: entity => baseQuery(entity) && entity.Id != entityIdToExclude
-            var parameter = baseQuery.Parameters[0];
-            var idProperty = Expression.Property(parameter, nameof(Entity.Id));
-            var idComparison = Expression.NotEqual(idProperty, Expression.Constant(entityIdToExclude));
-            var combinedBody = Expression.AndAlso(baseQuery.Body, idComparison);
-
-            return Expression.Lambda<Func<TDao, bool>>(combinedBody, parameter);
-        }
-
-        /// <summary>
-        /// Replaces parameter references in an expression.
-        /// </summary>
-        private static Expression ReplaceParameter(Expression expression, ParameterExpression oldParam, ParameterExpression newParam)
-        {
-            return new ParameterReplacer(oldParam, newParam).Visit(expression);
-        }
-
-        private class ParameterReplacer : ExpressionVisitor
-        {
-            private readonly ParameterExpression _oldParam;
-            private readonly ParameterExpression _newParam;
-
-            public ParameterReplacer(ParameterExpression oldParam, ParameterExpression newParam)
-            {
-                _oldParam = oldParam;
-                _newParam = newParam;
-            }
-
-            protected override Expression VisitParameter(ParameterExpression node)
-            {
-                return node == _oldParam ? _newParam : base.VisitParameter(node);
-            }
-        }
     }
 }

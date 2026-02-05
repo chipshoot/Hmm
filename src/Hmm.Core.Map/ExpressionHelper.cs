@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using Hmm.Utility.Dal.DataEntity;
+using Hmm.Utility.Specification;
 
 namespace Hmm.Core.Map;
 
@@ -83,6 +85,29 @@ public static class ExpressionHelper
 
         // Combine the mapped query with IsActivated using AndAlso
         return CombineExpressions(mappedQuery, isActivatedExpr);
+    }
+
+    /// <summary>
+    /// Returns an <see cref="ISpecification{TDest}"/> that combines an optional mapped query
+    /// with the <see cref="IsActivatedSpecification{T}"/> filter.
+    /// Use with <see cref="Hmm.Utility.Dal.Repository.RepositorySpecificationExtensions"/> to pass directly to repositories.
+    /// </summary>
+    /// <typeparam name="TSource">The source domain entity type.</typeparam>
+    /// <typeparam name="TDest">The destination DAO entity type that implements <see cref="IActivatable"/>.</typeparam>
+    /// <param name="query">The optional query expression in source entity terms.</param>
+    /// <returns>A specification combining the mapped query with the IsActivated filter.</returns>
+    public static ISpecification<TDest> GetIsActivatedSpec<TSource, TDest>(
+        Expression<Func<TSource, bool>>? query) where TDest : IActivatable
+    {
+        var isActivatedSpec = new IsActivatedSpecification<TDest>();
+
+        if (query == null)
+        {
+            return isActivatedSpec;
+        }
+
+        var mappedQuery = ExpressionMapper<TSource, TDest>.MapExpression(query);
+        return new Specification<TDest>(mappedQuery).And(isActivatedSpec);
     }
 
     /// <summary>

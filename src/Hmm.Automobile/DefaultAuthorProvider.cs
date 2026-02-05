@@ -1,5 +1,6 @@
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Core.Specifications;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -91,7 +92,8 @@ namespace Hmm.Automobile
             _logger?.LogDebug("Looking up default author with account name: {AccountName}", accountName);
 
             // Try to find existing author by account name
-            var authorsResult = await _authorManager.GetEntitiesAsync(a => a.AccountName == accountName);
+            var spec = new AuthorByAccountNameSpecification(accountName);
+            var authorsResult = await _authorManager.GetEntitiesAsync(spec.ToExpression());
             if (!authorsResult.Success)
             {
                 _logger?.LogError("Failed to query for default author: {Error}", authorsResult.ErrorMessage);

@@ -1,5 +1,6 @@
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Specification;
 using System.Linq.Expressions;
 
 namespace Hmm.Core.Map.Tests;
@@ -196,4 +197,58 @@ public class ExpressionHelperTests
         Assert.True(compiledExpr(activatedContact));
         Assert.False(compiledExpr(deactivatedContact));
     }
+
+    #region GetIsActivatedSpec Tests
+
+    [Fact]
+    public void GetIsActivatedSpec_Returns_IsActivatedSpecification_When_Query_Is_Null()
+    {
+        // Act
+        var spec = ExpressionHelper.GetIsActivatedSpec<Author, AuthorDao>(null);
+
+        // Assert
+        Assert.NotNull(spec);
+        Assert.IsType<IsActivatedSpecification<AuthorDao>>(spec);
+        Assert.True(spec.IsSatisfiedBy(new AuthorDao { IsActivated = true }));
+        Assert.False(spec.IsSatisfiedBy(new AuthorDao { IsActivated = false }));
+    }
+
+    [Fact]
+    public void GetIsActivatedSpec_Combines_MappedQuery_With_IsActivated()
+    {
+        // Arrange
+        Expression<Func<Author, bool>> query = a => a.AccountName == "test";
+
+        // Act
+        var spec = ExpressionHelper.GetIsActivatedSpec<Author, AuthorDao>(query);
+
+        // Assert
+        Assert.True(spec.IsSatisfiedBy(new AuthorDao { AccountName = "test", IsActivated = true }));
+        Assert.False(spec.IsSatisfiedBy(new AuthorDao { AccountName = "test", IsActivated = false }));
+        Assert.False(spec.IsSatisfiedBy(new AuthorDao { AccountName = "other", IsActivated = true }));
+    }
+
+    [Fact]
+    public void GetIsActivatedSpec_Expression_UsableWithLinq()
+    {
+        // Arrange
+        Expression<Func<Tag, bool>> query = t => t.Name == "Important";
+        var spec = ExpressionHelper.GetIsActivatedSpec<Tag, TagDao>(query);
+
+        var entities = new List<TagDao>
+        {
+            new() { Id = 1, Name = "Important", IsActivated = true },
+            new() { Id = 2, Name = "Important", IsActivated = false },
+            new() { Id = 3, Name = "Other", IsActivated = true }
+        }.AsQueryable();
+
+        // Act
+        var filtered = entities.Where(spec.ToExpression()).ToList();
+
+        // Assert
+        Assert.Single(filtered);
+        Assert.Equal(1, filtered[0].Id);
+    }
+
+    #endregion
 }

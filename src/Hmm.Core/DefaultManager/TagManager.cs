@@ -38,10 +38,10 @@ namespace Hmm.Core.DefaultManager
         {
             try
             {
-                // Use cached expression helper to combine query with IsActivated filter
-                var daoQuery = ExpressionHelper.CombineWithIsActivated<Tag, TagDao>(query);
+                // Use specification pattern to combine query with IsActivated filter
+                var spec = ExpressionHelper.GetIsActivatedSpec<Tag, TagDao>(query);
 
-                var tagDaosResult = await _tagRepository.GetEntitiesAsync(daoQuery, resourceCollectionParameters);
+                var tagDaosResult = await _tagRepository.GetEntitiesAsync(spec, resourceCollectionParameters);
                 if (!tagDaosResult.Success)
                 {
                     return ProcessingResult<PageList<Tag>>.Fail(tagDaosResult.ErrorMessage, tagDaosResult.ErrorType);
