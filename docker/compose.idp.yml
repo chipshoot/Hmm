@@ -1,0 +1,25 @@
+# IDP service overlay - extends compose.base.yml
+#
+# Usage: docker compose -f compose.base.yml -f compose.idp.yml up -d
+
+services:
+  hmm-idp:
+    build:
+      context: ../src/Hmm.Idp
+      dockerfile: DockerFiles/Dockerfile
+    container_name: hmm-idp
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+      - SEED_DATA=true
+      - DB_HOST=idp-sqlserver
+      - DB_PORT=1433
+      - ConnectionStrings__DefaultConnection=Server=idp-sqlserver;Database=HmmIdp;User Id=sa;Password=${IDP_SA_PASSWORD};TrustServerCertificate=True;
+    ports:
+      - "${IDP_PORT}:80"
+    depends_on:
+      idp-sqlserver:
+        condition: service_healthy
+    networks:
+      - hmm-network
+    restart: unless-stopped

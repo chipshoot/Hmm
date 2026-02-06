@@ -1,0 +1,28 @@
+# API service overlay - extends compose.base.yml + compose.idp.yml
+#
+# Usage: docker compose -f compose.base.yml -f compose.idp.yml -f compose.api.yml up -d
+
+services:
+  hmm-api:
+    build:
+      context: ..
+      dockerfile: src/Hmm.ServiceApi/Dockerfile
+    container_name: hmm-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__HmmNoteConnection=Server=api-sqlserver;Database=hmm;User Id=sa;Password=${API_SA_PASSWORD};TrustServerCertificate=True
+      - AppSettings__IdpBaseUrl=http://hmm-idp:80
+      - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
+    ports:
+      - "${API_HTTP_PORT}:80"
+    depends_on:
+      api-sqlserver:
+        condition: service_healthy
+      seq:
+        condition: service_started
+      hmm-idp:
+        condition: service_started
+    networks:
+      - hmm-network
+    restart: unless-stopped
