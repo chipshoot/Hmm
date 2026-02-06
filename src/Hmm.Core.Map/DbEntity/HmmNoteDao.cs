@@ -6,7 +6,7 @@ using Hmm.Utility.Dal.DataEntity;
 
 namespace Hmm.Core.Map.DbEntity
 {
-    public class HmmNoteDao : VersionedEntity
+    public class HmmNoteDao : VersionedEntity, IAuditable
     {
         [Column("subject")]
         [MaxLength(1000)]
@@ -29,6 +29,14 @@ namespace Hmm.Core.Map.DbEntity
 
         [Column("lastmodifieddate")]
         public DateTime LastModifiedDate { get; set; }
+
+        [Column("createdby")]
+        [MaxLength(256)]
+        public string? CreatedBy { get; set; }
+
+        [Column("lastmodifiedby")]
+        [MaxLength(256)]
+        public string? LastModifiedBy { get; set; }
 
         public IList<NoteTagRefDao> Tags { get; set; } = new List<NoteTagRefDao>();
     }

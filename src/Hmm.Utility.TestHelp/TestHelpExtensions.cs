@@ -26,6 +26,8 @@ namespace Hmm.Utility.TestHelp
                     CreateDate = source.CreateDate,
                     IsDeleted = source.IsDeleted,
                     LastModifiedDate = source.LastModifiedDate,
+                    CreatedBy = source.CreatedBy,
+                    LastModifiedBy = source.LastModifiedBy,
                     Version = source.Version
                 };
                 return target;
@@ -41,6 +43,8 @@ namespace Hmm.Utility.TestHelp
                 targetNote.CreateDate = source.CreateDate;
                 targetNote.IsDeleted = source.IsDeleted;
                 targetNote.LastModifiedDate = source.LastModifiedDate;
+                targetNote.CreatedBy = source.CreatedBy;
+                targetNote.LastModifiedBy = source.LastModifiedBy;
                 targetNote.Version = source.Version;
 
                 return targetNote;

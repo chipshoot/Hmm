@@ -2,7 +2,7 @@
 
 namespace Hmm.Core.Map.DomainEntity
 {
-    public class HmmNote : VersionedEntity
+    public class HmmNote : VersionedEntity, IAuditable
     {
         public string Subject { get; set; }
 
@@ -19,5 +19,9 @@ namespace Hmm.Core.Map.DomainEntity
         public DateTime CreateDate { get; set; }
 
         public DateTime LastModifiedDate { get; set; }
+
+        public string? CreatedBy { get; set; }
+
+        public string? LastModifiedBy { get; set; }
     }
 }

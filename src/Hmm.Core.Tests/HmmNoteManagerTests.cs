@@ -48,6 +48,8 @@ namespace Hmm.Core.Tests
             Assert.Equal("Testing note", newNoteResult.Value.Subject);
             Assert.Equal(newNoteResult.Value.CreateDate, newNoteResult.Value.LastModifiedDate);
             Assert.Equal(newNoteResult.Value.CreateDate, CurrentTime);
+            Assert.Equal("fchy", newNoteResult.Value.CreatedBy);
+            Assert.Equal("fchy", newNoteResult.Value.LastModifiedBy);
             Assert.False(note.IsDeleted);
         }
 
@@ -84,6 +86,8 @@ namespace Hmm.Core.Tests
             Assert.Equal("new note subject", updatedNoteResult.Value.Subject);
             Assert.Equal(updatedNoteResult.Value.CreateDate, crtTime);
             Assert.Equal(updatedNoteResult.Value.LastModifiedDate, mdfTime);
+            Assert.Equal("fchy", updatedNoteResult.Value.CreatedBy);
+            Assert.Equal("fchy", updatedNoteResult.Value.LastModifiedBy);
             Assert.NotEqual(updatedNoteResult.Value.Version, createdNoteResult.Value.Version);
             Assert.False(createdNoteResult.Value.IsDeleted);
         }

@@ -259,6 +259,8 @@ public static class SampleDataGenerator
             Catalog = GetCatalog(),
             CreateDate = DateTime.Now,
             LastModifiedDate = DateTime.Now,
+            CreatedBy = "fchy",
+            LastModifiedBy = "fchy",
             IsDeleted = false,
             Description = "This is test note",
             Version = GetVersionInfo()
@@ -278,6 +280,8 @@ public static class SampleDataGenerator
             Catalog = GetCatalogDao(),
             CreateDate = DateTime.Now,
             LastModifiedDate = DateTime.Now,
+            CreatedBy = "fchy",
+            LastModifiedBy = "fchy",
             IsDeleted = false,
             Description = "This is test note",
             Version = GetVersionInfo()
@@ -299,6 +303,8 @@ public static class SampleDataGenerator
                 Catalog = GetCatalogDao(),
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
+                CreatedBy = "fchy",
+                LastModifiedBy = "fchy",
                 IsDeleted = false,
                 Description = "This is test note 1",
                 Version = GetVersionInfo()
@@ -312,6 +318,8 @@ public static class SampleDataGenerator
                 Catalog = GetCatalogDao(),
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
+                CreatedBy = "fchy",
+                LastModifiedBy = "fchy",
                 IsDeleted = false,
                 Description = "This is test note 2",
                 Version = GetVersionInfo()
@@ -325,6 +333,8 @@ public static class SampleDataGenerator
                 Catalog = GetCatalogDao(),
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
+                CreatedBy = "fchy",
+                LastModifiedBy = "fchy",
                 IsDeleted = false,
                 Description = "This is test note 3",
                 Version = GetVersionInfo()
@@ -338,6 +348,8 @@ public static class SampleDataGenerator
                 Catalog = GetCatalogDao(),
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
+                CreatedBy = "fchy",
+                LastModifiedBy = "fchy",
                 IsDeleted = false,
                 Description = "This is test note 4",
                 Version = GetVersionInfo()
@@ -351,6 +363,8 @@ public static class SampleDataGenerator
                 Catalog = GetCatalogDao(),
                 CreateDate = DateTime.Now,
                 LastModifiedDate = DateTime.Now,
+                CreatedBy = "fchy",
+                LastModifiedBy = "fchy",
                 IsDeleted = false,
                 Description = "This is test note 5",
                 Version = GetVersionInfo()
@@ -454,6 +468,8 @@ public static class SampleDataGenerator
                 CreateDate = source.CreateDate,
                 IsDeleted = source.IsDeleted,
                 LastModifiedDate = source.LastModifiedDate,
+                CreatedBy = source.CreatedBy,
+                LastModifiedBy = source.LastModifiedBy,
                 Tags = tags,
                 Version = source.Version
             };
@@ -471,6 +487,8 @@ public static class SampleDataGenerator
             targetNote.CreateDate = source.CreateDate;
             targetNote.IsDeleted = source.IsDeleted;
             targetNote.LastModifiedDate = source.LastModifiedDate;
+            targetNote.CreatedBy = source.CreatedBy;
+            targetNote.LastModifiedBy = source.LastModifiedBy;
             targetNote.Tags = source.Tags.Select(tag => tag.Clone()).ToList();
             targetNote.Version = source.Version;
             targetNote.Tags = tags;

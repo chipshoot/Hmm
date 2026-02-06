@@ -19,5 +19,9 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         public DateTime CreateDate { get; set; }
 
         public DateTime LastModifiedDate { get; set; }
+
+        public string CreatedBy { get; set; }
+
+        public string LastModifiedBy { get; set; }
     }
 }

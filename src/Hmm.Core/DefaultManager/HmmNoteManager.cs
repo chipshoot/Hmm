@@ -104,6 +104,8 @@ namespace Hmm.Core.DefaultManager
 
                 note.CreateDate = _dateProvider.UtcNow;
                 note.LastModifiedDate = _dateProvider.UtcNow;
+                note.CreatedBy = note.Author?.AccountName;
+                note.LastModifiedBy = note.Author?.AccountName;
                 var noteDaoResult = _mapper.MapWithNullCheck<HmmNote, HmmNoteDao>(note, $"Cannot convert note {note.Subject} to NoteDao");
                 if (!noteDaoResult.Success)
                 {
@@ -148,6 +150,7 @@ namespace Hmm.Core.DefaultManager
 
                 var noteDao = noteDaoResult.Value;
                 noteDao.LastModifiedDate = _dateProvider.UtcNow;
+                noteDao.LastModifiedBy = noteDao.Author?.AccountName;
                 var updatedNoteDaoResult = await _noteRepository.UpdateAsync(noteDao);
                 if (!updatedNoteDaoResult.Success)
                 {
