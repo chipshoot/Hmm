@@ -601,7 +601,7 @@ namespace Hmm.Utility.Tests
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
                 Volume.Max());
 
-            Assert.Contains("No volume object found", exception.Message);
+            Assert.Contains("No measure unit object found", exception.Message);
         }
 
         [Fact]
@@ -639,7 +639,7 @@ namespace Hmm.Utility.Tests
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
                 Volume.Min());
 
-            Assert.Contains("No volume object found", exception.Message);
+            Assert.Contains("No measure unit object found", exception.Message);
         }
 
         [Fact]

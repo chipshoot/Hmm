@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-02-05 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #27, #28, #29, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, #55, #56, #57, #58, #60, #61, #75, #76, #78, #79, #82, #84, #86, #87, #90, #101, #106, #108)
+Last Updated: 2026-02-05 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #27, #28, #29, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, #55, #56, #57, #58, #60, #61, #75, #76, #78, #79, #82, #84, #86, #87, #90, #101, #106, #108, #110)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (68 resolved, 1 partially resolved)
+Total Defects Found: 107+ (69 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -1431,22 +1431,36 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
      Impact: Fragile, hard to maintain
      Fix: Create ISubjectBuilder and ISubjectParser
 
-110. **NO VALUE OBJECT BASE CLASS**
-     Problem: Value objects (Money, Dimension, ContactInfo) lack common pattern
-     Impact: Inconsistent implementation
-     Fix: Create ValueObject<T> base class with equality
+110. **NO COMMON PATTERN FOR VALUE TYPES (MONEY, MEASURE UNITS)** [RESOLVED]
+     Problem: Money, Dimension, Volume, Weight lack a common type contract despite
+       all being "quantity with unit" value types. Measure unit structs also have massive
+       code duplication (~400 lines each with identical Max/Min/operator patterns)
+     Impact: Inconsistent implementation, no polymorphic usage, copy-paste burden
+     Fix: IQuantity<TSelf, TUnit> base interface + IMeasureUnit extension + MeasureUnitHelper
+     Resolution:
+     - Created IQuantity<TSelf, TUnit> interface in Hmm.Utility.Dal.DataEntity as the
+       root "value with unit" contract (Unit, IEquatable, IComparable; no struct constraint)
+     - Created IMeasureUnit<TSelf, TUnit> : IQuantity in Hmm.Utility.MeasureUnit adding
+       measure-specific members (Value, Fractional, ToString(format); struct constraint)
+     - Created MeasureUnitHelper static class with generic Max<T>/Min<T> methods
+       eliminating duplicated Aggregate logic from all three structs
+     - Updated Dimension, Volume, Weight to implement IMeasureUnit and delegate
+       Max/Min to MeasureUnitHelper (removed per-type ErrorMsg constants)
+     - Updated Money to implement IQuantity<Money, CurrencyCodeType> with explicit
+       interface implementation for Unit (delegates to existing Currency property)
+     - Full test coverage in MeasureUnitInterfaceTests
 
 ================================================================================
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (68 resolved, 1 partially resolved)
+Total Defects Found: 107+ (69 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
 Critical (P1): 40 (16 resolved: #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #33, #34)
 Important (P2): 45
 Technical Debt (P3): 16+ (5 resolved: #75, #76, #78, #79, #82)
-Missing Features: 12 (3 resolved: #101, #106, #108)
+Missing Features: 12 (4 resolved: #101, #106, #108, #110)
 
 By Category:
 - Business Logic Bugs: 8
@@ -1460,7 +1474,7 @@ By Category:
 - Dead Code: 10
 - Infrastructure: 13 (5 resolved: #75, #76, #78, #79, #82)
 - Testing Issues: 6
-- Missing Features: 12 (3 resolved: #101 - IAuditable audit fields, #106 - guard clauses via .NET built-ins, #108 - specification pattern completed with repository integration)
+- Missing Features: 12 (4 resolved: #101 - IAuditable audit fields, #106 - guard clauses via .NET built-ins, #108 - specification pattern completed with repository integration, #110 - ValueObject base class)
 
 By Project:
 - Hmm.Core: 35 defects (7 resolved: #1, #13, #14, #27, #29, #31, #33 - all FIXED)
@@ -1469,7 +1483,7 @@ By Project:
 - Hmm.ServiceApi: 25 defects (7 resolved: #12, #32, #38, #44, #46, #75, #76)
 - Hmm.Automobile: 15 defects (5 resolved: #4-partial, #8, #20, #30, #34 - module restored, update fixed, static coupling fixed, duplicate CRUD fixed, N+1 fixed)
 - Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)
-- Hmm.Utility: 14 defects (7 resolved: #5, #37, #41, #79-StringEnum class removed, #101-IAuditable interface, #106-guard clauses documented, #108-specification pattern completed)
+- Hmm.Utility: 14 defects (8 resolved: #5, #37, #41, #79-StringEnum class removed, #101-IAuditable interface, #106-guard clauses documented, #108-specification pattern completed, #110-ValueObject base class)
 
 ================================================================================
 ESTIMATED REFACTORING EFFORT

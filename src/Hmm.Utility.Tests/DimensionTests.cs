@@ -494,7 +494,7 @@ namespace Hmm.Utility.Tests
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
                 Dimension.Max());
 
-            Assert.Contains("No dimension object found", exception.Message);
+            Assert.Contains("No measure unit object found", exception.Message);
         }
 
         [Fact]
@@ -532,7 +532,7 @@ namespace Hmm.Utility.Tests
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
                 Dimension.Min());
 
-            Assert.Contains("No dimension object found", exception.Message);
+            Assert.Contains("No measure unit object found", exception.Message);
         }
 
         [Fact]

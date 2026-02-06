@@ -502,7 +502,7 @@ namespace Hmm.Utility.Tests
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
                 Weight.Max());
 
-            Assert.Contains("No weight object found", exception.Message);
+            Assert.Contains("No measure unit object found", exception.Message);
         }
 
         [Fact]
@@ -540,7 +540,7 @@ namespace Hmm.Utility.Tests
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
                 Weight.Min());
 
-            Assert.Contains("No weight object found", exception.Message);
+            Assert.Contains("No measure unit object found", exception.Message);
         }
 
         [Fact]

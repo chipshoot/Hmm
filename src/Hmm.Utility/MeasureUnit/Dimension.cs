@@ -2,8 +2,6 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
-
 namespace Hmm.Utility.MeasureUnit
 {
     /// <summary>
@@ -34,11 +32,9 @@ namespace Hmm.Utility.MeasureUnit
     /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public readonly struct Dimension : IComparable<Dimension>, IEquatable<Dimension>
+    public readonly struct Dimension : IMeasureUnit<Dimension, DimensionUnit>
     {
         #region private fields
-
-        private const string ErrorMsg = "No dimension object found";
 
         // Internal representation: microns (1/1000 of a millimeter)
         private const long MicronsPerMillimetre = 1000;
@@ -187,29 +183,9 @@ namespace Hmm.Utility.MeasureUnit
             return new Dimension(value, DimensionUnit.Feet);
         }
 
-        public static Dimension Max(params Dimension[] items)
-        {
-            if (items.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
-            }
+        public static Dimension Max(params Dimension[] items) => MeasureUnitHelper.Max(items);
 
-            var max = items.Aggregate((i1, i2) => i1 > i2 ? i1 : i2);
-
-            return max;
-        }
-
-        public static Dimension Min(params Dimension[] items)
-        {
-            if (items.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
-            }
-
-            var min = items.Aggregate((i1, i2) => i1 < i2 ? i1 : i2);
-
-            return min;
-        }
+        public static Dimension Min(params Dimension[] items) => MeasureUnitHelper.Min(items);
 
         public static Dimension Abs(Dimension x)
         {

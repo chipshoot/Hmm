@@ -2,8 +2,6 @@ using Hmm.Utility.HmmNoteContentMap;
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
-
 namespace Hmm.Utility.MeasureUnit
 {
     /// <summary>
@@ -31,10 +29,8 @@ namespace Hmm.Utility.MeasureUnit
     /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public readonly struct Weight : IEquatable<Weight>, IComparable<Weight>
+    public readonly struct Weight : IMeasureUnit<Weight, WeightUnit>
     {
-        private const string ErrorMsg = "No weight object found";
-
         // Internal representation: milligrams (for better precision with decimal weights)
         private const long MilligramsPerGram = 1000;
         private const long MilligramsPerKilogram = 1000000;
@@ -129,29 +125,9 @@ namespace Hmm.Utility.MeasureUnit
 
         public double TotalPounds => Math.Round(_value / MilligramsPerPound, Fractional);
 
-        public static Weight Max(params Weight[] items)
-        {
-            if (items.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
-            }
+        public static Weight Max(params Weight[] items) => MeasureUnitHelper.Max(items);
 
-            var max = items.Aggregate((i1, i2) => i1 > i2 ? i1 : i2);
-
-            return max;
-        }
-
-        public static Weight Min(params Weight[] items)
-        {
-            if (items.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
-            }
-
-            var min = items.Aggregate((i1, i2) => i1 < i2 ? i1 : i2);
-
-            return min;
-        }
+        public static Weight Min(params Weight[] items) => MeasureUnitHelper.Min(items);
 
         public static Weight Abs(Weight x)
         {

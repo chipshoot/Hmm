@@ -1,4 +1,5 @@
-﻿using Hmm.Utility.Extensions;
+﻿using Hmm.Utility.Dal.DataEntity;
+using Hmm.Utility.Extensions;
 using Hmm.Utility.HmmNoteContentMap;
 using System;
 using System.ComponentModel;
@@ -35,7 +36,7 @@ namespace Hmm.Utility.Currency
     /// </Summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public class Money : IComparable<Money>, IEquatable<Money>, ICloneable
+    public class Money : IQuantity<Money, CurrencyCodeType>, ICloneable
     {
         #region private fields
 
@@ -113,6 +114,9 @@ namespace Hmm.Utility.Currency
         /// Useful for type-safe operations, comparisons, and creating related Money instances.
         /// </summary>
         public CurrencyCodeType Currency => _currencyCode;
+
+        /// <inheritdoc />
+        CurrencyCodeType IQuantity<Money, CurrencyCodeType>.Unit => _currencyCode;
 
         #endregion public properties
 

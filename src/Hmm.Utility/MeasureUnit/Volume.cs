@@ -2,8 +2,6 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
-
 namespace Hmm.Utility.MeasureUnit
 {
     /// <summary>
@@ -33,10 +31,8 @@ namespace Hmm.Utility.MeasureUnit
     /// </summary>
     [ImmutableObject(true)]
     [NoteSerializerInstructor(true)]
-    public readonly struct Volume : IComparable<Volume>, IEquatable<Volume>
+    public readonly struct Volume : IMeasureUnit<Volume, VolumeUnit>
     {
-        private const string ErrorMsg = "No volume object found";
-
         // Internal representation: microliters (1/1000 of a milliliter)
         private const long MicrolitersPerMilliliter = 1000;
         private const long MicrolitersPerCentiliter = 10000;
@@ -173,29 +169,9 @@ namespace Hmm.Utility.MeasureUnit
 
         public double TotalBushel => Math.Round(_value / (double)MicrolitersPerBushel, Fractional);
 
-        public static Volume Max(params Volume[] items)
-        {
-            if (items.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
-            }
+        public static Volume Max(params Volume[] items) => MeasureUnitHelper.Max(items);
 
-            var max = items.Aggregate((i1, i2) => i1 > i2 ? i1 : i2);
-
-            return max;
-        }
-
-        public static Volume Min(params Volume[] items)
-        {
-            if (items.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(items), ErrorMsg);
-            }
-
-            var min = items.Aggregate((i1, i2) => i1 < i2 ? i1 : i2);
-
-            return min;
-        }
+        public static Volume Min(params Volume[] items) => MeasureUnitHelper.Min(items);
 
         public static Volume Abs(Volume x)
         {
