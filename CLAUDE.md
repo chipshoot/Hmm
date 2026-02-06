@@ -131,7 +131,7 @@ Infrastructure (Hmm.Utility)
 - `PageList<T>` for pagination support
 - `ProcessingResult` for operation feedback
 - Value types: `Money`, `Dimension`, `Volume`
-- `Guard` clauses for validation
+- Guard clauses via .NET built-in `ArgumentNullException.ThrowIfNull` / `ArgumentException.ThrowIfNullOrWhiteSpace`
 
 **Hmm.Infrastructure** - IDP integration
 - `IdpUserProfileProvider` fetches user profile from IDP using access tokens
