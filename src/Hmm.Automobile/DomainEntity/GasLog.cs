@@ -122,6 +122,6 @@ namespace Hmm.Automobile.DomainEntity
         }
 
         public static string GetNoteSubject(int automobileId) =>
-            $"{AutomobileConstant.GasLogRecordSubject},AutomobileId:{automobileId}";
+            NoteSubjectBuilder.BuildGasLogSubject(automobileId);
     }
 }
