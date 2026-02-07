@@ -1,5 +1,4 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
-using Duende.IdentityServer.EntityFramework.Mappers;
 using Hmm.Idp.Data;
 using Hmm.Idp.Pages.Admin.User;
 using Hmm.Idp.Services;
@@ -142,51 +141,7 @@ internal static class HostingExtensions
 
             if (shouldSeed)
             {
-                // Seed API Scopes
-                if (!context.ApiScopes.Any())
-                {
-                    foreach (var scope in Config.ApiScopes)
-                    {
-                        context.ApiScopes.Add(scope.ToEntity());
-                    }
-                    context.SaveChanges();
-                    Log.Information("Seeded {Count} API scopes", Config.ApiScopes.Count());
-                }
-
-                // Seed API Resources
-                if (!context.ApiResources.Any())
-                {
-                    foreach (var resource in Config.ApiResources)
-                    {
-                        context.ApiResources.Add(resource.ToEntity());
-                    }
-                    context.SaveChanges();
-                    Log.Information("Seeded {Count} API resources", Config.ApiResources.Count());
-                }
-
-                // Seed Identity Resources
-                if (!context.IdentityResources.Any())
-                {
-                    foreach (var resource in Config.IdentityResources)
-                    {
-                        context.IdentityResources.Add(resource.ToEntity());
-                    }
-                    context.SaveChanges();
-                    Log.Information("Seeded {Count} identity resources", Config.IdentityResources.Count());
-                }
-
-                // Seed Clients
-                if (!context.Clients.Any())
-                {
-                    foreach (var client in Config.Clients)
-                    {
-                        context.Clients.Add(client.ToEntity());
-                    }
-                    context.SaveChanges();
-                    Log.Information("Seeded {Count} clients", Config.Clients.Count());
-                }
-
-                // Seed Users
+                // Seed Users (IdentityServer config data is seeded via SQL script in init-db.sql)
                 var seedDataService = serviceScope.ServiceProvider.GetRequiredService<SeedDataService>();
                 seedDataService.SeedAsync().GetAwaiter().GetResult();
                 Log.Information("User seeding completed");
