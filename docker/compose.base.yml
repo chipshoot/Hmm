@@ -52,6 +52,7 @@ services:
     container_name: hmm-seq
     environment:
       ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
     ports:
       - "${SEQ_INGESTION_PORT}:5341"
       - "${SEQ_UI_PORT}:80"
