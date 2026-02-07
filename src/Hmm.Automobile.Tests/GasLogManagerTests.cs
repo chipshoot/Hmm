@@ -136,7 +136,7 @@ namespace Hmm.Automobile.Tests
             Assert.True(result.Success);
             Assert.NotNull(result.Value);
             Assert.True(result.Value.Id >= 1);
-            Assert.Equal(_testCar.Id, result.Value.Car.Id);
+            Assert.Equal(_testCar.Id, result.Value.AutomobileId);
         }
 
         [Fact]
@@ -155,7 +155,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             var gasLog = CreateValidGasLog();
-            gasLog.Car = new AutomobileInfo { Id = 99999 }; // Non-existent car
+            gasLog.AutomobileId = 99999; // Non-existent car
 
             // Act
             var result = await _manager.CreateAsync(gasLog);
@@ -303,7 +303,6 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 99999, // Non-existent ID
                 Date = DateTime.UtcNow.AddHours(-1),
-                Car = _testCar,
                 AutomobileId = _testCar?.Id ?? 0,
                 Station = new GasStation { Name = "Test Station" },
                 Odometer = Dimension.FromKilometer(200),
@@ -451,7 +450,7 @@ namespace Hmm.Automobile.Tests
             Assert.NotNull(result.Value);
             var logList = result.Value.ToList();
             Assert.Single(logList);
-            Assert.All(logList, l => Assert.Equal(_testCar.Id, l.Car.Id));
+            Assert.All(logList, l => Assert.Equal(_testCar.Id, l.AutomobileId));
         }
 
         [Fact]
@@ -513,14 +512,12 @@ namespace Hmm.Automobile.Tests
 
             // Create gas log for first car
             var gasLog1 = CreateValidGasLog();
-            gasLog1.Car = _testCar;
             gasLog1.AutomobileId = _testCar.Id;
             var createLog1Result = await _manager.CreateAsync(gasLog1);
             Assert.True(createLog1Result.Success);
 
             // Create gas log for second car
             var gasLog2 = CreateValidGasLog();
-            gasLog2.Car = car2;
             gasLog2.AutomobileId = car2.Id;
             gasLog2.Odometer = Dimension.FromKilometer(50100);
             gasLog2.Distance = Dimension.FromKilometer(100);
@@ -536,8 +533,8 @@ namespace Hmm.Automobile.Tests
             Assert.True(result2.Success);
             Assert.Single(result1.Value);
             Assert.Single(result2.Value);
-            Assert.Equal(_testCar.Id, result1.Value.First().Car.Id);
-            Assert.Equal(car2.Id, result2.Value.First().Car.Id);
+            Assert.Equal(_testCar.Id, result1.Value.First().AutomobileId);
+            Assert.Equal(car2.Id, result2.Value.First().AutomobileId);
         }
 
         #endregion
@@ -832,7 +829,6 @@ namespace Hmm.Automobile.Tests
             return new GasLog
             {
                 Date = DateTime.UtcNow.AddHours(-1),
-                Car = _testCar,
                 AutomobileId = _testCar?.Id ?? 0,
                 Station = _testStation ?? new GasStation { Name = "Test Station" },
                 Odometer = Dimension.FromKilometer(200),
@@ -904,7 +900,6 @@ namespace Hmm.Automobile.Tests
             return new GasLogJsonNoteSerialize(
                 CatalogProvider,
                 new NullLogger<GasLog>(),
-                _autoManager,
                 _discountManager,
                 _stationManager);
         }

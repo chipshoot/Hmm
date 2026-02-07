@@ -159,14 +159,14 @@ namespace Hmm.Automobile.Tests
 
         #endregion
 
-        #region Car Validation Tests
+        #region AutomobileId Validation Tests
 
         [Fact]
-        public async Task GasLog_MustHaveValid_Automobile()
+        public async Task GasLog_MustHaveValid_AutomobileId()
         {
             // Arrange
             var log = CreateValidGasLog();
-            log.Car = null; // Invalid
+            log.AutomobileId = 0; // Invalid
 
             // Act
             var result = await _validator.ValidateEntityAsync(log);
@@ -517,7 +517,7 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = 0, // Invalid
                 Date = DateTime.MinValue, // Invalid
-                Car = null, // Invalid
+                AutomobileId = 0, // Invalid
                 Distance = 0d.GetKilometer(), // Invalid
                 Odometer = 0d.GetKilometer(), // Invalid
                 Fuel = 0d.GetLiter(), // Invalid
@@ -541,17 +541,7 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Date = CurrentTime,
-                Car = new AutomobileInfo
-                {
-                    AuthorId = _authorId,
-                    Brand = "Outback",
-                    Maker = "Subaru",
-                    MeterReading = 50000,
-                    Year = 2018,
-                    VIN = "1HGBH41JXMN109186",
-                    Plate = "BCTT208",
-                    Color = "Blue"
-                },
+                AutomobileId = 1,
                 Distance = 340d.GetKilometer(),
                 Odometer = 30000d.GetKilometer(),
                 Fuel = 40d.GetLiter(),

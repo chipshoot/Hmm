@@ -30,7 +30,7 @@ public class GasLogsResultFilter : ResultFilterBase
         if (resultFromAction.Value is PageList<GasLog> logs && logs.Any())
         {
             var result = Mapper.Map<PageList<GasLog>, PageList<ApiGasLog>>(logs);
-            var autoId = logs.First().Car.Id;
+            var autoId = logs.First().AutomobileId;
             foreach (var log in result)
             {
                 log.CreateLinks(context, LinkGenerator, autoId);

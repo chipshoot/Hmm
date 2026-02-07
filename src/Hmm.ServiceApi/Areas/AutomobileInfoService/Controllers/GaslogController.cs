@@ -140,7 +140,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
 
             var gasLog = result.Value;
-            if (gasLog.Car.Id != autoId)
+            if (gasLog.AutomobileId != autoId)
             {
                 return NotFound();
             }
@@ -176,7 +176,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                     return BadRequest(new ApiBadRequestResponse(errMsg));
                 }
 
-                gasLog.Car = carResult.Value;
+                gasLog.AutomobileId = autoId;
 
                 // Get discounts for gas log
                 var discountsResult = await GetGasDiscountsAsync(apiGasLog.DiscountInfos);
@@ -230,7 +230,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                     return BadRequest(new ApiBadRequestResponse(errMsg));
                 }
 
-                gasLog.Car = carResult.Value;
+                gasLog.AutomobileId = autoId;
 
                 // Get discounts for gas log
                 var discountsResult = await GetGasDiscountsAsync(apiGasLog.DiscountInfos);
@@ -319,7 +319,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 }
 
                 var curGasLog = getResult.Value;
-                if (curGasLog.Car.Id != autoId)
+                if (curGasLog.AutomobileId != autoId)
                 {
                     return NotFound();
                 }

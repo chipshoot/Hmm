@@ -42,7 +42,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
             // GasLog mappings
             CreateMap<GasLog, ApiGasLog>()
-                .ForMember(d => d.AutomobileId, opt => opt.MapFrom(s => s.Car.Id))
+                .ForMember(d => d.AutomobileId, opt => opt.MapFrom(s => s.AutomobileId))
                 .ForMember(d => d.Odometer, opt => opt.MapFrom(s => (decimal)s.Odometer.Value))
                 .ForMember(d => d.OdometerUnit, opt => opt.MapFrom(s => s.Odometer.Unit.ToString()))
                 .ForMember(d => d.Distance, opt => opt.MapFrom(s => (decimal)s.Distance.Value))
@@ -57,7 +57,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                 .ForMember(d => d.StationName, opt => opt.MapFrom(s => s.Station != null ? s.Station.Name : null));
 
             CreateMap<ApiGasLogForCreation, GasLog>()
-                .ForMember(d => d.Car, opt => opt.Ignore())
                 .ForMember(d => d.AutomobileId, opt => opt.MapFrom(s => s.AutomobileId))
                 .ForMember(d => d.Odometer, opt => opt.MapFrom(s => new Dimension((double)s.Odometer, DimensionUnit.Kilometre)))
                 .ForMember(d => d.Distance, opt => opt.MapFrom(s => new Dimension((double)s.Distance, DimensionUnit.Kilometre)))

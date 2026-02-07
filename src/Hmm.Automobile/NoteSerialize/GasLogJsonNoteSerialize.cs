@@ -17,7 +17,6 @@ namespace Hmm.Automobile.NoteSerialize
     public class GasLogJsonNoteSerialize : EntityJsonNoteSerializeBase<GasLog>
     {
         private readonly INoteCatalogProvider _catalogProvider;
-        private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
         private readonly IAutoEntityManager<GasStation> _stationManager;
         private readonly GasStationXRefSerializer _stationSerializer;
@@ -25,18 +24,15 @@ namespace Hmm.Automobile.NoteSerialize
         public GasLogJsonNoteSerialize(
             INoteCatalogProvider catalogProvider,
             ILogger<GasLog> logger,
-            IAutoEntityManager<AutomobileInfo> autoManager,
             IAutoEntityManager<GasDiscount> discountManager,
             IAutoEntityManager<GasStation> stationManager)
             : base(logger)
         {
             ArgumentNullException.ThrowIfNull(catalogProvider);
-            ArgumentNullException.ThrowIfNull(autoManager);
             ArgumentNullException.ThrowIfNull(discountManager);
             ArgumentNullException.ThrowIfNull(stationManager);
 
             _catalogProvider = catalogProvider;
-            _autoManager = autoManager;
             _discountManager = discountManager;
             _stationManager = stationManager;
 
@@ -58,22 +54,14 @@ namespace Hmm.Automobile.NoteSerialize
 
                 var gasLogJson = gasLogElement.Value;
 
-                // Parse and resolve automobile
+                // Parse automobile ID
                 var carId = GetIntProperty(gasLogJson, "automobile");
-                var carResult = await _autoManager.GetEntityByIdAsync(carId);
-                if (!carResult.Success || carResult.Value == null)
-                {
-                    document.Dispose();
-                    return ProcessingResult<GasLog>.NotFound(
-                        $"Cannot find automobile with ID: {carId}");
-                }
 
                 // Create GasLog entity
                 var gasLog = new GasLog
                 {
                     Id = note.Id,
                     Date = GetDateTimeProperty(gasLogJson, "date"),
-                    Car = carResult.Value,
                     AutomobileId = carId,
                     Comment = GetStringProperty(gasLogJson, "comment", string.Empty),
                     CreateDate = GetDateTimeProperty(gasLogJson, "createDate"),

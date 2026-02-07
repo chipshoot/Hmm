@@ -18,7 +18,7 @@ namespace Hmm.Automobile.Validator
 
             RuleFor(l => l.AuthorId).MustAsync(async (id, cancellation) => await HasValidAuthor(id, cancellation)).WithMessage("Has valid author for GasLog");
             RuleFor(l => l.Date).NotNull().Must(HasValidDate).WithMessage("Gas log does not has valid date");
-            RuleFor(l => l.Car).NotNull().WithMessage("Gas log must belongs to an automobile");
+            RuleFor(l => l.AutomobileId).GreaterThan(0).WithMessage("Gas log must belongs to an automobile");
             RuleFor(l => l.Distance).Must((o, distance)=>HasValidDistance2(distance, o.Odometer)).WithMessage("Need has valid distance");
             RuleFor(l => l.Odometer).Must((o, meter)=> HasValidDistance2(o.Distance, meter)).WithMessage("Need has valid meter reading");
             RuleFor(l => l.Fuel).Must(HasValidVolume).WithMessage("Need has valid gas volume");

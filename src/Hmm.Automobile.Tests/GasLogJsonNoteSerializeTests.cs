@@ -23,7 +23,6 @@ namespace Hmm.Automobile.Tests
         private AutomobileInfo _testCar;
         private GasStation _testStation;
         private GasDiscount _testDiscount;
-        private Mock<IAutoEntityManager<AutomobileInfo>> _autoManagerMock;
         private Mock<IAutoEntityManager<GasDiscount>> _discountManagerMock;
         private Mock<IAutoEntityManager<GasStation>> _stationManagerMock;
 
@@ -386,7 +385,7 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public async Task GetEntity_ValidNote_ResolvesAutomobile()
+        public async Task GetEntity_ValidNote_ParsesAutomobileId()
         {
             // Arrange
             var gasLog = CreateValidGasLog();
@@ -398,9 +397,7 @@ namespace Hmm.Automobile.Tests
 
             // Assert
             Assert.True(result.Success);
-            Assert.NotNull(result.Value.Car);
-            Assert.Equal(_testCar.Id, result.Value.Car.Id);
-            Assert.Equal(_testCar.Maker, result.Value.Car.Maker);
+            Assert.Equal(_testCar.Id, result.Value.AutomobileId);
         }
 
         [Fact]
@@ -716,23 +713,6 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public async Task GetEntity_InvalidAutomobileId_ReturnsError()
-        {
-            // Arrange - set up manager to return not found for specific ID
-            _autoManagerMock.Setup(m => m.GetEntityByIdAsync(999))
-                .ReturnsAsync(ProcessingResult<AutomobileInfo>.NotFound("Not found"));
-
-            var json = "{\"note\":{\"content\":{\"GasLog\":{\"date\":\"2024-01-01T00:00:00Z\",\"automobile\":999}}}}";
-            var note = CreateNote(json, 999);
-
-            // Act
-            var result = await _serializer.GetEntity(note);
-
-            // Assert
-            Assert.False(result.Success);
-        }
-
-        [Fact]
         public async Task GetEntity_SetsIdFromNote()
         {
             // Arrange
@@ -811,7 +791,6 @@ namespace Hmm.Automobile.Tests
                 AuthorId = _author.Id,
                 Date = DateTime.UtcNow,
                 AutomobileId = _testCar.Id,
-                Car = _testCar,
                 Distance = Dimension.FromKilometer(350),
                 Odometer = Dimension.FromKilometer(50000),
                 Fuel = Volume.FromLiter(45.5),
@@ -1037,7 +1016,6 @@ namespace Hmm.Automobile.Tests
                 AuthorId = _author.Id,
                 Date = DateTime.UtcNow,
                 AutomobileId = _testCar.Id,
-                Car = _testCar,
                 Distance = Dimension.FromKilometer(350),
                 Odometer = Dimension.FromKilometer(50000),
                 Fuel = Volume.FromLiter(45.5),
@@ -1105,10 +1083,6 @@ namespace Hmm.Automobile.Tests
             };
 
             // Setup mocks
-            _autoManagerMock = new Mock<IAutoEntityManager<AutomobileInfo>>();
-            _autoManagerMock.Setup(m => m.GetEntityByIdAsync(_testCar.Id))
-                .ReturnsAsync(ProcessingResult<AutomobileInfo>.Ok(_testCar));
-
             _discountManagerMock = new Mock<IAutoEntityManager<GasDiscount>>();
             _discountManagerMock.Setup(m => m.GetEntityByIdAsync(_testDiscount.Id))
                 .ReturnsAsync(ProcessingResult<GasDiscount>.Ok(_testDiscount));
@@ -1128,7 +1102,6 @@ namespace Hmm.Automobile.Tests
             _serializer = new GasLogJsonNoteSerialize(
                 CatalogProvider,
                 new NullLogger<GasLog>(),
-                _autoManagerMock.Object,
                 _discountManagerMock.Object,
                 _stationManagerMock.Object);
         }

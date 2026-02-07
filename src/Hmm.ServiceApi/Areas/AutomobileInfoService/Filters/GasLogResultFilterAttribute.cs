@@ -38,7 +38,7 @@ public class GasLogResultFilter : ResultFilterBase
             }
 
             var apiGasLog = Mapper.Map<GasLog, ApiGasLog>(gasLog);
-            apiGasLog.CreateLinks(context, LinkGenerator, gasLog.Car.Id);
+            apiGasLog.CreateLinks(context, LinkGenerator, gasLog.AutomobileId);
             var links = apiGasLog.Links;
             resultFromAction.Value = new { value = apiGasLog.ShapeData(fields), links };
         }

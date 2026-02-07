@@ -16,9 +16,6 @@ namespace Hmm.Automobile.DomainEntity
         [Required]
         public int AutomobileId { get; set; }
 
-        [Required]
-        public AutomobileInfo Car { get; set; }
-
         // ===== Odometer & Distance =====
         [Required]
         public Dimension Odometer { get; set; }

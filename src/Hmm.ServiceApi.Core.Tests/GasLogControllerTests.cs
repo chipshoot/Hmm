@@ -249,7 +249,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var createdGasLog = new GasLog
             {
                 Id = 3,
-                Car = _automobiles[0],
+                AutomobileId = _automobiles[0].Id,
                 Date = apiGasLog.Date,
                 Odometer = new Dimension(50000, DimensionUnit.Kilometre),
                 Distance = new Dimension(400, DimensionUnit.Kilometre),
@@ -379,7 +379,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var createdGasLog = new GasLog
             {
                 Id = 4,
-                Car = _automobiles[0],
+                AutomobileId = _automobiles[0].Id,
                 Date = apiGasLog.Date,
                 Odometer = new Dimension(49000, DimensionUnit.Kilometre),
                 Distance = new Dimension(350, DimensionUnit.Kilometre),
@@ -734,7 +734,7 @@ namespace Hmm.ServiceApi.Core.Tests
                 .Setup(m => m.GetGasLogsAsync(It.IsAny<int>(), It.IsAny<ResourceCollectionParameters>()))
                 .ReturnsAsync((int autoId, ResourceCollectionParameters _) =>
                 {
-                    var logs = _gasLogs.Where(g => g.Car.Id == autoId).ToList();
+                    var logs = _gasLogs.Where(g => g.AutomobileId == autoId).ToList();
                     return ProcessingResult<PageList<GasLog>>.Ok(
                         PageList<GasLog>.Create(logs.AsQueryable(), 1, 20));
                 });
@@ -788,7 +788,7 @@ namespace Hmm.ServiceApi.Core.Tests
                 new GasLog
                 {
                     Id = 1,
-                    Car = _automobiles[0],
+                    AutomobileId = _automobiles[0].Id,
                     Date = DateTime.UtcNow.AddDays(-7),
                     Odometer = new Dimension(50000, DimensionUnit.Kilometre),
                     Distance = new Dimension(400, DimensionUnit.Kilometre),
@@ -801,7 +801,7 @@ namespace Hmm.ServiceApi.Core.Tests
                 new GasLog
                 {
                     Id = 2,
-                    Car = _automobiles[0],
+                    AutomobileId = _automobiles[0].Id,
                     Date = DateTime.UtcNow.AddDays(-14),
                     Odometer = new Dimension(49600, DimensionUnit.Kilometre),
                     Distance = new Dimension(380, DimensionUnit.Kilometre),

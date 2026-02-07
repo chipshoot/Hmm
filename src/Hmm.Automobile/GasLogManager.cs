@@ -146,7 +146,7 @@ namespace Hmm.Automobile
                 return ProcessingResult<GasLog>.Invalid(validationResult.ErrorMessage);
             }
 
-            var autoResult = await _autoManager.GetEntityByIdAsync(entity.Car.Id);
+            var autoResult = await _autoManager.GetEntityByIdAsync(entity.AutomobileId);
             if (!autoResult.Success || autoResult.Value == null)
             {
                 return ProcessingResult<GasLog>.NotFound("Cannot find automobile information");
