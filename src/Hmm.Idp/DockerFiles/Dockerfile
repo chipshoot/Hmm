@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
@@ -10,7 +10,7 @@ COPY . ./
 RUN dotnet publish Hmm.Idp.csproj -c Release -o /app
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview
 WORKDIR /app
 COPY --from=build /app ./
 

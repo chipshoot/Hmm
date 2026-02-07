@@ -15,6 +15,7 @@ services:
       - DB_HOST=idp-sqlserver
       - DB_PORT=1433
       - ConnectionStrings__DefaultConnection=Server=idp-sqlserver;Database=HmmIdp;User Id=sa;Password=${IDP_SA_PASSWORD};TrustServerCertificate=True;
+      - IssuerUri=http://localhost:${IDP_PORT}
     ports:
       - "${IDP_PORT}:80"
     depends_on:

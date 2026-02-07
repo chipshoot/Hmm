@@ -11,22 +11,26 @@
 # Start infrastructure: .\scripts\Start-FuncTestInfra.ps1
 # Run with: Visual Studio "IIS Express SqlServer" profile
 # @baseUrl = https://localhost:44349
+# @idpUrl = https://localhost:5001
 
 # ---- Environment 2: Kestrel + Docker SQL Server ----
 # Start infrastructure: .\scripts\Start-FuncTestInfra.ps1
 # Run with: dotnet run --launch-profile "Hmm.ServiceApi SqlServer"
-@baseUrl = https://localhost:5002
-
-# ---- Environment 3: Full Docker Stack (API + SQL Server + Seq) ----
-# Start all: .\scripts\Start-FuncTestFull.ps1 -Build
 # @baseUrl = https://localhost:5002
+# @idpUrl = https://localhost:5001
+
+# ---- Environment 3: Full Docker Stack (Scenario 2) ----
+# Start all: cd docker && ./hmm-setup.sh --scenario 2
+# API: http://localhost:5010, IDP: http://localhost:5001, Seq: http://localhost:8081
+@baseUrl = http://localhost:5010
+@idpUrl = http://localhost:5001
 
 # ---- Legacy: PostgreSQL Development ----
 # Start with: docker-compose up (root docker-compose.yml)
 # @baseUrl = https://localhost:5002
+# @idpUrl = https://localhost:5001
 
 @apiVersion = 1.0
-@idpUrl = https://localhost:5001
 
 # ============================================================
 # AUTHENTICATION - GET TOKEN

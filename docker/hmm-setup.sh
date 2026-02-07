@@ -154,8 +154,8 @@ if [ "$SCENARIO" = "1" ] || [ "$SCENARIO" = "2" ]; then
     echo "  IDP:         http://localhost:5001"
 fi
 if [ "$SCENARIO" = "2" ]; then
-    echo "  API:         http://localhost:5000"
-    echo "  Swagger:     http://localhost:5000/swagger"
+    echo "  API:         http://localhost:5010"
+    echo "  Swagger:     http://localhost:5010/swagger"
 fi
 echo ""
 
