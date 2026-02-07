@@ -24,7 +24,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi;
 using Npgsql;
 using System;
@@ -84,12 +83,6 @@ namespace Hmm.ServiceApi
                 setup.DefaultApiVersion = new ApiVersion(1, 0);
                 setup.AssumeDefaultVersionWhenUnspecified = true;
                 setup.ReportApiVersions = true;
-            });
-            services.AddHttpClient(HmmServiceApiConstants.HttpClient.Idp, client =>
-            {
-                client.BaseAddress = new Uri(appSetting.IdpBaseUrl);
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
             });
             services.AddHttpContextAccessor();
             services.AddCors(opt =>

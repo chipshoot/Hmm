@@ -1,4 +1,3 @@
-using Hmm.Automobile;
 using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Core.Specifications;

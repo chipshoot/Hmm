@@ -1,3 +1,4 @@
+using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;

@@ -2,10 +2,10 @@ using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using System.Threading.Tasks;
 
-namespace Hmm.Automobile
+namespace Hmm.Core
 {
     /// <summary>
-    /// Base interface for providing author information for automobile operations.
+    /// Base interface for providing author information for operations.
     /// </summary>
     /// <remarks>
     /// <para>This interface defines the common contract for author resolution.</para>
@@ -18,7 +18,7 @@ namespace Hmm.Automobile
     public interface IAuthorProvider
     {
         /// <summary>
-        /// Gets the author for automobile operations.
+        /// Gets the author for operations.
         /// </summary>
         /// <returns>
         /// A ProcessingResult containing the Author if resolved successfully,

@@ -1,4 +1,5 @@
 using Hmm.Automobile.DomainEntity;
+using Hmm.Core;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;

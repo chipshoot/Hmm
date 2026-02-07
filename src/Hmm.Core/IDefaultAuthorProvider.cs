@@ -2,10 +2,10 @@ using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using System.Threading.Tasks;
 
-namespace Hmm.Automobile
+namespace Hmm.Core
 {
     /// <summary>
-    /// Provides access to the default (service-level) author for automobile operations.
+    /// Provides access to the default (service-level) author for operations.
     /// </summary>
     /// <remarks>
     /// <para>Use this interface for:</para>
@@ -19,7 +19,7 @@ namespace Hmm.Automobile
     public interface IDefaultAuthorProvider : IAuthorProvider
     {
         /// <summary>
-        /// Gets the configured default author for automobile operations.
+        /// Gets the configured default author for operations.
         /// </summary>
         /// <returns>
         /// A ProcessingResult containing the Author if found/created successfully,

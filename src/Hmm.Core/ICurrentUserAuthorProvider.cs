@@ -2,10 +2,10 @@ using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Misc;
 using System.Threading.Tasks;
 
-namespace Hmm.Automobile
+namespace Hmm.Core
 {
     /// <summary>
-    /// Provides access to the current authenticated user's author for automobile operations.
+    /// Provides access to the current authenticated user's author for operations.
     /// </summary>
     /// <remarks>
     /// <para>Use this interface for:</para>

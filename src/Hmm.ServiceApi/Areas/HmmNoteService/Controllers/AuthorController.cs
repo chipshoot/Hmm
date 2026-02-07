@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
@@ -30,7 +29,6 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         private readonly IAuthorManager _authorManager;
         private readonly IMapper _mapper;
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<AuthorController> _logger;
 
         #endregion private fields
@@ -42,12 +40,10 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             ArgumentNullException.ThrowIfNull(authorManager);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(logger);
-            //ArgumentNullException.ThrowIfNull(httpClientFactory);
 
             _authorManager = authorManager;
             _mapper = mapper;
             _logger = logger;
-            //_httpClientFactory = httpClientFactory;
         }
 
         #endregion constructor

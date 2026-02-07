@@ -1,3 +1,4 @@
+using Hmm.Core;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
