@@ -151,8 +151,8 @@ if ($Scenario -eq 1 -or $Scenario -eq 2) {
     Write-Host "  IDP:         http://localhost:5001" -ForegroundColor White
 }
 if ($Scenario -eq 2) {
-    Write-Host "  API:         http://localhost:5000" -ForegroundColor White
-    Write-Host "  Swagger:     http://localhost:5000/swagger" -ForegroundColor White
+    Write-Host "  API:         http://localhost:5010" -ForegroundColor White
+    Write-Host "  Swagger:     http://localhost:5010/swagger" -ForegroundColor White
 }
 Write-Host ""
 

@@ -107,36 +107,37 @@ namespace Hmm.ServiceApi
                 });
             });
 
-            // Configure database provider based on AppSettings.DatabaseProvider
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            var useSqlServer = string.Equals(appSetting?.DatabaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase);
+            // Configure database provider based on environment
+            // HmmNoteConnection (set via env var in Docker) takes precedence over DefaultConnection (from appsettings)
+            var connectionString = Configuration.GetConnectionString("HmmNoteConnection")
+                                   ?? Configuration.GetConnectionString("DefaultConnection");
 
-            if (useSqlServer)
-            {
-                services.AddDbContext<HmmDataContext>(opt =>
+            // Auto-detect database provider from connection string format if not explicitly set
+            // PostgreSQL uses "Host=", SQL Server uses "Server=" or "Data Source="
+            var usePostgres = Configuration.GetValue<bool?>("DatabaseSettings:UsePostgres")
+                              ?? connectionString?.Contains("Host=", StringComparison.OrdinalIgnoreCase) == true;
+
+            services.AddDbContext<HmmDataContext>(opt =>
                 {
-                    opt.UseSqlServer(connectionString);
+                    if (usePostgres)
+                    {
+                        // PostgreSQL with Npgsql
+                        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+                        dataSourceBuilder.MapEnum<Core.Map.DbEntity.NoteContentFormatType>();
+                        var dataSource = dataSourceBuilder.Build();
+                        opt.UseNpgsql(dataSource);
+                    }
+                    else
+                    {
+                        // SQL Server
+                        opt.UseSqlServer(connectionString);
+                    }
+
                     if (Environment.IsDevelopment())
                     {
                         opt.EnableSensitiveDataLogging();
                     }
                 });
-            }
-            else
-            {
-                var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-                dataSourceBuilder.MapEnum<Core.Map.DbEntity.NoteContentFormatType>();
-                var dataSource = dataSourceBuilder.Build();
-
-                services.AddDbContext<HmmDataContext>(opt =>
-                {
-                    opt.UseNpgsql(dataSource);
-                    if (Environment.IsDevelopment())
-                    {
-                        opt.EnableSensitiveDataLogging();
-                    }
-                });
-            }
 
             services
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
@@ -223,7 +224,7 @@ namespace Hmm.ServiceApi
         {
             app.UseExceptionHandler(_ => { });
 
-            if (env.IsDevelopment())
+            if (env.IsDevelopment() || env.EnvironmentName == "Docker")
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hmm.ServiceApi v1"));
@@ -270,6 +271,9 @@ namespace Hmm.ServiceApi
             var hasExternalProviders = externalAuth != null &&
                 (externalAuth.EnableFirebase || externalAuth.EnableAuth0 || externalAuth.EnableAzureAd);
 
+            // Allow HTTP for Docker/Development when IdpBaseUrl uses http://
+        var requireHttpsMetadata = !appSetting.IdpBaseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+
             if (!hasExternalProviders)
             {
                 // Simple single-provider configuration (backward compatible)
@@ -277,7 +281,7 @@ namespace Hmm.ServiceApi
                     .AddJwtBearer("Bearer", opt =>
                     {
                         opt.Authority = appSetting.IdpBaseUrl;
-                        opt.RequireHttpsMetadata = appSetting.IdpBaseUrl?.StartsWith("https", StringComparison.OrdinalIgnoreCase) != false;
+                        opt.RequireHttpsMetadata = requireHttpsMetadata;
                         opt.TokenValidationParameters = new TokenValidationParameters
                         {
                             ValidateAudience = true,
@@ -298,7 +302,7 @@ namespace Hmm.ServiceApi
             authBuilder.AddJwtBearer(MultiAuthSchemeSelector.HmmIdpScheme, opt =>
             {
                 opt.Authority = appSetting.IdpBaseUrl;
-                opt.RequireHttpsMetadata = appSetting.IdpBaseUrl?.StartsWith("https", StringComparison.OrdinalIgnoreCase) != false;
+                opt.RequireHttpsMetadata = requireHttpsMetadata;
                 opt.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateAudience = true,

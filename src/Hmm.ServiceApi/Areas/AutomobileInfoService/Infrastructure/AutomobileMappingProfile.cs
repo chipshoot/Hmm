@@ -58,9 +58,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
             CreateMap<ApiGasLogForCreation, GasLog>()
                 .ForMember(d => d.AutomobileId, opt => opt.MapFrom(s => s.AutomobileId))
-                .ForMember(d => d.Odometer, opt => opt.MapFrom(s => new Dimension((double)s.Odometer, DimensionUnit.Kilometre)))
-                .ForMember(d => d.Distance, opt => opt.MapFrom(s => new Dimension((double)s.Distance, DimensionUnit.Kilometre)))
-                .ForMember(d => d.Fuel, opt => opt.MapFrom(s => new Volume((double)s.Fuel, VolumeUnit.Gallon)))
+                .ForMember(d => d.Odometer, opt => opt.MapFrom(s => new Dimension((double)s.Odometer, DimensionUnit.Kilometre, 3)))
+                .ForMember(d => d.Distance, opt => opt.MapFrom(s => new Dimension((double)s.Distance, DimensionUnit.Kilometre, 3)))
+                .ForMember(d => d.Fuel, opt => opt.MapFrom(s => new Volume((double)s.Fuel, VolumeUnit.Gallon, 3)))
                 .ForMember(d => d.FuelGrade, opt => opt.MapFrom(s => Enum.Parse<FuelGrade>(s.FuelGrade, true)))
                 .ForMember(d => d.TotalPrice, opt => opt.MapFrom(s => new Money(s.TotalPrice, CurrencyCodeType.Cad)))
                 .ForMember(d => d.UnitPrice, opt => opt.MapFrom(s => new Money(s.UnitPrice, CurrencyCodeType.Cad)))
