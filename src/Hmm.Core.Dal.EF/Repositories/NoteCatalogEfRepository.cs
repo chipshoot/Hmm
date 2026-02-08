@@ -80,6 +80,17 @@ namespace Hmm.Core.Dal.EF.Repositories
             {
                 // Reset the id to 0 to make sure it is a new entity
                 entity.Id = 0;
+
+                // Check for duplicate Name
+                var existingCatalogsResult = await _lookupRepository.GetEntitiesAsync<NoteCatalogDao>(
+                    c => c.Name == entity.Name);
+                if (existingCatalogsResult.Success && existingCatalogsResult.Value?.Count > 0)
+                {
+                    var invalidResult = ProcessingResult<NoteCatalogDao>.Invalid(
+                        $"NoteCatalog with Name '{entity.Name}' already exists");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
+                }
                 _dataContext.Set<NoteCatalogDao>().Add(entity);
 
                 var result = ProcessingResult<NoteCatalogDao>.Ok(entity, $"NoteCatalog '{entity.Name}' added to context (pending commit)");
@@ -114,6 +125,17 @@ namespace Hmm.Core.Dal.EF.Repositories
                     var notFoundResult = ProcessingResult<NoteCatalogDao>.NotFound($"NoteCatalog with ID {entity.Id} not found");
                     notFoundResult.LogMessages(_logger);
                     return notFoundResult;
+                }
+
+                // Check for duplicate Name (excluding the current entity)
+                var existingCatalogsResult = await _lookupRepository.GetEntitiesAsync<NoteCatalogDao>(
+                    c => c.Name == entity.Name && c.Id != entity.Id);
+                if (existingCatalogsResult.Success && existingCatalogsResult.Value?.Count > 0)
+                {
+                    var invalidResult = ProcessingResult<NoteCatalogDao>.Invalid(
+                        $"Another NoteCatalog with Name '{entity.Name}' already exists");
+                    invalidResult.LogMessages(_logger);
+                    return invalidResult;
                 }
 
                 _dataContext.Set<NoteCatalogDao>().Update(entity);

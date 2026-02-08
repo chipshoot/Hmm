@@ -226,6 +226,12 @@ namespace Hmm.Core.Dal.EF
                     .HasConversion<int>();
             }
 
+            // Unique constraint on Name (matching Authors and Tags pattern)
+            modelBuilder.Entity<NoteCatalogDao>()
+                .HasIndex(c => c.Name)
+                .IsUnique()
+                .HasDatabaseName(IndexNames.UQ_NoteCatalogs_Name);
+
             // ============================================================
             // TagDao Configuration
             // ============================================================

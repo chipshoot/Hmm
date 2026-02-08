@@ -2,6 +2,7 @@
 using Hmm.Core.DefaultManager.Validator;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
@@ -178,7 +179,10 @@ namespace Hmm.Core.Tests.ValidatorTests
         public async Task CannotChangeAuthorForExistsNote()
         {
             // Arrange
-            var manager = new HmmNoteManager(NoteRepository, UnitOfWork, Mapper, LookupRepository, DateProvider, Mock.Of<IHmmValidator<HmmNote>>());
+            var mockValidator = new Mock<IHmmValidator<HmmNote>>();
+            mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<HmmNote>()))
+                .ReturnsAsync((HmmNote n) => ProcessingResult<HmmNote>.Ok(n));
+            var manager = new HmmNoteManager(NoteRepository, UnitOfWork, Mapper, LookupRepository, DateProvider, mockValidator.Object);
             var note = new HmmNote
             {
                 Author = _author,
