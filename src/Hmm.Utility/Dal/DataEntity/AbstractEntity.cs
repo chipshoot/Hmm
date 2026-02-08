@@ -35,8 +35,9 @@ namespace Hmm.Utility.Dal.DataEntity
         #region implementation of IGenericEntity{TIdentity}
 
         /// <summary>
-        /// Gets the id of the domain entity. the setting should be protected, we open it here
-        /// for unit testing purpose
+        /// Gets or sets the id of the domain entity. The setter is public because it is
+        /// required by EF Core repositories (resetting ID for inserts) and API controllers
+        /// (setting ID from route parameters for updates).
         /// </summary>
         /// <value>
         /// The id of the domain entity.
