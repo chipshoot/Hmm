@@ -39,8 +39,11 @@ dotnet run --project src/Hmm.ServiceApi/Hmm.ServiceApi.csproj
 # Run the Identity Provider
 dotnet run --project src/Hmm.Idp/Hmm.Idp.csproj
 
-# Using Docker Compose (starts API + PostgreSQL)
-docker-compose up
+# Docker Compose - SQL Server (full infrastructure)
+docker compose -f docker/compose.base.yml -f docker/compose.idp.yml -f docker/compose.api.yml up -d
+
+# Docker Compose - SQLite (lightweight, no api-sqlserver container)
+docker compose -f docker/compose.base-sqlite.yml -f docker/compose.idp.yml -f docker/compose.api-sqlite.yml up -d
 ```
 
 ### Database Operations
@@ -91,10 +94,11 @@ Infrastructure (Hmm.Utility)
 - Expression-based querying with domain/DAO model mapping
 
 **Hmm.Core.Dal.EF** - Entity Framework Core 8.0 data access
-- PostgreSQL primary database (uses Npgsql.EntityFrameworkCore.PostgreSQL)
-- SQL Server fallback support available
+- Three database providers: SQL Server (default), PostgreSQL, and SQLite
+- Configured via `AppSettings.DatabaseProvider`: `"SqlServer"`, `"PostgreSQL"`, or `"SQLite"`
 - Repository pattern with `IRepository<T>` and `IVersionRepository<T>`
 - Optimistic concurrency using Version/Timestamp fields
+- SQLite uses application-managed version tokens (`UpdateSqliteVersionTokens()` in `HmmDataContext`)
 - Async-first approach for all database operations
 
 **Hmm.Core.Map** - Entity mapping layer
@@ -176,17 +180,67 @@ Complex domain objects can be stored as note content:
 - `AppSettings.MaxPageSize` - Maximum page size for paginated queries (default: 100)
 - `idpBaseUrl` - Identity Provider URL (default: https://localhost:5001)
 - `Serilog` - Logging configuration with Seq sink (http://localhost:5341)
-- Connection strings for PostgreSQL and SQL Server
+- Connection strings for SQL Server, PostgreSQL, or SQLite
+
+### Docker Compose Scenarios
+Located in `docker/` directory. All scenarios require a `.env` file (see `docker/.env`).
+
+**SQL Server API** (full infrastructure - 4 containers):
+```bash
+docker compose -f docker/compose.base.yml -f docker/compose.idp.yml -f docker/compose.api.yml up -d
+```
+Services: `api-sqlserver` + `idp-sqlserver` + `seq` + `hmm-idp` + `hmm-api`
+
+**SQLite API** (lightweight - 3 containers, no api-sqlserver):
+```bash
+docker compose -f docker/compose.base-sqlite.yml -f docker/compose.idp.yml -f docker/compose.api-sqlite.yml up -d
+```
+Services: `idp-sqlserver` + `seq` + `hmm-idp` + `hmm-api`
+- SQLite database saved to `docker/data/hmm.db` on the host (bind mount)
+- To sync to cloud, change the volume in `compose.api-sqlite.yml`:
+  ```yaml
+  volumes:
+    - C:/Users/name/OneDrive/hmm-data:/app/data
+  ```
 
 ### Database Configuration
-Primary database is PostgreSQL. Connection string should be configured in appsettings or user secrets:
+Three providers are supported, configured via `AppSettings.DatabaseProvider`:
+
+**SQL Server** (default):
 ```json
 {
+  "AppSettings": { "DatabaseProvider": "SqlServer" },
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=hmm;User Id=sa;Password=pass;TrustServerCertificate=True"
+  }
+}
+```
+
+**PostgreSQL**:
+```json
+{
+  "AppSettings": { "DatabaseProvider": "PostgreSQL" },
   "ConnectionStrings": {
     "HmmNoteConnection": "Host=localhost;Database=hmm;Username=user;Password=pass"
   }
 }
 ```
+
+**SQLite** (file-based, ideal for single-user / cloud sync):
+```json
+{
+  "AppSettings": { "DatabaseProvider": "SQLite" },
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=hmm.db"
+  }
+}
+```
+SQLite notes:
+- Database auto-created on startup via `EnsureCreated()`
+- WAL journal mode enabled for cloud sync friendliness (OneDrive, iCloud, Dropbox)
+- Point `Data Source` to a cloud sync folder for automatic backup
+- Single-user only: do not run on multiple machines simultaneously against the same `.db` file
+- See `src/Hmm.ServiceApi/appsettings.SQLite.json` for template configuration
 
 ## Testing Framework
 
