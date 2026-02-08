@@ -11,11 +11,10 @@ namespace Hmm.Utility.Tests
     public class ProcessingResultTests
     {
         [Theory]
-        [InlineData("This is Info", MessageType.Info, true, false, false, false)]
-        [InlineData("This is Warning", MessageType.Warning, false, true, false, false)]
-        [InlineData("This is Error", MessageType.Error, false, false, true, false)]
-        [InlineData("This is Fatal", MessageType.Fatal, false, false, true, true)]
-        public void Can_Get_Right_Result_Flag(string message, MessageType messageType, bool hasInfo, bool hasWarning, bool hasError, bool hasFatal)
+        [InlineData("This is Info", MessageType.Info, true, false, false)]
+        [InlineData("This is Warning", MessageType.Warning, false, true, false)]
+        [InlineData("This is Error", MessageType.Error, false, false, true)]
+        public void Can_Get_Right_Result_Flag(string message, MessageType messageType, bool hasInfo, bool hasWarning, bool hasError)
         {
             // Arrange & Act
             ProcessingResult<Unit> result = messageType switch
@@ -23,7 +22,6 @@ namespace Hmm.Utility.Tests
                 MessageType.Info => ProcessingResult<Unit>.Ok(Unit.Value).WithInfo(message),
                 MessageType.Warning => ProcessingResult<Unit>.Ok(Unit.Value).WithWarning(message),
                 MessageType.Error => ProcessingResult<Unit>.Fail(message),
-                MessageType.Fatal => ProcessingResult<Unit>.Fail(message),
                 _ => throw new ArgumentException("Invalid message type")
             };
 
@@ -31,7 +29,6 @@ namespace Hmm.Utility.Tests
             Assert.Equal(hasInfo, result.HasInfo);
             Assert.Equal(hasWarning, result.HasWarning);
             Assert.Equal(hasError, result.HasError);
-            Assert.Equal(hasFatal, result.HasFatal);
         }
 
         [Fact]
