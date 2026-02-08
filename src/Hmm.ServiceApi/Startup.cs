@@ -108,20 +108,24 @@ namespace Hmm.ServiceApi
             });
 
             // Configure database provider based on AppSettings.DatabaseProvider
-            // Default is SQL Server; set to "PostgreSQL" to use PostgreSQL
+            // Default is SQL Server; set to "PostgreSQL" or "SQLite" for alternatives
             var connectionString = Configuration.GetConnectionString("HmmNoteConnection")
                                    ?? Configuration.GetConnectionString("DefaultConnection");
-            var usePostgres = string.Equals(appSetting?.DatabaseProvider, "PostgreSQL", StringComparison.OrdinalIgnoreCase);
+            var databaseProvider = appSetting?.DatabaseProvider ?? "SqlServer";
 
             services.AddDbContext<HmmDataContext>(opt =>
                 {
-                    if (usePostgres)
+                    if (string.Equals(databaseProvider, "PostgreSQL", StringComparison.OrdinalIgnoreCase))
                     {
                         // PostgreSQL with Npgsql
                         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
                         dataSourceBuilder.MapEnum<Core.Map.DbEntity.NoteContentFormatType>();
                         var dataSource = dataSourceBuilder.Build();
                         opt.UseNpgsql(dataSource);
+                    }
+                    else if (string.Equals(databaseProvider, "SQLite", StringComparison.OrdinalIgnoreCase))
+                    {
+                        opt.UseSqlite(connectionString);
                     }
                     else
                     {
@@ -219,6 +223,17 @@ namespace Hmm.ServiceApi
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseExceptionHandler(_ => { });
+
+            // SQLite: auto-create database and enable WAL mode for cloud sync friendliness
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<HmmDataContext>();
+                if (dbContext.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    dbContext.Database.EnsureCreated();
+                    dbContext.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+                }
+            }
 
             if (env.IsDevelopment() || env.EnvironmentName == "Docker")
             {
