@@ -146,7 +146,7 @@ namespace Hmm.ServiceApi
                 .AddTransient<IHmmValidator<HmmNote>, NoteValidator>()
                 .AddTransient<IHmmValidator<Tag>, TagValidator>()
                 .AddTransient<IHmmValidator<Contact>, ContactValidator>()
-                //.AddTransient<IPropertyMappingService, PropertyMappingService>()
+                .AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
                 .AddAutoMapper(cfg =>
                 {

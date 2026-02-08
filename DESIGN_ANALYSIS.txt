@@ -2,10 +2,10 @@
 COMPREHENSIVE DESIGN DEFECT ANALYSIS - HMM SOLUTION
 ================================================================================
 Analysis Date: 2026-01-05
-Last Updated: 2026-02-07 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #27, #28, #29, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, #55, #56, #57, #58, #60, #61, #65, #68, #75, #76, #78, #79, #80, #81, #82, #83, #84, #86, #87, #88, #89, #90, #101, #106, #108, #110)
+Last Updated: 2026-02-07 (verified fixes: #1, #3, #4-partial, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #27, #28, #29, #30, #31, #32, #33, #34, #35, #36, #37, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, #55, #56, #57, #58, #60, #61, #65, #68, #69, #70, #71, #75, #76, #78, #79, #80, #81, #82, #83, #84, #86, #87, #88, #89, #90, #101, #106, #108, #110)
 Scope: All projects in src/ folder
 Total Projects Analyzed: 20
-Total Defects Found: 107+ (76 resolved, 1 partially resolved)
+Total Defects Found: 107+ (78 resolved, 1 partially resolved)
 
 ================================================================================
 BLOCKING ISSUES (P0 - FIX IMMEDIATELY)
@@ -1104,27 +1104,36 @@ DESIGN DEFECTS (P2 - MAINTAINABILITY ISSUES)
     GasLogJsonNoteSerialize (no longer fetches full automobile during deserialization).
     Updated AutomobileMappingProfile, GasLogController, result filters, and all tests.
 
-69. **INCONSISTENT FRACTIONAL VALIDATION**
-    Location: Dimension.cs:123-134 (>= 0) vs Weight.cs:84 (> 0)
-    Problem: Same concept validated differently
-    Impact: Fractional can be 0 in some types but not others
-    Fix: Standardize validation rules
+69. **[RESOLVED] INCONSISTENT FRACTIONAL VALIDATION**
+    Status: ✓ FIXED (Verified 2026-02-07)
+    Location: Dimension.cs, Weight.cs, Volume.cs constructors
+    Problem: Fractional digit validation was inconsistent across measure unit types
+    Resolution: All three measure unit types (Dimension, Weight, Volume) now consistently
+    validate `fractional >= 0` with identical logic (`if (fractional < 0) throw`).
+    Each type has matching test coverage for negative fractional rejection.
 
-70. **APPLICATIONREGISTER VIOLATES SRP**
-    Location: src/Hmm.Automobile/ApplicationRegister.cs:19-214
-    Problem: 5+ responsibilities - default author, registration, seeding, catalog lookup, schema loading
-    Impact: Hard to test, hard to maintain, multiple reasons to change
-    Fix: Split into DefaultAuthorProvider, DataSeeder, CatalogProvider, SchemaLoader
+70. **[RESOLVED] APPLICATIONREGISTER VIOLATES SRP**
+    Status: ✓ FIXED (Verified 2026-02-07)
+    Location: src/Hmm.Automobile/ApplicationRegister.cs
+    Problem: ApplicationRegister had 5+ responsibilities mixed into one class
+    Resolution: Responsibilities split into dedicated classes: DefaultAuthorProvider
+    (default author management), AutomobileSeedingService/ISeedingService (data seeding),
+    NoteCatalogProvider/INoteCatalogProvider (catalog lookups). ApplicationRegister is now
+    a lean registration coordinator with a single responsibility.
 
 ================================================================================
 INFRASTRUCTURE DEFECTS (P3 - TECHNICAL DEBT)
 ================================================================================
 
-71. **COMMENTED-OUT SERVICE REGISTRATION**
-    Location: src/Hmm.ServiceApi/Startup.cs:123
-    Problem: IPropertyMappingService registration commented out
-    Impact: Unclear if feature deprecated or incomplete, dead code
-    Fix: Remove or restore with explanation
+71. **[RESOLVED] COMMENTED-OUT SERVICE REGISTRATION**
+    Status: FIXED (Verified 2026-02-07)
+    Location: src/Hmm.ServiceApi/Startup.cs:149
+    Problem: IPropertyMappingService registration commented out, implementation entirely commented out with outdated property mappings (CarId, CurrentMeterReading, Gas, Price instead of AutomobileId, Odometer, Fuel, TotalPrice)
+    Resolution: Restored PropertyMappingService with correct ApiGasLog→GasLog property mappings and re-enabled DI registration
+    - Moved implementation from Hmm.ServiceApi.DtoEntity to Hmm.ServiceApi/Areas/AutomobileInfoService/Infrastructure (avoids adding Hmm.Automobile dependency to DtoEntity project)
+    - Updated property mappings: id, automobileId, date, createDate, distance, odometer, fuel, totalPrice, unitPrice, comment
+    - Interface IPropertyMappingService remains in Hmm.ServiceApi.DtoEntity.Services
+    - GasLogController OrderBy validation and sort clause mapping now functional
 
 72. **HARDCODED CONFIGURATION READING**
     Location: src/Hmm.ServiceApi/Startup.cs:156-173
@@ -1484,12 +1493,12 @@ MISSING FEATURES / INCOMPLETE IMPLEMENTATIONS
 SUMMARY STATISTICS
 ================================================================================
 
-Total Defects Found: 107+ (76 resolved, 1 partially resolved)
+Total Defects Found: 107+ (79 resolved, 1 partially resolved)
 Blocking (P0): 8 (6 resolved: #1, #3, #5, #6, #7, #8; 1 partial: #4)
 Security Vulnerabilities: 4 (4 resolved: #9, #10, #11, #12 - ALL FIXED)
 Critical (P1): 40 (16 resolved: #13, #14, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #33, #34)
 Important (P2): 45
-Technical Debt (P3): 16+ (7 resolved: #75, #76, #78, #79, #82, #88, #89)
+Technical Debt (P3): 16+ (8 resolved: #71, #75, #76, #78, #79, #82, #88, #89)
 Missing Features: 12 (4 resolved: #101, #106, #108, #110)
 
 By Category:
@@ -1502,7 +1511,7 @@ By Category:
 - Data Layer Issues: 9 (6 resolved: #21, #22, #23, #24, #25, #26)
 - API Design: 12 (8 resolved: #44 - empty Location URI, #45 - inconsistent error formats, #46 - empty collection 404, #47 - PATCH ModelState validation, #48 - ambiguous route conflict, #49 - API versioning, #50 - ProducesResponseType, #51 - Swagger config)
 - Dead Code: 10 (3 resolved: #83 - Hmm.Contract/HmmConstants removed, #88 - unused Policy constants removed, #89 - ValidationExtensionHelper deleted)
-- Infrastructure: 13 (7 resolved: #75, #76, #78, #79, #80, #81, #82)
+- Infrastructure: 13 (8 resolved: #71, #75, #76, #78, #79, #80, #81, #82)
 - Testing Issues: 6
 - Missing Features: 12 (4 resolved: #101 - IAuditable audit fields, #106 - guard clauses via .NET built-ins, #108 - specification pattern completed with repository integration, #110 - ValueObject base class)
 
@@ -1510,10 +1519,10 @@ By Project:
 - Hmm.Core: 35 defects (8 resolved: #1, #13, #14, #27, #29, #31, #33, #89 - all FIXED)
 - Hmm.Core.Dal.EF: 18 defects (13 resolved: #3, #7, #15, #16, #17, #21, #22, #23, #24, #25, #26, #78, #82)
 - Hmm.Core.Map: 3 defects (3 resolved: #24 - NoteTagRefDao documented, #28 - ExpressionHelper created, #31 - MapperExtensions created)
-- Hmm.ServiceApi: 25 defects (8 resolved: #12, #32, #38, #44, #46, #75, #76, #88)
-- Hmm.Automobile: 15 defects (7 resolved: #4-partial, #8, #20, #30, #34, #65, #68 - module restored, update fixed, static coupling fixed, duplicate CRUD fixed, N+1 fixed, subject builder, circular reference removed)
+- Hmm.ServiceApi: 25 defects (9 resolved: #12, #32, #38, #44, #46, #71, #75, #76, #88)
+- Hmm.Automobile: 15 defects (8 resolved: #4-partial, #8, #20, #30, #34, #65, #68, #70 - module restored, update fixed, static coupling fixed, duplicate CRUD fixed, N+1 fixed, subject builder, circular reference removed, SRP split)
 - Hmm.BigCalendar: 10 defects (partial #4 still open - managers still commented)
-- Hmm.Utility: 14 defects (8 resolved: #5, #37, #41, #79-StringEnum class removed, #101-IAuditable interface, #106-guard clauses documented, #108-specification pattern completed, #110-ValueObject base class)
+- Hmm.Utility: 14 defects (9 resolved: #5, #37, #41, #69-fractional validation standardized, #79-StringEnum class removed, #101-IAuditable interface, #106-guard clauses documented, #108-specification pattern completed, #110-ValueObject base class)
 
 ================================================================================
 ESTIMATED REFACTORING EFFORT
