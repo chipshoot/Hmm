@@ -4,7 +4,7 @@
     {
         public string AccountName { get; set; }
 
-        public ApiContact Contact { get; set; }
+        public ApiContact ContactInfo { get; set; }
 
         public string Role { get; set; }
 
