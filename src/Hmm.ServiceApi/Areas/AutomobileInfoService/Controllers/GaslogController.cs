@@ -22,6 +22,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
+    /// <summary>
+    /// Manages gas log entries for automobiles.
+    /// </summary>
     [Authorize]
     [ApiController]
     [EnableCors("AllowCors")]
@@ -65,7 +68,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             _logger = logger;
         }
 
-        // GET api/automobiles/1/gaslogs
+        /// <summary>
+        /// Retrieves gas log entries for a specific automobile.
+        /// </summary>
+        /// <param name="autoId">The automobile identifier.</param>
+        /// <param name="resourceParameters">Pagination, sorting, and filtering parameters.</param>
+        /// <returns>A list of gas log entries.</returns>
         [HttpGet(Name = "GetGasLogs")]
         [TypeFilter(typeof(GasLogsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -114,7 +122,13 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // GET api/automobiles/1/gaslogs/5
+        /// <summary>
+        /// Retrieves a single gas log entry by identifier.
+        /// </summary>
+        /// <param name="autoId">The automobile identifier.</param>
+        /// <param name="id">The gas log identifier.</param>
+        /// <param name="fields">Comma-separated list of fields to include in the response.</param>
+        /// <returns>The gas log entry matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetGasLogById")]
         [TypeFilter(typeof(GasLogResultFilter))]
         [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
@@ -148,7 +162,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(gasLog);
         }
 
-        // POST api/automobiles/1/gaslogs/historyLog
+        /// <summary>
+        /// Creates a historical gas log entry (does not update meter reading).
+        /// </summary>
+        /// <param name="autoId">The automobile identifier.</param>
+        /// <param name="apiGasLog">The gas log data for creation.</param>
+        /// <returns>The newly created gas log entry.</returns>
         [HttpPost("historylog", Name = "AddHistoryGasLog")]
         [TypeFilter(typeof(GasLogResultFilter))]
         [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
@@ -202,7 +221,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
         }
 
-        // POST api/automobiles/1/gaslogs
+        /// <summary>
+        /// Creates a new gas log entry and updates the automobile's meter reading.
+        /// </summary>
+        /// <param name="autoId">The automobile identifier.</param>
+        /// <param name="apiGasLog">The gas log data for creation.</param>
+        /// <returns>The newly created gas log entry.</returns>
         [HttpPost(Name = "AddGasLog")]
         [TypeFilter(typeof(GasLogResultFilter))]
         [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
@@ -256,7 +280,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
         }
 
-        // PUT api/automobiles/1/gaslogs/5
+        /// <summary>
+        /// Updates an existing gas log entry.
+        /// </summary>
+        /// <param name="id">The gas log identifier.</param>
+        /// <param name="apiGasLog">The updated gas log data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateGasLog")]
         [ProducesResponseType(typeof(ApiGasLog), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -292,7 +321,13 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(newApiLog);
         }
 
-        // PATCH api/automobiles/1/gaslogs/4
+        /// <summary>
+        /// Partially updates a gas log entry using a JSON Patch document.
+        /// </summary>
+        /// <param name="autoId">The automobile identifier.</param>
+        /// <param name="id">The gas log identifier.</param>
+        /// <param name="patchDoc">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchGasLog")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -343,7 +378,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
         }
 
-        // DELETE api/automobiles/1/gaslogs/5
+        /// <summary>
+        /// Deletes a gas log entry.
+        /// </summary>
+        /// <param name="id">The gas log identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}", Name = "DeleteGasLog")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

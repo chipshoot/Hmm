@@ -1,5 +1,8 @@
 ﻿namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Data required to create a new author.
+    /// </summary>
     public class ApiAuthorForCreate : ApiEntity
     {
         public string AccountName { get; set; }

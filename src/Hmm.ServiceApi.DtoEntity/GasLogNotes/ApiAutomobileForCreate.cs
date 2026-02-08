@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Data required to create a new automobile.
+    /// </summary>
     public class ApiAutomobileForCreate
     {
         [Required]

@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Data required to update an existing gas log entry.
+    /// </summary>
     public class ApiGasLogForUpdate
     {
         public DateTime? Date { get; set; }

@@ -2,6 +2,9 @@
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Represents a note in API responses.
+    /// </summary>
     public class ApiNote : ApiEntity
     {
         public int Id { get; set; }

@@ -4,6 +4,9 @@ using System;
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Data required to create a new note.
+    /// </summary>
     public class ApiNoteForCreate : ApiEntity
     {
         public string Subject { get; set; }

@@ -1,5 +1,8 @@
 ﻿namespace Hmm.ServiceApi.DtoEntity.HmmNote;
 
+/// <summary>
+/// Represents a phone number.
+/// </summary>
 public class ApiPhone
 {
     public string Number { get; set; }

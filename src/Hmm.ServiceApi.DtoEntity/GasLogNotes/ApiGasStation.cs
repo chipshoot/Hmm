@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Represents a gas station in API responses.
+    /// </summary>
     public class ApiGasStation : ApiEntity
     {
         public int Id { get; set; }

@@ -18,6 +18,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
+    /// <summary>
+    /// Manages tag CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
@@ -48,6 +51,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         #endregion constructor
 
+        /// <summary>
+        /// Retrieves a paginated list of tags.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of tags.</returns>
         [HttpGet(Name = "GetTags")]
         [TypeFilter(typeof(TagsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -68,6 +76,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(tagsResult.Value ?? new PageList<Tag>());
         }
 
+        /// <summary>
+        /// Retrieves a single tag by identifier.
+        /// </summary>
+        /// <param name="id">The tag identifier.</param>
+        /// <returns>The tag matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetTagById")]
         [TypeFilter(typeof(TagResultFilter))]
         [ProducesResponseType(typeof(ApiTag), StatusCodes.Status200OK)]
@@ -91,6 +104,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(tagResult.Value);
         }
 
+        /// <summary>
+        /// Retrieves a tag by its name.
+        /// </summary>
+        /// <param name="name">The tag name.</param>
+        /// <returns>The tag matching the specified name.</returns>
         [HttpGet("by-name/{name}", Name = "GetTagByName")]
         [TypeFilter(typeof(TagResultFilter))]
         [ProducesResponseType(typeof(ApiTag), StatusCodes.Status200OK)]
@@ -123,7 +141,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(tagResult.Value);
         }
 
-        // POST api/tags
+        /// <summary>
+        /// Creates a new tag.
+        /// </summary>
+        /// <param name="apiTag">The tag data for creation.</param>
+        /// <returns>The newly created tag.</returns>
         [HttpPost(Name = "AddTag")]
         [TypeFilter(typeof(TagResultFilter))]
         [ProducesResponseType(typeof(ApiTag), StatusCodes.Status201Created)]
@@ -158,7 +180,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PUT api/tags/5
+        /// <summary>
+        /// Updates an existing tag.
+        /// </summary>
+        /// <param name="id">The tag identifier.</param>
+        /// <param name="tag">The updated tag data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateTag")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -214,7 +241,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PATCH api/tags/5
+        /// <summary>
+        /// Partially updates a tag using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The tag identifier.</param>
+        /// <param name="patchDoc">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchTag")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -272,7 +304,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // DELETE api/tags/5
+        /// <summary>
+        /// Deactivates a tag.
+        /// </summary>
+        /// <param name="id">The tag identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

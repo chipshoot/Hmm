@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Represents a gas discount program in API responses.
+    /// </summary>
     public class ApiDiscount : ApiEntity
     {
         public int Id { get; set; }

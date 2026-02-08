@@ -18,6 +18,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
+    /// <summary>
+    /// Manages note CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
@@ -43,6 +46,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Retrieves a paginated list of notes.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of notes.</returns>
         [HttpGet(Name = "GetNotes")]
         [TypeFilter(typeof(NotesResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -64,6 +72,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(noteListResult.Value ?? new PageList<HmmNote>());
         }
 
+        /// <summary>
+        /// Retrieves a single note by its identifier.
+        /// </summary>
+        /// <param name="id">The note identifier.</param>
+        /// <returns>The note matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetNoteById")]
         [TypeFilter(typeof(NoteResultFilter))]
         [ProducesResponseType(typeof(ApiNote), StatusCodes.Status200OK)]
@@ -88,7 +101,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(noteResult.Value);
         }
 
-        // POST api/notes
+        /// <summary>
+        /// Creates a new note.
+        /// </summary>
+        /// <param name="note">The note data for creation.</param>
+        /// <returns>The newly created note.</returns>
         [HttpPost(Name = "AddNote")]
         [TypeFilter(typeof(NoteResultFilter))]
         [ProducesResponseType(typeof(ApiNote), StatusCodes.Status201Created)]
@@ -124,7 +141,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PUT api/notes/5
+        /// <summary>
+        /// Updates an existing note.
+        /// </summary>
+        /// <param name="id">The note identifier.</param>
+        /// <param name="note">The updated note data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateNote")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -182,7 +204,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PUT api/notes/5/applyTag
+        /// <summary>
+        /// Applies a tag to a note.
+        /// </summary>
+        /// <param name="id">The note identifier.</param>
+        /// <param name="tag">The tag to apply.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}/applyTag", Name = "ApplyTagToNote")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -222,7 +249,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PATCH api/notes/5
+        /// <summary>
+        /// Partially updates a note using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The note identifier.</param>
+        /// <param name="patchDoc">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchNote")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -282,7 +314,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // DELETE api/notes/5
+        /// <summary>
+        /// Soft-deletes a note by setting its IsDeleted flag.
+        /// </summary>
+        /// <param name="id">The note identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

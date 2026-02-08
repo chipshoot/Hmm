@@ -2,6 +2,9 @@
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Data required to create a new contact.
+    /// </summary>
     public class ApiContactForCreate : ApiEntity
     {
         public string FirstName { get; set; }

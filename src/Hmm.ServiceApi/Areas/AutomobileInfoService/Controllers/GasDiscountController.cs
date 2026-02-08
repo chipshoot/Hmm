@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
+    /// <summary>
+    /// Manages gas discount program CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
@@ -42,7 +45,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             _logger = logger;
         }
 
-        // GET api/automobiles/gaslogs/discounts
+        /// <summary>
+        /// Retrieves a paginated list of gas discount programs.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of gas discounts.</returns>
         [HttpGet(Name = "GetGasDiscounts")]
         [TypeFilter(typeof(GasDiscountsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -66,7 +73,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // GET api/automobiles/gaslogs/discounts/1
+        /// <summary>
+        /// Retrieves a single gas discount by identifier.
+        /// </summary>
+        /// <param name="id">The gas discount identifier.</param>
+        /// <returns>The gas discount matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetGasDiscountById")]
         [TypeFilter(typeof(GasDiscountResultFilter))]
         [ProducesResponseType(typeof(ApiDiscount), StatusCodes.Status200OK)]
@@ -88,7 +99,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // POST api/automobiles/gaslogs/discounts
+        /// <summary>
+        /// Creates a new gas discount program.
+        /// </summary>
+        /// <param name="apiDiscount">The gas discount data for creation.</param>
+        /// <returns>The newly created gas discount.</returns>
         [HttpPost(Name = "AddGasDiscount")]
         [TypeFilter(typeof(GasDiscountResultFilter))]
         [ProducesResponseType(typeof(ApiDiscount), StatusCodes.Status200OK)]
@@ -108,7 +123,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // PUT api/automobiles/gaslogs/discount/5
+        /// <summary>
+        /// Updates an existing gas discount program.
+        /// </summary>
+        /// <param name="id">The gas discount identifier.</param>
+        /// <param name="apiDiscount">The updated gas discount data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateGasDiscount")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -143,7 +163,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return NoContent();
         }
 
-        // PATCH api/automobiles/gaslogs/discounts/1
+        /// <summary>
+        /// Partially updates a gas discount using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The gas discount identifier.</param>
+        /// <param name="patchDocument">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchGasDiscount")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -186,7 +211,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return NoContent();
         }
 
-        // DELETE api/automobiles/gaslogs/discounts/1
+        /// <summary>
+        /// Deletes a gas discount program.
+        /// </summary>
+        /// <param name="id">The gas discount identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

@@ -2,6 +2,9 @@
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Data required to update an existing note.
+    /// </summary>
     public class ApiNoteForUpdate : ApiEntity
     {
         [Required(ErrorMessage = "Subject is required")]

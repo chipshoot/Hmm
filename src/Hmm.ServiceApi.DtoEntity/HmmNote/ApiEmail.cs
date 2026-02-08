@@ -1,5 +1,8 @@
 ﻿namespace Hmm.ServiceApi.DtoEntity.HmmNote;
 
+/// <summary>
+/// Represents an email address.
+/// </summary>
 public class ApiEmail
 {
     public string Address { get; set; }

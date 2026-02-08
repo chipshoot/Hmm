@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Represents a gas log entry in API responses.
+    /// </summary>
     public class ApiGasLog : ApiEntity
     {
         public int Id { get; set; }

@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
+    /// <summary>
+    /// Manages gas station CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
@@ -42,7 +45,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             _logger = logger;
         }
 
-        // GET api/automobiles/gasstations
+        /// <summary>
+        /// Retrieves a paginated list of all gas stations.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of gas stations.</returns>
         [HttpGet(Name = "GetGasStations")]
         [TypeFilter(typeof(GasStationsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -66,7 +73,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // GET api/automobiles/gasstations/active
+        /// <summary>
+        /// Retrieves a paginated list of active gas stations only.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of active gas stations.</returns>
         [HttpGet("active", Name = "GetActiveGasStations")]
         [TypeFilter(typeof(GasStationsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -90,7 +101,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // GET api/automobiles/gasstations/1
+        /// <summary>
+        /// Retrieves a single gas station by identifier.
+        /// </summary>
+        /// <param name="id">The gas station identifier.</param>
+        /// <returns>The gas station matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetGasStationById")]
         [TypeFilter(typeof(GasStationResultFilter))]
         [ProducesResponseType(typeof(ApiGasStation), StatusCodes.Status200OK)]
@@ -112,7 +127,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // GET api/automobiles/gasstations/byname/{name}
+        /// <summary>
+        /// Retrieves a gas station by its name.
+        /// </summary>
+        /// <param name="name">The gas station name.</param>
+        /// <returns>The gas station matching the specified name.</returns>
         [HttpGet("byname/{name}", Name = "GetGasStationByName")]
         [TypeFilter(typeof(GasStationResultFilter))]
         [ProducesResponseType(typeof(ApiGasStation), StatusCodes.Status200OK)]
@@ -139,7 +158,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // POST api/automobiles/gasstations
+        /// <summary>
+        /// Creates a new gas station.
+        /// </summary>
+        /// <param name="apiStation">The gas station data for creation.</param>
+        /// <returns>The newly created gas station.</returns>
         [HttpPost(Name = "AddGasStation")]
         [TypeFilter(typeof(GasStationResultFilter))]
         [ProducesResponseType(typeof(ApiGasStation), StatusCodes.Status200OK)]
@@ -173,7 +196,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
         }
 
-        // PUT api/automobiles/gasstations/5
+        /// <summary>
+        /// Updates an existing gas station.
+        /// </summary>
+        /// <param name="id">The gas station identifier.</param>
+        /// <param name="apiStation">The updated gas station data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateGasStation")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -208,7 +236,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return NoContent();
         }
 
-        // PATCH api/automobiles/gasstations/1
+        /// <summary>
+        /// Partially updates a gas station using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The gas station identifier.</param>
+        /// <param name="patchDocument">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchGasStation")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -260,7 +293,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
         }
 
-        // DELETE api/automobiles/gasstations/1
+        /// <summary>
+        /// Deletes a gas station.
+        /// </summary>
+        /// <param name="id">The gas station identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}", Name = "DeleteGasStation")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

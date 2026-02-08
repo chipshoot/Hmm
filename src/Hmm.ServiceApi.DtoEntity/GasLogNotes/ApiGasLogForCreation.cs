@@ -4,6 +4,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Data required to create a new gas log entry.
+    /// </summary>
     public class ApiGasLogForCreation
     {
         [Required]

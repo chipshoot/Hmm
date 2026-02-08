@@ -18,6 +18,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
+    /// <summary>
+    /// Manages author CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
@@ -48,6 +51,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         #endregion constructor
 
+        /// <summary>
+        /// Retrieves a paginated list of authors.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of authors.</returns>
         [HttpGet(Name = "GetAuthors")]
         [TypeFilter(typeof(AuthorsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -68,6 +76,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(authorsResult.Value ?? new PageList<Author>());
         }
 
+        /// <summary>
+        /// Retrieves a single author by identifier.
+        /// </summary>
+        /// <param name="id">The author identifier.</param>
+        /// <returns>The author matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetAuthorById")]
         [TypeFilter(typeof(AuthorResultFilter))]
         [ProducesResponseType(typeof(ApiAuthor), StatusCodes.Status200OK)]
@@ -97,7 +110,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(authorResult.Value);
         }
 
-        // POST api/authors
+        /// <summary>
+        /// Creates a new author.
+        /// </summary>
+        /// <param name="author">The author data for creation.</param>
+        /// <returns>The newly created author.</returns>
         [HttpPost(Name = "AddAuthor")]
         [TypeFilter(typeof(AuthorResultFilter))]
         [ProducesResponseType(typeof(ApiAuthor), StatusCodes.Status201Created)]
@@ -133,7 +150,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PUT api/authors/5
+        /// <summary>
+        /// Updates an existing author.
+        /// </summary>
+        /// <param name="id">The author identifier.</param>
+        /// <param name="author">The updated author data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateAuthor")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -178,7 +200,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PATCH api/authors/5
+        /// <summary>
+        /// Partially updates an author using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The author identifier.</param>
+        /// <param name="patchDoc">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchAuthor")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -236,7 +263,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // DELETE api/authors/5
+        /// <summary>
+        /// Deactivates an author.
+        /// </summary>
+        /// <param name="id">The author identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

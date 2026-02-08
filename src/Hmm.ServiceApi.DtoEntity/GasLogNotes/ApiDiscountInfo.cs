@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Represents a discount applied to a gas log entry.
+    /// </summary>
     public class ApiDiscountInfo
     {
         [Required]

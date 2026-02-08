@@ -2,6 +2,9 @@
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Represents contact information in API responses.
+    /// </summary>
     public class ApiContact : ApiEntity
     {
         public int Id { get; set; }

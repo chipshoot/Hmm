@@ -2,6 +2,9 @@
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Data required to update an existing author.
+    /// </summary>
     public class ApiAuthorForUpdate : ApiEntity
     {
         public string Role { get; set; }

@@ -2,6 +2,9 @@
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Data required to update an existing tag.
+    /// </summary>
     public class ApiTagForUpdate
     {
         [Required(ErrorMessage = "Tag name is required")]

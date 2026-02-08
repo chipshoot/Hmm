@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Data required to update an existing contact.
+    /// </summary>
     public class ApiContactForUpdate : ApiEntity
     {
         [StringLength(100, ErrorMessage = "First name cannot exceed 100 characters")]

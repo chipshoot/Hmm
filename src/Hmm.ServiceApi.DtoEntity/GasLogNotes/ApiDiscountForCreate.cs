@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Data required to create a new gas discount program.
+    /// </summary>
     public class ApiDiscountForCreate
     {
         [Required]

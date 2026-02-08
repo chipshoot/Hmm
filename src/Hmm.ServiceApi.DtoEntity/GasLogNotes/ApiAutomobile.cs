@@ -4,6 +4,9 @@ using System;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
+    /// <summary>
+    /// Represents an automobile in API responses.
+    /// </summary>
     public class ApiAutomobile : ApiEntity
     {
         public int Id { get; set; }

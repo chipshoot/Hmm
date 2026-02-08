@@ -2,6 +2,9 @@
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
+    /// <summary>
+    /// Represents an author in API responses.
+    /// </summary>
     public class ApiAuthor : ApiEntity
     {
         public int Id { get; set; }

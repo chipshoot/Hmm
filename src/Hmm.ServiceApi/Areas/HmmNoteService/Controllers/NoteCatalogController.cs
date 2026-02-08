@@ -18,6 +18,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
+    /// <summary>
+    /// Manages note catalog and template CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
@@ -48,6 +51,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         #endregion constructor
 
+        /// <summary>
+        /// Retrieves a paginated list of note catalogs.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of note catalogs.</returns>
         [HttpGet(Name = "GetNoteCatalogs")]
         [TypeFilter(typeof(NoteCatalogsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -68,6 +76,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(noteCatalogsResult.Value ?? new PageList<NoteCatalog>());
         }
 
+        /// <summary>
+        /// Retrieves a single note catalog by identifier.
+        /// </summary>
+        /// <param name="id">The note catalog identifier.</param>
+        /// <returns>The note catalog matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetNoteCatalogById")]
         [TypeFilter(typeof(NoteCatalogResultFilter))]
         [ProducesResponseType(typeof(ApiNoteCatalog), StatusCodes.Status200OK)]
@@ -91,7 +104,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(catalogResult.Value);
         }
 
-        // POST api/notecatalogs
+        /// <summary>
+        /// Creates a new note catalog.
+        /// </summary>
+        /// <param name="catalog">The note catalog data for creation.</param>
+        /// <returns>The newly created note catalog.</returns>
         [HttpPost(Name = "AddNoteCatalog")]
         [TypeFilter(typeof(NoteCatalogResultFilter))]
         [ProducesResponseType(typeof(ApiNoteCatalog), StatusCodes.Status201Created)]
@@ -126,7 +143,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PUT api/notecatalogs/{id}
+        /// <summary>
+        /// Updates an existing note catalog.
+        /// </summary>
+        /// <param name="id">The note catalog identifier.</param>
+        /// <param name="catalog">The updated note catalog data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateNoteCatalog")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -182,7 +204,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PATCH api/notecatalogs/{id}
+        /// <summary>
+        /// Partially updates a note catalog using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The note catalog identifier.</param>
+        /// <param name="patchDoc">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchNoteCatalog")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

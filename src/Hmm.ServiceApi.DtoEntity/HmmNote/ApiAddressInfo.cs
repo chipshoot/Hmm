@@ -1,5 +1,8 @@
 ﻿namespace Hmm.ServiceApi.DtoEntity.HmmNote;
 
+/// <summary>
+/// Represents a physical address.
+/// </summary>
 public class ApiAddressInfo
 {
     public string Address { get; set; }

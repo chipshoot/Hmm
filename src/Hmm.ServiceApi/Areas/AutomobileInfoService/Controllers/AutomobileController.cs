@@ -18,6 +18,9 @@ using Microsoft.AspNetCore.Cors;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 {
+    /// <summary>
+    /// Manages automobile CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [EnableCors("AllowCors")]
@@ -44,7 +47,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             _logger = logger;
         }
 
-        // GET api/automobiles
+        /// <summary>
+        /// Retrieves a paginated list of automobiles.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of automobiles.</returns>
         [HttpGet(Name = "GetAutomobiles")]
         [TypeFilter(typeof(AutomobilesResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -69,7 +76,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // GET api/automobiles/1
+        /// <summary>
+        /// Retrieves a single automobile by identifier.
+        /// </summary>
+        /// <param name="id">The automobile identifier.</param>
+        /// <returns>The automobile matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetAutomobileById")]
         [HttpHead]
         [TypeFilter(typeof(AutomobileResultFilter))]
@@ -92,7 +103,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // POST api/automobiles
+        /// <summary>
+        /// Creates a new automobile.
+        /// </summary>
+        /// <param name="apiCar">The automobile data for creation.</param>
+        /// <returns>The newly created automobile.</returns>
         [HttpPost(Name = "AddAutomobile")]
         [TypeFilter(typeof(AutomobileResultFilter))]
         [ProducesResponseType(typeof(ApiAutomobile), StatusCodes.Status200OK)]
@@ -112,7 +127,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return Ok(result.Value);
         }
 
-        // PUT api/automobiles/4
+        /// <summary>
+        /// Updates an existing automobile.
+        /// </summary>
+        /// <param name="id">The automobile identifier.</param>
+        /// <param name="apiCar">The updated automobile data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateAutomobile")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -147,7 +167,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             return NoContent();
         }
 
-        // PATCH api/automobiles/4
+        /// <summary>
+        /// Partially updates an automobile using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The automobile identifier.</param>
+        /// <param name="patchDoc">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchAutomobile")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -193,7 +218,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             }
         }
 
-        // DELETE api/automobiles/5
+        /// <summary>
+        /// Deletes an automobile.
+        /// </summary>
+        /// <param name="id">The automobile identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}", Name = "DeleteAutomobile")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

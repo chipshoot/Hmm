@@ -19,6 +19,9 @@ using System.Threading.Tasks;
 
 namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 {
+    /// <summary>
+    /// Manages contact information CRUD operations.
+    /// </summary>
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
@@ -49,6 +52,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
         #endregion constructor
 
+        /// <summary>
+        /// Retrieves a paginated list of contacts.
+        /// </summary>
+        /// <param name="resourceCollectionParameters">Pagination and sorting parameters.</param>
+        /// <returns>A paginated list of contacts.</returns>
         [HttpGet(Name = "GetContacts")]
         [TypeFilter(typeof(ContactsResultFilter))]
         [TypeFilter(typeof(CollectionResultFilter))]
@@ -69,6 +77,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(contactsResult.Value ?? new PageList<Contact>());
         }
 
+        /// <summary>
+        /// Retrieves a single contact by identifier.
+        /// </summary>
+        /// <param name="id">The contact identifier.</param>
+        /// <returns>The contact matching the specified identifier.</returns>
         [HttpGet("{id:int}", Name = "GetContactById")]
         [TypeFilter(typeof(ContactResultFilter))]
         [ProducesResponseType(typeof(ApiContact), StatusCodes.Status200OK)]
@@ -98,7 +111,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             return Ok(contactResult.Value);
         }
 
-        // POST api/contacts
+        /// <summary>
+        /// Creates a new contact.
+        /// </summary>
+        /// <param name="contact">The contact data for creation.</param>
+        /// <returns>The newly created contact.</returns>
         [HttpPost(Name = "AddContact")]
         [TypeFilter(typeof(ContactResultFilter))]
         [ProducesResponseType(typeof(ApiContact), StatusCodes.Status201Created)]
@@ -134,7 +151,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PUT api/contacts/{id}
+        /// <summary>
+        /// Updates an existing contact.
+        /// </summary>
+        /// <param name="id">The contact identifier.</param>
+        /// <param name="contact">The updated contact data.</param>
+        /// <returns>No content on success.</returns>
         [HttpPut("{id:int}", Name = "UpdateContact")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -179,7 +201,12 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // PATCH api/contacts/{id}
+        /// <summary>
+        /// Partially updates a contact using a JSON Patch document.
+        /// </summary>
+        /// <param name="id">The contact identifier.</param>
+        /// <param name="patchDoc">The JSON Patch document.</param>
+        /// <returns>No content on success.</returns>
         [HttpPatch("{id:int}", Name = "PatchContact")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -237,7 +264,11 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
             }
         }
 
-        // DELETE api/contacts/{id}
+        /// <summary>
+        /// Deletes a contact.
+        /// </summary>
+        /// <param name="id">The contact identifier.</param>
+        /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
