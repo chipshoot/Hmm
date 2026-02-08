@@ -5,7 +5,7 @@ public class AppSettings
     public string ConnectionString { get; set; }
 
     /// <summary>
-    /// Database provider: "SqlServer" (default) or "PostgreSQL"
+    /// Database provider: "SqlServer" (default), "PostgreSQL", or "SQLite"
     /// </summary>
     public string DatabaseProvider { get; set; } = "SqlServer";
 

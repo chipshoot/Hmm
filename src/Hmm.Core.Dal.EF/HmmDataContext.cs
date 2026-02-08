@@ -57,6 +57,7 @@ namespace Hmm.Core.Dal.EF
         {
             try
             {
+                UpdateSqliteVersionTokens();
                 return base.SaveChanges();
             }
             catch (Exception ex)
@@ -70,11 +71,26 @@ namespace Hmm.Core.Dal.EF
         {
             try
             {
+                UpdateSqliteVersionTokens();
                 return await base.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
             {
                 throw new DataSourceException(ex.Message, ex);
+            }
+        }
+
+        private void UpdateSqliteVersionTokens()
+        {
+            if (Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) != true)
+                return;
+
+            foreach (var entry in ChangeTracker.Entries<VersionedEntity>())
+            {
+                if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                {
+                    entry.Entity.Version = Guid.NewGuid().ToByteArray();
+                }
             }
         }
 
@@ -90,6 +106,7 @@ namespace Hmm.Core.Dal.EF
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var isPostgres = Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+            var isSqlite = Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true;
 
             if (isPostgres)
             {
@@ -128,15 +145,27 @@ namespace Hmm.Core.Dal.EF
             modelBuilder.Entity<HmmNoteDao>().HasKey(n => n.Id);
 
             // Configure Version property differently based on provider
-            var versionProperty = modelBuilder.Entity<HmmNoteDao>()
-                .Property(n => n.Version)
-                .HasColumnName("ts")
-                .IsConcurrencyToken()
-                .ValueGeneratedOnAddOrUpdate();
-
-            if (isPostgres)
+            if (isSqlite)
             {
-                versionProperty.HasColumnType("bytea");
+                modelBuilder.Entity<HmmNoteDao>()
+                    .Property(n => n.Version)
+                    .HasColumnName("ts")
+                    .HasColumnType("BLOB")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedNever();
+            }
+            else
+            {
+                var versionProperty = modelBuilder.Entity<HmmNoteDao>()
+                    .Property(n => n.Version)
+                    .HasColumnName("ts")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAddOrUpdate();
+
+                if (isPostgres)
+                {
+                    versionProperty.HasColumnType("bytea");
+                }
             }
 
             // FK to Author with explicit constraint name and index (Issue #25 fix)
@@ -188,6 +217,13 @@ namespace Hmm.Core.Dal.EF
             if (isPostgres)
             {
                 catalogEntity.Property(e => e.Schema).HasColumnType("xml");
+            }
+
+            if (isSqlite)
+            {
+                modelBuilder.Entity<NoteCatalogDao>()
+                    .Property(e => e.FormatType)
+                    .HasConversion<int>();
             }
 
             // ============================================================
