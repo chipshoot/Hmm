@@ -107,21 +107,38 @@ namespace Hmm.ServiceApi
                 });
             });
 
-            // Configure NpgsqlDataSource with enum mapping
+            // Configure database provider based on AppSettings.DatabaseProvider
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-            dataSourceBuilder.MapEnum<Core.Map.DbEntity.NoteContentFormatType>();
-            var dataSource = dataSourceBuilder.Build();
+            var useSqlServer = string.Equals(appSetting?.DatabaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase);
 
-            services
-                .AddDbContext<HmmDataContext>(opt =>
+            if (useSqlServer)
+            {
+                services.AddDbContext<HmmDataContext>(opt =>
+                {
+                    opt.UseSqlServer(connectionString);
+                    if (Environment.IsDevelopment())
+                    {
+                        opt.EnableSensitiveDataLogging();
+                    }
+                });
+            }
+            else
+            {
+                var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+                dataSourceBuilder.MapEnum<Core.Map.DbEntity.NoteContentFormatType>();
+                var dataSource = dataSourceBuilder.Build();
+
+                services.AddDbContext<HmmDataContext>(opt =>
                 {
                     opt.UseNpgsql(dataSource);
                     if (Environment.IsDevelopment())
                     {
                         opt.EnableSensitiveDataLogging();
                     }
-                })
+                });
+            }
+
+            services
                 .AddSingleton<IDateTimeProvider, DateTimeAdapter>()
                 .AddScoped<IHmmDataContext, HmmDataContext>()
                 .AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<IHmmDataContext>())
@@ -260,6 +277,7 @@ namespace Hmm.ServiceApi
                     .AddJwtBearer("Bearer", opt =>
                     {
                         opt.Authority = appSetting.IdpBaseUrl;
+                        opt.RequireHttpsMetadata = appSetting.IdpBaseUrl?.StartsWith("https", StringComparison.OrdinalIgnoreCase) != false;
                         opt.TokenValidationParameters = new TokenValidationParameters
                         {
                             ValidateAudience = true,
@@ -280,6 +298,7 @@ namespace Hmm.ServiceApi
             authBuilder.AddJwtBearer(MultiAuthSchemeSelector.HmmIdpScheme, opt =>
             {
                 opt.Authority = appSetting.IdpBaseUrl;
+                opt.RequireHttpsMetadata = appSetting.IdpBaseUrl?.StartsWith("https", StringComparison.OrdinalIgnoreCase) != false;
                 opt.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateAudience = true,
