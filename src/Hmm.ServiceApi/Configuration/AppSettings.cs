@@ -5,9 +5,9 @@ public class AppSettings
     public string ConnectionString { get; set; }
 
     /// <summary>
-    /// Database provider: "PostgreSQL" (default) or "SqlServer"
+    /// Database provider: "SqlServer" (default) or "PostgreSQL"
     /// </summary>
-    public string DatabaseProvider { get; set; } = "PostgreSQL";
+    public string DatabaseProvider { get; set; } = "SqlServer";
 
     public string IdpBaseUrl { get; set; }
 

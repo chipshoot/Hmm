@@ -107,15 +107,11 @@ namespace Hmm.ServiceApi
                 });
             });
 
-            // Configure database provider based on environment
-            // HmmNoteConnection (set via env var in Docker) takes precedence over DefaultConnection (from appsettings)
+            // Configure database provider based on AppSettings.DatabaseProvider
+            // Default is SQL Server; set to "PostgreSQL" to use PostgreSQL
             var connectionString = Configuration.GetConnectionString("HmmNoteConnection")
                                    ?? Configuration.GetConnectionString("DefaultConnection");
-
-            // Auto-detect database provider from connection string format if not explicitly set
-            // PostgreSQL uses "Host=", SQL Server uses "Server=" or "Data Source="
-            var usePostgres = Configuration.GetValue<bool?>("DatabaseSettings:UsePostgres")
-                              ?? connectionString?.Contains("Host=", StringComparison.OrdinalIgnoreCase) == true;
+            var usePostgres = string.Equals(appSetting?.DatabaseProvider, "PostgreSQL", StringComparison.OrdinalIgnoreCase);
 
             services.AddDbContext<HmmDataContext>(opt =>
                 {
@@ -129,7 +125,7 @@ namespace Hmm.ServiceApi
                     }
                     else
                     {
-                        // SQL Server
+                        // SQL Server (default)
                         opt.UseSqlServer(connectionString);
                     }
 
