@@ -6,6 +6,8 @@ using Hmm.Idp.Pages.Admin.User;
 using Hmm.Idp.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Serilog;
 using IServiceScopeFactory = Microsoft.Extensions.DependencyInjection.IServiceScopeFactory;
 
@@ -128,7 +130,9 @@ internal static class HostingExtensions
 
         try
         {
-            // SQLite: use EnsureCreated to auto-create tables from model
+            // SQLite with multiple DbContexts: EnsureCreated() only creates tables when
+            // the database file doesn't exist. For subsequent contexts sharing the same
+            // database, we must use CreateTables() to add their tables.
             var applicationDbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             applicationDbContext.Database.EnsureCreated();
             Log.Information("ApplicationDbContext database ensured");
@@ -137,11 +141,30 @@ internal static class HostingExtensions
             applicationDbContext.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
 
             var persistedGrantDbContext = serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>();
-            persistedGrantDbContext.Database.EnsureCreated();
+            try
+            {
+                persistedGrantDbContext.Database.EnsureCreated();
+                // If database already existed, EnsureCreated is a no-op; try creating tables directly
+                var creator = persistedGrantDbContext.GetService<IRelationalDatabaseCreator>();
+                creator?.CreateTables();
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException)
+            {
+                // Tables already exist - safe to ignore
+            }
             Log.Information("PersistedGrantDbContext database ensured");
 
             var configurationDbContext = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
-            configurationDbContext.Database.EnsureCreated();
+            try
+            {
+                configurationDbContext.Database.EnsureCreated();
+                var creator = configurationDbContext.GetService<IRelationalDatabaseCreator>();
+                creator?.CreateTables();
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException)
+            {
+                // Tables already exist - safe to ignore
+            }
             Log.Information("ConfigurationDbContext database ensured");
 
             // Check if we should seed data (Development or Docker environment)

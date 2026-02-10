@@ -1,6 +1,7 @@
-# IDP service overlay - extends compose.base.yml
+# IDP service overlay - extends compose.base.yml or compose.base-sqlite.yml
 #
-# Usage: docker compose -f compose.base.yml -f compose.idp.yml up -d
+# Usage (SQLite API): docker compose -f compose.base-sqlite.yml -f compose.idp.yml -f compose.api-sqlite.yml up -d
+# Usage (SQL Server API): docker compose -f compose.base.yml -f compose.idp.yml -f compose.api.yml up -d
 
 services:
   hmm-idp:

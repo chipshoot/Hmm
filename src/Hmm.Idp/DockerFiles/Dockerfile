@@ -14,9 +14,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview
 WORKDIR /app
 COPY --from=build /app ./
 
-# Copy Entity Framework Core migrations
-COPY --from=build /src/Data/Migrations ./Data/Migrations
-
 # Copy initialization scripts
 COPY DockerFiles/scripts ./scripts
 
