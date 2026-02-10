@@ -26,27 +26,6 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  idp-sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: hmm-idp-sqlserver
-    environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${IDP_SA_PASSWORD}
-      MSSQL_PID: "Developer"
-    ports:
-      - "${IDP_SQLSERVER_PORT}:1433"
-    volumes:
-      - idp-sqlserver-data:/var/opt/mssql
-    networks:
-      - hmm-network
-    healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${IDP_SA_PASSWORD}" -C -Q "SELECT 1" || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-    restart: unless-stopped
-
   seq:
     image: datalust/seq:latest
     container_name: hmm-seq
@@ -68,5 +47,4 @@ networks:
 
 volumes:
   api-sqlserver-data:
-  idp-sqlserver-data:
   seq-data:

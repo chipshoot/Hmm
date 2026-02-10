@@ -12,15 +12,15 @@ services:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
       - SEED_DATA=true
-      - DB_HOST=idp-sqlserver
-      - DB_PORT=1433
-      - ConnectionStrings__DefaultConnection=Server=idp-sqlserver;Database=HmmIdp;User Id=sa;Password=${IDP_SA_PASSWORD};TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/hmm-idp.db
       - IssuerUri=http://localhost:${IDP_PORT}
     ports:
       - "${IDP_PORT}:80"
-    depends_on:
-      idp-sqlserver:
-        condition: service_healthy
+    volumes:
+      - idp-data:/app/data
     networks:
       - hmm-network
     restart: unless-stopped
+
+volumes:
+  idp-data:

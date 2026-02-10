@@ -1,11 +1,11 @@
 using Duende.IdentityServer.EntityFramework.DbContexts;
+using Duende.IdentityServer.EntityFramework.Mappers;
+using Duende.IdentityServer.Models;
 using Hmm.Idp.Data;
 using Hmm.Idp.Pages.Admin.User;
 using Hmm.Idp.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Serilog;
 using IServiceScopeFactory = Microsoft.Extensions.DependencyInjection.IServiceScopeFactory;
 
@@ -20,11 +20,9 @@ internal static class HostingExtensions
 
         builder.Services.AddRazorPages();
 
-        var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
-
-        // Add ASP.NET Identity
+        // Add ASP.NET Identity with SQLite
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseSqlite(connectionString));
 
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -70,11 +68,11 @@ internal static class HostingExtensions
             })
             .AddConfigurationStore(options =>
             {
-                options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
+                options.ConfigureDbContext = b => b.UseSqlite(connectionString);
             })
             .AddOperationalStore(options =>
             {
-                options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
+                options.ConfigureDbContext = b => b.UseSqlite(connectionString);
             })
             .AddAspNetIdentity<ApplicationUser>();
 
@@ -128,163 +126,193 @@ internal static class HostingExtensions
 
         using var serviceScope = scopeFactory.CreateScope();
 
-        // Retry logic for transient database connection failures
-        const int maxRetries = 10;
-        const int delayMs = 3000;
-
-        for (var retry = 0; retry < maxRetries; retry++)
+        try
         {
-            try
+            // SQLite: use EnsureCreated to auto-create tables from model
+            var applicationDbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            applicationDbContext.Database.EnsureCreated();
+            Log.Information("ApplicationDbContext database ensured");
+
+            // Enable WAL mode for cloud sync friendliness
+            applicationDbContext.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+
+            var persistedGrantDbContext = serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>();
+            persistedGrantDbContext.Database.EnsureCreated();
+            Log.Information("PersistedGrantDbContext database ensured");
+
+            var configurationDbContext = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+            configurationDbContext.Database.EnsureCreated();
+            Log.Information("ConfigurationDbContext database ensured");
+
+            // Check if we should seed data (Development or Docker environment)
+            var shouldSeed = false;
+            if (builder is WebApplication app)
             {
-                var applicationDbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                // Create database if it doesn't exist (without creating tables - migrations will do that)
-                var connectionString = applicationDbContext.Database.GetConnectionString();
-                EnsureDatabaseExists(connectionString!);
-
-                // Run migrations for all databases
-                applicationDbContext.Database.Migrate();
-                Log.Information("ApplicationDbContext migrations applied");
-
-                var persistedGrantDbContext = serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>();
-                persistedGrantDbContext.Database.Migrate();
-                Log.Information("PersistedGrantDbContext migrations applied");
-
-                var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
-                context.Database.Migrate();
-                Log.Information("ConfigurationDbContext migrations applied");
-
-                // Check if we should seed data (Development or Docker environment)
-                var shouldSeed = false;
-                if (builder is WebApplication app)
-                {
-                    shouldSeed = app.Environment.IsDevelopment() ||
-                                 app.Environment.EnvironmentName == "Docker" ||
-                                 Environment.GetEnvironmentVariable("SEED_DATA") == "true";
-                }
-
-                if (shouldSeed)
-                {
-                    // Seed IdentityServer configuration (clients, scopes, resources)
-                    SeedIdentityServerConfiguration(connectionString!);
-
-                    // Seed Users
-                    var seedDataService = serviceScope.ServiceProvider.GetRequiredService<SeedDataService>();
-                    seedDataService.SeedAsync().GetAwaiter().GetResult();
-                    Log.Information("User seeding completed");
-                }
-
-                Log.Information("Database initialization completed successfully");
-                return;
+                shouldSeed = app.Environment.IsDevelopment() ||
+                             app.Environment.EnvironmentName == "Docker" ||
+                             Environment.GetEnvironmentVariable("SEED_DATA") == "true";
             }
-            catch (Exception ex) when (retry < maxRetries - 1)
+
+            if (shouldSeed)
             {
-                Log.Warning(ex, "Database initialization attempt {Attempt} of {MaxRetries} failed, retrying in {DelayMs}ms...",
-                    retry + 1, maxRetries, delayMs);
-                Thread.Sleep(delayMs);
+                // Seed IdentityServer configuration (clients, scopes, resources)
+                SeedIdentityServerConfiguration(configurationDbContext);
+
+                // Seed Users
+                var seedDataService = serviceScope.ServiceProvider.GetRequiredService<SeedDataService>();
+                seedDataService.SeedAsync().GetAwaiter().GetResult();
+                Log.Information("User seeding completed");
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "An error occurred while initializing the database after {MaxRetries} attempts", maxRetries);
-            }
+
+            Log.Information("Database initialization completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while initializing the database");
         }
     }
 
-    private static void EnsureDatabaseExists(string connectionString)
+    private static void SeedIdentityServerConfiguration(ConfigurationDbContext context)
     {
-        // Parse the connection string to extract the database name
-        var builder = new SqlConnectionStringBuilder(connectionString);
-        var databaseName = builder.InitialCatalog;
-
-        // Connect to master database to create the target database
-        builder.InitialCatalog = "master";
-
-        using var connection = new SqlConnection(builder.ConnectionString);
-        connection.Open();
-
-        // Check if database exists
-        using var checkCommand = connection.CreateCommand();
-        checkCommand.CommandText = $"SELECT COUNT(*) FROM sys.databases WHERE name = @dbName";
-        checkCommand.Parameters.AddWithValue("@dbName", databaseName);
-
-        var exists = (int)checkCommand.ExecuteScalar()! > 0;
-
-        if (!exists)
+        // Seed Identity Resources
+        if (!context.IdentityResources.Any())
         {
-            Log.Information("Creating database {DatabaseName}", databaseName);
-            using var createCommand = connection.CreateCommand();
-            createCommand.CommandText = $"CREATE DATABASE [{databaseName}]";
-            createCommand.ExecuteNonQuery();
-            Log.Information("Database {DatabaseName} created successfully", databaseName);
-        }
-    }
-
-    private static void SeedIdentityServerConfiguration(string connectionString)
-    {
-        // Read the seed SQL script - check multiple locations
-        // In Docker: /app/scripts/init-db.sql
-        // In development: DockerFiles/scripts/init-db.sql
-        var possiblePaths = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, "scripts", "init-db.sql"),           // Docker path
-            Path.Combine(AppContext.BaseDirectory, "DockerFiles", "scripts", "init-db.sql"),
-            Path.Combine(Directory.GetCurrentDirectory(), "scripts", "init-db.sql"),
-            Path.Combine(Directory.GetCurrentDirectory(), "DockerFiles", "scripts", "init-db.sql")
-        };
-
-        var scriptPath = possiblePaths.FirstOrDefault(File.Exists);
-
-        if (scriptPath == null)
-        {
-            Log.Warning("IdentityServer seed script not found in any expected location, skipping configuration seeding");
-            return;
-        }
-
-        Log.Information("Loading IdentityServer seed script from {ScriptPath}", scriptPath);
-        var fullScript = File.ReadAllText(scriptPath);
-
-        // Extract only the seeding part (skip the database creation section)
-        // The seed data starts after "-- Seed IdentityServer Configuration Data"
-        var seedMarker = "-- Seed IdentityServer Configuration Data";
-        var seedStartIndex = fullScript.IndexOf(seedMarker, StringComparison.Ordinal);
-
-        if (seedStartIndex < 0)
-        {
-            Log.Warning("Could not find seed data marker in init-db.sql, skipping configuration seeding");
-            return;
-        }
-
-        var seedScript = fullScript[seedStartIndex..];
-
-        // Split by GO statements and execute each batch
-        var batches = seedScript.Split(new[] { "\nGO\n", "\nGO\r\n", "\r\nGO\r\n", "\r\nGO\n" },
-            StringSplitOptions.RemoveEmptyEntries);
-
-        using var connection = new SqlConnection(connectionString);
-        connection.Open();
-
-        foreach (var batch in batches)
-        {
-            var trimmedBatch = batch.Trim();
-            if (string.IsNullOrWhiteSpace(trimmedBatch) || trimmedBatch == "GO")
-                continue;
-
-            try
+            var identityResources = new List<IdentityResource>
             {
-                using var command = connection.CreateCommand();
-                command.CommandText = trimmedBatch;
-                command.ExecuteNonQuery();
-            }
-            catch (SqlException ex) when (ex.Number == 2627) // Duplicate key - already seeded
+                new IdentityResources.OpenId(),
+                new IdentityResources.Profile(),
+                new IdentityResources.Email()
+            };
+
+            foreach (var resource in identityResources)
             {
-                // Ignore duplicate key errors, data already exists
+                context.IdentityResources.Add(resource.ToEntity());
             }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Error executing seed batch: {Batch}", trimmedBatch[..Math.Min(100, trimmedBatch.Length)]);
-            }
+
+            context.SaveChanges();
+            Log.Information("Seeded IdentityResources: openid, profile, email");
         }
+
+        // Seed API Scopes
+        if (!context.ApiScopes.Any(s => s.Name == "hmmapi"))
+        {
+            var apiScope = new ApiScope("hmmapi", "Hmm API")
+            {
+                UserClaims = { "name", "email", "role" }
+            };
+
+            context.ApiScopes.Add(apiScope.ToEntity());
+            context.SaveChanges();
+            Log.Information("Seeded ApiScope: hmmapi");
+        }
+
+        // Seed API Resources
+        if (!context.ApiResources.Any(r => r.Name == "hmmapi"))
+        {
+            var apiResource = new ApiResource("hmmapi", "Hmm API")
+            {
+                Scopes = { "hmmapi" },
+                UserClaims = { "name", "email", "role" }
+            };
+
+            context.ApiResources.Add(apiResource.ToEntity());
+            context.SaveChanges();
+            Log.Information("Seeded ApiResource: hmmapi");
+        }
+
+        // Seed Clients
+        SeedClients(context);
 
         Log.Information("IdentityServer configuration seeding completed");
+    }
+
+    private static void SeedClients(ConfigurationDbContext context)
+    {
+        // hmm.functest - Resource Owner Password Grant
+        if (!context.Clients.Any(c => c.ClientId == "hmm.functest"))
+        {
+            var funcTestClient = new Client
+            {
+                ClientId = "hmm.functest",
+                ClientName = "Hmm Functional Testing Client",
+                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                ClientSecrets = { new Secret("FuncTestSecret123!".Sha256()) },
+                AllowedScopes = { "openid", "profile", "email", "hmmapi" },
+                AllowOfflineAccess = true,
+                AccessTokenLifetime = 3600,
+                SlidingRefreshTokenLifetime = 86400,
+                AbsoluteRefreshTokenLifetime = 2592000,
+                RefreshTokenExpiration = TokenExpiration.Sliding
+            };
+
+            context.Clients.Add(funcTestClient.ToEntity());
+            context.SaveChanges();
+            Log.Information("Seeded Client: hmm.functest");
+        }
+
+        // hmm.m2m - Client Credentials Grant
+        if (!context.Clients.Any(c => c.ClientId == "hmm.m2m"))
+        {
+            var m2mClient = new Client
+            {
+                ClientId = "hmm.m2m",
+                ClientName = "Hmm Machine-to-Machine Client",
+                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                ClientSecrets = { new Secret("M2MSecret456!".Sha256()) },
+                AllowedScopes = { "hmmapi" }
+            };
+
+            context.Clients.Add(m2mClient.ToEntity());
+            context.SaveChanges();
+            Log.Information("Seeded Client: hmm.m2m");
+        }
+
+        // hmm.web - Authorization Code with PKCE
+        if (!context.Clients.Any(c => c.ClientId == "hmm.web"))
+        {
+            var webClient = new Client
+            {
+                ClientId = "hmm.web",
+                ClientName = "Hmm Web Application",
+                AllowedGrantTypes = GrantTypes.Code,
+                RequirePkce = true,
+                ClientSecrets = { new Secret("WebSecret789!".Sha256()) },
+                AllowedScopes = { "openid", "profile", "email", "hmmapi" },
+                AllowOfflineAccess = true,
+                UpdateAccessTokenClaimsOnRefresh = true,
+                RedirectUris =
+                {
+                    "https://localhost:5002/signin-oidc",
+                    "https://localhost:44342/signin-oidc"
+                },
+                PostLogoutRedirectUris =
+                {
+                    "https://localhost:5002/signout-callback-oidc",
+                    "https://localhost:44342/signout-callback-oidc"
+                }
+            };
+
+            context.Clients.Add(webClient.ToEntity());
+            context.SaveChanges();
+            Log.Information("Seeded Client: hmm.web");
+        }
+
+        // hmm.serviceapi - Client Credentials + Token Introspection
+        if (!context.Clients.Any(c => c.ClientId == "hmm.serviceapi"))
+        {
+            var serviceApiClient = new Client
+            {
+                ClientId = "hmm.serviceapi",
+                ClientName = "Hmm Service API",
+                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                ClientSecrets = { new Secret("ServiceApiSecret!@#456".Sha256()) },
+                AllowedScopes = { "hmmapi" },
+                Properties = { { "AllowTokenIntrospection", "true" } }
+            };
+
+            context.Clients.Add(serviceApiClient.ToEntity());
+            context.SaveChanges();
+            Log.Information("Seeded Client: hmm.serviceapi");
+        }
     }
 }

@@ -20,7 +20,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
         var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        builder.UseSqlServer(connectionString);
+        builder.UseSqlite(connectionString);
 
         return new ApplicationDbContext(builder.Options);
     }
@@ -34,7 +34,7 @@ public class DbMigrationHelper
     {
         var services = new ServiceCollection();
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseSqlite(connectionString));
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -44,6 +44,6 @@ public class DbMigrationHelper
         using var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
         var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
 
-        context.Database.Migrate();
+        context.Database.EnsureCreated();
     }
 }
