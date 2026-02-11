@@ -8,7 +8,6 @@ using Hmm.ServiceApi.DtoEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
 using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.ServiceApi.Models;
-using Hmm.ServiceApi.Models.Validation;
 using Hmm.Utility.Currency;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -30,7 +29,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
-    [ValidationModel]
     [Produces("application/json")]
     public class GasLogController : Controller
     {
