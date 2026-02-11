@@ -9,6 +9,7 @@ using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
 using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity.Profiles;
+using Hmm.ServiceApi.Filters;
 using Hmm.ServiceApi.DtoEntity.Services;
 using Hmm.ServiceApi.Middleware;
 using Hmm.Utility.Dal.Query;
@@ -46,9 +47,12 @@ namespace Hmm.ServiceApi
         {
             var configSection = SetupConfiguration(services);
             var appSetting = configSection.Get<AppSettings>();
+            services.Configure<ApiDeprecationOptions>(Configuration.GetSection("ApiDeprecation"));
+            services.AddSingleton<ApiSunsetHeaderFilter>();
             services.AddControllers(setupAction =>
                         {
                             setupAction.ReturnHttpNotAcceptable = true;
+                            setupAction.Filters.AddService<ApiSunsetHeaderFilter>();
                         })
                             .AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null)
                             .AddNewtonsoftJson()
