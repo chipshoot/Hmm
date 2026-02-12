@@ -3,8 +3,8 @@
 # Usage (slim base): docker compose -f compose.base-sqlite.yml -f compose.idp.yml -f compose.api-sqlite.yml up -d
 # Usage (full base): docker compose -f compose.base.yml -f compose.idp.yml -f compose.api-sqlite.yml up -d
 #
-# The SQLite database file is saved to ./data/ on the host (bind mount).
-# Point this to a cloud sync folder for automatic backup:
+# The SQLite database file is stored in a Docker volume (api-data).
+# To sync to cloud, switch to a bind mount:
 #   volumes:
 #     - C:/Users/name/OneDrive/hmm-data:/app/data
 
@@ -24,7 +24,7 @@ services:
     ports:
       - "${API_HTTP_PORT}:80"
     volumes:
-      - ./data:/app/data
+      - api-data:/app/data
     depends_on:
       seq:
         condition: service_started
@@ -33,3 +33,6 @@ services:
     networks:
       - hmm-network
     restart: unless-stopped
+
+volumes:
+  api-data:
