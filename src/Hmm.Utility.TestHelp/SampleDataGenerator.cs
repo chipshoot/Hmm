@@ -106,7 +106,10 @@ public static class SampleDataGenerator
             AccountName = acc,
             ContactInfo = GetContact(),
             Role = Core.Map.DomainEntity.AuthorRoleType.Author,
-            IsActivated = true
+            IsActivated = true,
+            Bio = "A sample author bio for testing",
+            AvatarUrl = "https://example.com/avatars/fchy.png",
+            TimeZone = "America/Vancouver"
         };
 
         return author;
@@ -121,7 +124,10 @@ public static class SampleDataGenerator
             ContactInfo = GetContactDao(),
             Role = Core.Map.DbEntity.AuthorRoleType.Author,
             Description = "Testing Author",
-            IsActivated = true
+            IsActivated = true,
+            Bio = "A sample author bio for testing",
+            AvatarUrl = "https://example.com/avatars/fchy.png",
+            TimeZone = "America/Vancouver"
         };
 
         return authorDao;
@@ -138,7 +144,10 @@ public static class SampleDataGenerator
                 ContactInfo = GetContactDao(),
                 Role = Core.Map.DbEntity.AuthorRoleType.Author,
                 Description = "Testing Author",
-                IsActivated = true
+                IsActivated = true,
+                Bio = "A sample author bio for testing",
+                AvatarUrl = "https://example.com/avatars/fchy.png",
+                TimeZone = "America/Vancouver"
             },
 
             new()
@@ -148,7 +157,10 @@ public static class SampleDataGenerator
                 ContactInfo = GetContactDao(),
                 Role = Core.Map.DbEntity.AuthorRoleType.Author,
                 Description = "Testing Author2",
-                IsActivated = true
+                IsActivated = true,
+                Bio = "Second author bio",
+                AvatarUrl = "https://example.com/avatars/jfang.png",
+                TimeZone = "America/New_York"
             },
             new()
             {
@@ -157,7 +169,10 @@ public static class SampleDataGenerator
                 ContactInfo = GetContactDao(),
                 Role = Core.Map.DbEntity.AuthorRoleType.Author,
                 Description = "Testing Author3",
-                IsActivated = true
+                IsActivated = true,
+                Bio = "Third author bio",
+                AvatarUrl = "https://example.com/avatars/amywang.png",
+                TimeZone = "Asia/Shanghai"
             },
             new()
             {
@@ -166,7 +181,10 @@ public static class SampleDataGenerator
                 ContactInfo = GetContactDao(),
                 Role = Core.Map.DbEntity.AuthorRoleType.Author,
                 Description = "Testing Author4",
-                IsActivated = true
+                IsActivated = true,
+                Bio = "Fourth author bio",
+                AvatarUrl = "https://example.com/avatars/taotao.png",
+                TimeZone = "Europe/London"
             },
         };
 
@@ -542,7 +560,10 @@ public static class SampleDataGenerator
                 ContactInfo = source.ContactInfo,
                 Role = source.Role,
                 Description = source.Description,
-                IsActivated = source.IsActivated
+                IsActivated = source.IsActivated,
+                Bio = source.Bio,
+                AvatarUrl = source.AvatarUrl,
+                TimeZone = source.TimeZone
             };
             return target;
         }
@@ -554,6 +575,9 @@ public static class SampleDataGenerator
             targetAuthor.Role = source.Role;
             targetAuthor.Description = source.Description;
             targetAuthor.IsActivated = source.IsActivated;
+            targetAuthor.Bio = source.Bio;
+            targetAuthor.AvatarUrl = source.AvatarUrl;
+            targetAuthor.TimeZone = source.TimeZone;
 
             return targetAuthor;
         }

@@ -20,5 +20,17 @@ namespace Hmm.Core.Map.DbEntity
 
         [Column("isactivated")]
         public bool IsActivated { get; set; }
+
+        [Column("bio")]
+        [StringLength(2000)]
+        public string? Bio { get; set; }
+
+        [Column("avatarurl")]
+        [StringLength(500)]
+        public string? AvatarUrl { get; set; }
+
+        [Column("timezone")]
+        [StringLength(100)]
+        public string? TimeZone { get; set; }
     }
 }

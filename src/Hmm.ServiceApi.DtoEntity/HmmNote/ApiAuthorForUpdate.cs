@@ -19,5 +19,14 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
         public string Description { get; set; }
+
+        [StringLength(2000, ErrorMessage = "Bio cannot exceed 2000 characters")]
+        public string? Bio { get; set; }
+
+        [StringLength(500, ErrorMessage = "Avatar URL cannot exceed 500 characters")]
+        public string? AvatarUrl { get; set; }
+
+        [StringLength(100, ErrorMessage = "Time zone cannot exceed 100 characters")]
+        public string? TimeZone { get; set; }
     }
 }

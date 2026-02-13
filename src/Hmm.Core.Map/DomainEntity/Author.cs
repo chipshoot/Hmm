@@ -13,5 +13,14 @@ namespace Hmm.Core.Map.DomainEntity
         public AuthorRoleType Role { get; set; }
 
         public bool IsActivated { get; set; }
+
+        [StringLength(2000)]
+        public string? Bio { get; set; }
+
+        [StringLength(500)]
+        public string? AvatarUrl { get; set; }
+
+        [StringLength(100)]
+        public string? TimeZone { get; set; }
     }
 }

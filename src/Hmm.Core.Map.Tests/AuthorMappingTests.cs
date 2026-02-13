@@ -42,6 +42,9 @@ public class AuthorMappingTests
         Assert.Equal(AddressType.Home, author.ContactInfo.Addresses.FirstOrDefault()?.Type);
         Assert.Equal("Testing Author", author.Description);
         Assert.True(author.IsActivated);
+        Assert.Equal("A sample author bio for testing", author.Bio);
+        Assert.Equal("https://example.com/avatars/fchy.png", author.AvatarUrl);
+        Assert.Equal("America/Vancouver", author.TimeZone);
     }
 
     //[Fact]
@@ -77,5 +80,8 @@ public class AuthorMappingTests
         // Assert
         Assert.NotNull(authorDao);
         Assert.NotNull(authorDao.ContactInfo);
+        Assert.Equal("A sample author bio for testing", authorDao.Bio);
+        Assert.Equal("https://example.com/avatars/fchy.png", authorDao.AvatarUrl);
+        Assert.Equal("America/Vancouver", authorDao.TimeZone);
     }
 }

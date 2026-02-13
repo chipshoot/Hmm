@@ -18,5 +18,11 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         public bool IsActivated { get; set; }
 
         public string Description { get; set; }
+
+        public string? Bio { get; set; }
+
+        public string? AvatarUrl { get; set; }
+
+        public string? TimeZone { get; set; }
     }
 }

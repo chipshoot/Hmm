@@ -125,13 +125,15 @@ namespace Hmm.ServiceApi.Services
             _logger?.LogInformation("Creating new author for user subject: {Subject}", subject);
 
             var userName = GetUserName() ?? subject;
+            var avatarUrl = GetUserPicture();
 
             var newAuthor = new Author
             {
                 AccountName = subject,
                 Description = $"User: {userName}",
                 Role = AuthorRoleType.Author,
-                IsActivated = true
+                IsActivated = true,
+                AvatarUrl = avatarUrl
             };
 
             var createResult = await _authorManager.CreateAsync(newAuthor);
@@ -162,6 +164,12 @@ namespace Hmm.ServiceApi.Services
                 ?? user.FindFirstValue("sub");
 
             return subject;
+        }
+
+        private string GetUserPicture()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            return user?.FindFirstValue("picture");
         }
 
         private string GetUserName()
