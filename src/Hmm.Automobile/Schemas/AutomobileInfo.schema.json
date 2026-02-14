@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AutomobileInfo Note",
+  "type": "object",
+  "required": ["note"],
+  "properties": {
+    "note": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "object",
+          "required": ["Automobile"],
+          "properties": {
+            "Automobile": {
+              "type": "object",
+              "required": ["vin", "maker", "brand", "model", "year", "plate", "engineType", "fuelType", "meterReading", "createdDate", "lastModifiedDate"],
+              "properties": {
+                "vin": { "type": "string", "minLength": 17, "maxLength": 17 },
+                "maker": { "type": "string", "minLength": 1, "maxLength": 50 },
+                "brand": { "type": "string", "minLength": 1, "maxLength": 50 },
+                "model": { "type": "string", "minLength": 1, "maxLength": 50 },
+                "trim": { "type": "string", "maxLength": 30 },
+                "year": { "type": "integer", "minimum": 1900, "maximum": 2100 },
+                "color": { "type": "string", "maxLength": 30 },
+                "plate": { "type": "string", "minLength": 1, "maxLength": 20 },
+                "engineType": {
+                  "type": "string",
+                  "enum": ["Gasoline", "Diesel", "Hybrid", "PlugInHybrid", "Electric", "Hydrogen", "CNG"]
+                },
+                "fuelType": {
+                  "type": "string",
+                  "enum": ["Regular", "MidGrade", "Premium", "Diesel", "E85", "Electric", "Other"]
+                },
+                "fuelTankCapacity": { "type": "number", "minimum": 0, "maximum": 200 },
+                "cityMPG": { "type": "number", "minimum": 0, "maximum": 200 },
+                "highwayMPG": { "type": "number", "minimum": 0, "maximum": 200 },
+                "combinedMPG": { "type": "number", "minimum": 0, "maximum": 200 },
+                "meterReading": { "type": "integer", "minimum": 1 },
+                "purchaseMeterReading": { "type": "integer" },
+                "purchaseDate": { "type": "string", "format": "date-time" },
+                "purchasePrice": { "type": "number", "minimum": 0 },
+                "ownershipStatus": {
+                  "type": "string",
+                  "enum": ["Owned", "Financed", "Leased", "Company"]
+                },
+                "isActive": { "type": "boolean" },
+                "soldDate": { "type": "string", "format": "date-time" },
+                "soldMeterReading": { "type": "integer" },
+                "soldPrice": { "type": "number" },
+                "registrationExpiryDate": { "type": "string", "format": "date-time" },
+                "insuranceExpiryDate": { "type": "string", "format": "date-time" },
+                "insuranceProvider": { "type": "string", "maxLength": 100 },
+                "insurancePolicyNumber": { "type": "string", "maxLength": 50 },
+                "lastServiceDate": { "type": "string", "format": "date-time" },
+                "lastServiceMeterReading": { "type": "integer" },
+                "nextServiceDueDate": { "type": "string", "format": "date-time" },
+                "nextServiceDueMeterReading": { "type": "integer" },
+                "notes": { "type": "string", "maxLength": 1000 },
+                "createdDate": { "type": "string", "format": "date-time" },
+                "lastModifiedDate": { "type": "string", "format": "date-time" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

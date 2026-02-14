@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GasDiscount Note",
+  "type": "object",
+  "required": ["note"],
+  "definitions": {
+    "money": {
+      "type": "object",
+      "required": ["value", "currencyCode"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "currencyCode": { "type": "string" }
+      }
+    }
+  },
+  "properties": {
+    "note": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "object",
+          "required": ["GasDiscount"],
+          "properties": {
+            "GasDiscount": {
+              "type": "object",
+              "required": ["program", "amount"],
+              "properties": {
+                "program": { "type": "string", "minLength": 1 },
+                "amount": { "$ref": "#/definitions/money" },
+                "discountType": {
+                  "type": "string",
+                  "enum": ["Flat", "PerLiter"]
+                },
+                "isActive": { "type": "boolean" },
+                "comment": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

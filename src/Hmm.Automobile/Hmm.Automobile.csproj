@@ -14,4 +14,8 @@
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\*.schema.json" />
+  </ItemGroup>
+
 </Project>

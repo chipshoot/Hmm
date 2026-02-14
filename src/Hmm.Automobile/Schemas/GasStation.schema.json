@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GasStation Note",
+  "type": "object",
+  "required": ["note"],
+  "properties": {
+    "note": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "object",
+          "required": ["GasStation"],
+          "properties": {
+            "GasStation": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                "address": { "type": "string", "maxLength": 200 },
+                "city": { "type": "string", "maxLength": 50 },
+                "state": { "type": "string", "maxLength": 50 },
+                "zipCode": { "type": "string", "maxLength": 20 },
+                "description": { "type": "string", "maxLength": 500 },
+                "isActive": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GasLog Note",
+  "type": "object",
+  "required": ["note"],
+  "definitions": {
+    "money": {
+      "type": "object",
+      "required": ["value", "currencyCode"],
+      "properties": {
+        "value": { "type": "number" },
+        "currencyCode": { "type": "string" }
+      }
+    },
+    "dimension": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "unit": { "type": "string" }
+      }
+    },
+    "volume": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "unit": { "type": "string" }
+      }
+    },
+    "station": {
+      "oneOf": [
+        { "type": "integer", "minimum": 1 },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "name": { "type": "string", "maxLength": 100 },
+            "address": { "type": "string", "maxLength": 200 },
+            "city": { "type": "string", "maxLength": 50 },
+            "state": { "type": "string", "maxLength": 50 },
+            "zipCode": { "type": "string", "maxLength": 20 },
+            "description": { "type": "string", "maxLength": 500 }
+          }
+        }
+      ]
+    },
+    "discountInfo": {
+      "type": "object",
+      "required": ["amount", "programId"],
+      "properties": {
+        "amount": { "$ref": "#/definitions/money" },
+        "programId": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "properties": {
+    "note": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "object",
+          "required": ["GasLog"],
+          "properties": {
+            "GasLog": {
+              "type": "object",
+              "required": ["date", "automobile", "distance", "odometer", "fuel", "totalPrice", "createDate"],
+              "properties": {
+                "date": { "type": "string", "format": "date-time" },
+                "automobile": { "type": "integer", "minimum": 1 },
+                "distance": { "$ref": "#/definitions/dimension" },
+                "odometer": { "$ref": "#/definitions/dimension" },
+                "fuel": { "$ref": "#/definitions/volume" },
+                "totalPrice": { "$ref": "#/definitions/money" },
+                "unitPrice": { "$ref": "#/definitions/money" },
+                "fuelGrade": {
+                  "type": "string",
+                  "enum": ["Regular", "MidGrade", "Premium", "Diesel", "E85", "Electric", "Other"]
+                },
+                "isFullTank": { "type": "boolean" },
+                "isFirstFillUp": { "type": "boolean" },
+                "station": { "$ref": "#/definitions/station" },
+                "location": { "type": "string", "maxLength": 100 },
+                "cityDrivingPercentage": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "highwayDrivingPercentage": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "receiptNumber": { "type": "string", "maxLength": 50 },
+                "comment": { "type": "string", "maxLength": 1000 },
+                "createDate": { "type": "string", "format": "date-time" },
+                "discounts": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/discountInfo" }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

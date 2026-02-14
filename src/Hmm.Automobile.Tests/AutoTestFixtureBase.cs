@@ -5,7 +5,6 @@ using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Moq;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Xml.Linq;
@@ -114,36 +113,36 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 200,
                 Name = AutomobileConstant.AutoMobileInfoCatalogName,
-                Type = DomainNoteContentFormatType.Xml,
+                Type = DomainNoteContentFormatType.Json,
                 Description = "Automobile info catalog",
-                Schema = File.Exists("Automobile.xsd") ? File.ReadAllText("Automobile.xsd") : ""
+                Schema = NoteCatalogSchemas.AutomobileInfoSchema
             };
 
             var gasLogCatalog = new NoteCatalog
             {
                 Id = 201,
                 Name = AutomobileConstant.GasLogCatalogName,
-                Type = DomainNoteContentFormatType.Xml,
+                Type = DomainNoteContentFormatType.Json,
                 Description = "Gas log catalog",
-                Schema = File.Exists("GasLog.xsd") ? File.ReadAllText("GasLog.xsd") : ""
+                Schema = NoteCatalogSchemas.GasLogSchema
             };
 
             var gasDiscountCatalog = new NoteCatalog
             {
                 Id = 202,
                 Name = AutomobileConstant.GasDiscountCatalogName,
-                Type = DomainNoteContentFormatType.Xml,
+                Type = DomainNoteContentFormatType.Json,
                 Description = "Gas discount catalog",
-                Schema = File.Exists("Discount.xsd") ? File.ReadAllText("Discount.xsd") : ""
+                Schema = NoteCatalogSchemas.GasDiscountSchema
             };
 
             var gasStationCatalog = new NoteCatalog
             {
                 Id = 203,
                 Name = AutomobileConstant.GasStationCatalogName,
-                Type = DomainNoteContentFormatType.Xml,
+                Type = DomainNoteContentFormatType.Json,
                 Description = "Gas station catalog",
-                Schema = ""
+                Schema = NoteCatalogSchemas.GasStationSchema
             };
 
             var catalogs = new[] { automobileCatalog, gasLogCatalog, gasDiscountCatalog, gasStationCatalog };
@@ -190,32 +189,32 @@ namespace Hmm.Automobile.Tests
                 {
                     Id = 200,
                     Name = AutomobileConstant.AutoMobileInfoCatalogName,
-                    Schema = File.Exists("Automobile.xsd") ? File.ReadAllText("Automobile.xsd") : "",
-                    Type = DomainNoteContentFormatType.Xml,
+                    Schema = NoteCatalogSchemas.AutomobileInfoSchema,
+                    Type = DomainNoteContentFormatType.Json,
                     Description = "Automobile info catalog"
                 },
                 NoteCatalogType.GasDiscount => new NoteCatalog
                 {
                     Id = 202,
                     Name = AutomobileConstant.GasDiscountCatalogName,
-                    Schema = File.Exists("Discount.xsd") ? File.ReadAllText("Discount.xsd") : "",
-                    Type = DomainNoteContentFormatType.Xml,
+                    Schema = NoteCatalogSchemas.GasDiscountSchema,
+                    Type = DomainNoteContentFormatType.Json,
                     Description = "Gas discount catalog"
                 },
                 NoteCatalogType.GasLog => new NoteCatalog
                 {
                     Id = 201,
                     Name = AutomobileConstant.GasLogCatalogName,
-                    Schema = File.Exists("GasLog.xsd") ? File.ReadAllText("GasLog.xsd") : "",
-                    Type = DomainNoteContentFormatType.Xml,
+                    Schema = NoteCatalogSchemas.GasLogSchema,
+                    Type = DomainNoteContentFormatType.Json,
                     Description = "Gas log catalog"
                 },
                 NoteCatalogType.GasStation => new NoteCatalog
                 {
                     Id = 203,
                     Name = AutomobileConstant.GasStationCatalogName,
-                    Schema = "",
-                    Type = DomainNoteContentFormatType.Xml,
+                    Schema = NoteCatalogSchemas.GasStationSchema,
+                    Type = DomainNoteContentFormatType.Json,
                     Description = "Gas station catalog"
                 },
                 _ => null
