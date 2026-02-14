@@ -1,3 +1,4 @@
+using Duende.IdentityServer;
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
 using Duende.IdentityServer.Models;
@@ -26,7 +27,7 @@ internal static class HostingExtensions
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlite(connectionString));
 
-        builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+        builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
@@ -55,6 +56,21 @@ internal static class HostingExtensions
             options.SignIn.RequireConfirmedAccount = true;
         });
 
+        // Configure external authentication providers (Google + GitHub)
+        builder.Services.AddAuthentication()
+            .AddGoogle("Google", options =>
+            {
+                options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
+                options.ClientId = configuration["ExternalAuth:Google:ClientId"]!;
+                options.ClientSecret = configuration["ExternalAuth:Google:ClientSecret"]!;
+            })
+            .AddGitHub("GitHub", options =>
+            {
+                options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
+                options.ClientId = configuration["ExternalAuth:GitHub:ClientId"]!;
+                options.ClientSecret = configuration["ExternalAuth:GitHub:ClientSecret"]!;
+            });
+
         // Configure email settings
         builder.Services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
 
@@ -77,6 +93,9 @@ internal static class HostingExtensions
                 options.ConfigureDbContext = b => b.UseSqlite(connectionString);
             })
             .AddAspNetIdentity<ApplicationUser>();
+
+        // Register user repository (used by login, external login, and user management)
+        builder.Services.AddScoped<ApplicationUserRepository>();
 
         // Register credential management services
         builder.Services.AddScoped<PasswordPolicyService>();
