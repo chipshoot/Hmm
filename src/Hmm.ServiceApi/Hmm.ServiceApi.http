@@ -57,10 +57,10 @@ grant_type=client_credentials&client_id=hmm.m2m&client_secret=M2MSecret456!&scop
 # ============================================================
 
 # Dynamic token from getToken request above (VS Code REST Client / Rider)
-# @hmmIdpToken = {{getToken.response.body.access_token}}
+ @hmmIdpToken = {{getToken.response.body.access_token}}
 
 # Or paste your token here manually:
-@hmmIdpToken = YOUR_HMM_IDP_TOKEN_HERE
+#@hmmIdpToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkNFRjJBRjY0OEU0RUREOTQ0NURDOUY2MTc0MzREQTRFIiwidHlwIjoiYXQrand0In0.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjUwMDEiLCJuYmYiOjE3NzExMjk2NTUsImlhdCI6MTc3MTEyOTY1NSwiZXhwIjoxNzcxMTMzMjU1LCJhdWQiOiJobW1hcGkiLCJzY29wZSI6WyJlbWFpbCIsImhtbWFwaSIsIm9wZW5pZCIsInByb2ZpbGUiXSwiYW1yIjpbInB3ZCJdLCJjbGllbnRfaWQiOiJobW0uZnVuY3Rlc3QiLCJzdWIiOiI4OWIxNDFlYS03YjU1LTQ0NmUtYTAyNi03MzMyMzY3MjA0ZjYiLCJhdXRoX3RpbWUiOjE3NzExMjk2NTUsImlkcCI6ImxvY2FsIiwiZW1haWwiOiJ0ZXN0dXNlckBobW0ubG9jYWwiLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZSI6IlVzZXIiLCJqdGkiOiI1NURBRTE4MTdENDEwQUVCNDVGNjBDOTA1RUUyOTE2QyJ9.MGW43nqvHGe0cUhx9QVXxqWlNBsFFXsgNhSGXGBcqAHobRPaNJVxwHToIe0BpoqlVSGDY2shLIF_6m5E9Tit3aJk_CrMqjlkqJkZHzz2kxrqEEf6-3edghSNEbzNRmuZMSWhmDe_j6jZuPT_QM2W5rjrMix1u00p4ZbNjZ4arkJFPP2tGi6SZ4HpMyqRsAI2YOpdgheWVF01WUWlagRswiLuB4hhSKKQicWBjqUtzZp2u27pENvb0ax2MGlGMo7qZj4b3ofls8BkxuCjtO3ODfKo8Ra32w0srLQJv00qg8yv-baonef9T9b8opZqGOFmY_GBruZpk4kBd1Gr5rh1pg"
 
 # Firebase token - Get from Firebase Auth SDK or REST API
 # POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=YOUR_API_KEY

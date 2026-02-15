@@ -39,7 +39,10 @@ namespace Hmm.Core.Dal.EF.Repositories
         {
             try
             {
-                var author = await _dataContext.Set<AuthorDao>().FindAsync(id);
+                var author = await _dataContext.Set<AuthorDao>()
+                    .AsNoTracking()
+                    .Include(a => a.ContactInfo)
+                    .FirstOrDefaultAsync(a => a.Id == id);
 
                 if (author == null)
                 {
