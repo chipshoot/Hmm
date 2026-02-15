@@ -364,6 +364,8 @@ FodyWeavers.xsd
 
 # Docker database local data directory
 data/
+docker/.data/
+docker/.compose.host-data.yml
 
 nul
 
