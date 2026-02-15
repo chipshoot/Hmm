@@ -8,8 +8,7 @@
     the IDP and API are functional. Designed for use before testing with
     the Hmm_Console Flutter client.
 
-    Services started:
-      - SQL Server (API database)     localhost:1433
+    Services started (SQLite - lightweight, no SQL Server):
       - Seq (logging UI)              localhost:8081
       - Hmm IDP (IdentityServer)      localhost:5001
       - Hmm API (REST service)        localhost:5010
@@ -57,7 +56,7 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ScriptDir
 
-$ComposeFiles = @("-f", "compose.base.yml", "-f", "compose.idp.yml", "-f", "compose.api.yml")
+$ComposeFiles = @("-f", "compose.base-sqlite.yml", "-f", "compose.idp.yml", "-f", "compose.api-sqlite.yml")
 
 $IdpBaseUrl   = "http://localhost:5001"
 $ApiBaseUrl   = "http://localhost:5010"
@@ -117,15 +116,12 @@ function Test-Url($url, $description) {
 # ── Check Docker ───────────────────────────────────────────────────────
 Write-Banner "Hmm Test Environment (Scenario 2)"
 
-try {
-    docker info 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "Docker not running" }
-}
-catch {
+$dockerCheck = & docker version --format "{{.Server.Version}}" 2>$null
+if (-not $dockerCheck) {
     Write-Fail "Docker is not running. Please start Docker Desktop and try again."
     exit 1
 }
-Write-Ok "Docker is running"
+Write-Ok "Docker is running (Engine $dockerCheck)"
 
 # ── Handle -Down ───────────────────────────────────────────────────────
 if ($Down) {
@@ -143,8 +139,8 @@ if ($Rebuild) {
     docker compose @ComposeFiles build --no-cache
 }
 
-Write-Step "Starting Scenario 2 (all services in Docker)..."
-Write-Info "Compose: compose.base.yml + compose.idp.yml + compose.api.yml"
+Write-Step "Starting Scenario 2 - SQLite (all services in Docker)..."
+Write-Info "Compose: compose.base-sqlite.yml + compose.idp.yml + compose.api-sqlite.yml"
 Write-Host ""
 
 docker compose @ComposeFiles up -d --build
@@ -350,7 +346,7 @@ Write-Host "    IDP Login:     $IdpBaseUrl/Account/Login" -ForegroundColor White
 Write-Host "    API:           $ApiBaseUrl" -ForegroundColor White
 Write-Host "    Swagger:       $ApiBaseUrl/swagger" -ForegroundColor White
 Write-Host "    Seq Logs:      $SeqUrl" -ForegroundColor White
-Write-Host "    SQL Server:    localhost,1433 (sa / Shcdlhgm1!)" -ForegroundColor White
+Write-Host "    Database:      SQLite (in Docker volume)" -ForegroundColor White
 Write-Host ""
 Write-Host "  Test Users:" -ForegroundColor Cyan
 Write-Host "    admin@hmm.local      / Admin@12345678!   (Administrator)" -ForegroundColor White
