@@ -2,17 +2,18 @@ using Hmm.Idp.Pages.Admin.User;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
+
 namespace Hmm.Idp.Services;
 
 public class SeedDataService
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly ILogger<SeedDataService> _logger;
 
     public SeedDataService(
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager,
+        RoleManager<ApplicationRole> roleManager,
         ILogger<SeedDataService> logger)
     {
         _userManager = userManager;
@@ -34,7 +35,7 @@ public class SeedDataService
         {
             if (!await _roleManager.RoleExistsAsync(role))
             {
-                var result = await _roleManager.CreateAsync(new IdentityRole(role));
+                var result = await _roleManager.CreateAsync(new ApplicationRole { Name = role });
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("Created role: {Role}", role);
