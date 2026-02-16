@@ -22,6 +22,12 @@ internal static class HostingExtensions
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         builder.Services.AddRazorPages();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            });
 
         // Add ASP.NET Identity with SQLite
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -92,10 +98,22 @@ internal static class HostingExtensions
             {
                 options.ConfigureDbContext = b => b.UseSqlite(connectionString);
             })
-            .AddAspNetIdentity<ApplicationUser>();
+            .AddAspNetIdentity<ApplicationUser>()
+            .AddResourceOwnerValidator<CustomResourceOwnerPasswordValidator>();
 
         // Register user repository (used by login, external login, and user management)
         builder.Services.AddScoped<ApplicationUserRepository>();
+
+        // Register PasswordOptions for PasswordPolicyService
+        builder.Services.AddSingleton(new PasswordOptions
+        {
+            RequireDigit = true,
+            RequireLowercase = true,
+            RequireNonAlphanumeric = true,
+            RequireUppercase = true,
+            RequiredLength = 12,
+            RequiredUniqueChars = 6
+        });
 
         // Register credential management services
         builder.Services.AddScoped<PasswordPolicyService>();
@@ -109,6 +127,7 @@ internal static class HostingExtensions
 
         // Add the user management service
         builder.Services.AddScoped<UserManagementService>();
+        builder.Services.AddScoped<IUserManagementService>(sp => sp.GetRequiredService<UserManagementService>());
 
         // Add seed data service
         builder.Services.AddScoped<SeedDataService>();
@@ -125,6 +144,14 @@ internal static class HostingExtensions
             app.UseDeveloperExceptionPage();
         }
 
+        // Enable request body buffering so API controllers can read the body
+        // even after middleware (e.g. anti-forgery) has consumed the stream
+        app.Use(async (context, next) =>
+        {
+            context.Request.EnableBuffering();
+            await next();
+        });
+
         InitializeDatabase(app);
         app.UseStaticFiles();
         app.UseRouting();
@@ -132,6 +159,7 @@ internal static class HostingExtensions
         app.UseIdentityServer();
 
         app.UseAuthorization();
+        app.MapControllers();
         app.MapRazorPages().RequireAuthorization();
 
         return app;

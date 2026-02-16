@@ -3,7 +3,7 @@ using Hmm.Idp.Pages.Admin.User;
 
 namespace Hmm.Idp.Services
 {
-    public class UserManagementService(ApplicationUserRepository userRepository)
+    public class UserManagementService(ApplicationUserRepository userRepository) : IUserManagementService
     {
         private readonly ApplicationUserRepository _userStore = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
 
@@ -25,7 +25,7 @@ namespace Hmm.Idp.Services
 
         public async Task<ApplicationUser> CreateUser(string userName, string password, string name = null, string email = null)
         {
-            return await _userStore.CreateUserAsync(userName, password, name, email);
+            return await _userStore.CreateUserAsync(userName, password, firstName: name, email: email);
         }
 
         public async Task<bool> UpdateUser(ApplicationUser user)
