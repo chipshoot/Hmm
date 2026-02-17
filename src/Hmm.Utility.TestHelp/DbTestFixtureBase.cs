@@ -1,7 +1,9 @@
 ﻿// Ignore Spelling: Dbs
 
+using AutoMapper;
 using Hmm.Core.Dal.EF;
 using Hmm.Core.Dal.EF.Repositories;
+using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
@@ -91,7 +93,8 @@ namespace Hmm.Utility.TestHelp
             DbContext = new HmmDataContext(optBuilder.Options);
 
             // ... init repositories exactly like you do today ...
-            LookupRepository = new EfEntityLookup(DbContext);
+            var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<HmmMappingProfile>());
+            LookupRepository = new EfEntityLookup(DbContext, mapperConfig.CreateMapper());
             var dateProvider = new DateTimeAdapter();
             AuthorRepository = new AuthorEfRepository(DbContext, LookupRepository, Logger);
             ContactRepository = new ContactEfRepository(DbContext, LookupRepository, Logger);

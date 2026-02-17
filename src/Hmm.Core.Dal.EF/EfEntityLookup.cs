@@ -1,6 +1,8 @@
 ﻿// Ignore Spelling: Ef
 
+using AutoMapper;
 using Hmm.Core.Map.DbEntity;
+using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.Dal.DataEntity;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Misc;
@@ -15,11 +17,14 @@ namespace Hmm.Core.Dal.EF
     public class EfEntityLookup : IEntityLookup
     {
         private readonly IHmmDataContext _dataContext;
+        private readonly IMapper _mapper;
 
-        public EfEntityLookup(IHmmDataContext dataContext)
+        public EfEntityLookup(IHmmDataContext dataContext, IMapper mapper)
         {
             ArgumentNullException.ThrowIfNull(dataContext);
+            ArgumentNullException.ThrowIfNull(mapper);
             _dataContext = dataContext;
+            _mapper = mapper;
         }
 
         public async Task<ProcessingResult<PageList<T>>> GetEntitiesAsync<T>(Expression<Func<T, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null)
@@ -74,6 +79,14 @@ namespace Hmm.Core.Dal.EF
                 {
                     entity = await _dataContext.Set<TagDao>().AsNoTracking().FirstOrDefaultAsync(t => t.Id == id) as T;
                 }
+                else if (typeof(T) == typeof(Author))
+                {
+                    var dao = await _dataContext.Set<AuthorDao>()
+                        .AsNoTracking()
+                        .Include(a => a.ContactInfo)
+                        .FirstOrDefaultAsync(a => a.Id == id);
+                    entity = dao != null ? _mapper.Map<Author>(dao) as T : null;
+                }
                 else
                 {
                     return ProcessingResult<T>.Fail($"{typeof(T).Name} is not supported", ErrorCategory.ValidationError);
@@ -118,6 +131,19 @@ namespace Hmm.Core.Dal.EF
             else if (typeof(T) == typeof(TagDao))
             {
                 entities = _dataContext.Set<TagDao>().AsNoTracking().Cast<T>();
+            }
+            else if (typeof(T) == typeof(NoteCatalog))
+            {
+                entities = _dataContext.Set<NoteCatalogDao>().AsNoTracking()
+                    .Select(dao => (T)(object)new NoteCatalog
+                    {
+                        Id = dao.Id,
+                        Name = dao.Name,
+                        Schema = dao.Schema,
+                        Type = (Hmm.Core.Map.DomainEntity.NoteContentFormatType)(int)dao.FormatType,
+                        Description = dao.Description,
+                        IsDefault = dao.IsDefault
+                    });
             }
             else
             {

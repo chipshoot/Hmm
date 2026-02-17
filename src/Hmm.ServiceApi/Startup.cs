@@ -174,6 +174,7 @@ namespace Hmm.ServiceApi
                 {
                     cfg.AddProfile<ApiMappingProfile>();
                     cfg.AddProfile<HmmMappingProfile>();
+                    cfg.AddProfile<AutomobileMappingProfile>();
                 })
                 .AddSwaggerGen(options =>
                 {

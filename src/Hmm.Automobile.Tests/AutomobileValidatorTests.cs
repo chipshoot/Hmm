@@ -203,7 +203,7 @@ namespace Hmm.Automobile.Tests
         [Fact]
         public async Task AutoMustHaveValid_Color()
         {
-            // Arrange
+            // Arrange - Color is now optional, empty should pass validation
             var auto = new AutomobileInfo
             {
                 AuthorId = _authorId,
@@ -213,14 +213,14 @@ namespace Hmm.Automobile.Tests
                 Year = 2018,
                 VIN = "1HGBH41JXMN109186",
                 Plate = "BCTT208",
-                Color = "" // Invalid - empty
+                Color = "" // Optional - empty is valid
             };
 
             // Act
             var result = await _validator.ValidateEntityAsync(auto);
 
             // Assert
-            Assert.False(result.Success);
+            Assert.True(result.Success);
         }
 
         private void SetupTestEnv()

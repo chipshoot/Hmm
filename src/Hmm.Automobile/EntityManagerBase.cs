@@ -185,7 +185,13 @@ namespace Hmm.Automobile
                 return ProcessingResult<T>.Invalid("Entity cannot be null");
             }
 
-            entity.AuthorId = DefaultAuthor.Id;
+            var authorResult = await AuthorProvider.GetAuthorAsync();
+            if (!authorResult.Success)
+            {
+                return ProcessingResult<T>.Fail(authorResult.ErrorMessage, authorResult.ErrorType);
+            }
+
+            entity.AuthorId = authorResult.Value.Id;
 
             var validationResult = await Validator.ValidateEntityAsync(entity);
             if (!validationResult.Success)
@@ -200,7 +206,7 @@ namespace Hmm.Automobile
             }
 
             var note = noteResult.Value;
-            note.Author = DefaultAuthor;
+            note.Author = authorResult.Value;
 
             var createdNoteResult = await NoteManager.CreateAsync(note, commitChanges);
             if (!createdNoteResult.Success)
@@ -253,6 +259,12 @@ namespace Hmm.Automobile
             var existing = existingResult.Value;
             applyUpdates(existing, entity);
 
+            var authorResult = await AuthorProvider.GetAuthorAsync();
+            if (!authorResult.Success)
+            {
+                return ProcessingResult<T>.Fail(authorResult.ErrorMessage, authorResult.ErrorType);
+            }
+
             var noteResult = await NoteSerializer.GetNote(existing);
             if (!noteResult.Success)
             {
@@ -260,7 +272,7 @@ namespace Hmm.Automobile
             }
 
             var note = noteResult.Value;
-            note.Author = DefaultAuthor;
+            note.Author = authorResult.Value;
 
             var updatedNoteResult = await NoteManager.UpdateAsync(note, commitChanges);
             if (!updatedNoteResult.Success)

@@ -1,3 +1,4 @@
+using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
@@ -131,6 +132,7 @@ namespace Hmm.Core.Dal.EF.Tests
             services.AddScoped<IRepository<AuthorDao>, AuthorEfRepository>();
             services.AddScoped<IRepository<NoteCatalogDao>, NoteCatalogEfRepository>();
             services.AddScoped<IEntityLookup, EfEntityLookup>();
+            services.AddAutoMapper(cfg => cfg.AddProfile<HmmMappingProfile>());
             services.AddSingleton<IDateTimeProvider, DateTimeAdapter>();
             services.AddSingleton<ILogger<NoteEfRepository>>(new Mock<ILogger<NoteEfRepository>>().Object);
             services.AddSingleton<ILogger<AuthorEfRepository>>(new Mock<ILogger<AuthorEfRepository>>().Object);
