@@ -348,6 +348,80 @@ namespace Hmm.Automobile.Tests
             Assert.Equal("New Location", result.Value.Location);
         }
 
+        [Fact]
+        public async Task UpdateAsync_UpdatesPricingProperties()
+        {
+            // Arrange
+            var logs = await SetupEnvironmentAsync();
+            var log = logs.First();
+
+            // Act
+            log.TotalPrice = new Money(99.99m, CurrencyCodeType.Cad);
+            log.UnitPrice = new Money(2.10m, CurrencyCodeType.Cad);
+            var result = await _manager.UpdateAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(99.99m, result.Value.TotalPrice.Amount);
+            Assert.Equal(2.10m, result.Value.UnitPrice.Amount);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_UpdatesFuelAndStationProperties()
+        {
+            // Arrange
+            var logs = await SetupEnvironmentAsync();
+            var log = logs.First();
+
+            // Act
+            log.FuelGrade = FuelGrade.Premium;
+            log.Fuel = Volume.FromLiter(60);
+            log.IsFullTank = false;
+            log.Station = new GasStation { Name = "New Station" };
+            var result = await _manager.UpdateAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(FuelGrade.Premium, result.Value.FuelGrade);
+            Assert.False(result.Value.IsFullTank);
+            Assert.Equal("New Station", result.Value.Station.Name);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_UpdatesOdometerAndDistance()
+        {
+            // Arrange
+            var logs = await SetupEnvironmentAsync();
+            var log = logs.First();
+
+            // Act
+            log.Odometer = Dimension.FromKilometer(300);
+            log.Distance = Dimension.FromKilometer(150);
+            var result = await _manager.UpdateAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(300, result.Value.Odometer.TotalKilometre);
+            Assert.Equal(150, result.Value.Distance.TotalKilometre);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_PreservesEntityId()
+        {
+            // Arrange
+            var logs = await SetupEnvironmentAsync();
+            var log = logs.First();
+            var originalId = log.Id;
+
+            // Act
+            log.Comment = "Changed";
+            var result = await _manager.UpdateAsync(log);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(originalId, result.Value.Id);
+        }
+
         #endregion
 
         #region GetEntitiesAsync Tests

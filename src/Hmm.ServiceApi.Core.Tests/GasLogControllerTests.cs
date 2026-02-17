@@ -402,6 +402,80 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
+        public async Task HistoryLog_ReturnsBadRequest_WhenCreationFails()
+        {
+            // Arrange
+            const int autoId = 1;
+            var apiGasLog = new ApiGasLogForCreation
+            {
+                AutomobileId = autoId,
+                Date = DateTime.UtcNow.AddDays(-30),
+                Odometer = 49000,
+                Fuel = 35,
+                FuelGrade = "Regular",
+                TotalPrice = 55,
+                UnitPrice = 1.57m
+            };
+
+            _mockGasLogManager
+                .Setup(m => m.LogHistoryAsync(It.IsAny<GasLog>()))
+                .ReturnsAsync(ProcessingResult<GasLog>.Invalid("Validation failed"));
+
+            // Act
+            var result = await _controller.HistoryLog(autoId, apiGasLog);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task HistoryLog_ReturnsBadRequest_WhenAutomobileNotFound()
+        {
+            // Arrange
+            const int autoId = 999;
+            var apiGasLog = new ApiGasLogForCreation
+            {
+                Date = DateTime.UtcNow.AddDays(-30),
+                FuelGrade = "Regular"
+            };
+
+            _mockAutoManager
+                .Setup(m => m.GetEntityByIdAsync(autoId))
+                .ReturnsAsync(ProcessingResult<AutomobileInfo>.NotFound("Automobile not found"));
+
+            // Act
+            var result = await _controller.HistoryLog(autoId, apiGasLog);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task HistoryLog_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            const int autoId = 1;
+            var apiGasLog = new ApiGasLogForCreation
+            {
+                Date = DateTime.UtcNow.AddDays(-30),
+                FuelGrade = "Regular"
+            };
+
+            _mockGasLogManager
+                .Setup(m => m.LogHistoryAsync(It.IsAny<GasLog>()))
+                .ThrowsAsync(new Exception("Unexpected error"));
+
+            // Act
+            var result = await _controller.HistoryLog(autoId, apiGasLog);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        }
+
+        [Fact]
         public async Task HistoryLog_ReturnsBadRequest_WhenApiGasLogIsNull()
         {
             // Arrange

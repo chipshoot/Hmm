@@ -184,6 +184,62 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
+        public async Task CreateAutomobile_WithNullApiCar_ReturnsFailure_WhenManagerRejectsNull()
+        {
+            // Arrange
+            // CreateAutomobile maps null to default AutomobileInfo which fails validation
+            _mockAutomobileManager
+                .Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .ReturnsAsync(ProcessingResult<AutomobileInfo>.Invalid("Validation failed"));
+
+            // Act
+            var result = await _controller.CreateAutomobile(null);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task CreateAutomobile_MapsRequiredDtoFields()
+        {
+            // Arrange
+            AutomobileInfo capturedEntity = null;
+            var apiCar = new ApiAutomobileForCreate
+            {
+                Maker = "Subaru",
+                Brand = "Outback",
+                Model = "Premium",
+                Year = 2024,
+                Plate = "TEST123",
+                VIN = "1HGBH41JXMN109186",
+                EngineType = "Gasoline",
+                FuelType = "Regular",
+                Color = "Blue",
+                MeterReading = 15000
+            };
+
+            _mockAutomobileManager
+                .Setup(m => m.CreateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .Callback<AutomobileInfo, bool>((entity, _) => capturedEntity = entity)
+                .ReturnsAsync((AutomobileInfo entity, bool _) =>
+                    ProcessingResult<AutomobileInfo>.Ok(entity));
+
+            // Act
+            var result = await _controller.CreateAutomobile(apiCar);
+
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(capturedEntity);
+            Assert.Equal("Subaru", capturedEntity.Maker);
+            Assert.Equal("Outback", capturedEntity.Brand);
+            Assert.Equal("Premium", capturedEntity.Model);
+            Assert.Equal(2024, capturedEntity.Year);
+            Assert.Equal("TEST123", capturedEntity.Plate);
+            Assert.Equal("1HGBH41JXMN109186", capturedEntity.VIN);
+        }
+
+        [Fact]
         public async Task CreateAutomobile_ReturnsBadRequest_WhenCreationFails()
         {
             // Arrange
@@ -228,6 +284,37 @@ namespace Hmm.ServiceApi.Core.Tests
 
             // Assert
             Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateAutomobile_MapsUpdateDtoToExistingEntity()
+        {
+            // Arrange
+            const int autoId = 1;
+            AutomobileInfo capturedEntity = null;
+            var apiCar = new ApiAutomobileForUpdate
+            {
+                Color = "Silver",
+                Plate = "UPD789",
+                MeterReading = 75000,
+                Notes = "Service completed"
+            };
+
+            _mockAutomobileManager
+                .Setup(m => m.UpdateAsync(It.IsAny<AutomobileInfo>(), It.IsAny<bool>()))
+                .Callback<AutomobileInfo, bool>((entity, _) => capturedEntity = entity)
+                .ReturnsAsync(ProcessingResult<AutomobileInfo>.Ok(_automobiles[0]));
+
+            // Act
+            var result = await _controller.UpdateAutomobile(autoId, apiCar);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            Assert.NotNull(capturedEntity);
+            Assert.Equal(autoId, capturedEntity.Id);
+            // Verify the DTO properties were mapped onto the existing entity
+            Assert.Equal("Silver", capturedEntity.Color);
+            Assert.Equal("UPD789", capturedEntity.Plate);
         }
 
         [Fact]

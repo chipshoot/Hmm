@@ -23,7 +23,7 @@ namespace Hmm.Core.Tests.ValidatorTests
                 cfg.AddProfile<HmmMappingProfile>();
             });
             var mapper = config.CreateMapper();
-            var catalogManager = new NoteCatalogManager(CatalogRepository, mapper, LookupRepository, Mock.Of<IHmmValidator<NoteCatalog>>());
+            var catalogManager = new NoteCatalogManager(CatalogRepository, UnitOfWork, mapper, LookupRepository, Mock.Of<IHmmValidator<NoteCatalog>>());
             _validator = new NoteCatalogValidator(CatalogRepository);
         }
 

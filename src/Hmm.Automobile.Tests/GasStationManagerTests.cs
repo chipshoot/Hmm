@@ -80,6 +80,41 @@ namespace Hmm.Automobile.Tests
             Assert.False(result.Success);
         }
 
+        [Fact]
+        public async Task CreateAsync_WithMinimalFields_OnlyNameRequired()
+        {
+            // Arrange - only Name is required
+            var station = new GasStation
+            {
+                Name = "Minimal Station"
+            };
+
+            // Act
+            var result = await _manager.CreateAsync(station);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal("Minimal Station", result.Value.Name);
+        }
+
+        [Fact]
+        public async Task CreateAsync_SetsAuthorId()
+        {
+            // Arrange
+            var station = new GasStation
+            {
+                Name = "Author Test Station"
+            };
+
+            // Act
+            var result = await _manager.CreateAsync(station);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(TestDefaultAuthor.Id, result.Value.AuthorId);
+        }
+
         #endregion
 
         #region UpdateAsync Tests
@@ -158,6 +193,63 @@ namespace Hmm.Automobile.Tests
             Assert.Equal("12345", updated.ZipCode);
             Assert.Equal("Updated Description", updated.Description);
             Assert.False(updated.IsActive);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ActiveToInactive_UpdatesIsActive()
+        {
+            // Arrange
+            var stations = await SetupEnvironmentAsync();
+            var station = stations.First();
+            Assert.True(station.IsActive);
+
+            // Act
+            station.IsActive = false;
+            var result = await _manager.UpdateAsync(station);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.False(result.Value.IsActive);
+
+            // Verify persisted via GetById
+            var getResult = await _manager.GetEntityByIdAsync(station.Id);
+            Assert.True(getResult.Success);
+            Assert.False(getResult.Value.IsActive);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_InactiveToActive_UpdatesIsActive()
+        {
+            // Arrange
+            var stations = await SetupEnvironmentAsync();
+            var station = stations.First();
+            station.IsActive = false;
+            await _manager.UpdateAsync(station);
+
+            // Act
+            station.IsActive = true;
+            var result = await _manager.UpdateAsync(station);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.True(result.Value.IsActive);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_PreservesEntityId()
+        {
+            // Arrange
+            var stations = await SetupEnvironmentAsync();
+            var station = stations.First();
+            var originalId = station.Id;
+
+            // Act
+            station.Name = "Renamed Station";
+            var result = await _manager.UpdateAsync(station);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(originalId, result.Value.Id);
         }
 
         #endregion

@@ -16,19 +16,22 @@ namespace Hmm.Core.DefaultManager
     public class NoteCatalogManager : INoteCatalogManager
     {
         private readonly IRepository<NoteCatalogDao> _catalogRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IHmmValidator<NoteCatalog> _validator;
         private readonly IEntityLookup _lookup;
 
-        public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IMapper mapper, IEntityLookup lookup, IHmmValidator<NoteCatalog> validator)
+        public NoteCatalogManager(IRepository<NoteCatalogDao> dataSource, IUnitOfWork unitOfWork, IMapper mapper, IEntityLookup lookup, IHmmValidator<NoteCatalog> validator)
         {
             ArgumentNullException.ThrowIfNull(dataSource);
+            ArgumentNullException.ThrowIfNull(unitOfWork);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(lookup);
             ArgumentNullException.ThrowIfNull(validator);
 
             _mapper = mapper;
             _catalogRepository = dataSource;
+            _unitOfWork = unitOfWork;
             _validator = validator;
             _lookup = lookup;
         }
@@ -92,6 +95,8 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<NoteCatalog>.Fail(addedCatalogDaoResult.ErrorMessage, addedCatalogDaoResult.ErrorType);
                 }
 
+                await _unitOfWork.CommitAsync();
+
                 var createdCatalog = _mapper.Map<NoteCatalog>(addedCatalogDaoResult.Value);
                 return ProcessingResult<NoteCatalog>.Ok(createdCatalog);
             }
@@ -122,6 +127,8 @@ namespace Hmm.Core.DefaultManager
                 {
                     return ProcessingResult<NoteCatalog>.Fail(updatedCatalogDaoResult.ErrorMessage, updatedCatalogDaoResult.ErrorType);
                 }
+
+                await _unitOfWork.CommitAsync();
 
                 return _mapper.MapWithNullCheck<NoteCatalogDao, NoteCatalog>(updatedCatalogDaoResult.Value);
             }

@@ -151,6 +151,23 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.IsType<NotFoundResult>(result);
         }
 
+        [Fact]
+        public async Task GetActive_ReturnsBadRequest_WhenManagerFails()
+        {
+            // Arrange
+            _mockStationManager
+                .Setup(m => m.GetActiveStationsAsync(It.IsAny<ResourceCollectionParameters>()))
+                .ReturnsAsync(ProcessingResult<PageList<GasStation>>.Invalid("Database error"));
+
+            // Act
+            var result = await _controller.GetActive(new ResourceCollectionParameters());
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var response = Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+            Assert.Contains("Database error", response.Errors);
+        }
+
         #endregion
 
         #region Get station by Id
@@ -509,6 +526,26 @@ namespace Hmm.ServiceApi.Core.Tests
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.IsType<ApiBadRequestResponse>(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Patch_ReturnsInternalServerError_OnException()
+        {
+            // Arrange
+            const int stationId = 1;
+            var patchDoc = new JsonPatchDocument<ApiGasStationForUpdate>();
+            patchDoc.Replace(s => s.Description, "Test");
+
+            _mockStationManager
+                .Setup(m => m.UpdateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
+                .ThrowsAsync(new Exception("Unexpected error"));
+
+            // Act
+            var result = await _controller.Patch(stationId, patchDoc);
+
+            // Assert
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
         }
 
         #endregion

@@ -61,6 +61,20 @@ public class ExpressionMapper<TSource, TTarget> : ExpressionVisitor
         return Expression.Lambda<Func<TTarget, bool>>(body, parameter);
     }
 
+    protected override Expression VisitInvocation(InvocationExpression node)
+    {
+        // Handle Expression.Invoke used by PredicateBuilder.And/Or.
+        // When the invoked expression is a lambda, visit its body directly.
+        // The inner lambda's parameters (of type TSource) will be remapped
+        // to the target parameter by VisitParameter, just like the outer ones.
+        if (node.Expression is LambdaExpression innerLambda)
+        {
+            return Visit(innerLambda.Body);
+        }
+
+        return base.VisitInvocation(node);
+    }
+
     protected override Expression VisitParameter(ParameterExpression node)
     {
         // Replace source parameter with target parameter
@@ -160,4 +174,5 @@ public class ExpressionMapper<TSource, TTarget> : ExpressionVisitor
             return field;
         });
     }
+
 }

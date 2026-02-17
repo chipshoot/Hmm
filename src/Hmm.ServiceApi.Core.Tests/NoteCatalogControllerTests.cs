@@ -28,7 +28,7 @@ namespace Hmm.ServiceApi.Core.Tests
             _mockValidator = new Mock<IHmmValidator<NoteCatalog>>();
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<NoteCatalog>()))
                 .ReturnsAsync(ProcessingResult<NoteCatalog>.Ok(It.IsAny<NoteCatalog>()));
-            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, _mockValidator.Object);
+            _catalogManager = new NoteCatalogManager(CatalogRepository, UnitOfWork, Mapper, LookupRepository, _mockValidator.Object);
             _controller = new NoteCatalogController(_catalogManager, ApiMapper, new Mock<ILogger<NoteCatalogController>>().Object);
             _controller.ControllerContext = new ControllerContext
             {

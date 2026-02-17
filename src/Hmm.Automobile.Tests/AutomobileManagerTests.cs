@@ -133,6 +133,120 @@ namespace Hmm.Automobile.Tests
             Assert.False(result.Success);
         }
 
+        [Fact]
+        public async Task CreateAsync_SetsAuthorId()
+        {
+            // Arrange
+            var car = new AutomobileInfo
+            {
+                Brand = "Outback",
+                Maker = "Subaru",
+                MeterReading = 100,
+                Year = 2018,
+                VIN = "1HGBH41JXMN109186",
+                Color = "Blue",
+                Plate = "BCTT208"
+            };
+
+            // Act
+            var result = await _manager.CreateAsync(car);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(TestDefaultAuthor.Id, result.Value.AuthorId);
+        }
+
+        #endregion
+
+        #region UpdateAsync Tests - Property Coverage
+
+        [Fact]
+        public async Task UpdateAsync_CopiesBrandMakerMeterReadingYearColorPlate()
+        {
+            // Arrange
+            var cars = await SetupEnvironmentAsync();
+            var car = cars.First();
+
+            // Act
+            car.Brand = "Forester";
+            car.Maker = "Toyota";
+            car.MeterReading = 5000;
+            car.Year = 2024;
+            car.Color = "Red";
+            car.Plate = "NEW123";
+            var result = await _manager.UpdateAsync(car);
+
+            // Assert
+            Assert.True(result.Success);
+            var updated = result.Value;
+            Assert.Equal("Forester", updated.Brand);
+            Assert.Equal("Toyota", updated.Maker);
+            Assert.Equal(5000, updated.MeterReading);
+            Assert.Equal(2024, updated.Year);
+            Assert.Equal("Red", updated.Color);
+            Assert.Equal("NEW123", updated.Plate);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_PreservesEntityId()
+        {
+            // Arrange
+            var cars = await SetupEnvironmentAsync();
+            var car = cars.First();
+            var originalId = car.Id;
+
+            // Act
+            car.Brand = "Updated";
+            var result = await _manager.UpdateAsync(car);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(originalId, result.Value.Id);
+        }
+
+        #endregion
+
+        #region Multiple Entities Tests
+
+        [Fact]
+        public async Task CreateAsync_MultipleEntities_AllRetrievable()
+        {
+            // Arrange
+            var car1 = new AutomobileInfo
+            {
+                Brand = "Outback",
+                Maker = "Subaru",
+                MeterReading = 100,
+                Year = 2018,
+                VIN = "1HGBH41JXMN109186",
+                Color = "Blue",
+                Plate = "BCTT208"
+            };
+            var car2 = new AutomobileInfo
+            {
+                Brand = "Civic",
+                Maker = "Honda",
+                MeterReading = 50000,
+                Year = 2020,
+                VIN = "2HGBH41JXMN109187",
+                Color = "Red",
+                Plate = "XYZ789"
+            };
+
+            // Act
+            var result1 = await _manager.CreateAsync(car1);
+            var result2 = await _manager.CreateAsync(car2);
+
+            // Assert
+            Assert.True(result1.Success);
+            Assert.True(result2.Success);
+            Assert.NotEqual(result1.Value.Id, result2.Value.Id);
+
+            var allResult = await _manager.GetEntitiesAsync(new ResourceCollectionParameters());
+            Assert.True(allResult.Success);
+            Assert.Equal(2, allResult.Value.Count());
+        }
+
         #endregion
 
         #region GetEntitiesAsync Tests

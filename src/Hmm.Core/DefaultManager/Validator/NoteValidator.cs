@@ -53,7 +53,7 @@ namespace Hmm.Core.DefaultManager.Validator
                 return true;
             }
 
-            return savedNoteResult.Value.Id == authorId;
+            return savedNoteResult.Value.Author?.Id == authorId;
         }
 
         private async Task<bool> NoteCatalogExists(NoteCatalog catalog, CancellationToken cancellationToken)

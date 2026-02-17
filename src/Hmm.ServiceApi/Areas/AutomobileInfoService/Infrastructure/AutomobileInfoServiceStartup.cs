@@ -64,7 +64,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     .AddScoped<IAutoEntityManager<AutomobileInfo>, AutomobileManager>()
                     .AddScoped<IAutoEntityManager<GasDiscount>, DiscountManager>()
                     .AddScoped<IGasLogManager, GasLogManager>()
-                    .AddScoped<IAutoEntityManager<GasStation>, GasStationManager>()
+                    .AddScoped<GasStationManager>()
+                    .AddScoped<IAutoEntityManager<GasStation>>(sp => sp.GetRequiredService<GasStationManager>())
 
                     // Startup filter
                     .AddTransient<IStartupFilter, AutomobileAppStartupFilter>();

@@ -197,6 +197,8 @@ namespace Hmm.Core.Dal.EF.Repositories
                 entity.Catalog = catalogResult.Value;
 
                 entity.LastModifiedDate = _dateTimeProvider.UtcNow;
+                entity.CreateDate = existingNote.CreateDate;
+                entity.Version = existingNote.Version;
                 _dataContext.Set<HmmNoteDao>().Update(entity);
 
                 var result = ProcessingResult<HmmNoteDao>.Ok(entity, $"Note '{entity.Subject}' updated in context (pending commit)");

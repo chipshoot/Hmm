@@ -22,8 +22,8 @@ namespace Hmm.Core.Tests
             _mockValidator = new Mock<IHmmValidator<NoteCatalog>>();
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<NoteCatalog>()))
                 .ReturnsAsync(ProcessingResult<NoteCatalog>.Ok(It.IsAny<NoteCatalog>()));
-            _catalogManager = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, _mockValidator.Object);
-            _catalogManagerWithRealValidator = new NoteCatalogManager(CatalogRepository, Mapper, LookupRepository, new NoteCatalogValidator(CatalogRepository));
+            _catalogManager = new NoteCatalogManager(CatalogRepository, UnitOfWork, Mapper, LookupRepository, _mockValidator.Object);
+            _catalogManagerWithRealValidator = new NoteCatalogManager(CatalogRepository, UnitOfWork, Mapper, LookupRepository, new NoteCatalogValidator(CatalogRepository));
         }
 
         [Fact]
