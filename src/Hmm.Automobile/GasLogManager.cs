@@ -178,21 +178,32 @@ namespace Hmm.Automobile
             var note = noteResult.Value;
             note.Author = DefaultAuthor;
 
-            // Create gas log note WITHOUT committing
-            var createdNoteResult = await NoteManager.CreateAsync(note, commitChanges: false);
+            // Create gas log note - commit both auto update and note creation together
+            // When UnitOfWork is available, both operations are committed atomically
+            var createdNoteResult = await NoteManager.CreateAsync(note, commitChanges: commitChanges && UnitOfWork == null);
             if (!createdNoteResult.Success)
             {
-                // No commit has happened yet, so no rollback needed
                 return ProcessingResult<GasLog>.Fail(createdNoteResult.ErrorMessage, createdNoteResult.ErrorType);
             }
 
-            // Both operations succeeded - now commit them together atomically
+            // Commit both the automobile meter update and gas log note creation together
             if (commitChanges && UnitOfWork != null)
             {
                 await UnitOfWork.CommitAsync();
             }
 
-            var result = await GetEntityByIdAsync(createdNoteResult.Value.Id);
+            // After commit, retrieve the created gas log by querying with its subject
+            // (createdNoteResult.Value.Id may be 0 if commitChanges was deferred)
+            var subject = GasLog.GetNoteSubject(entity.AutomobileId);
+            var notesResult = await GetNotesAsync(entity, n => n.Subject == subject);
+            if (!notesResult.Success || notesResult.Value == null || notesResult.Value.Count == 0)
+            {
+                return ProcessingResult<GasLog>.Fail("Gas log was created but could not be retrieved");
+            }
+
+            // Get the most recently created note (last one)
+            var latestNote = notesResult.Value[notesResult.Value.Count - 1];
+            var result = await NoteSerializer.GetEntity(latestNote);
 
             // Add warning if there was a non-critical validation message
             if (!string.IsNullOrEmpty(validationError))

@@ -229,16 +229,8 @@ namespace Hmm.ServiceApi
         {
             app.UseExceptionHandler(_ => { });
 
-            // SQLite: auto-create database and enable WAL mode for cloud sync friendliness
-            using (var scope = app.ApplicationServices.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<HmmDataContext>();
-                if (dbContext.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    dbContext.Database.EnsureCreated();
-                    dbContext.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
-                }
-            }
+            // Note: SQLite EnsureCreated + WAL mode is handled in AutomobileAppStartupFilter
+            // which runs before Configure(), ensuring tables exist before catalog seeding.
 
             if (env.IsDevelopment() || env.EnvironmentName == "Docker")
             {

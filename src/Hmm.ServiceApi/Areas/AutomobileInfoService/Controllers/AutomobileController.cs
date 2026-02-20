@@ -225,12 +225,31 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         /// <returns>No content on success.</returns>
         [HttpDelete("{id:int}", Name = "DeleteAutomobile")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status501NotImplemented)]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            throw new NotImplementedException();
+            var getResult = await _automobileManager.GetEntityByIdAsync(id);
+            if (!getResult.Success)
+            {
+                if (getResult.IsNotFound)
+                {
+                    return NotFound();
+                }
+                return BadRequest(new ApiBadRequestResponse(getResult.ErrorMessage));
+            }
+
+            var car = getResult.Value;
+            car.IsActive = false;
+
+            var updateResult = await _automobileManager.UpdateAsync(car);
+            if (!updateResult.Success)
+            {
+                return BadRequest(new ApiBadRequestResponse(updateResult.ErrorMessage));
+            }
+
+            return NoContent();
         }
     }
 }

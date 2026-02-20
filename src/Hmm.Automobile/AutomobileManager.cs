@@ -45,6 +45,7 @@ namespace Hmm.Automobile
                     existing.Year = updated.Year;
                     existing.Color = updated.Color;
                     existing.Plate = updated.Plate;
+                    existing.IsActive = updated.IsActive;
                 },
                 commitChanges);
         }

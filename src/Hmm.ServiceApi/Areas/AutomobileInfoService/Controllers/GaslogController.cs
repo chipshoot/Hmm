@@ -35,6 +35,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
         private readonly IGasLogManager _gasLogManager;
         private readonly IAutoEntityManager<AutomobileInfo> _autoManager;
         private readonly IAutoEntityManager<GasDiscount> _discountManager;
+        private readonly IAutoEntityManager<GasStation> _stationManager;
         private readonly IMapper _mapper;
         private readonly IPropertyMappingService _propertyMappingService;
         private readonly IPropertyCheckService _propertyCheckService;
@@ -45,6 +46,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             IMapper mapper,
             IAutoEntityManager<AutomobileInfo> autoManager,
             IAutoEntityManager<GasDiscount> discountManager,
+            IAutoEntityManager<GasStation> stationManager,
             IPropertyMappingService propertyMappingService,
             IPropertyCheckService propertyCheckService,
             ILogger<GasLogController> logger)
@@ -53,6 +55,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(autoManager);
             ArgumentNullException.ThrowIfNull(discountManager);
+            ArgumentNullException.ThrowIfNull(stationManager);
             ArgumentNullException.ThrowIfNull(propertyMappingService);
             ArgumentNullException.ThrowIfNull(propertyCheckService);
             ArgumentNullException.ThrowIfNull(logger);
@@ -61,6 +64,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             _mapper = mapper;
             _autoManager = autoManager;
             _discountManager = discountManager;
+            _stationManager = stationManager;
             _propertyMappingService = propertyMappingService;
             _propertyCheckService = propertyCheckService;
             _logger = logger;
@@ -195,6 +199,15 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
                 gasLog.AutomobileId = autoId;
 
+                // Resolve gas station from StationId
+                var stationResult = await GetGasStationAsync(apiGasLog.StationId);
+                if (!stationResult.Success)
+                {
+                    return BadRequest(new ApiBadRequestResponse(stationResult.ErrorMessage));
+                }
+
+                gasLog.Station = stationResult.Value;
+
                 // Get discounts for gas log
                 var discountsResult = await GetGasDiscountsAsync(apiGasLog.DiscountInfos);
                 if (!discountsResult.Success)
@@ -253,6 +266,15 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 }
 
                 gasLog.AutomobileId = autoId;
+
+                // Resolve gas station from StationId
+                var stationResult = await GetGasStationAsync(apiGasLog.StationId);
+                if (!stationResult.Success)
+                {
+                    return BadRequest(new ApiBadRequestResponse(stationResult.ErrorMessage));
+                }
+
+                gasLog.Station = stationResult.Value;
 
                 // Get discounts for gas log
                 var discountsResult = await GetGasDiscountsAsync(apiGasLog.DiscountInfos);
@@ -404,6 +426,22 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
 
             var updateResult = await _gasLogManager.UpdateAsync(gasLog);
             return updateResult.Success ? NoContent() : StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+        private async Task<(bool Success, GasStation Value, string ErrorMessage)> GetGasStationAsync(int? stationId)
+        {
+            if (!stationId.HasValue)
+            {
+                return (false, null, "Gas station is required");
+            }
+
+            var stationResult = await _stationManager.GetEntityByIdAsync(stationId.Value);
+            if (!stationResult.Success)
+            {
+                return (false, null, $"Cannot find gas station with id {stationId.Value} from data source");
+            }
+
+            return (true, stationResult.Value, null);
         }
 
         private async Task<(bool Success, List<GasDiscountInfo> Value, string ErrorMessage)> GetGasDiscountsAsync(

@@ -23,6 +23,7 @@ namespace Hmm.ServiceApi.Core.Tests
         private readonly Mock<IGasLogManager> _mockGasLogManager;
         private readonly Mock<IAutoEntityManager<AutomobileInfo>> _mockAutoManager;
         private readonly Mock<IAutoEntityManager<GasDiscount>> _mockDiscountManager;
+        private readonly Mock<IAutoEntityManager<GasStation>> _mockStationManager;
         private readonly Mock<IPropertyMappingService> _mockPropertyMappingService;
         private readonly Mock<IPropertyCheckService> _mockPropertyCheckService;
         private readonly GasLogController _controller;
@@ -35,6 +36,7 @@ namespace Hmm.ServiceApi.Core.Tests
             _mockGasLogManager = new Mock<IGasLogManager>();
             _mockAutoManager = new Mock<IAutoEntityManager<AutomobileInfo>>();
             _mockDiscountManager = new Mock<IAutoEntityManager<GasDiscount>>();
+            _mockStationManager = new Mock<IAutoEntityManager<GasStation>>();
             _mockPropertyMappingService = new Mock<IPropertyMappingService>();
             _mockPropertyCheckService = new Mock<IPropertyCheckService>();
 
@@ -53,6 +55,7 @@ namespace Hmm.ServiceApi.Core.Tests
                 _mapper,
                 _mockAutoManager.Object,
                 _mockDiscountManager.Object,
+                _mockStationManager.Object,
                 _mockPropertyMappingService.Object,
                 _mockPropertyCheckService.Object,
                 new Mock<ILogger<GasLogController>>().Object);
@@ -243,7 +246,8 @@ namespace Hmm.ServiceApi.Core.Tests
                 Fuel = 40,
                 FuelGrade = "Regular",
                 TotalPrice = 60,
-                UnitPrice = 1.5m
+                UnitPrice = 1.5m,
+                StationId = 1
             };
 
             var createdGasLog = new GasLog
@@ -317,7 +321,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiGasLog = new ApiGasLogForCreation
             {
                 Date = DateTime.UtcNow,
-                FuelGrade = "Regular"
+                FuelGrade = "Regular",
+                StationId = 1
             };
 
             _mockGasLogManager
@@ -340,7 +345,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiGasLog = new ApiGasLogForCreation
             {
                 Date = DateTime.UtcNow,
-                FuelGrade = "Regular"
+                FuelGrade = "Regular",
+                StationId = 1
             };
 
             _mockGasLogManager
@@ -373,7 +379,8 @@ namespace Hmm.ServiceApi.Core.Tests
                 Fuel = 35,
                 FuelGrade = "Regular",
                 TotalPrice = 55,
-                UnitPrice = 1.57m
+                UnitPrice = 1.57m,
+                StationId = 1
             };
 
             var createdGasLog = new GasLog
@@ -414,7 +421,8 @@ namespace Hmm.ServiceApi.Core.Tests
                 Fuel = 35,
                 FuelGrade = "Regular",
                 TotalPrice = 55,
-                UnitPrice = 1.57m
+                UnitPrice = 1.57m,
+                StationId = 1
             };
 
             _mockGasLogManager
@@ -460,7 +468,8 @@ namespace Hmm.ServiceApi.Core.Tests
             var apiGasLog = new ApiGasLogForCreation
             {
                 Date = DateTime.UtcNow.AddDays(-30),
-                FuelGrade = "Regular"
+                FuelGrade = "Regular",
+                StationId = 1
             };
 
             _mockGasLogManager
@@ -594,6 +603,7 @@ namespace Hmm.ServiceApi.Core.Tests
                 mockMapper.Object,
                 _mockAutoManager.Object,
                 _mockDiscountManager.Object,
+                _mockStationManager.Object,
                 _mockPropertyMappingService.Object,
                 _mockPropertyCheckService.Object,
                 new Mock<ILogger<GasLogController>>().Object)
@@ -802,6 +812,12 @@ namespace Hmm.ServiceApi.Core.Tests
                         ? ProcessingResult<AutomobileInfo>.Ok(auto)
                         : ProcessingResult<AutomobileInfo>.NotFound($"Automobile {id} not found");
                 });
+
+            // Setup gas station manager
+            _mockStationManager
+                .Setup(m => m.GetEntityByIdAsync(It.IsAny<int>()))
+                .ReturnsAsync((int id) => ProcessingResult<GasStation>.Ok(
+                    new GasStation { Id = id, Name = $"Test Station {id}", IsActive = true }));
 
             // Setup gas log manager
             _mockGasLogManager

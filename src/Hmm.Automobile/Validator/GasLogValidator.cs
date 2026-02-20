@@ -24,7 +24,7 @@ namespace Hmm.Automobile.Validator
             RuleFor(l => l.Fuel).Must(HasValidVolume).WithMessage("Need has valid gas volume");
             RuleFor(l => l.UnitPrice).Must(HasValidMoney).WithMessage("Need has valid Price");
             RuleFor(l => l.Station).NotEmpty().WithMessage("Need has gas station");
-            RuleFor(l => l.Station.Name).Length(1, 1000).WithMessage("Need has gas name");
+            RuleFor(l => l.Station.Name).Length(1, 1000).WithMessage("Need has gas name").When(l => l.Station != null);
             RuleFor(l => l.CreateDate).Must(HasValidEarlyDate).WithMessage("Create date should not earlier then today");
             RuleForEach(l => l.Discounts).SetValidator(new GasDiscountInfoValidator(lookupRepo)).WithMessage("All valid GasDiscountInfo is required");
         }
