@@ -68,12 +68,8 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
                 return BadRequest(new ApiBadRequestResponse(result.ErrorMessage));
             }
 
-            if (result.Value == null || result.Value.Count == 0)
-            {
-                return NotFound();
-            }
-
-            return Ok(result.Value);
+            return Ok(result.Value ?? new Hmm.Utility.Dal.Query.PageList<AutomobileInfo>(
+                Array.Empty<AutomobileInfo>(), 0, 1, 10));
         }
 
         /// <summary>

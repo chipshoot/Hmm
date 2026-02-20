@@ -236,6 +236,13 @@ namespace Hmm.Automobile
                 return ProcessingResult<GasLog>.Fail(updatedNoteResult.ErrorMessage, updatedNoteResult.ErrorType);
             }
 
+            // For soft deletes, the note is now marked as deleted and won't be found
+            // by GetEntityByIdAsync (which filters out deleted notes by default)
+            if (entity.IsDeleted)
+            {
+                return ProcessingResult<GasLog>.Ok(entity);
+            }
+
             return await GetEntityByIdAsync(curLog.Id);
         }
 
@@ -253,6 +260,7 @@ namespace Hmm.Automobile
             orgLog.FuelGrade = delta.FuelGrade;
             orgLog.IsFullTank = delta.IsFullTank;
             orgLog.IsFirstFillUp = delta.IsFirstFillUp;
+            orgLog.IsDeleted = delta.IsDeleted;
             orgLog.Discounts = delta.Discounts;
             orgLog.Station = delta.Station;
             orgLog.Location = delta.Location;
@@ -270,6 +278,7 @@ namespace Hmm.Automobile
 
             var curNote = noteResult.Value;
             curNote.Author = DefaultAuthor;
+            curNote.IsDeleted = orgLog.IsDeleted;
 
             return curNote;
         }
@@ -279,21 +288,22 @@ namespace Hmm.Automobile
             if (log == null) throw new ArgumentNullException(nameof(log));
             if (auto == null) throw new ArgumentNullException(nameof(auto));
 
+            // No meter reading set yet (first gas log or optional field left empty) - skip validation
             if (auto.MeterReading <= 0)
             {
-                return (false, "The automobile's meter reading is invalid");
+                return (true, string.Empty);
             }
 
             // automobile's meter reading should be less than new meter reading
             if (auto.MeterReading > log.Odometer.TotalKilometre)
             {
-                return (false, "The automobile's meter reading is larger than gas log");
+                return (true, "The automobile's meter reading is larger than gas log");
             }
 
             // the difference between current automobile meter reading and new meter reading should be greater than log distance
             if (log.Odometer - Dimension.FromKilometer(auto.MeterReading) < log.Distance)
             {
-                return (false, "The logging distance is invalid");
+                return (true, "The logging distance is invalid");
             }
 
             return log.Odometer - Dimension.FromKilometer(auto.MeterReading) != log.Distance

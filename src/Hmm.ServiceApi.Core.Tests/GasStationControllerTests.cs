@@ -80,7 +80,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Get_ReturnsNotFound_WhenNoStationsFound()
+        public async Task Get_ReturnsOkWithEmptyList_WhenNoStationsFound()
         {
             // Arrange
             _mockStationManager
@@ -92,7 +92,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Get(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnStations = Assert.IsType<PageList<GasStation>>(okResult.Value);
+            Assert.Equal(0, returnStations.Count);
         }
 
         [Fact]
@@ -136,7 +138,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task GetActive_ReturnsNotFound_WhenNoActiveStationsFound()
+        public async Task GetActive_ReturnsOkWithEmptyList_WhenNoActiveStationsFound()
         {
             // Arrange
             _mockStationManager
@@ -148,7 +150,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.GetActive(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnStations = Assert.IsType<PageList<GasStation>>(okResult.Value);
+            Assert.Equal(0, returnStations.Count);
         }
 
         [Fact]

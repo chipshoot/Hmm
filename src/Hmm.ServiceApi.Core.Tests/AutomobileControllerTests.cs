@@ -56,7 +56,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task GetMobiles_ReturnsNotFound_WhenNoAutomobilesFound()
+        public async Task GetMobiles_ReturnsOkWithEmptyList_WhenNoAutomobilesFound()
         {
             // Arrange
             _mockAutomobileManager
@@ -68,7 +68,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.GetMobiles(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnAutomobiles = Assert.IsType<PageList<AutomobileInfo>>(okResult.Value);
+            Assert.Equal(0, returnAutomobiles.Count);
         }
 
         [Fact]

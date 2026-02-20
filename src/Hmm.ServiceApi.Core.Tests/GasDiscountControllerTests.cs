@@ -74,7 +74,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Get_ReturnsNotFound_WhenNoDiscountsFound()
+        public async Task Get_ReturnsOkWithEmptyList_WhenNoDiscountsFound()
         {
             // Arrange
             _mockDiscountManager
@@ -86,7 +86,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Get(new ResourceCollectionParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnDiscounts = Assert.IsType<PageList<GasDiscount>>(okResult.Value);
+            Assert.Equal(0, returnDiscounts.Count);
         }
 
         [Fact]

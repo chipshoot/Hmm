@@ -85,7 +85,7 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
-        public async Task Get_ReturnsNotFound_WhenNoGasLogsFound()
+        public async Task Get_ReturnsOkWithEmptyList_WhenNoGasLogsFound()
         {
             // Arrange
             const int autoId = 1;
@@ -98,7 +98,9 @@ namespace Hmm.ServiceApi.Core.Tests
             var result = await _controller.Get(autoId, new GasLogResourceParameters());
 
             // Assert
-            Assert.IsType<NotFoundResult>(result);
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnGasLogs = Assert.IsType<PageList<GasLog>>(okResult.Value);
+            Assert.Equal(0, returnGasLogs.Count);
         }
 
         [Fact]

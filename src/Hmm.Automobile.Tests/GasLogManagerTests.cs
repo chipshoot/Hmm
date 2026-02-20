@@ -166,7 +166,7 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public async Task CreateAsync_WithMeterReadingLessThanCarMeterReading_ReturnsValidationError()
+        public async Task CreateAsync_WithMeterReadingLessThanCarMeterReading_ReturnsWarning()
         {
             // Arrange
             await SetupTestCarAsync();
@@ -179,13 +179,13 @@ namespace Hmm.Automobile.Tests
             // Act
             var result = await _manager.CreateAsync(gasLog);
 
-            // Assert
-            // Fails because odometer (50km) is less than car's meter reading (100km)
-            Assert.False(result.Success);
+            // Assert - meter reading mismatch is a warning, not a hard error
+            Assert.True(result.Success);
+            Assert.True(result.HasWarning);
         }
 
         [Fact]
-        public async Task CreateAsync_WithInvalidDistance_ReturnsValidationError()
+        public async Task CreateAsync_WithInvalidDistance_ReturnsWarning()
         {
             // Arrange
             await SetupTestCarAsync();
@@ -197,9 +197,9 @@ namespace Hmm.Automobile.Tests
             // Act
             var result = await _manager.CreateAsync(gasLog);
 
-            // Assert
-            Assert.False(result.Success);
-            Assert.Contains("distance", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+            // Assert - distance mismatch is a warning, not a hard error
+            Assert.True(result.Success);
+            Assert.True(result.HasWarning);
         }
 
         [Fact]
@@ -241,11 +241,11 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
-        public async Task CreateAsync_WithZeroAutomobileMeterReading_ReturnsValidationError()
+        public async Task CreateAsync_WithZeroAutomobileMeterReading_SkipsValidationAndSucceeds()
         {
             // Arrange
             await SetupTestCarAsync();
-            // Set car's meter reading to 0
+            // Set car's meter reading to 0 (no previous reading)
             _testCar.MeterReading = 0;
             await _autoManager.UpdateAsync(_testCar);
 
@@ -256,9 +256,8 @@ namespace Hmm.Automobile.Tests
             // Act
             var result = await _manager.CreateAsync(gasLog);
 
-            // Assert
-            Assert.False(result.Success);
-            Assert.Contains("meter reading", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+            // Assert - zero meter reading skips validation, gas log is created
+            Assert.True(result.Success);
         }
 
         #endregion
