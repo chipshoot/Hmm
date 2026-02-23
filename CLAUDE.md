@@ -61,7 +61,7 @@ dotnet ef migrations script
 
 ## Architecture Overview
 
-This is a multi-layered .NET 8.0 application following Domain-Driven Design (DDD) principles with clear separation of concerns.
+This is a multi-layered .NET 10.0 application following Domain-Driven Design (DDD) principles with clear separation of concerns.
 
 ### Layer Structure
 
@@ -79,7 +79,7 @@ Infrastructure (Hmm.Utility)
 
 ### Key Projects and Responsibilities
 
-**Hmm.ServiceApi** - ASP.NET Core 8.0 REST API
+**Hmm.ServiceApi** - ASP.NET Core 10.0 REST API
 - API routes use `/api/v{version}/` prefix to separate from web application routes
 - JWT Bearer authentication validated against Hmm.Idp
 - Swagger/OpenAPI documentation at `/swagger`
@@ -93,7 +93,7 @@ Infrastructure (Hmm.Utility)
 - All operations return `ProcessingResult` for error handling
 - Expression-based querying with domain/DAO model mapping
 
-**Hmm.Core.Dal.EF** - Entity Framework Core 8.0 data access
+**Hmm.Core.Dal.EF** - Entity Framework Core 10.0 data access
 - Three database providers: SQL Server (default), PostgreSQL, and SQLite
 - Configured via `AppSettings.DatabaseProvider`: `"SqlServer"`, `"PostgreSQL"`, or `"SQLite"`
 - Repository pattern with `IRepository<T>` and `IVersionRepository<T>`
@@ -121,7 +121,7 @@ Infrastructure (Hmm.Utility)
 - `Appointment` entity with Guid-based primary keys
 - `IAppointmentManager` for CRUD and date range queries
 
-**Hmm.Idp** - Duende IdentityServer 7 identity provider (.NET 9.0)
+**Hmm.Idp** - Duende IdentityServer 7 identity provider (.NET 10.0)
 - ASP.NET Identity for user management
 - OAuth 2.0 / OpenID Connect authentication
 - JWT token generation
