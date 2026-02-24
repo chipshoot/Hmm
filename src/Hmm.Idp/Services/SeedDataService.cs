@@ -55,7 +55,7 @@ public class SeedDataService
         {
             UserName = "admin@hmm.local",
             Email = "admin@hmm.local",
-            Password = "Admin@12345678!",
+            Password = "Admin@12345678#",
             FirstName = "System",
             LastName = "Administrator",
             Roles = ["Administrator"],
@@ -75,7 +75,7 @@ public class SeedDataService
         {
             UserName = "testuser@hmm.local",
             Email = "testuser@hmm.local",
-            Password = "TestPassword123!",
+            Password = "TestPassword123#",
             FirstName = "Test",
             LastName = "User",
             Roles = ["User"],
@@ -95,7 +95,7 @@ public class SeedDataService
         {
             UserName = "alice",
             Email = "alicesmith@email.com",
-            Password = "Alice@12345678!",
+            Password = "Alice@12345678#",
             FirstName = "Alice",
             LastName = "Smith",
             Roles = ["User"],
@@ -116,7 +116,7 @@ public class SeedDataService
         {
             UserName = "bob",
             Email = "bobsmith@email.com",
-            Password = "Bob@123456789!",
+            Password = "Bob@123456789#",
             FirstName = "Bob",
             LastName = "Smith",
             Roles = ["User"],
@@ -137,7 +137,7 @@ public class SeedDataService
         {
             UserName = "serviceapi@hmm.local",
             Email = "serviceapi@hmm.local",
-            Password = "ServiceApi@123!",
+            Password = "ServiceApi@123#",
             FirstName = "Service",
             LastName = "API",
             Roles = ["ApiClient"],

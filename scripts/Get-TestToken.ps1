@@ -10,7 +10,7 @@
     The username to authenticate with. Default: testuser@hmm.local
 
 .PARAMETER Password
-    The password for the user. Default: TestPassword123!
+    The password for the user. Default: TestPassword123#
 
 .PARAMETER IdpUrl
     The URL of the Identity Provider. Default: https://localhost:5001
@@ -19,7 +19,7 @@
     The client ID to use. Default: hmm.functest
 
 .PARAMETER ClientSecret
-    The client secret. Default: FuncTestSecret123!
+    The client secret. Default: FuncTestSecret123#
 
 .PARAMETER Scope
     The scopes to request. Default: openid profile email hmmapi
@@ -49,10 +49,10 @@
 
 param(
     [string]$Username = "testuser@hmm.local",
-    [string]$Password = "TestPassword123!",
+    [string]$Password = "TestPassword123#",
     [string]$IdpUrl = "https://localhost:5001",
     [string]$ClientId = "hmm.functest",
-    [string]$ClientSecret = "FuncTestSecret123!",
+    [string]$ClientSecret = "FuncTestSecret123#",
     [string]$Scope = "openid profile email hmmapi",
     [ValidateSet("password", "client_credentials")]
     [string]$GrantType = "password",

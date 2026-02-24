@@ -135,10 +135,10 @@ GO
 -- Secret hashes are Base64-encoded SHA256, matching Duende's .Sha256() extension.
 -- Computed via: SHA256(UTF8(secret)) -> Base64 string
 --
--- FuncTestSecret123!     -> WV8Cywlu2jFiCqDIPSwttp6FlkGfaQ/J49N/XEeYK9E=
--- M2MSecret456!          -> SReDVYb6SZ1mIlJRxE5RW4WJTpL/WUqEpKAhwJJ0FDk=
--- WebSecret789!          -> OWfNilXDtNbH89AVTT3FvInWETVlUnlsR7VKlIJ6OdQ=
--- ServiceApiSecret!@#456 -> kaf0/dH1UOF8QWzWxeSnH/j8WUjLEt6OuTKvaSvzpU8=
+-- FuncTestSecret123#     -> N5TBJMgK9HZx2fi+CzyQMDHbEjeq3chMwJkdntwKFg4=
+-- M2MSecret456#          -> OOs4GapFemk+eEaV1abuoACT6e6x11c1ShwT/zDzXKY=
+-- WebSecret789#          -> 25fQB+d0WYBEp7zZvsgPJh3VISDa/u5LF5kpKQ4Ri94=
+-- ServiceApiSecret#@#456 -> vQNJUuTo3YB03zNG5h0i6pucC6e4SmHofmU9w1qVHJw=
 
 -- ---- Client: hmm.functest (Resource Owner Password Grant) ----
 IF NOT EXISTS (SELECT 1 FROM Clients WHERE [ClientId] = 'hmm.functest')
@@ -178,7 +178,7 @@ BEGIN
     INSERT INTO ClientGrantTypes ([ClientId], [GrantType]) VALUES (@funcTestId, 'password');
 
     INSERT INTO ClientSecrets ([ClientId], [Value], [Type], [Created])
-    VALUES (@funcTestId, 'WV8Cywlu2jFiCqDIPSwttp6FlkGfaQ/J49N/XEeYK9E=', 'SharedSecret', GETUTCDATE());
+    VALUES (@funcTestId, 'N5TBJMgK9HZx2fi+CzyQMDHbEjeq3chMwJkdntwKFg4=', 'SharedSecret', GETUTCDATE());
 
     INSERT INTO ClientScopes ([ClientId], [Scope]) VALUES (@funcTestId, 'openid');
     INSERT INTO ClientScopes ([ClientId], [Scope]) VALUES (@funcTestId, 'profile');
@@ -227,7 +227,7 @@ BEGIN
     INSERT INTO ClientGrantTypes ([ClientId], [GrantType]) VALUES (@m2mId, 'client_credentials');
 
     INSERT INTO ClientSecrets ([ClientId], [Value], [Type], [Created])
-    VALUES (@m2mId, 'SReDVYb6SZ1mIlJRxE5RW4WJTpL/WUqEpKAhwJJ0FDk=', 'SharedSecret', GETUTCDATE());
+    VALUES (@m2mId, 'OOs4GapFemk+eEaV1abuoACT6e6x11c1ShwT/zDzXKY=', 'SharedSecret', GETUTCDATE());
 
     INSERT INTO ClientScopes ([ClientId], [Scope]) VALUES (@m2mId, 'hmmapi');
 
@@ -273,7 +273,7 @@ BEGIN
     INSERT INTO ClientGrantTypes ([ClientId], [GrantType]) VALUES (@webId, 'authorization_code');
 
     INSERT INTO ClientSecrets ([ClientId], [Value], [Type], [Created])
-    VALUES (@webId, 'OWfNilXDtNbH89AVTT3FvInWETVlUnlsR7VKlIJ6OdQ=', 'SharedSecret', GETUTCDATE());
+    VALUES (@webId, '25fQB+d0WYBEp7zZvsgPJh3VISDa/u5LF5kpKQ4Ri94=', 'SharedSecret', GETUTCDATE());
 
     INSERT INTO ClientScopes ([ClientId], [Scope]) VALUES (@webId, 'openid');
     INSERT INTO ClientScopes ([ClientId], [Scope]) VALUES (@webId, 'profile');
@@ -328,7 +328,7 @@ BEGIN
     INSERT INTO ClientGrantTypes ([ClientId], [GrantType]) VALUES (@serviceApiId, 'client_credentials');
 
     INSERT INTO ClientSecrets ([ClientId], [Value], [Type], [Created])
-    VALUES (@serviceApiId, 'kaf0/dH1UOF8QWzWxeSnH/j8WUjLEt6OuTKvaSvzpU8=', 'SharedSecret', GETUTCDATE());
+    VALUES (@serviceApiId, 'vQNJUuTo3YB03zNG5h0i6pucC6e4SmHofmU9w1qVHJw=', 'SharedSecret', GETUTCDATE());
 
     INSERT INTO ClientScopes ([ClientId], [Scope]) VALUES (@serviceApiId, 'hmmapi');
 

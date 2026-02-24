@@ -13,7 +13,7 @@ The following OAuth2/OIDC clients are automatically created:
 
 ### 1. hmm.functest (Functional Testing)
 - **Grant Type:** Resource Owner Password
-- **Client Secret:** `FuncTestSecret123!`
+- **Client Secret:** `FuncTestSecret123#`
 - **Use Case:** Automated testing and scripts
 - **Scopes:** openid, profile, email, hmmapi
 - **Token Lifetime:** 1 hour
@@ -21,14 +21,14 @@ The following OAuth2/OIDC clients are automatically created:
 
 ### 2. hmm.m2m (Machine-to-Machine)
 - **Grant Type:** Client Credentials
-- **Client Secret:** `M2MSecret456!`
+- **Client Secret:** `M2MSecret456#`
 - **Use Case:** Service-to-service communication
 - **Scopes:** hmmapi
 - **Token Lifetime:** 1 hour
 
 ### 3. hmm.web (Web Application)
 - **Grant Type:** Authorization Code with PKCE
-- **Client Secret:** `WebSecret789!`
+- **Client Secret:** `WebSecret789#`
 - **Use Case:** Interactive web applications
 - **Redirect URIs:**
   - https://localhost:5002/signin-oidc
@@ -38,7 +38,7 @@ The following OAuth2/OIDC clients are automatically created:
 
 ### 4. hmm.serviceapi (Service API)
 - **Grant Type:** Client Credentials
-- **Client Secret:** `ServiceApiSecret!@#456`
+- **Client Secret:** `ServiceApiSecret#@#456`
 - **Use Case:** Hmm.ServiceApi token validation
 - **Scopes:** hmmapi
 - **Token Lifetime:** 1 hour
@@ -49,35 +49,35 @@ The following test users are automatically created:
 
 ### 1. Administrator
 - **Username:** admin@hmm.local
-- **Password:** `Admin@12345678!`
+- **Password:** `Admin@12345678#`
 - **Email:** admin@hmm.local
 - **Roles:** Administrator
 - **Use Case:** System administration
 
 ### 2. Test User (for functional testing)
 - **Username:** testuser@hmm.local
-- **Password:** `TestPassword123!`
+- **Password:** `TestPassword123#`
 - **Email:** testuser@hmm.local
 - **Roles:** User
 - **Use Case:** API functional testing (matches .http file)
 
 ### 3. Alice (Test User)
 - **Username:** alice
-- **Password:** `Alice@12345678!`
+- **Password:** `Alice@12345678#`
 - **Email:** alicesmith@email.com
 - **Roles:** User
 - **Use Case:** Standard test user
 
 ### 4. Bob (Test User)
 - **Username:** bob
-- **Password:** `Bob@123456789!`
+- **Password:** `Bob@123456789#`
 - **Email:** bobsmith@email.com
 - **Roles:** User
 - **Use Case:** Standard test user
 
 ### 5. Service API User
 - **Username:** serviceapi@hmm.local
-- **Password:** `ServiceApi@123!`
+- **Password:** `ServiceApi@123#`
 - **Email:** serviceapi@hmm.local
 - **Roles:** ApiClient
 - **Use Case:** Service API authentication
@@ -108,9 +108,9 @@ curl -X POST https://localhost:5001/connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "client_id=hmm.functest" \
-  -d "client_secret=FuncTestSecret123!" \
+  -d "client_secret=FuncTestSecret123#" \
   -d "username=testuser@hmm.local" \
-  -d "password=TestPassword123!" \
+  -d "password=TestPassword123#" \
   -d "scope=openid profile email hmmapi"
 ```
 
@@ -120,7 +120,7 @@ curl -X POST https://localhost:5001/connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials" \
   -d "client_id=hmm.m2m" \
-  -d "client_secret=M2MSecret456!" \
+  -d "client_secret=M2MSecret456#" \
   -d "scope=hmmapi"
 ```
 

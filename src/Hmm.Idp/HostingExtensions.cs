@@ -306,7 +306,7 @@ internal static class HostingExtensions
                 ClientId = "hmm.functest",
                 ClientName = "Hmm Functional Testing Client",
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-                ClientSecrets = { new Secret("FuncTestSecret123!".Sha256()) },
+                ClientSecrets = { new Secret("FuncTestSecret123#".Sha256()) },
                 AllowedScopes = { "openid", "profile", "email", "hmmapi" },
                 AllowOfflineAccess = true,
                 AccessTokenLifetime = 3600,
@@ -328,7 +328,7 @@ internal static class HostingExtensions
                 ClientId = "hmm.m2m",
                 ClientName = "Hmm Machine-to-Machine Client",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret("M2MSecret456!".Sha256()) },
+                ClientSecrets = { new Secret("M2MSecret456#".Sha256()) },
                 AllowedScopes = { "hmmapi" }
             };
 
@@ -346,7 +346,7 @@ internal static class HostingExtensions
                 ClientName = "Hmm Web Application",
                 AllowedGrantTypes = GrantTypes.Code,
                 RequirePkce = true,
-                ClientSecrets = { new Secret("WebSecret789!".Sha256()) },
+                ClientSecrets = { new Secret("WebSecret789#".Sha256()) },
                 AllowedScopes = { "openid", "profile", "email", "hmmapi" },
                 AllowOfflineAccess = true,
                 UpdateAccessTokenClaimsOnRefresh = true,
@@ -375,7 +375,7 @@ internal static class HostingExtensions
                 ClientId = "hmm.serviceapi",
                 ClientName = "Hmm Service API",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret("ServiceApiSecret!@#456".Sha256()) },
+                ClientSecrets = { new Secret("ServiceApiSecret#@#456".Sha256()) },
                 AllowedScopes = { "hmmapi" },
                 Properties = { { "AllowTokenIntrospection", "true" } }
             };

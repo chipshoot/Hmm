@@ -14,7 +14,7 @@
     The username/email for the test user. Default: testuser@hmm.local
 
 .PARAMETER Password
-    The password for the test user. Default: TestPassword123!
+    The password for the test user. Default: TestPassword123#
 
 .PARAMETER FirstName
     The first name of the test user. Default: Test
@@ -42,7 +42,7 @@
 param(
     [string]$ConnectionString = "Server=localhost,1433;Database=HmmIdp;User Id=sa;Password=Shcdlhgm1!;TrustServerCertificate=True;",
     [string]$Username = "testuser@hmm.local",
-    [string]$Password = "TestPassword123!",
+    [string]$Password = "TestPassword123#",
     [string]$FirstName = "Test",
     [string]$LastName = "User"
 )

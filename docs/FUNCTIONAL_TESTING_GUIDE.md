@@ -211,7 +211,7 @@ The IDP will be available at: https://localhost:5001
 1. Navigate to https://localhost:5001/Account/Register
 2. Create a user with:
    - Email: `testuser@hmm.local`
-   - Password: `TestPassword123!` (must meet complexity requirements)
+   - Password: `TestPassword123#` (must meet complexity requirements)
 3. Confirm the email (in development, emails may be auto-confirmed)
 
 **Password Requirements:**
@@ -228,9 +228,9 @@ The IDP is pre-configured with these clients:
 
 | Client ID | Grant Type | Secret | Use Case |
 |-----------|------------|--------|----------|
-| `hmm.functest` | Password | `FuncTestSecret123!` | Automated testing |
-| `hmm.m2m` | Client Credentials | `M2MSecret456!` | Service-to-service |
-| `hmm.web` | Authorization Code | `WebSecret789!` | Web applications |
+| `hmm.functest` | Password | `FuncTestSecret123#` | Automated testing |
+| `hmm.m2m` | Client Credentials | `M2MSecret456#` | Service-to-service |
+| `hmm.web` | Authorization Code | `WebSecret789#` | Web applications |
 
 ---
 
@@ -243,13 +243,13 @@ The IDP is pre-configured with these clients:
 .\scripts\Get-TestToken.ps1
 
 # Get token for specific user
-.\scripts\Get-TestToken.ps1 -Username "testuser@hmm.local" -Password "TestPassword123!"
+.\scripts\Get-TestToken.ps1 -Username "testuser@hmm.local" -Password "TestPassword123#"
 
 # Get just the token (for scripting)
 $token = .\scripts\Get-TestToken.ps1 -Raw
 
 # Get client credentials token (no user)
-.\scripts\Get-TestToken.ps1 -GrantType client_credentials -ClientId "hmm.m2m" -ClientSecret "M2MSecret456!"
+.\scripts\Get-TestToken.ps1 -GrantType client_credentials -ClientId "hmm.m2m" -ClientSecret "M2MSecret456#"
 ```
 
 ### Method 2: cURL
@@ -260,9 +260,9 @@ curl -k -X POST https://localhost:5001/connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "client_id=hmm.functest" \
-  -d "client_secret=FuncTestSecret123!" \
+  -d "client_secret=FuncTestSecret123#" \
   -d "username=testuser@hmm.local" \
-  -d "password=TestPassword123!" \
+  -d "password=TestPassword123#" \
   -d "scope=openid profile email hmmapi"
 
 # Client Credentials Grant
@@ -270,7 +270,7 @@ curl -k -X POST https://localhost:5001/connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials" \
   -d "client_id=hmm.m2m" \
-  -d "client_secret=M2MSecret456!" \
+  -d "client_secret=M2MSecret456#" \
   -d "scope=hmmapi"
 ```
 
@@ -286,9 +286,9 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=password
 &client_id=hmm.functest
-&client_secret=FuncTestSecret123!
+&client_secret=FuncTestSecret123#
 &username=testuser@hmm.local
-&password=TestPassword123!
+&password=TestPassword123#
 &scope=openid profile email hmmapi
 
 ### Use the token
@@ -302,9 +302,9 @@ grant_type=password
 3. Add these key-value pairs:
    - `grant_type`: `password`
    - `client_id`: `hmm.functest`
-   - `client_secret`: `FuncTestSecret123!`
+   - `client_secret`: `FuncTestSecret123#`
    - `username`: `testuser@hmm.local`
-   - `password`: `TestPassword123!`
+   - `password`: `TestPassword123#`
    - `scope`: `openid profile email hmmapi`
 4. Send and copy the `access_token` from the response
 
@@ -585,7 +585,7 @@ docker-compose -f docker/docker-compose.idp.yml up -d  # Start IDP database
 .\scripts\Start-Idp.ps1                 # Start Identity Provider
 .\scripts\Get-TestToken.ps1             # Get token (password grant)
 .\scripts\Get-TestToken.ps1 -Raw        # Get just the token string
-.\scripts\Get-TestToken.ps1 -GrantType client_credentials -ClientId hmm.m2m -ClientSecret "M2MSecret456!"
+.\scripts\Get-TestToken.ps1 -GrantType client_credentials -ClientId hmm.m2m -ClientSecret "M2MSecret456#"
 
 # ===== Useful Commands =====
 docker ps                               # List running containers
@@ -602,7 +602,7 @@ docker exec -it hmm-sqlserver bash      # Shell into SQL container
 # IDP SQL:     localhost,14333 (sa / Password1!)
 
 # ===== Test Credentials =====
-# Test User:   testuser@hmm.local / TestPassword123!
-# FuncTest:    hmm.functest / FuncTestSecret123!
-# M2M Client:  hmm.m2m / M2MSecret456!
+# Test User:   testuser@hmm.local / TestPassword123#
+# FuncTest:    hmm.functest / FuncTestSecret123#
+# M2M Client:  hmm.m2m / M2MSecret456#
 ```
