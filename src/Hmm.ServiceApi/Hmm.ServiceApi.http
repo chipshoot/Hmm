@@ -34,49 +34,73 @@
 
 # ============================================================
 # AUTHENTICATION - GET TOKEN
-# Run this request first to get a token, then use it below
+# Run ONE of these requests first to get a token, then use it below
 # ============================================================
 
-### Get Access Token (Resource Owner Password Grant)
+### OPTION 1: Get Token - Test User (recommended for testing) ⭐
 # @name getToken
 POST {{idpUrl}}/connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password&client_id=hmm.functest&client_secret=FuncTestSecret123!&username=testuser@hmm.local&password=TestPassword123!&scope=openid profile email hmmapi
+grant_type=password&client_id=hmm.functest&client_secret=FuncTestSecret123#&username=testuser@hmm.local&password=TestPassword123#&scope=openid profile email hmmapi
 
-### Get Access Token (Client Credentials - Machine to Machine)
+### OPTION 2: Get Token - Alice
+# @name getAliceToken
+POST {{idpUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=hmm.functest&client_secret=FuncTestSecret123#&username=alice&password=Alice@12345678#&scope=openid profile email hmmapi
+
+### OPTION 3: Get Token - Bob
+# @name getBobToken
+POST {{idpUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=hmm.functest&client_secret=FuncTestSecret123#&username=bob&password=Bob@123456789#&scope=openid profile email hmmapi
+
+### OPTION 4: Get Token - Admin
+# @name getAdminToken
+POST {{idpUrl}}/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=hmm.functest&client_secret=FuncTestSecret123#&username=admin@hmm.local&password=Admin@12345678#&scope=openid profile email hmmapi
+
+### OPTION 5: Get Token - Machine-to-Machine (Client Credentials)
 # @name getM2MToken
 POST {{idpUrl}}/connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=client_credentials&client_id=hmm.m2m&client_secret=M2MSecret456!&scope=hmmapi
+grant_type=client_credentials&client_id=hmm.m2m&client_secret=M2MSecret456#&scope=hmmapi
+
+# ============================================================
+# HOW TO USE:
+# 1. Click the "Send Request" button (▶) next to one of the token requests above
+# 2. Copy the "access_token" value from the response
+# 3. Paste it in the @token variable below
+# 4. Use {{token}} in your API requests
+# ============================================================
 
 # ============================================================
 # AUTHENTICATION TOKENS
-# The API supports multiple identity providers. Use the appropriate token below.
+# After running a token request above, paste the access_token here
 # ============================================================
 
-# Dynamic token from getToken request above (VS Code REST Client / Rider)
- @hmmIdpToken = {{getToken.response.body.access_token}}
+# METHOD 1: Auto-capture token from request (Visual Studio / VS Code with REST Client)
+@hmmIdpToken = {{getToken.response.body.access_token}}
 
-# Or paste your token here manually:
-#@hmmIdpToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkNFRjJBRjY0OEU0RUREOTQ0NURDOUY2MTc0MzREQTRFIiwidHlwIjoiYXQrand0In0.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjUwMDEiLCJuYmYiOjE3NzExMjk2NTUsImlhdCI6MTc3MTEyOTY1NSwiZXhwIjoxNzcxMTMzMjU1LCJhdWQiOiJobW1hcGkiLCJzY29wZSI6WyJlbWFpbCIsImhtbWFwaSIsIm9wZW5pZCIsInByb2ZpbGUiXSwiYW1yIjpbInB3ZCJdLCJjbGllbnRfaWQiOiJobW0uZnVuY3Rlc3QiLCJzdWIiOiI4OWIxNDFlYS03YjU1LTQ0NmUtYTAyNi03MzMyMzY3MjA0ZjYiLCJhdXRoX3RpbWUiOjE3NzExMjk2NTUsImlkcCI6ImxvY2FsIiwiZW1haWwiOiJ0ZXN0dXNlckBobW0ubG9jYWwiLCJuYW1lIjoiVGVzdCBVc2VyIiwicm9sZSI6IlVzZXIiLCJqdGkiOiI1NURBRTE4MTdENDEwQUVCNDVGNjBDOTA1RUUyOTE2QyJ9.MGW43nqvHGe0cUhx9QVXxqWlNBsFFXsgNhSGXGBcqAHobRPaNJVxwHToIe0BpoqlVSGDY2shLIF_6m5E9Tit3aJk_CrMqjlkqJkZHzz2kxrqEEf6-3edghSNEbzNRmuZMSWhmDe_j6jZuPT_QM2W5rjrMix1u00p4ZbNjZ4arkJFPP2tGi6SZ4HpMyqRsAI2YOpdgheWVF01WUWlagRswiLuB4hhSKKQicWBjqUtzZp2u27pENvb0ax2MGlGMo7qZj4b3ofls8BkxuCjtO3ODfKo8Ra32w0srLQJv00qg8yv-baonef9T9b8opZqGOFmY_GBruZpk4kBd1Gr5rh1pg"
+# METHOD 2: Manual paste (copy access_token from response above)
+# @hmmIdpToken = PASTE_YOUR_TOKEN_HERE
 
-# Firebase token - Get from Firebase Auth SDK or REST API
-# POST https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=YOUR_API_KEY
-# Body: { "email": "user@example.com", "password": "password", "returnSecureToken": true }
+# METHOD 3: Use PowerShell script (copies to clipboard):
+#   .\Get-HmmApiToken.ps1 -User testuser -CopyToClipboard
+#   Then: @hmmIdpToken = <Ctrl+V>
+
+# External identity provider tokens (if configured)
 @firebaseToken = YOUR_FIREBASE_TOKEN_HERE
-
-# Auth0 token - Get from Auth0 Authentication API
-# POST https://YOUR_DOMAIN.auth0.com/oauth/token
-# Body: { "grant_type": "password", "client_id": "...", "username": "...", "password": "...", "audience": "..." }
 @auth0Token = YOUR_AUTH0_TOKEN_HERE
-
-# Azure AD token - Get from Microsoft Identity Platform
-# POST https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token
 @azureAdToken = YOUR_AZURE_AD_TOKEN_HERE
 
-# Active token - Change this to switch between providers for testing
+# Active token - This is what gets used in Authorization headers below
 @token = {{hmmIdpToken}}
 
 ### ============================================================
