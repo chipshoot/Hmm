@@ -11,10 +11,10 @@
 #   - Hmm API (REST service)        localhost:5010
 #
 # Seeded test users:
-#   - admin@hmm.local      / Admin@12345678!    (Administrator)
-#   - testuser@hmm.local   / TestPassword123!   (User)
-#   - alice                / Alice@12345678!     (User)
-#   - bob                  / Bob@123456789!      (User)
+#   - admin@hmm.local      / Admin@12345678#    (Administrator)
+#   - testuser@hmm.local   / TestPassword123#   (User)
+#   - alice                / Alice@12345678#     (User)
+#   - bob                  / Bob@123456789#      (User)
 #
 # Usage:
 #   ./test-env.sh              Start environment + smoke tests
@@ -36,11 +36,11 @@ SEQ_URL="http://localhost:8081"
 
 # IDP client credentials (must match HostingExtensions.cs seed data)
 CLIENT_ID="hmm.functest"
-CLIENT_SECRET="FuncTestSecret123!"
+CLIENT_SECRET="FuncTestSecret123#"
 
 # Test user credentials (from SeedDataService)
 TEST_USER="testuser@hmm.local"
-TEST_PASSWORD="TestPassword123!"
+TEST_PASSWORD="TestPassword123#"
 
 MAX_WAIT_SECS=180
 
@@ -350,16 +350,16 @@ echo -e "    IDP DB:        ${WHITE}$DATA_DIR/idp/hmm-idp.db${NC}"
 echo -e "    API DB:        ${WHITE}$DATA_DIR/api/hmm.db${NC}"
 echo ""
 echo -e "  ${CYAN}Test Users:${NC}"
-echo -e "    admin@hmm.local      / Admin@12345678!   (Administrator)"
-echo -e "    testuser@hmm.local   / TestPassword123!  (User)"
-echo -e "    alice                / Alice@12345678!    (User)"
-echo -e "    bob                  / Bob@123456789!     (User)"
+echo -e "    admin@hmm.local      / Admin@12345678#   (Administrator)"
+echo -e "    testuser@hmm.local   / TestPassword123#  (User)"
+echo -e "    alice                / Alice@12345678#    (User)"
+echo -e "    bob                  / Bob@123456789#     (User)"
 echo ""
 echo -e "  ${CYAN}Hmm_Console (Flutter) connection:${NC}"
 echo -e "    IDP Authority:   ${WHITE}http://localhost:5001${NC}"
 echo -e "    API Base URL:    ${WHITE}http://localhost:5010/api/v1${NC}"
 echo -e "    Client ID:       ${WHITE}hmm.functest${NC}"
-echo -e "    Client Secret:   ${WHITE}FuncTestSecret123!${NC}"
+echo -e "    Client Secret:   ${WHITE}FuncTestSecret123#${NC}"
 echo ""
 echo -e "  ${CYAN}Commands:${NC}"
 echo -e "    ${GRAY}Stop:      ./test-env.sh --down${NC}"

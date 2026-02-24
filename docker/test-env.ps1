@@ -14,10 +14,10 @@
       - Hmm API (REST service)        localhost:5010
 
     Seeded test users:
-      - admin@hmm.local      / Admin@12345678!    (Administrator)
-      - testuser@hmm.local   / TestPassword123!   (User)
-      - alice                / Alice@12345678!     (User)
-      - bob                  / Bob@123456789!      (User)
+      - admin@hmm.local      / Admin@12345678#    (Administrator)
+      - testuser@hmm.local   / TestPassword123#   (User)
+      - alice                / Alice@12345678#     (User)
+      - bob                  / Bob@123456789#      (User)
 
 .PARAMETER Up
     Start the test environment (default action)
@@ -64,11 +64,11 @@ $SeqUrl       = "http://localhost:8081"
 
 # IDP client credentials (must match HostingExtensions.cs seed data)
 $ClientId     = "hmm.functest"
-$ClientSecret = "FuncTestSecret123!"
+$ClientSecret = "FuncTestSecret123#"
 
 # Test user credentials (from SeedDataService)
 $TestUser     = "testuser@hmm.local"
-$TestPassword = "TestPassword123!"
+$TestPassword = "TestPassword123#"
 
 $MaxWaitSecs  = 180   # Max seconds to wait for services
 
@@ -349,16 +349,16 @@ Write-Host "    Seq Logs:      $SeqUrl" -ForegroundColor White
 Write-Host "    Database:      SQLite (in Docker volume)" -ForegroundColor White
 Write-Host ""
 Write-Host "  Test Users:" -ForegroundColor Cyan
-Write-Host "    admin@hmm.local      / Admin@12345678!   (Administrator)" -ForegroundColor White
-Write-Host "    testuser@hmm.local   / TestPassword123!  (User)" -ForegroundColor White
-Write-Host "    alice                / Alice@12345678!    (User)" -ForegroundColor White
-Write-Host "    bob                  / Bob@123456789!     (User)" -ForegroundColor White
+Write-Host "    admin@hmm.local      / Admin@12345678#   (Administrator)" -ForegroundColor White
+Write-Host "    testuser@hmm.local   / TestPassword123#  (User)" -ForegroundColor White
+Write-Host "    alice                / Alice@12345678#    (User)" -ForegroundColor White
+Write-Host "    bob                  / Bob@123456789#     (User)" -ForegroundColor White
 Write-Host ""
 Write-Host "  Hmm_Console (Flutter) connection:" -ForegroundColor Cyan
 Write-Host "    IDP Authority:   http://localhost:5001" -ForegroundColor White
 Write-Host "    API Base URL:    http://localhost:5010/api/v1" -ForegroundColor White
 Write-Host "    Client ID:       hmm.functest" -ForegroundColor White
-Write-Host "    Client Secret:   FuncTestSecret123!" -ForegroundColor White
+Write-Host "    Client Secret:   FuncTestSecret123#" -ForegroundColor White
 Write-Host ""
 Write-Host "  Commands:" -ForegroundColor Cyan
 Write-Host "    Stop:      .\test-env.ps1 -Down" -ForegroundColor DarkGray
