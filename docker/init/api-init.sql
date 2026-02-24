@@ -35,6 +35,9 @@ CREATE TABLE dbo.Authors(
     Role INT NOT NULL,
     ContactInfo INT NULL,
     IsActivated BIT NOT NULL,
+    Bio NVARCHAR(2000) NULL,
+    AvatarUrl NVARCHAR(500) NULL,
+    TimeZone NVARCHAR(100) NULL,
     Description NVARCHAR(1000) NULL,
     CONSTRAINT FK_Authors_Contacts FOREIGN KEY(ContactInfo) REFERENCES dbo.Contacts(Id) ON DELETE NO ACTION
 );
@@ -60,7 +63,7 @@ CREATE TABLE dbo.NoteCatalogs(
     Id INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(200) NOT NULL,
     [Schema] XML NOT NULL,
-    Format NVARCHAR(50) NOT NULL DEFAULT 'plain_text',
+    Format INT NOT NULL DEFAULT 0,
     IsDefault BIT NOT NULL DEFAULT 0,
     Description NVARCHAR(1000) NULL
 );
@@ -119,21 +122,21 @@ GO
 -- Default note catalog
 SET IDENTITY_INSERT dbo.NoteCatalogs ON;
 INSERT INTO dbo.NoteCatalogs (Id, Name, [Schema], Format, IsDefault, Description)
-VALUES (1, 'DefaultCatalog', '<schema />', 'plain_text', 1, 'Default note catalog');
+VALUES (1, 'DefaultCatalog', '<schema />', 0, 1, 'Default note catalog');
 SET IDENTITY_INSERT dbo.NoteCatalogs OFF;
 GO
 
 -- Automobile note catalog (for GasLog JSON storage)
 INSERT INTO dbo.NoteCatalogs (Name, [Schema], Format, IsDefault, Description)
-VALUES ('GasLog', '<schema />', 'json', 0, 'Gas log entries stored as JSON');
+VALUES ('GasLog', '<schema />', 2, 0, 'Gas log entries stored as JSON');
 GO
 
 INSERT INTO dbo.NoteCatalogs (Name, [Schema], Format, IsDefault, Description)
-VALUES ('Automobile', '<schema />', 'json', 0, 'Automobile information stored as JSON');
+VALUES ('Automobile', '<schema />', 2, 0, 'Automobile information stored as JSON');
 GO
 
 INSERT INTO dbo.NoteCatalogs (Name, [Schema], Format, IsDefault, Description)
-VALUES ('GasDiscount', '<schema />', 'json', 0, 'Gas discount programs stored as JSON');
+VALUES ('GasDiscount', '<schema />', 2, 0, 'Gas discount programs stored as JSON');
 GO
 
 -- Default tag
