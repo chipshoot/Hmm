@@ -201,7 +201,7 @@ GET {{baseUrl}}/api/v{{apiVersion}}/tags/1
 Authorization: Bearer {{token}}
 
 ### Get tag by name
-GET {{baseUrl}}/api/v{{apiVersion}}/tags/work
+GET {{baseUrl}}/api/v{{apiVersion}}/tags/by-name/work
 Authorization: Bearer {{token}}
 
 ### Create a new tag

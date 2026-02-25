@@ -30,7 +30,7 @@ namespace Hmm.ServiceApi.Core.Tests
             _mockValidator = new Mock<IHmmValidator<Contact>>();
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
                 .ReturnsAsync(ProcessingResult<Contact>.Ok(It.IsAny<Contact>()));
-            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, _mockValidator.Object);
+            _contactManager = new ContactManager(ContactRepository, UnitOfWork, Mapper, LookupRepository, _mockValidator.Object);
             _controller = new ContactController(_contactManager, ApiMapper, new Mock<ILogger<ContactController>>().Object);
             _controller.ControllerContext = new ControllerContext
             {

@@ -18,17 +18,20 @@ namespace Hmm.Core.DefaultManager;
 public class ContactManager : IContactManager
 {
     private readonly IRepository<ContactDao> _contactDaoRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IHmmValidator<Contact> _validator;
     private readonly IEntityLookup _lookup;
 
-    public ContactManager(IRepository<ContactDao> contactRepository, IMapper mapper, IEntityLookup lookup, IHmmValidator<Contact> validator)
+    public ContactManager(IRepository<ContactDao> contactRepository, IUnitOfWork unitOfWork, IMapper mapper, IEntityLookup lookup, IHmmValidator<Contact> validator)
     {
         ArgumentNullException.ThrowIfNull(contactRepository);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
         ArgumentNullException.ThrowIfNull(mapper);
         ArgumentNullException.ThrowIfNull(lookup);
         ArgumentNullException.ThrowIfNull(validator);
         _contactDaoRepository = contactRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _validator = validator;
         _lookup = lookup;
@@ -109,6 +112,8 @@ public class ContactManager : IContactManager
                 return ProcessingResult<Contact>.Fail(addedContactDaoResult.ErrorMessage, addedContactDaoResult.ErrorType);
             }
 
+            await _unitOfWork.CommitAsync();
+
             var createdContact = _mapper.Map<Contact>(addedContactDaoResult.Value);
             return ProcessingResult<Contact>.Ok(createdContact);
         }
@@ -140,6 +145,8 @@ public class ContactManager : IContactManager
                 return ProcessingResult<Contact>.Fail(updatedContactDaoResult.ErrorMessage, updatedContactDaoResult.ErrorType);
             }
 
+            await _unitOfWork.CommitAsync();
+
             return _mapper.MapWithNullCheck<ContactDao, Contact>(updatedContactDaoResult.Value);
         }
         catch (Exception ex)
@@ -153,6 +160,7 @@ public class ContactManager : IContactManager
         return DeactivationHelper.DeactivateAsync(
             _contactDaoRepository,
             id,
-            "contact");
+            "contact",
+            () => _unitOfWork.CommitAsync());
     }
 }

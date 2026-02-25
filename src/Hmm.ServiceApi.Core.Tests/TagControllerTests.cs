@@ -27,7 +27,7 @@ namespace Hmm.ServiceApi.Core.Tests
             _mockValidator = new Mock<IHmmValidator<Tag>>();
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
                 .ReturnsAsync(ProcessingResult<Tag>.Ok(It.IsAny<Tag>()));
-            _tagManager = new TagManager(TagRepository, Mapper, LookupRepository, _mockValidator.Object);
+            _tagManager = new TagManager(TagRepository, UnitOfWork, Mapper, LookupRepository, _mockValidator.Object);
             _controller = new TagController(_tagManager, ApiMapper, new Mock<ILogger<TagController>>().Object);
             _controller.ControllerContext = new ControllerContext
             {

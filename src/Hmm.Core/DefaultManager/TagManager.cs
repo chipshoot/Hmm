@@ -19,16 +19,19 @@ namespace Hmm.Core.DefaultManager
     public class TagManager : ITagManager
     {
         private readonly ICompositeEntityRepository<TagDao, HmmNoteDao> _tagRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IHmmValidator<Tag> _validator;
         private readonly IEntityLookup _lookup;
 
-        public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IMapper mapper, IEntityLookup lookup, IHmmValidator<Tag> validator)
+        public TagManager(ICompositeEntityRepository<TagDao, HmmNoteDao> tagRepository, IUnitOfWork unitOfWork, IMapper mapper, IEntityLookup lookup, IHmmValidator<Tag> validator)
         {
             ArgumentNullException.ThrowIfNull(tagRepository);
+            ArgumentNullException.ThrowIfNull(unitOfWork);
             ArgumentNullException.ThrowIfNull(mapper);
             ArgumentNullException.ThrowIfNull(validator);
             _tagRepository = tagRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _validator = validator;
             _lookup = lookup;
@@ -234,6 +237,8 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Tag>.Fail(addedTagDaoResult.ErrorMessage, addedTagDaoResult.ErrorType);
                 }
 
+                await _unitOfWork.CommitAsync();
+
                 var createdTag = _mapper.Map<Tag>(addedTagDaoResult.Value);
                 return ProcessingResult<Tag>.Ok(createdTag);
             }
@@ -275,6 +280,8 @@ namespace Hmm.Core.DefaultManager
                     return ProcessingResult<Tag>.Fail(updatedTagDaoResult.ErrorMessage, updatedTagDaoResult.ErrorType);
                 }
 
+                await _unitOfWork.CommitAsync();
+
                 return _mapper.MapWithNullCheck<TagDao, Tag>(updatedTagDaoResult.Value);
             }
             catch (Exception ex)
@@ -297,7 +304,8 @@ namespace Hmm.Core.DefaultManager
                 _lookup,
                 _tagRepository,
                 id,
-                "tag");
+                "tag",
+                () => _unitOfWork.CommitAsync());
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Hmm.ServiceApi.Core.Tests
             tagValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Tag>()))
                 .ReturnsAsync(ProcessingResult<Tag>.Ok(It.IsAny<Tag>()));
             _noteManager = new HmmNoteManager(NoteRepository, UnitOfWork, Mapper, LookupRepository, DateProvider, _mockValidator.Object);
-            var tagManager = new TagManager(TagRepository, Mapper, LookupRepository, tagValidator.Object);
+            var tagManager = new TagManager(TagRepository, UnitOfWork, Mapper, LookupRepository, tagValidator.Object);
             _noteTagAssociationManager = new NoteTagAssociationManager(_noteManager, tagManager);
             _controller = new HmmNoteController(_noteManager, _noteTagAssociationManager, ApiMapper, new Mock<ILogger<HmmNoteController>>().Object);
             _controller.ControllerContext = new ControllerContext

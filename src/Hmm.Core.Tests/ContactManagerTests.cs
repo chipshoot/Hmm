@@ -24,8 +24,8 @@ namespace Hmm.Core.Tests
             _mockValidator = new Mock<IHmmValidator<Contact>>();
             _mockValidator.Setup(v => v.ValidateEntityAsync(It.IsAny<Contact>()))
                 .ReturnsAsync(ProcessingResult<Contact>.Ok(It.IsAny<Contact>()));
-            _contactManager = new ContactManager(ContactRepository, Mapper, LookupRepository, _mockValidator.Object);
-            _contactManagerWithRealValidator = new ContactManager(ContactRepository, Mapper, LookupRepository, new ContactValidator());
+            _contactManager = new ContactManager(ContactRepository, UnitOfWork, Mapper, LookupRepository, _mockValidator.Object);
+            _contactManagerWithRealValidator = new ContactManager(ContactRepository, UnitOfWork, Mapper, LookupRepository, new ContactValidator());
         }
 
         [Fact]
