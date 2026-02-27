@@ -139,12 +139,21 @@ namespace Hmm.Idp.Services
 
         public async Task<ApplicationUser> CreateUserAsync(string userName, string password, string firstName = null, string lastName = null, string email = null)
         {
-            // Check if user exists
+            // Check if username exists
             var existingUser = await FindByUserNameAsync(userName);
-
             if (existingUser != null)
             {
                 throw new Exception("Username already exists");
+            }
+
+            // Check if email exists (RequireUniqueEmail is enabled)
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var existingEmail = await FindByEmailAsync(email);
+                if (existingEmail != null)
+                {
+                    throw new Exception("An account with this email address already exists");
+                }
             }
 
             // Create unique identifier
