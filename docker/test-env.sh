@@ -21,6 +21,7 @@
 #   ./test-env.sh --down       Stop and remove containers
 #   ./test-env.sh --rebuild    Force rebuild images (no cache)
 #   ./test-env.sh --skip-tests Start without running smoke tests
+#   ./test-env.sh --reset-db   Delete SQLite databases and restart fresh
 
 set -euo pipefail
 
@@ -51,19 +52,21 @@ DATA_DIR="$SCRIPT_DIR/data"
 ACTION="up"
 REBUILD=false
 SKIP_TESTS=false
+RESET_DB=false
 
 for arg in "$@"; do
     case "$arg" in
         --down|-d)       ACTION="down" ;;
         --rebuild|-r)    REBUILD=true ;;
         --skip-tests|-s) SKIP_TESTS=true ;;
+        --reset-db)      RESET_DB=true ;;
         --help|-h)
-            echo "Usage: $0 [--down] [--rebuild] [--skip-tests]"
+            echo "Usage: $0 [--down] [--rebuild] [--skip-tests] [--reset-db]"
             exit 0
             ;;
         *)
             echo "Unknown option: $arg"
-            echo "Usage: $0 [--down] [--rebuild] [--skip-tests]"
+            echo "Usage: $0 [--down] [--rebuild] [--skip-tests] [--reset-db]"
             exit 1
             ;;
     esac
@@ -114,6 +117,20 @@ if [ "$ACTION" = "down" ]; then
     info "Host data directory preserved at: $DATA_DIR"
     info "To remove database files: rm -rf $DATA_DIR"
     exit 0
+fi
+
+# ── Handle --reset-db ─────────────────────────────────────────────────
+if [ "$RESET_DB" = true ]; then
+    step "Resetting SQLite databases..."
+    # Stop containers first so db files are not locked
+    docker compose "${COMPOSE_FILES[@]}" down --remove-orphans 2>/dev/null || true
+    if [ -d "$DATA_DIR" ]; then
+        rm -f "$DATA_DIR"/hmm.db "$DATA_DIR"/hmm.db-wal "$DATA_DIR"/hmm.db-shm
+        rm -f "$DATA_DIR"/hmm-idp.db "$DATA_DIR"/hmm-idp.db-wal "$DATA_DIR"/hmm-idp.db-shm
+        ok "Deleted SQLite database files from $DATA_DIR"
+    else
+        info "No data directory found at $DATA_DIR — nothing to delete"
+    fi
 fi
 
 # ── Prepare host data directory ───────────────────────────────────────
@@ -359,6 +376,7 @@ echo ""
 echo -e "  ${CYAN}Commands:${NC}"
 echo -e "    ${GRAY}Stop:      ./test-env.sh --down${NC}"
 echo -e "    ${GRAY}Rebuild:   ./test-env.sh --rebuild${NC}"
+echo -e "    ${GRAY}Reset DB:  ./test-env.sh --reset-db${NC}"
 echo -e "    ${GRAY}Logs:      docker compose ${COMPOSE_FILES[*]} logs -f${NC}"
 echo -e "    ${GRAY}IDP logs:  docker compose ${COMPOSE_FILES[*]} logs -f hmm-idp${NC}"
 echo -e "    ${GRAY}API logs:  docker compose ${COMPOSE_FILES[*]} logs -f hmm-api${NC}"

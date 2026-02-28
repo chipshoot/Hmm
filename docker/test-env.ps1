@@ -31,6 +31,9 @@
 .PARAMETER SkipTests
     Skip the smoke tests after starting services
 
+.PARAMETER ResetDb
+    Delete SQLite databases and restart with a fresh database
+
 .EXAMPLE
     .\test-env.ps1
     Start test environment, wait for health, run smoke tests
@@ -42,13 +45,18 @@
 .EXAMPLE
     .\test-env.ps1 -Down
     Stop and tear down the test environment
+
+.EXAMPLE
+    .\test-env.ps1 -ResetDb
+    Delete SQLite databases and restart fresh
 #>
 
 param(
     [switch]$Up,
     [switch]$Down,
     [switch]$Rebuild,
-    [switch]$SkipTests
+    [switch]$SkipTests,
+    [switch]$ResetDb
 )
 
 # ── Configuration ──────────────────────────────────────────────────────
@@ -140,6 +148,24 @@ if ($Down) {
     Write-Info "Host data directory preserved at: $DataDir"
     Write-Info "To remove database files: Remove-Item -Recurse $DataDir"
     exit 0
+}
+
+# ── Handle -ResetDb ───────────────────────────────────────────────────
+if ($ResetDb) {
+    Write-Step "Resetting SQLite databases..."
+    # Stop containers first so db files are not locked
+    docker compose @ComposeFiles down --remove-orphans 2>$null
+    if (Test-Path $DataDir) {
+        $dbFiles = @("hmm.db", "hmm.db-wal", "hmm.db-shm", "hmm-idp.db", "hmm-idp.db-wal", "hmm-idp.db-shm")
+        foreach ($f in $dbFiles) {
+            $path = Join-Path $DataDir $f
+            if (Test-Path $path) { Remove-Item $path -Force }
+        }
+        Write-Ok "Deleted SQLite database files from $DataDir"
+    }
+    else {
+        Write-Info "No data directory found at $DataDir - nothing to delete"
+    }
 }
 
 # ── Prepare host data directory ───────────────────────────────────────
@@ -404,6 +430,7 @@ Write-Host ""
 Write-Host "  Commands:" -ForegroundColor Cyan
 Write-Host "    Stop:      .\test-env.ps1 -Down" -ForegroundColor DarkGray
 Write-Host "    Rebuild:   .\test-env.ps1 -Rebuild" -ForegroundColor DarkGray
+Write-Host "    Reset DB:  .\test-env.ps1 -ResetDb" -ForegroundColor DarkGray
 Write-Host "    Logs:      docker compose $($ComposeFiles -join ' ') logs -f" -ForegroundColor DarkGray
 Write-Host "    IDP logs:  docker compose $($ComposeFiles -join ' ') logs -f hmm-idp" -ForegroundColor DarkGray
 Write-Host "    API logs:  docker compose $($ComposeFiles -join ' ') logs -f hmm-api" -ForegroundColor DarkGray
