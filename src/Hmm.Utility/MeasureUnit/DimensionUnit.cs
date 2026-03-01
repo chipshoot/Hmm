@@ -34,6 +34,11 @@ namespace Hmm.Utility.MeasureUnit
         /// <summary>
         /// The feet unit
         /// </summary>
-        Feet
+        Feet,
+
+        /// <summary>
+        /// The mile unit
+        /// </summary>
+        Mile
     }
 }

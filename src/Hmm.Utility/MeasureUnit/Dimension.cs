@@ -43,6 +43,7 @@ namespace Hmm.Utility.MeasureUnit
         private const long MicronsPerKilometre = 1000000000;
         private const long MicronsPerInch = 25400;
         private const long MicronsPerFoot = MicronsPerInch * 12;
+        private const long MicronsPerMile = 1609344000; // 1 mile = 1,609,344 mm = 1,609,344,000 microns
 
         private readonly long _value;
         private readonly int _fractional;
@@ -126,6 +127,9 @@ namespace Hmm.Utility.MeasureUnit
                     case DimensionUnit.Feet:
                         return TotalFeet;
 
+                    case DimensionUnit.Mile:
+                        return TotalMile;
+
                     default:
                         return TotalMillimetre;
                 }
@@ -148,6 +152,8 @@ namespace Hmm.Utility.MeasureUnit
         public double TotalInch => Math.Round(_value / (double)MicronsPerInch, Fractional);
 
         public double TotalFeet => Math.Round(_value / (double)MicronsPerFoot, Fractional);
+
+        public double TotalMile => Math.Round(_value / (double)MicronsPerMile, Fractional);
 
         #endregion public properties
 
@@ -181,6 +187,11 @@ namespace Hmm.Utility.MeasureUnit
         public static Dimension FromFeet(double value)
         {
             return new Dimension(value, DimensionUnit.Feet);
+        }
+
+        public static Dimension FromMile(double value)
+        {
+            return new Dimension(value, DimensionUnit.Mile);
         }
 
         public static Dimension Max(params Dimension[] items) => MeasureUnitHelper.Max(items);
@@ -344,6 +355,10 @@ namespace Hmm.Utility.MeasureUnit
                     result = $"{TotalFeet} ft";
                     break;
 
+                case "mi":
+                    result = $"{TotalMile} mi";
+                    break;
+
                 case "mm/in":
                     result = $"{TotalMillimetre} mm / {TotalInch} in";
                     break;
@@ -415,6 +430,9 @@ namespace Hmm.Utility.MeasureUnit
 
                 case DimensionUnit.Feet:
                     return (long)Math.Round(value * MicronsPerFoot, 0);
+
+                case DimensionUnit.Mile:
+                    return (long)Math.Round(value * MicronsPerMile, 0);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(unit), unit, "Invalid dimension unit");
