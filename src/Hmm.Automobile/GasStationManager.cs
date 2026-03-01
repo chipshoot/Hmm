@@ -47,6 +47,8 @@ namespace Hmm.Automobile
                     existing.Country = updated.Country;
                     existing.ZipCode = updated.ZipCode;
                     existing.Description = updated.Description;
+                    existing.Latitude = updated.Latitude;
+                    existing.Longitude = updated.Longitude;
                     existing.IsActive = updated.IsActive;
                 },
                 commitChanges);

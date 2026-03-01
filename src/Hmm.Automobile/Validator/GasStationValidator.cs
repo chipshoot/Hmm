@@ -16,6 +16,8 @@ namespace Hmm.Automobile.Validator
             RuleFor(s => s.Country).NotEmpty().MaximumLength(50).WithMessage("Country is required and must be 50 characters or less");
             RuleFor(s => s.ZipCode).MaximumLength(20).WithMessage("Zip code must be 20 characters or less");
             RuleFor(s => s.Description).MaximumLength(500).WithMessage("Description must be 500 characters or less");
+            RuleFor(s => s.Latitude).InclusiveBetween(-90, 90).When(s => s.Latitude.HasValue).WithMessage("Latitude must be between -90 and 90");
+            RuleFor(s => s.Longitude).InclusiveBetween(-180, 180).When(s => s.Longitude.HasValue).WithMessage("Longitude must be between -180 and 180");
         }
     }
 }
