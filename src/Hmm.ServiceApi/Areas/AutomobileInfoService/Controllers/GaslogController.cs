@@ -327,6 +327,18 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
             var gasLog = getResult.Value;
             _mapper.Map(apiGasLog, gasLog);
 
+            // Resolve gas station from StationId if provided
+            if (apiGasLog.StationId.HasValue)
+            {
+                var stationResult = await GetGasStationAsync(apiGasLog.StationId);
+                if (!stationResult.Success)
+                {
+                    return BadRequest(new ApiBadRequestResponse(stationResult.ErrorMessage));
+                }
+
+                gasLog.Station = stationResult.Value;
+            }
+
             var updateResult = await _gasLogManager.UpdateAsync(gasLog);
             if (!updateResult.Success)
             {

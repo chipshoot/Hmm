@@ -8,18 +8,20 @@ namespace Hmm.Utility.Misc
     {
         #region constructors
 
-        public DateTimeAdapter() : this(DateTime.UtcNow)
+        public DateTimeAdapter()
         {
         }
 
-        public DateTimeAdapter(DateTime currentUtc)
+        public DateTimeAdapter(DateTime fixedUtcNow)
         {
-            UtcNow = currentUtc;
+            _fixedUtcNow = fixedUtcNow;
         }
 
         #endregion constructors
 
-        public DateTime UtcNow { get; private set; }
+        private readonly DateTime? _fixedUtcNow;
+
+        public DateTime UtcNow => _fixedUtcNow ?? DateTime.UtcNow;
 
         public DateTime AddBusinessDays(DateTime startUtcDate, int days, ICollection<string> holidays = null)
         {

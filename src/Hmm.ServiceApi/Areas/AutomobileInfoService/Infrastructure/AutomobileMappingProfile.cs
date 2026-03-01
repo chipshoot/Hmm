@@ -11,6 +11,42 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 {
     public class AutomobileMappingProfile : Profile
     {
+        private static DimensionUnit ParseDimensionUnit(string unit)
+        {
+            if (string.IsNullOrEmpty(unit))
+                return DimensionUnit.Kilometre;
+
+            // Handle American spelling from Flutter client
+            return unit switch
+            {
+                "Kilometer" => DimensionUnit.Kilometre,
+                "Mile" => DimensionUnit.Mile,
+                _ => Enum.TryParse<DimensionUnit>(unit, true, out var parsed)
+                    ? parsed
+                    : DimensionUnit.Kilometre
+            };
+        }
+
+        private static VolumeUnit ParseVolumeUnit(string unit)
+        {
+            if (string.IsNullOrEmpty(unit))
+                return VolumeUnit.Gallon;
+
+            return Enum.TryParse<VolumeUnit>(unit, true, out var parsed)
+                ? parsed
+                : VolumeUnit.Gallon;
+        }
+
+        private static CurrencyCodeType ParseCurrency(string currency)
+        {
+            if (string.IsNullOrEmpty(currency))
+                return CurrencyCodeType.Cad;
+
+            return Enum.TryParse<CurrencyCodeType>(currency, true, out var parsed)
+                ? parsed
+                : CurrencyCodeType.Cad;
+        }
+
         public AutomobileMappingProfile()
         {
             // AutomobileInfo mappings
@@ -58,17 +94,49 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
             CreateMap<ApiGasLogForCreation, GasLog>()
                 .ForMember(d => d.AutomobileId, opt => opt.MapFrom(s => s.AutomobileId))
-                .ForMember(d => d.Odometer, opt => opt.MapFrom(s => new Dimension((double)s.Odometer, DimensionUnit.Kilometre, 3)))
-                .ForMember(d => d.Distance, opt => opt.MapFrom(s => new Dimension((double)s.Distance, DimensionUnit.Kilometre, 3)))
-                .ForMember(d => d.Fuel, opt => opt.MapFrom(s => new Volume((double)s.Fuel, VolumeUnit.Gallon, 3)))
+                .ForMember(d => d.Odometer, opt => opt.MapFrom(s => new Dimension((double)s.Odometer, ParseDimensionUnit(s.OdometerUnit), 3)))
+                .ForMember(d => d.Distance, opt => opt.MapFrom(s => new Dimension((double)s.Distance, ParseDimensionUnit(s.DistanceUnit), 3)))
+                .ForMember(d => d.Fuel, opt => opt.MapFrom(s => new Volume((double)s.Fuel, ParseVolumeUnit(s.FuelUnit), 3)))
                 .ForMember(d => d.FuelGrade, opt => opt.MapFrom(s => Enum.Parse<FuelGrade>(s.FuelGrade, true)))
-                .ForMember(d => d.TotalPrice, opt => opt.MapFrom(s => new Money(s.TotalPrice, CurrencyCodeType.Cad)))
-                .ForMember(d => d.UnitPrice, opt => opt.MapFrom(s => new Money(s.UnitPrice, CurrencyCodeType.Cad)))
+                .ForMember(d => d.TotalPrice, opt => opt.MapFrom(s => new Money(s.TotalPrice, ParseCurrency(s.Currency))))
+                .ForMember(d => d.UnitPrice, opt => opt.MapFrom(s => new Money(s.UnitPrice, ParseCurrency(s.Currency))))
                 .ForMember(d => d.Station, opt => opt.Ignore())
                 .ForMember(d => d.Discounts, opt => opt.Ignore())
                 .ForMember(d => d.CreateDate, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
             CreateMap<ApiGasLogForUpdate, GasLog>()
+                .ForMember(d => d.Odometer, opt =>
+                {
+                    opt.PreCondition(s => s.Odometer.HasValue);
+                    opt.MapFrom(s => new Dimension((double)s.Odometer.Value, ParseDimensionUnit(s.OdometerUnit), 3));
+                })
+                .ForMember(d => d.Distance, opt =>
+                {
+                    opt.PreCondition(s => s.Distance.HasValue);
+                    opt.MapFrom(s => new Dimension((double)s.Distance.Value, ParseDimensionUnit(s.DistanceUnit), 3));
+                })
+                .ForMember(d => d.Fuel, opt =>
+                {
+                    opt.PreCondition(s => s.Fuel.HasValue);
+                    opt.MapFrom(s => new Volume((double)s.Fuel.Value, ParseVolumeUnit(s.FuelUnit), 3));
+                })
+                .ForMember(d => d.FuelGrade, opt =>
+                {
+                    opt.PreCondition(s => s.FuelGrade != null);
+                    opt.MapFrom(s => Enum.Parse<FuelGrade>(s.FuelGrade, true));
+                })
+                .ForMember(d => d.TotalPrice, opt =>
+                {
+                    opt.PreCondition(s => s.TotalPrice.HasValue);
+                    opt.MapFrom(s => new Money(s.TotalPrice.Value, ParseCurrency(s.Currency)));
+                })
+                .ForMember(d => d.UnitPrice, opt =>
+                {
+                    opt.PreCondition(s => s.UnitPrice.HasValue);
+                    opt.MapFrom(s => new Money(s.UnitPrice.Value, ParseCurrency(s.Currency)));
+                })
+                .ForMember(d => d.Station, opt => opt.Ignore())
+                .ForMember(d => d.Discounts, opt => opt.Ignore())
                 .ForMember(d => d.LastModifiedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
@@ -94,11 +162,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                 .ForMember(d => d.DiscountType, opt => opt.MapFrom(s => s.DiscountType.ToString()));
 
             CreateMap<ApiDiscountForCreate, GasDiscount>()
-                .ForMember(d => d.Amount, opt => opt.MapFrom(s => new Money(s.Amount, CurrencyCodeType.Cad)))
+                .ForMember(d => d.Amount, opt => opt.MapFrom(s => new Money(s.Amount, ParseCurrency(s.Currency))))
                 .ForMember(d => d.DiscountType, opt => opt.MapFrom(s => Enum.Parse<GasDiscountType>(s.DiscountType, true)));
 
             CreateMap<ApiDiscountForUpdate, GasDiscount>()
-                .ForMember(d => d.Amount, opt => opt.MapFrom(s => s.Amount.HasValue ? new Money(s.Amount.Value, CurrencyCodeType.Cad) : default))
+                .ForMember(d => d.Amount, opt => opt.MapFrom(s => s.Amount.HasValue ? new Money(s.Amount.Value, ParseCurrency(s.Currency)) : default))
                 .ForMember(d => d.DiscountType, opt => opt.MapFrom(s =>
                     string.IsNullOrEmpty(s.DiscountType) ? default : Enum.Parse<GasDiscountType>(s.DiscountType, true)))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
