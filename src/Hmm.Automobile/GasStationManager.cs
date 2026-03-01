@@ -44,6 +44,7 @@ namespace Hmm.Automobile
                     existing.Address = updated.Address;
                     existing.City = updated.City;
                     existing.State = updated.State;
+                    existing.Country = updated.Country;
                     existing.ZipCode = updated.ZipCode;
                     existing.Description = updated.Description;
                     existing.IsActive = updated.IsActive;

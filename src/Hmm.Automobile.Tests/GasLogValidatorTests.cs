@@ -331,7 +331,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             var log = CreateValidGasLog();
-            log.Station = new GasStation { Name = "" }; // Empty name - invalid
+            log.Station = new GasStation { Name = "", City = "Vancouver", Country = "Canada" }; // Empty name - invalid
 
             // Act
             var result = await _validator.ValidateEntityAsync(log);
@@ -345,7 +345,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             var log = CreateValidGasLog();
-            log.Station = new GasStation { Name = new string('A', 1001) }; // 1001 chars - exceeds max
+            log.Station = new GasStation { Name = new string('A', 1001), City = "Vancouver", Country = "Canada" }; // 1001 chars - exceeds max
 
             // Act
             var result = await _validator.ValidateEntityAsync(log);
@@ -359,7 +359,7 @@ namespace Hmm.Automobile.Tests
         {
             // Arrange
             var log = CreateValidGasLog();
-            log.Station = new GasStation { Name = new string('A', 1000) };
+            log.Station = new GasStation { Name = new string('A', 1000), City = "Vancouver", Country = "Canada" };
 
             // Act
             var result = await _validator.ValidateEntityAsync(log);
@@ -552,6 +552,7 @@ namespace Hmm.Automobile.Tests
                     Name = "Costco",
                     Address = "123 Main St",
                     City = "Vancouver",
+                    Country = "Canada",
                     State = "BC"
                 },
                 CreateDate = CurrentTime,

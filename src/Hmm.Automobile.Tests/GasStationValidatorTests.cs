@@ -28,6 +28,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Costco Gas",
                 Address = "123 Main St",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1",
                 Description = "Costco gas station",
@@ -48,7 +49,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = _authorId,
-                Name = "Shell"
+                Name = "Shell",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -69,7 +72,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = 0, // Invalid - zero
-                Name = "Costco Gas"
+                Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -86,7 +91,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = 99999, // Non-existent author
-                Name = "Costco Gas"
+                Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -103,7 +110,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = -1, // Negative
-                Name = "Costco Gas"
+                Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -124,7 +133,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = _authorId,
-                Name = "" // Empty - invalid
+                Name = "", // Empty - invalid
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -141,7 +152,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = _authorId,
-                Name = null // Null - invalid
+                Name = null, // Null - invalid
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -158,7 +171,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = _authorId,
-                Name = new string('A', 101) // 101 chars - exceeds max
+                Name = new string('A', 101), // 101 chars - exceeds max
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -175,7 +190,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 AuthorId = _authorId,
-                Name = new string('A', 100) // Exactly 100 chars
+                Name = new string('A', 100), // Exactly 100 chars
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -197,7 +214,9 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
-                Address = new string('A', 201) // 201 chars - exceeds max
+                Address = new string('A', 201), // 201 chars - exceeds max
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -215,7 +234,9 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
-                Address = new string('A', 200) // Exactly 200 chars
+                Address = new string('A', 200), // Exactly 200 chars
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -233,7 +254,9 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
-                Address = ""
+                Address = "",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -255,7 +278,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
-                City = new string('A', 51) // 51 chars - exceeds max
+                City = new string('A', 51), // 51 chars - exceeds max
+                Country = "Canada"
             };
 
             // Act
@@ -273,7 +297,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
-                City = new string('A', 50) // Exactly 50 chars
+                City = new string('A', 50), // Exactly 50 chars
+                Country = "Canada"
             };
 
             // Act
@@ -295,6 +320,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada",
                 State = new string('A', 51) // 51 chars - exceeds max
             };
 
@@ -313,6 +340,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada",
                 State = new string('A', 50) // Exactly 50 chars
             };
 
@@ -335,6 +364,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada",
                 ZipCode = new string('1', 21) // 21 chars - exceeds max
             };
 
@@ -353,6 +384,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada",
                 ZipCode = new string('1', 20) // Exactly 20 chars
             };
 
@@ -375,6 +408,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada",
                 Description = new string('A', 501) // 501 chars - exceeds max
             };
 
@@ -393,6 +428,8 @@ namespace Hmm.Automobile.Tests
             {
                 AuthorId = _authorId,
                 Name = "Costco Gas",
+                City = "Vancouver",
+                Country = "Canada",
                 Description = new string('A', 500) // Exactly 500 chars
             };
 
@@ -416,7 +453,8 @@ namespace Hmm.Automobile.Tests
                 AuthorId = 0, // Invalid
                 Name = "", // Invalid
                 Address = new string('A', 201), // Too long
-                City = new string('B', 51) // Too long
+                City = new string('B', 51), // Too long
+                Country = "Canada"
             };
 
             // Act

@@ -35,6 +35,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Costco Gas",
                 Address = "123 Main St",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1",
                 Description = "Test station",
@@ -70,7 +71,8 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 Name = "", // Empty - invalid
-                City = "Vancouver"
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -83,10 +85,12 @@ namespace Hmm.Automobile.Tests
         [Fact]
         public async Task CreateAsync_WithMinimalFields_OnlyNameRequired()
         {
-            // Arrange - only Name is required
+            // Arrange - only Name, City, and Country are required
             var station = new GasStation
             {
-                Name = "Minimal Station"
+                Name = "Minimal Station",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -104,7 +108,9 @@ namespace Hmm.Automobile.Tests
             // Arrange
             var station = new GasStation
             {
-                Name = "Author Test Station"
+                Name = "Author Test Station",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -155,7 +161,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 Id = 99999, // Non-existent
-                Name = "Test"
+                Name = "Test",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -480,6 +488,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Costco Gas",
                 Address = "123 Main St",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1",
                 Description = "Costco gas station",
@@ -494,6 +503,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Shell Station",
                 Address = "456 Oak Ave",
                 City = "Burnaby",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V5H 2Z8",
                 Description = "Shell gas station",

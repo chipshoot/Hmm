@@ -303,7 +303,7 @@ namespace Hmm.Automobile.Tests
                 Id = 99999, // Non-existent ID
                 Date = DateTime.UtcNow.AddHours(-1),
                 AutomobileId = _testCar?.Id ?? 0,
-                Station = new GasStation { Name = "Test Station" },
+                Station = new GasStation { Name = "Test Station", City = "Vancouver", Country = "Canada" },
                 Odometer = Dimension.FromKilometer(200),
                 Distance = Dimension.FromKilometer(100),
                 Fuel = Volume.FromLiter(45),
@@ -376,7 +376,7 @@ namespace Hmm.Automobile.Tests
             log.FuelGrade = FuelGrade.Premium;
             log.Fuel = Volume.FromLiter(60);
             log.IsFullTank = false;
-            log.Station = new GasStation { Name = "New Station" };
+            log.Station = new GasStation { Name = "New Station", City = "Vancouver", Country = "Canada" };
             var result = await _manager.UpdateAsync(log);
 
             // Assert
@@ -888,6 +888,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Test Gas Station",
                 Address = "123 Main St",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1"
             };
@@ -903,7 +904,7 @@ namespace Hmm.Automobile.Tests
             {
                 Date = DateTime.UtcNow.AddHours(-1),
                 AutomobileId = _testCar?.Id ?? 0,
-                Station = _testStation ?? new GasStation { Name = "Test Station" },
+                Station = _testStation ?? new GasStation { Name = "Test Station", City = "Vancouver", Country = "Canada" },
                 Odometer = Dimension.FromKilometer(200),
                 Distance = Dimension.FromKilometer(100),
                 Fuel = Volume.FromLiter(45),

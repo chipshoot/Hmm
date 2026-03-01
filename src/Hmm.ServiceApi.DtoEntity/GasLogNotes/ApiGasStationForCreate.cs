@@ -14,11 +14,16 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
         [StringLength(200)]
         public string Address { get; set; }
 
+        [Required]
         [StringLength(50)]
         public string City { get; set; }
 
         [StringLength(50)]
         public string State { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string Country { get; set; }
 
         [StringLength(20)]
         public string ZipCode { get; set; }

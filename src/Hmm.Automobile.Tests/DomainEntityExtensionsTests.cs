@@ -100,7 +100,9 @@ namespace Hmm.Automobile.Tests
                 Id = 1,
                 AuthorId = TestDefaultAuthor.Id,
                 Name = "Costco Gas",
-                Address = "123 Main St"
+                Address = "123 Main St",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -176,7 +178,9 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 1,
                 AuthorId = TestDefaultAuthor.Id,
-                Name = "Test Station"
+                Name = "Test Station",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act

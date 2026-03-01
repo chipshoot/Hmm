@@ -288,6 +288,7 @@ namespace Hmm.ServiceApi.Core.Tests
                 Name = "New Gas Station",
                 Address = "123 New St",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC"
             };
 
@@ -297,6 +298,7 @@ namespace Hmm.ServiceApi.Core.Tests
                 Name = "New Gas Station",
                 Address = "123 New St",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 IsActive = true
             };
@@ -331,7 +333,7 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task Post_ReturnsBadRequest_WhenCreationFails()
         {
             // Arrange
-            var apiStation = new ApiGasStationForCreate { Name = "Test" };
+            var apiStation = new ApiGasStationForCreate { Name = "Test", City = "Vancouver", Country = "Canada" };
 
             _mockStationManager
                 .Setup(m => m.CreateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
@@ -350,7 +352,7 @@ namespace Hmm.ServiceApi.Core.Tests
         public async Task Post_ReturnsInternalServerError_OnException()
         {
             // Arrange
-            var apiStation = new ApiGasStationForCreate { Name = "Test" };
+            var apiStation = new ApiGasStationForCreate { Name = "Test", City = "Vancouver", Country = "Canada" };
 
             _mockStationManager
                 .Setup(m => m.CreateAsync(It.IsAny<GasStation>(), It.IsAny<bool>()))
@@ -676,6 +678,7 @@ namespace Hmm.ServiceApi.Core.Tests
                     Name = "Costco Gas",
                     Address = "123 Main St",
                     City = "Vancouver",
+                    Country = "Canada",
                     State = "BC",
                     ZipCode = "V5K 1A1",
                     Description = "Costco gas station",
@@ -687,6 +690,7 @@ namespace Hmm.ServiceApi.Core.Tests
                     Name = "Petro Canada",
                     Address = "456 Oak Ave",
                     City = "Burnaby",
+                    Country = "Canada",
                     State = "BC",
                     ZipCode = "V5H 2B2",
                     Description = "Petro Canada station",
@@ -698,6 +702,7 @@ namespace Hmm.ServiceApi.Core.Tests
                     Name = "Closed Station",
                     Address = "789 Elm Blvd",
                     City = "Richmond",
+                    Country = "Canada",
                     State = "BC",
                     ZipCode = "V6X 3C3",
                     Description = "Permanently closed",

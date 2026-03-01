@@ -18,6 +18,8 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 
         public string State { get; set; }
 
+        public string Country { get; set; }
+
         public string ZipCode { get; set; }
 
         public string Description { get; set; }

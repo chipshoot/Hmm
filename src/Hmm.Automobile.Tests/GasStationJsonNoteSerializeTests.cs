@@ -212,7 +212,9 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 1,
                 AuthorId = _author.Id,
-                Name = "Shell"
+                Name = "Shell",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -554,7 +556,9 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 1,
                 AuthorId = _author.Id,
-                Name = "Shell"
+                Name = "Shell",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -713,6 +717,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Costco Gas",
                 Address = "123 Main Street",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1",
                 Description = "Costco gas station with good prices",

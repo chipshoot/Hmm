@@ -312,7 +312,9 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 42,
                 Name = "Test Station",
-                Address = "123 Test St"
+                Address = "123 Test St",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -333,6 +335,7 @@ namespace Hmm.Automobile.Tests
                 Name = "New Station",
                 Address = "456 New Ave",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1",
                 Description = "A new station"
@@ -365,6 +368,7 @@ namespace Hmm.Automobile.Tests
                 Name = null,
                 Address = null,
                 City = null,
+                Country = null,
                 State = null,
                 ZipCode = null,
                 Description = null
@@ -405,7 +409,9 @@ namespace Hmm.Automobile.Tests
             var station = new GasStation
             {
                 Id = 42,
-                Name = "Test Station"
+                Name = "Test Station",
+                City = "Vancouver",
+                Country = "Canada"
             };
 
             // Act
@@ -424,7 +430,8 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 0,
                 Name = "New Station",
-                City = "Toronto"
+                City = "Toronto",
+                Country = "Canada"
             };
 
             // Act
@@ -598,6 +605,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Test Station",
                 Address = "123 Test St",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1",
                 Description = "A test station"
@@ -697,6 +705,8 @@ namespace Hmm.Automobile.Tests
             {
                 Id = 0,
                 Name = "Shell \"Super\" <Station> & More",
+                City = "Vancouver",
+                Country = "Canada",
                 Description = "Description with \"quotes\""
             };
 
@@ -729,6 +739,7 @@ namespace Hmm.Automobile.Tests
                 Name = "Costco Gas",
                 Address = "123 Main Street",
                 City = "Vancouver",
+                Country = "Canada",
                 State = "BC",
                 ZipCode = "V6B 1A1",
                 Description = "Costco gas station",

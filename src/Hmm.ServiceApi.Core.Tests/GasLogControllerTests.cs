@@ -819,7 +819,7 @@ namespace Hmm.ServiceApi.Core.Tests
             _mockStationManager
                 .Setup(m => m.GetEntityByIdAsync(It.IsAny<int>()))
                 .ReturnsAsync((int id) => ProcessingResult<GasStation>.Ok(
-                    new GasStation { Id = id, Name = $"Test Station {id}", IsActive = true }));
+                    new GasStation { Id = id, Name = $"Test Station {id}", City = "Vancouver", Country = "Canada", IsActive = true }));
 
             // Setup gas log manager
             _mockGasLogManager
