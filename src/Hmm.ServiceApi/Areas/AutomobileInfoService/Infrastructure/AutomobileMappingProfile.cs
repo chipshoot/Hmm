@@ -1,6 +1,7 @@
 using AutoMapper;
 using Hmm.Automobile.DomainEntity;
 using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using GeoAddress = Hmm.Automobile.DomainEntity.GeoAddress;
 using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.Utility.Currency;
 using Hmm.Utility.Dal.Query;
@@ -196,6 +197,9 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
             CreateMap<PageList<GasStation>, PageList<ApiGasStation>>()
                 .ConvertUsing(new PageListConverter<GasStation, ApiGasStation>());
+
+            // GeoAddress mappings
+            CreateMap<GeoAddress, ApiGeoAddress>();
         }
     }
 }

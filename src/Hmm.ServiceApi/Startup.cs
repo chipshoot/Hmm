@@ -220,7 +220,7 @@ namespace Hmm.ServiceApi
             services.AddExceptionHandler<GlobalExceptionHandler>();
 
             // Register Automobile module services (managers, validators, serializers)
-            var automobileStartup = new AutomobileInfoServiceStartup(services);
+            var automobileStartup = new AutomobileInfoServiceStartup(services, Configuration);
             automobileStartup.ConfigureServices();
         }
 
