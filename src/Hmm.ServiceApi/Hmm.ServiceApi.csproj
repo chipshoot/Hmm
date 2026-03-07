@@ -30,7 +30,6 @@
     <ProjectReference Include="..\Hmm.Utility.Services\Hmm.Utility.Services.csproj" />
     <ProjectReference Include="..\Hmm.Core.Dal.EF\Hmm.Core.Dal.EF.csproj" />
     <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />
-    <ProjectReference Include="..\Hmm.Infrastructure\Hmm.Infrastructure.csproj" />
     <ProjectReference Include="..\Hmm.ServiceApi.DtoEntity\Hmm.ServiceApi.DtoEntity.csproj" />
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>
