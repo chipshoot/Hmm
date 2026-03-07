@@ -1,5 +1,4 @@
-using Hmm.Automobile;
-using Hmm.Automobile.DomainEntity;
+using Hmm.Utility.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;

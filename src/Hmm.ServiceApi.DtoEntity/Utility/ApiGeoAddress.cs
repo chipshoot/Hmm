@@ -1,6 +1,6 @@
-namespace Hmm.Automobile.DomainEntity
+namespace Hmm.ServiceApi.DtoEntity.Utility
 {
-    public class GeoAddress
+    public class ApiGeoAddress
     {
         public string Street { get; set; }
 

@@ -1,6 +1,6 @@
-namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
+namespace Hmm.Utility.Services
 {
-    public class ApiGeoAddress
+    public class GeoAddress
     {
         public string Street { get; set; }
 

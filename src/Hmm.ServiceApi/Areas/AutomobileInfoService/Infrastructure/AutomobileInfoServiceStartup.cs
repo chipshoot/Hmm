@@ -7,7 +7,6 @@ using Hmm.ServiceApi.Services;
 using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
@@ -17,12 +16,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
     public class AutomobileInfoServiceStartup
     {
         private readonly IServiceCollection _services;
-        private readonly IConfiguration _configuration;
 
-        public AutomobileInfoServiceStartup(IServiceCollection services, IConfiguration configuration)
+        public AutomobileInfoServiceStartup(IServiceCollection services)
         {
             _services = services;
-            _configuration = configuration;
         }
 
         public void ConfigureServices()
@@ -69,16 +66,6 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     .AddScoped<IGasLogManager, GasLogManager>()
                     .AddScoped<GasStationManager>()
                     .AddScoped<IAutoEntityManager<GasStation>>(sp => sp.GetRequiredService<GasStationManager>())
-
-                    // Geocoding service
-                    ;
-
-                _services.Configure<GeocodingSettings>(
-                    _configuration.GetSection(GeocodingSettings.SectionName));
-
-                _services
-                    .AddHttpClient<IGeocodingService, NominatimGeocodingService>()
-                    .Services
 
                     // Startup filter
                     .AddTransient<IStartupFilter, AutomobileAppStartupFilter>();

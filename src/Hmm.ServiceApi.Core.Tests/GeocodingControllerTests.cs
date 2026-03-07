@@ -1,9 +1,8 @@
 using AutoMapper;
-using Hmm.Automobile;
-using Hmm.Automobile.DomainEntity;
-using Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers;
-using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
-using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.ServiceApi.Areas.UtilityService.Controllers;
+using Hmm.ServiceApi.Areas.UtilityService.Infrastructure;
+using Hmm.ServiceApi.DtoEntity.Utility;
+using Hmm.Utility.Services;
 using Hmm.ServiceApi.Models;
 using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +23,7 @@ namespace Hmm.ServiceApi.Core.Tests
 
             var config = new MapperConfiguration(cfg =>
             {
-                cfg.AddProfile<AutomobileMappingProfile>();
+                cfg.AddProfile<UtilityServiceMappingProfile>();
             });
             _mapper = config.CreateMapper();
 

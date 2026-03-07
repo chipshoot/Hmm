@@ -1,8 +1,7 @@
-using Hmm.Automobile.DomainEntity;
 using Hmm.Utility.Misc;
 using System.Threading.Tasks;
 
-namespace Hmm.Automobile
+namespace Hmm.Utility.Services
 {
     public interface IGeocodingService
     {

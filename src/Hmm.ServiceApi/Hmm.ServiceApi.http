@@ -970,6 +970,35 @@ DELETE {{baseUrl}}/api/v{{apiVersion}}/automobiles/gasstations/1
 Authorization: Bearer {{token}}
 
 ### ============================================================
+### GEOCODING
+### Route: /api/v{version}/geocoding
+### ============================================================
+
+### Reverse geocode - Vancouver, BC
+GET {{baseUrl}}/api/v{{apiVersion}}/geocoding/reverse?latitude=49.2827&longitude=-123.1207
+Authorization: Bearer {{token}}
+
+### Reverse geocode - Toronto, ON
+GET {{baseUrl}}/api/v{{apiVersion}}/geocoding/reverse?latitude=43.6532&longitude=-79.3832
+Authorization: Bearer {{token}}
+
+### Reverse geocode - New York City
+GET {{baseUrl}}/api/v{{apiVersion}}/geocoding/reverse?latitude=40.7128&longitude=-74.0060
+Authorization: Bearer {{token}}
+
+### Reverse geocode - invalid latitude (should return 400)
+GET {{baseUrl}}/api/v{{apiVersion}}/geocoding/reverse?latitude=91&longitude=0
+Authorization: Bearer {{token}}
+
+### Reverse geocode - invalid longitude (should return 400)
+GET {{baseUrl}}/api/v{{apiVersion}}/geocoding/reverse?latitude=0&longitude=181
+Authorization: Bearer {{token}}
+
+### Reverse geocode - middle of ocean (may return not found)
+GET {{baseUrl}}/api/v{{apiVersion}}/geocoding/reverse?latitude=0&longitude=0
+Authorization: Bearer {{token}}
+
+### ============================================================
 ### CONTACTS (for Authors)
 ### ============================================================
 

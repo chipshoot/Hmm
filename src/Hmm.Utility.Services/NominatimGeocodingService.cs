@@ -1,4 +1,3 @@
-using Hmm.Automobile.DomainEntity;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -8,7 +7,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Hmm.Automobile
+namespace Hmm.Utility.Services
 {
     public class NominatimGeocodingService : IGeocodingService
     {

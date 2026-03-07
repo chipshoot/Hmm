@@ -1,7 +1,7 @@
 using AutoMapper;
-using Hmm.Automobile;
-using Hmm.ServiceApi.DtoEntity.GasLogNotes;
+using Hmm.ServiceApi.DtoEntity.Utility;
 using Hmm.ServiceApi.Models;
+using Hmm.Utility.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
+namespace Hmm.ServiceApi.Areas.UtilityService.Controllers
 {
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/automobiles/geocoding")]
+    [Route("/api/v{version:apiVersion}/geocoding")]
     [Produces("application/json")]
     public class GeocodingController : Controller
     {

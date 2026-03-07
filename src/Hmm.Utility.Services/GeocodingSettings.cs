@@ -1,4 +1,4 @@
-namespace Hmm.Automobile
+namespace Hmm.Utility.Services
 {
     public class GeocodingSettings
     {
