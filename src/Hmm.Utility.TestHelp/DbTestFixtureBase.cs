@@ -18,6 +18,7 @@ using System;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -93,7 +94,7 @@ namespace Hmm.Utility.TestHelp
             DbContext = new HmmDataContext(optBuilder.Options);
 
             // ... init repositories exactly like you do today ...
-            var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<HmmMappingProfile>());
+            var mapperConfig = new MapperConfiguration(cfg => cfg.AddProfile<HmmMappingProfile>(), NullLoggerFactory.Instance);
             LookupRepository = new EfEntityLookup(DbContext, mapperConfig.CreateMapper());
             var dateProvider = new DateTimeAdapter();
             AuthorRepository = new AuthorEfRepository(DbContext, LookupRepository, Logger);

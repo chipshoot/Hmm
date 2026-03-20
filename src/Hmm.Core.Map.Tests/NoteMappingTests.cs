@@ -4,6 +4,7 @@ using AutoMapper;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.Utility.TestHelp;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hmm.Core.Map.Tests;
 
@@ -16,7 +17,7 @@ public class NoteMappingTests
         var config = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<HmmMappingProfile>();
-        });
+        }, NullLoggerFactory.Instance);
         _mapper = config.CreateMapper();
     }
 

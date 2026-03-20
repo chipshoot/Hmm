@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Hmm.ServiceApi.Core.Tests
@@ -43,7 +44,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<AutomobileMappingProfile>();
-            });
+            }, NullLoggerFactory.Instance);
             _mapper = config.CreateMapper();
 
             _automobiles = GetSampleAutomobiles();

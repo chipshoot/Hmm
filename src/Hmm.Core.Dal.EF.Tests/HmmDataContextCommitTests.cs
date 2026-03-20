@@ -15,6 +15,7 @@ using Xunit;
 using Hmm.Core.Dal.EF.Repositories;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.DataEntity;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hmm.Core.Dal.EF.Tests
 {
@@ -132,6 +133,7 @@ namespace Hmm.Core.Dal.EF.Tests
             services.AddScoped<IRepository<AuthorDao>, AuthorEfRepository>();
             services.AddScoped<IRepository<NoteCatalogDao>, NoteCatalogEfRepository>();
             services.AddScoped<IEntityLookup, EfEntityLookup>();
+            services.AddSingleton<ILoggerFactory>(NullLoggerFactory.Instance);
             services.AddAutoMapper(cfg => cfg.AddProfile<HmmMappingProfile>());
             services.AddSingleton<IDateTimeProvider, DateTimeAdapter>();
             services.AddSingleton<ILogger<NoteEfRepository>>(new Mock<ILogger<NoteEfRepository>>().Object);

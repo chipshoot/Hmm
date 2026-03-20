@@ -8,6 +8,7 @@ using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Moq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Hmm.Core.Tests.ValidatorTests
@@ -21,7 +22,7 @@ namespace Hmm.Core.Tests.ValidatorTests
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<HmmMappingProfile>();
-            });
+            }, NullLoggerFactory.Instance);
             var mapper = config.CreateMapper();
             var catalogManager = new NoteCatalogManager(CatalogRepository, UnitOfWork, mapper, LookupRepository, Mock.Of<IHmmValidator<NoteCatalog>>());
             _validator = new NoteCatalogValidator(CatalogRepository);

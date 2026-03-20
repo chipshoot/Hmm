@@ -16,7 +16,6 @@ COPY ["src/Hmm.Core/Hmm.Core.csproj", "src/Hmm.Core/"]
 COPY ["src/Hmm.Core.Map/Hmm.Core.Map.csproj", "src/Hmm.Core.Map/"]
 COPY ["src/Hmm.Utility/Hmm.Utility.csproj", "src/Hmm.Utility/"]
 COPY ["src/Hmm.Core.Dal.EF/Hmm.Core.Dal.EF.csproj", "src/Hmm.Core.Dal.EF/"]
-COPY ["src/Hmm.Infrastructure/Hmm.Infrastructure.csproj", "src/Hmm.Infrastructure/"]
 
 RUN dotnet restore "src/Hmm.ServiceApi/Hmm.ServiceApi.csproj"
 

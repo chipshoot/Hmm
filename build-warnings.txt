@@ -1,0 +1,26 @@
+Hmm Solution Build Warnings
+============================
+Date: 2026-03-19
+Total: 12 warnings (6 unique, duplicated across restore and build phases)
+
+Unique Warnings:
+================
+
+1. NU1903 (High Severity) - AutoMapper 13.0.1 [FIXED]
+   Advisory: https://github.com/advisories/GHSA-rvv3-g6hj-g44x
+   Fix: Upgraded AutoMapper from 13.0.1 to 15.1.3 across 6 projects
+   Updated MapperConfiguration constructor calls (added null ILoggerFactory) in 13 files
+
+2. NU1902 (Moderate Severity) - IdentityServer4 4.1.2 [FIXED]
+   Advisory: https://github.com/advisories/GHSA-55p7-v223-x366
+   Fix: Removed unused IdentityServer4 and IdentityServer4.AccessTokenValidation
+   packages from Hmm.ServiceApi.csproj (zero code references, EOL package with no patch)
+
+3. NU1902 (Moderate Severity) - IdentityServer4 4.1.2 [FIXED]
+   Advisory: https://github.com/advisories/GHSA-ff4q-64jc-gx98
+   Fix: Same as #2 above — dead package removed
+
+Docker Build Fix Applied:
+=========================
+Removed stale COPY reference to src/Hmm.Infrastructure/Hmm.Infrastructure.csproj
+from src/Hmm.ServiceApi/Dockerfile (project no longer exists in solution).

@@ -18,6 +18,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hmm.Utility.TestHelp
 {
@@ -183,7 +184,7 @@ namespace Hmm.Utility.TestHelp
 
         private static IMapper CreateMapper(Action<IMapperConfigurationExpression> configure)
         {
-            var config = new MapperConfiguration(configure);
+            var config = new MapperConfiguration(configure, NullLoggerFactory.Instance);
             return config.CreateMapper();
         }
 

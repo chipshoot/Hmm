@@ -7,6 +7,7 @@ using Hmm.ServiceApi.Models;
 using Hmm.Utility.Misc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Hmm.ServiceApi.Core.Tests
@@ -24,7 +25,7 @@ namespace Hmm.ServiceApi.Core.Tests
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<UtilityServiceMappingProfile>();
-            });
+            }, NullLoggerFactory.Instance);
             _mapper = config.CreateMapper();
 
             _controller = new GeocodingController(
