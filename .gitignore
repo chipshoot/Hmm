@@ -371,3 +371,14 @@ nul
 
 # Claude Code local settings
 .claude/
+
+# Production secrets
+docker/.env
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# IdentityServer signing keys
+src/**/keys/

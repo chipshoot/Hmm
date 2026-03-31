@@ -238,7 +238,7 @@ namespace Hmm.ServiceApi
             // Note: SQLite EnsureCreated + WAL mode is handled in AutomobileAppStartupFilter
             // which runs before Configure(), ensuring tables exist before catalog seeding.
 
-            if (env.IsDevelopment() || env.EnvironmentName == "Docker")
+            if (env.IsDevelopment() || env.EnvironmentName == "Docker" || env.IsProduction())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hmm.ServiceApi v1"));

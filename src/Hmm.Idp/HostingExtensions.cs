@@ -63,19 +63,29 @@ internal static class HostingExtensions
         });
 
         // Configure external authentication providers (Google + GitHub)
-        builder.Services.AddAuthentication()
-            .AddGoogle("Google", options =>
+        var authBuilder = builder.Services.AddAuthentication();
+
+        var googleClientId = configuration["ExternalAuth:Google:ClientId"];
+        if (!string.IsNullOrEmpty(googleClientId) && googleClientId != "your-google-client-id")
+        {
+            authBuilder.AddGoogle("Google", options =>
             {
                 options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
-                options.ClientId = configuration["ExternalAuth:Google:ClientId"]!;
+                options.ClientId = googleClientId;
                 options.ClientSecret = configuration["ExternalAuth:Google:ClientSecret"]!;
-            })
-            .AddGitHub("GitHub", options =>
+            });
+        }
+
+        var githubClientId = configuration["ExternalAuth:GitHub:ClientId"];
+        if (!string.IsNullOrEmpty(githubClientId) && githubClientId != "your-github-client-id")
+        {
+            authBuilder.AddGitHub("GitHub", options =>
             {
                 options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
-                options.ClientId = configuration["ExternalAuth:GitHub:ClientId"]!;
+                options.ClientId = githubClientId;
                 options.ClientSecret = configuration["ExternalAuth:GitHub:ClientSecret"]!;
             });
+        }
 
         // Configure email settings
         builder.Services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
@@ -353,12 +363,14 @@ internal static class HostingExtensions
                 RedirectUris =
                 {
                     "https://localhost:5002/signin-oidc",
-                    "https://localhost:44342/signin-oidc"
+                    "https://localhost:44342/signin-oidc",
+                    "https://homemademessage.com/signin-oidc"
                 },
                 PostLogoutRedirectUris =
                 {
                     "https://localhost:5002/signout-callback-oidc",
-                    "https://localhost:44342/signout-callback-oidc"
+                    "https://localhost:44342/signout-callback-oidc",
+                    "https://homemademessage.com/signout-callback-oidc"
                 }
             };
 
