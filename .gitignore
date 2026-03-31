@@ -374,6 +374,7 @@ nul
 
 # Production secrets
 docker/.env
+docker/.env.ftp
 
 # SQLite databases
 *.db
