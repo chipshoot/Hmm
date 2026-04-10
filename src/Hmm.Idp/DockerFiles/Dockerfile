@@ -17,10 +17,12 @@ COPY --from=build /app ./
 # Copy initialization scripts
 COPY DockerFiles/scripts ./scripts
 
-# Install network utilities for health checks
+# Install PostgreSQL and network utilities
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     netcat-openbsd \
+    postgresql \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Fix Windows line endings and make entrypoint script executable
@@ -30,6 +32,10 @@ RUN sed -i 's/\r$//' /app/scripts/*.sh && chmod +x /app/scripts/entrypoint.sh
 ENV ASPNETCORE_ENVIRONMENT=Docker
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 ENV SEED_DATA=true
+ENV PGDATA=/var/lib/postgresql/data
+
+# Create PostgreSQL data directory with correct ownership
+RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

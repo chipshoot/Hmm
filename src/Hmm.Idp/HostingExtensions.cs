@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using Npgsql;
 using Serilog;
 using IServiceScopeFactory = Microsoft.Extensions.DependencyInjection.IServiceScopeFactory;
 
@@ -29,9 +30,9 @@ internal static class HostingExtensions
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
             });
 
-        // Add ASP.NET Identity with SQLite
+        // Add ASP.NET Identity with PostgreSQL
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlite(connectionString));
+            options.UseNpgsql(connectionString));
 
         builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -102,11 +103,11 @@ internal static class HostingExtensions
             })
             .AddConfigurationStore(options =>
             {
-                options.ConfigureDbContext = b => b.UseSqlite(connectionString);
+                options.ConfigureDbContext = b => b.UseNpgsql(connectionString);
             })
             .AddOperationalStore(options =>
             {
-                options.ConfigureDbContext = b => b.UseSqlite(connectionString);
+                options.ConfigureDbContext = b => b.UseNpgsql(connectionString);
             })
             .AddAspNetIdentity<ApplicationUser>()
             .AddResourceOwnerValidator<CustomResourceOwnerPasswordValidator>();
@@ -187,15 +188,12 @@ internal static class HostingExtensions
 
         try
         {
-            // SQLite with multiple DbContexts: EnsureCreated() only creates tables when
-            // the database file doesn't exist. For subsequent contexts sharing the same
-            // database, we must use CreateTables() to add their tables.
+            // Multiple DbContexts share the same PostgreSQL database. EnsureCreated()
+            // only creates tables for the first context; subsequent contexts need
+            // CreateTables() to add their tables.
             var applicationDbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             applicationDbContext.Database.EnsureCreated();
             Log.Information("ApplicationDbContext database ensured");
-
-            // Enable WAL mode for cloud sync friendliness
-            applicationDbContext.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
 
             var persistedGrantDbContext = serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>();
             try
@@ -205,7 +203,7 @@ internal static class HostingExtensions
                 var creator = persistedGrantDbContext.GetService<IRelationalDatabaseCreator>();
                 creator?.CreateTables();
             }
-            catch (Microsoft.Data.Sqlite.SqliteException)
+            catch (PostgresException)
             {
                 // Tables already exist - safe to ignore
             }
@@ -218,7 +216,7 @@ internal static class HostingExtensions
                 var creator = configurationDbContext.GetService<IRelationalDatabaseCreator>();
                 creator?.CreateTables();
             }
-            catch (Microsoft.Data.Sqlite.SqliteException)
+            catch (PostgresException)
             {
                 // Tables already exist - safe to ignore
             }

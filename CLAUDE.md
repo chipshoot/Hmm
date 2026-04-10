@@ -122,7 +122,7 @@ Infrastructure (Hmm.Utility)
 - `IAppointmentManager` for CRUD and date range queries
 
 **Hmm.Idp** - Duende IdentityServer 7 identity provider (.NET 10.0)
-- ASP.NET Identity for user management
+- ASP.NET Identity for user management with PostgreSQL backend
 - OAuth 2.0 / OpenID Connect authentication
 - JWT token generation
 - Runs on separate port (default: https://localhost:5001)
@@ -189,13 +189,13 @@ Located in `docker/` directory. All scenarios require a `.env` file (see `docker
 ```bash
 docker compose -f docker/compose.base.yml -f docker/compose.idp.yml -f docker/compose.api.yml up -d
 ```
-Services: `api-sqlserver` + `idp-sqlserver` + `seq` + `hmm-idp` + `hmm-api`
+Services: `api-sqlserver` + `seq` + `hmm-idp` (with embedded PostgreSQL) + `hmm-api`
 
 **SQLite API** (lightweight - 3 containers, no api-sqlserver):
 ```bash
 docker compose -f docker/compose.base-sqlite.yml -f docker/compose.idp.yml -f docker/compose.api-sqlite.yml up -d
 ```
-Services: `idp-sqlserver` + `seq` + `hmm-idp` + `hmm-api`
+Services: `seq` + `hmm-idp` (with embedded PostgreSQL) + `hmm-api`
 - SQLite database saved to `docker/data/hmm.db` on the host (bind mount)
 - To sync to cloud, change the volume in `compose.api-sqlite.yml`:
   ```yaml
