@@ -3,9 +3,11 @@ using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
+using Hmm.Idp.Pages.Admin.User;
 using Hmm.Idp.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -16,6 +18,7 @@ namespace Hmm.Idp.Pages.Login;
 public class Index : PageModel
 {
     private readonly ApplicationUserRepository _userRepository;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IIdentityServerInteractionService _interaction;
     private readonly IEventService _events;
     private readonly IAuthenticationSchemeProvider _schemeProvider;
@@ -31,9 +34,11 @@ public class Index : PageModel
         IAuthenticationSchemeProvider schemeProvider,
         IIdentityProviderStore identityProviderStore,
         IEventService events,
-        ApplicationUserRepository userRepository)
+        ApplicationUserRepository userRepository,
+        SignInManager<ApplicationUser> signInManager)
     {
         _userRepository = userRepository;
+        _signInManager = signInManager;
         _interaction = interaction;
         _schemeProvider = schemeProvider;
         _identityProviderStore = identityProviderStore;
@@ -93,25 +98,9 @@ public class Index : PageModel
                 var user = await _userRepository.FindByUserNameAsync(Input.Username);
                 await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
 
-                // only set explicit expiration here if user chooses "remember me".
-                // otherwise we rely upon expiration configured in cookie middleware.
-                AuthenticationProperties props = null;
-                if (LoginOptions.AllowRememberLogin && Input.RememberLogin)
-                {
-                    props = new AuthenticationProperties
-                    {
-                        IsPersistent = true,
-                        ExpiresUtc = DateTimeOffset.UtcNow.Add(LoginOptions.RememberMeLoginDuration)
-                    };
-                };
-
-                // issue authentication cookie with subject ID and username
-                var isuser = new IdentityServerUser(user.Id)
-                {
-                    DisplayName = user.UserName
-                };
-
-                await HttpContext.SignInAsync(isuser, props);
+                // issue authentication cookie via SignInManager (includes roles and claims)
+                var isPersistent = LoginOptions.AllowRememberLogin && Input.RememberLogin;
+                await _signInManager.SignInAsync(user, isPersistent);
 
                 if (context != null)
                 {
