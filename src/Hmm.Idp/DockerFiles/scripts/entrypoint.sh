@@ -34,12 +34,13 @@ if [ ! -f "$PGDATA/PG_VERSION" ]; then
     chown -R postgres:postgres "$PGDATA"
     su postgres -c "$PG_BIN_DIR/initdb -D $PGDATA"
 
-    # Configure PostgreSQL to accept local connections with password
+    # Configure PostgreSQL to accept connections with password
     echo "host all all 127.0.0.1/32 md5" >> "$PGDATA/pg_hba.conf"
+    echo "host all all 0.0.0.0/0 md5" >> "$PGDATA/pg_hba.conf"
     echo "local all all trust" >> "$PGDATA/pg_hba.conf"
 
-    # Listen only on localhost
-    echo "listen_addresses = '127.0.0.1'" >> "$PGDATA/postgresql.conf"
+    # Listen on all interfaces (allows external access via exposed port)
+    echo "listen_addresses = '*'" >> "$PGDATA/postgresql.conf"
 fi
 
 # Ensure data directory ownership (in case of volume mount)

@@ -5,9 +5,9 @@
 .DESCRIPTION
     Sets up Docker containers for 3 development scenarios using compose file layering.
 
-    Scenario 1: API runs locally, IDP + SQL Server (API) + SQL Server (IDP) + Seq in Docker
-    Scenario 2: Everything in Docker (API + IDP + SQL Server x2 + Seq)
-    Scenario 3: API + IDP run locally, SQL Server (API) + SQL Server (IDP) + Seq in Docker
+    Scenario 1: API runs locally, IDP (PostgreSQL embedded) + SQL Server (API) + Seq in Docker
+    Scenario 2: Everything in Docker (API + IDP (PostgreSQL embedded) + SQL Server (API) + Seq)
+    Scenario 3: API + IDP run locally, SQL Server (API) + Seq in Docker
 
 .PARAMETER Scenario
     Which development scenario to start (1, 2, or 3)
@@ -90,9 +90,9 @@ if (-not $Scenario) {
     Write-Host "ERROR: Please specify a scenario with -Scenario 1, 2, or 3" -ForegroundColor Red
     Write-Host ""
     Write-Host "Scenarios:" -ForegroundColor Cyan
-    Write-Host "  1  API local, IDP + SQL Servers + Seq in Docker"
+    Write-Host "  1  API local, IDP (PostgreSQL) + SQL Server (API) + Seq in Docker"
     Write-Host "  2  Everything in Docker"
-    Write-Host "  3  API + IDP local, SQL Servers + Seq in Docker"
+    Write-Host "  3  API + IDP local, SQL Server (API) + Seq in Docker"
     Write-Host ""
     Write-Host "Usage: .\hmm-setup.ps1 -Scenario <1|2|3> [-Rebuild]" -ForegroundColor Yellow
     Write-Host "       .\hmm-setup.ps1 -Down" -ForegroundColor Yellow
@@ -120,9 +120,9 @@ Write-Host "Starting Scenario $Scenario..." -ForegroundColor Yellow
 Write-Host ""
 
 switch ($Scenario) {
-    1 { Write-Host "  Docker: IDP + SQL Server (API) + SQL Server (IDP) + Seq" -ForegroundColor DarkGray }
-    2 { Write-Host "  Docker: API + IDP + SQL Server (API) + SQL Server (IDP) + Seq" -ForegroundColor DarkGray }
-    3 { Write-Host "  Docker: SQL Server (API) + SQL Server (IDP) + Seq" -ForegroundColor DarkGray }
+    1 { Write-Host "  Docker: IDP (PostgreSQL embedded) + SQL Server (API) + Seq" -ForegroundColor DarkGray }
+    2 { Write-Host "  Docker: API + IDP (PostgreSQL embedded) + SQL Server (API) + Seq" -ForegroundColor DarkGray }
+    3 { Write-Host "  Docker: SQL Server (API) + Seq" -ForegroundColor DarkGray }
 }
 Write-Host ""
 
@@ -143,12 +143,13 @@ Write-Host ""
 # Connection info
 Write-Host "Services:" -ForegroundColor Cyan
 Write-Host "  SQL Server (API): localhost,1433  (user: sa)" -ForegroundColor White
-Write-Host "  SQL Server (IDP): localhost,14333 (user: sa)" -ForegroundColor White
 Write-Host "  Seq UI:      http://localhost:8081" -ForegroundColor White
 Write-Host "  Seq Ingest:  http://localhost:5341" -ForegroundColor White
 
 if ($Scenario -eq 1 -or $Scenario -eq 2) {
     Write-Host "  IDP:         http://localhost:5001" -ForegroundColor White
+    Write-Host "  IDP DB:      PostgreSQL (embedded in hmm-idp container)" -ForegroundColor White
+    Write-Host "  IDP DB CLI:  docker exec -it hmm-idp su postgres -c `"psql -h 127.0.0.1 -d HmmIdp`"" -ForegroundColor White
 }
 if ($Scenario -eq 2) {
     Write-Host "  API:         http://localhost:5010" -ForegroundColor White

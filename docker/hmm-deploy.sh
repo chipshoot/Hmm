@@ -1,9 +1,11 @@
 #!/bin/bash
 # ============================================================
-# Production Deployment Script for Hmm (SQLite + Cloudflare)
+# Production Deployment Script for Hmm (Cloudflare)
 # ============================================================
 #
-# Deploys API + IDP in Docker with SQLite database on the host.
+# Deploys API + IDP in Docker:
+#   - API uses SQLite database on the host
+#   - IDP uses PostgreSQL (embedded in hmm-idp container)
 # Designed for macOS with Cloudflare Tunnel for public access.
 #
 # Usage:
@@ -19,7 +21,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Compose file combination for SQLite production
+# Compose file combination for production (API: SQLite, IDP: PostgreSQL)
 COMPOSE_FILES="-f compose.base-sqlite.yml -f compose.idp.yml -f compose.api-sqlite.yml"
 
 # Default OneDrive path on macOS
@@ -73,14 +75,14 @@ while [[ $# -gt 0 ]]; do
             echo "  --stop              Stop and remove containers"
             echo "  --status            Show container status and health"
             echo "  --logs [service]    Follow logs (optional: hmm-api, hmm-idp, hmm-seq)"
-            echo "  --backup            Backup SQLite and IDP databases"
+            echo "  --backup            Backup API SQLite and IDP PostgreSQL databases"
             echo ""
             echo "Options:"
             echo "  --build, -b         Build images before starting"
             echo "  --rebuild, -r       Rebuild images from scratch (no cache)"
             echo ""
             echo "Environment variables:"
-            echo "  HMM_DATA_DIR        SQLite data directory (default: ~/Library/CloudStorage/OneDrive-Personal/hmm-data)"
+            echo "  HMM_DATA_DIR        API SQLite data directory (default: ~/Library/CloudStorage/OneDrive-Personal/hmm-data)"
             echo "  HMM_BACKUP_DIR      Backup directory (default: ~/hmm-backups)"
             exit 0
             ;;
@@ -112,16 +114,16 @@ case $ACTION in
     start)
         check_docker
         echo "============================================================"
-        echo "Hmm Production Deployment (SQLite)"
+        echo "Hmm Production Deployment (API: SQLite, IDP: PostgreSQL)"
         echo "============================================================"
         echo ""
 
-        # Ensure SQLite data directory exists
+        # Ensure API SQLite data directory exists
         if [ ! -d "$SQLITE_DATA_DIR" ]; then
             echo "Creating data directory: $SQLITE_DATA_DIR"
             mkdir -p "$SQLITE_DATA_DIR"
         fi
-        echo "SQLite data: $SQLITE_DATA_DIR"
+        echo "API SQLite data: $SQLITE_DATA_DIR"
         echo ""
 
         # Handle rebuild
@@ -158,7 +160,8 @@ case $ACTION in
         echo "  IDP:         http://localhost:5001"
         echo "  Seq:         http://localhost:8081"
         echo ""
-        echo "SQLite database: $SQLITE_DATA_DIR/hmm.db"
+        echo "API SQLite database: $SQLITE_DATA_DIR/hmm.db"
+        echo "IDP PostgreSQL:     embedded in hmm-idp container (volume: idp-postgres-data)"
         echo ""
         echo "Commands:"
         echo "  Stop:    ./hmm-deploy.sh --stop"
@@ -185,12 +188,19 @@ case $ACTION in
         docker ps --filter "name=hmm-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
         echo ""
 
-        # Check SQLite database
+        # Check API SQLite database
         if [ -f "$SQLITE_DATA_DIR/hmm.db" ]; then
             DB_SIZE=$(du -h "$SQLITE_DATA_DIR/hmm.db" | cut -f1)
-            echo "SQLite database: $SQLITE_DATA_DIR/hmm.db ($DB_SIZE)"
+            echo "API SQLite database: $SQLITE_DATA_DIR/hmm.db ($DB_SIZE)"
         else
-            echo "SQLite database: not created yet"
+            echo "API SQLite database: not created yet"
+        fi
+
+        # Check IDP PostgreSQL
+        if docker ps --format '{{.Names}}' | grep -q hmm-idp; then
+            echo "IDP PostgreSQL:     embedded in hmm-idp container (volume: idp-postgres-data)"
+        else
+            echo "IDP PostgreSQL:     hmm-idp container not running"
         fi
         echo ""
 
@@ -233,9 +243,9 @@ case $ACTION in
         TIMESTAMP=$(date +%Y%m%d_%H%M%S)
         mkdir -p "$BACKUP_DIR"
 
-        # Backup SQLite
+        # Backup API SQLite
         if [ -f "$SQLITE_DATA_DIR/hmm.db" ]; then
-            echo "Backing up SQLite database..."
+            echo "Backing up API SQLite database..."
             echo "  Stopping API to checkpoint WAL..."
             docker stop hmm-api 2>/dev/null || true
             sleep 2
@@ -244,23 +254,19 @@ case $ACTION in
             docker start hmm-api
             echo "  Saved: $BACKUP_DIR/hmm-$TIMESTAMP.db"
         else
-            echo "  SQLite database not found, skipping."
+            echo "  API SQLite database not found, skipping."
         fi
         echo ""
 
-        # Backup IDP SQL Server
-        echo "Backing up IDP database..."
-        if docker ps --format '{{.Names}}' | grep -q hmm-idp-sqlserver; then
-            docker exec hmm-idp-sqlserver mkdir -p /var/opt/mssql/backup 2>/dev/null || true
-            docker exec hmm-idp-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-                -S localhost -U sa -P "${IDP_SA_PASSWORD:-Password1!}" -C \
-                -Q "BACKUP DATABASE [HmmIdp] TO DISK = '/var/opt/mssql/backup/HmmIdp.bak' WITH INIT" \
-                2>/dev/null && \
-            docker cp hmm-idp-sqlserver:/var/opt/mssql/backup/HmmIdp.bak "$BACKUP_DIR/HmmIdp-$TIMESTAMP.bak" && \
-            echo "  Saved: $BACKUP_DIR/HmmIdp-$TIMESTAMP.bak" || \
-            echo "  IDP backup failed (database may not exist yet)"
+        # Backup IDP PostgreSQL (embedded in hmm-idp container)
+        echo "Backing up IDP PostgreSQL database..."
+        if docker ps --format '{{.Names}}' | grep -q hmm-idp; then
+            docker exec hmm-idp su postgres -c "pg_dump -h 127.0.0.1 HmmIdp" \
+                > "$BACKUP_DIR/HmmIdp-$TIMESTAMP.sql" 2>/dev/null && \
+            echo "  Saved: $BACKUP_DIR/HmmIdp-$TIMESTAMP.sql" || \
+            echo "  IDP PostgreSQL backup failed (database may not exist yet)"
         else
-            echo "  IDP SQL Server not running, skipping."
+            echo "  hmm-idp container not running, skipping."
         fi
 
         echo ""

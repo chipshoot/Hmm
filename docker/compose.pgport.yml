@@ -1,0 +1,12 @@
+# Exposes PostgreSQL port from hmm-idp container for external browsing
+# Usage: add -f compose.pgport.yml to your docker compose command
+#
+# Connect with DBeaver:
+#   Host: localhost    Port: 5432
+#   Database: HmmIdp   User: postgres
+#   Password: (see IDP_POSTGRES_PASSWORD in .env)
+
+services:
+  hmm-idp:
+    ports:
+      - "5432:5432"

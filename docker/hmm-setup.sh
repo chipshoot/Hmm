@@ -4,9 +4,9 @@
 # ============================================================
 #
 # Scenarios:
-#   1  API local, IDP + SQL Server (API) + SQL Server (IDP) + Seq in Docker
-#   2  Everything in Docker (API + IDP + SQL Server x2 + Seq)
-#   3  API + IDP local, SQL Server (API) + SQL Server (IDP) + Seq in Docker
+#   1  API local, IDP (PostgreSQL embedded) + SQL Server (API) + Seq in Docker
+#   2  Everything in Docker (API + IDP (PostgreSQL embedded) + SQL Server (API) + Seq)
+#   3  API + IDP local, SQL Server (API) + Seq in Docker
 #
 # Usage:
 #   ./hmm-setup.sh --scenario 1|2|3 [--rebuild]
@@ -43,9 +43,9 @@ while [[ $# -gt 0 ]]; do
             echo "       ./hmm-setup.sh --down"
             echo ""
             echo "Scenarios:"
-            echo "  1  API local, IDP + SQL Servers + Seq in Docker"
+            echo "  1  API local, IDP (PostgreSQL) + SQL Server (API) + Seq in Docker"
             echo "  2  Everything in Docker"
-            echo "  3  API + IDP local, SQL Servers + Seq in Docker"
+            echo "  3  API + IDP local, SQL Server (API) + Seq in Docker"
             echo ""
             echo "Options:"
             echo "  --scenario, -s  Scenario number (1, 2, or 3)"
@@ -95,9 +95,9 @@ if [ -z "$SCENARIO" ]; then
     echo "ERROR: Please specify a scenario with --scenario 1, 2, or 3"
     echo ""
     echo "Scenarios:"
-    echo "  1  API local, IDP + SQL Servers + Seq in Docker"
+    echo "  1  API local, IDP (PostgreSQL) + SQL Server (API) + Seq in Docker"
     echo "  2  Everything in Docker"
-    echo "  3  API + IDP local, SQL Servers + Seq in Docker"
+    echo "  3  API + IDP local, SQL Server (API) + Seq in Docker"
     echo ""
     echo "Usage: ./hmm-setup.sh --scenario <1|2|3> [--rebuild]"
     echo "       ./hmm-setup.sh --down"
@@ -129,9 +129,9 @@ fi
 echo "Starting Scenario $SCENARIO..."
 echo ""
 case $SCENARIO in
-    1) echo "  Docker: IDP + SQL Server (API) + SQL Server (IDP) + Seq" ;;
-    2) echo "  Docker: API + IDP + SQL Server (API) + SQL Server (IDP) + Seq" ;;
-    3) echo "  Docker: SQL Server (API) + SQL Server (IDP) + Seq" ;;
+    1) echo "  Docker: IDP (PostgreSQL embedded) + SQL Server (API) + Seq" ;;
+    2) echo "  Docker: API + IDP (PostgreSQL embedded) + SQL Server (API) + Seq" ;;
+    3) echo "  Docker: SQL Server (API) + Seq" ;;
 esac
 echo ""
 
@@ -146,12 +146,13 @@ echo ""
 # Connection info
 echo "Services:"
 echo "  SQL Server (API): localhost,1433  (user: sa)"
-echo "  SQL Server (IDP): localhost,14333 (user: sa)"
 echo "  Seq UI:      http://localhost:8081"
 echo "  Seq Ingest:  http://localhost:5341"
 
 if [ "$SCENARIO" = "1" ] || [ "$SCENARIO" = "2" ]; then
     echo "  IDP:         http://localhost:5001"
+    echo "  IDP DB:      PostgreSQL (embedded in hmm-idp container)"
+    echo "  IDP DB CLI:  docker exec -it hmm-idp su postgres -c \"psql -h 127.0.0.1 -d HmmIdp\""
 fi
 if [ "$SCENARIO" = "2" ]; then
     echo "  API:         http://localhost:5010"
