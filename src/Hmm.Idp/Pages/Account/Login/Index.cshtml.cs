@@ -118,6 +118,11 @@ public class Index : PageModel
                 // request for a local page
                 if (Url.IsLocalUrl(Input.ReturnUrl))
                 {
+                    // Never bounce a freshly signed-in user back to the logout pages.
+                    if (Input.ReturnUrl.StartsWith("/Account/Logout", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Redirect("~/");
+                    }
                     return Redirect(Input.ReturnUrl);
                 }
                 else if (string.IsNullOrEmpty(Input.ReturnUrl))

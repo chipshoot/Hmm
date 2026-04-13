@@ -7,7 +7,9 @@
     }
     var isAuthenticated = !string.IsNullOrWhiteSpace(name);
     var isAdmin = Context.User?.IsInRole("Administrator") ?? false;
-    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var currentPath = Context.Request.Path.Value ?? string.Empty;
+    var isLogoutPage = currentPath.StartsWith("/Account/Logout", StringComparison.OrdinalIgnoreCase);
+    var returnUrl = isLogoutPage ? "~/" : Context.Request.Path + Context.Request.QueryString;
 }
 
 <div class="nav-page">
