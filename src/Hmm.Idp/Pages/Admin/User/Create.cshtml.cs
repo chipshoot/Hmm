@@ -7,20 +7,20 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.Idp.Pages.Admin.User
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Administrator")]
     [SecurityHeaders]
     public class CreateModel : PageModel
     {
-        private readonly UserManagementService _userService;
+        private readonly IApplicationUserRepository _userRepository;
         private readonly PasswordPolicyService _passwordPolicyService;
         private readonly IEmailService _emailService;
 
         public CreateModel(
-            UserManagementService userService,
+            IApplicationUserRepository userRepository,
             PasswordPolicyService passwordPolicyService,
             IEmailService emailService)
         {
-            _userService = userService;
+            _userRepository = userRepository;
             _passwordPolicyService = passwordPolicyService;
             _emailService = emailService;
         }
@@ -60,7 +60,7 @@ namespace Hmm.Idp.Pages.Admin.User
             public bool EnableTwoFactorAuth { get; set; }
         }
 
-        public IActionResult OnPostAsync()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
@@ -81,18 +81,18 @@ namespace Hmm.Idp.Pages.Admin.User
                 }
 
                 // Create the user
-                var user = _userService.CreateUser(
+                var user = await _userRepository.CreateUserAsync(
                     Input.Username,
                     Input.Password,
-                    $"{Input.FirstName} {Input.LastName}".Trim(),
-                    Input.Email);
+                    firstName: Input.FirstName,
+                    lastName: Input.LastName,
+                    email: Input.Email);
 
                 // Send email verification link
-                var userId = user.Result.Id;
-                var emailSent = _emailService.SendVerificationEmailAsync(
+                await _emailService.SendVerificationEmailAsync(
                     Input.Email,
-                    userId,
-                    "VerificationToken").Result; // In a real implementation, generate a proper token
+                    user.Id,
+                    "VerificationToken"); // In a real implementation, generate a proper token
 
                 TempData["SuccessMessage"] = "User created successfully. A verification email has been sent.";
                 return RedirectToPage("./Index");

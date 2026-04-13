@@ -7,18 +7,18 @@ namespace Hmm.Idp.Pages.Account
 {
     public class RegisterModel : PageModel
     {
-        private readonly UserManagementService _userService;
+        private readonly IApplicationUserRepository _userRepository;
         private readonly PasswordPolicyService _passwordPolicyService;
         private readonly IEmailService _emailService;
         private readonly ILogger<RegisterModel> _logger;
 
         public RegisterModel(
-            UserManagementService userService,
+            IApplicationUserRepository userRepository,
             PasswordPolicyService passwordPolicyService,
             IEmailService emailService,
             ILogger<RegisterModel> logger)
         {
-            _userService = userService;
+            _userRepository = userRepository;
             _passwordPolicyService = passwordPolicyService;
             _emailService = emailService;
             _logger = logger;
@@ -76,7 +76,7 @@ namespace Hmm.Idp.Pages.Account
                 }
 
                 // Create the user
-                var user = await _userService.CreateUser(
+                var user = await _userRepository.CreateUserAsync(
                     Input.Username,
                     Input.Password,
                     email: Input.Email);

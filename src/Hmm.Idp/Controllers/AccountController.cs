@@ -10,7 +10,7 @@ namespace Hmm.Idp.Controllers;
 [Route("api/[controller]")]
 public class AccountController : ControllerBase
 {
-    private readonly IUserManagementService _userService;
+    private readonly IApplicationUserRepository _userRepository;
     private readonly PasswordPolicyService _passwordPolicyService;
     private readonly IEmailService _emailService;
     private readonly ILogger<AccountController> _logger;
@@ -21,12 +21,12 @@ public class AccountController : ControllerBase
     };
 
     public AccountController(
-        IUserManagementService userService,
+        IApplicationUserRepository userRepository,
         PasswordPolicyService passwordPolicyService,
         IEmailService emailService,
         ILogger<AccountController> logger)
     {
-        _userService = userService;
+        _userRepository = userRepository;
         _passwordPolicyService = passwordPolicyService;
         _emailService = emailService;
         _logger = logger;
@@ -106,7 +106,7 @@ public class AccountController : ControllerBase
 
         try
         {
-            var user = await _userService.CreateUser(
+            var user = await _userRepository.CreateUserAsync(
                 request.Username,
                 request.Password,
                 email: request.Email);

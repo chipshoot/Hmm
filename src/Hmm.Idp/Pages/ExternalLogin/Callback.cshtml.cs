@@ -15,7 +15,7 @@ namespace Hmm.Idp.Pages.ExternalLogin;
 [SecurityHeaders]
 public class Callback : PageModel
 {
-    private readonly ApplicationUserRepository _userRepository;
+    private readonly IApplicationUserRepository _userRepository;
     private readonly IIdentityServerInteractionService _interaction;
     private readonly ILogger<Callback> _logger;
     private readonly IEventService _events;
@@ -24,7 +24,7 @@ public class Callback : PageModel
         IIdentityServerInteractionService interaction,
         IEventService events,
         ILogger<Callback> logger,
-        ApplicationUserRepository userRepository)
+        IApplicationUserRepository userRepository)
     {
         _userRepository = userRepository;
         _interaction = interaction;

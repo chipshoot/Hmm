@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model Hmm.Idp.Pages.Admin.User.IndexModel
 @{
     ViewData["Title"] = "User Management";
@@ -6,17 +6,27 @@
 
 <div class="user-management-page">
     <h1>User Management</h1>
-    <p>Manage users of hmmIdp system</p>
+    <p>Manage users of the Hmm Identity system.</p>
 
     <div class="row mb-3">
-        <div class="col">
+        <div class="col-auto">
             <a asp-page="./Create" class="btn btn-primary">Create New User</a>
+        </div>
+        <div class="col">
+            <form method="get" class="d-flex">
+                <input type="text" name="Query" value="@Model.Query" class="form-control me-2" placeholder="Search by username or email" />
+                <button type="submit" class="btn btn-secondary">Search</button>
+                @if (!string.IsNullOrEmpty(Model.Query))
+                {
+                    <a asp-page="./Index" class="btn btn-link">Clear</a>
+                }
+            </form>
         </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h2>Users</h2>
+            <h2>Users (@Model.TotalUsers total)</h2>
         </div>
         <div class="card-body">
             @if (!Model.Users.Any())
@@ -29,8 +39,11 @@
                     <thead>
                         <tr>
                             <th>Username</th>
-                            <th>Subject ID</th>
-                            <th>Claims</th>
+                            <th>Email</th>
+                            <th>Roles</th>
+                            <th>Active</th>
+                            <th>Locked</th>
+                            <th>Last Login</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -39,33 +52,34 @@
                         {
                             <tr>
                                 <td>@user.UserName</td>
-                                <td>@user.SubjectId</td>
+                                <td>@user.Email</td>
+                                <td>@user.Roles</td>
+                                <td>@(user.IsActive ? "Yes" : "No")</td>
+                                <td>@(user.IsLockedOut ? "Yes" : "No")</td>
+                                <td>@(user.LastLoginAt?.ToString("u") ?? "-")</td>
                                 <td>
-                                    @if (user.GetClaims().Any())
-                                    {
-                                        <ul>
-                                            @foreach (var claim in user.GetClaims().Take(2))
-                                            {
-                                                <li>@claim.Type: @claim.Value</li>
-                                            }
-                                            @if (user.GetClaims().Count() > 2)
-                                            {
-                                                <li>...</li>
-                                            }
-                                        </ul>
-                                    }
-                                </td>
-                                <td>
-                                    <a asp-page="./Details" asp-route-id="@user.SubjectId"
-                                        class="btn btn-info btn-sm">Details</a>
-                                    <a asp-page="./Edit" asp-route-id="@user.SubjectId" class="btn btn-warning btn-sm">Edit</a>
-                                    <a asp-page="./Delete" asp-route-id="@user.SubjectId"
-                                        class="btn btn-danger btn-sm">Delete</a>
+                                    <a asp-page="./Details" asp-route-id="@user.Id" class="btn btn-info btn-sm">Details</a>
+                                    <a asp-page="./Edit" asp-route-id="@user.Id" class="btn btn-warning btn-sm">Edit</a>
+                                    <a asp-page="./Delete" asp-route-id="@user.Id" class="btn btn-danger btn-sm">Delete</a>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <nav>
+                        <ul class="pagination">
+                            @for (var p = 1; p <= Model.TotalPages; p++)
+                            {
+                                <li class="page-item @(p == Model.Page ? "active" : "")">
+                                    <a class="page-link" asp-page="./Index" asp-route-Page="@p" asp-route-Query="@Model.Query">@p</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
             }
         </div>
     </div>

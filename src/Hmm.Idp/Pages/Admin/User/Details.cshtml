@@ -1,0 +1,92 @@
+@page "{id}"
+@model Hmm.Idp.Pages.Admin.User.DetailsModel
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<h1>User Details</h1>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-success">@Model.StatusMessage</div>
+}
+
+<dl class="row">
+    <dt class="col-sm-3">Username</dt>
+    <dd class="col-sm-9">@Model.User.UserName</dd>
+
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@Model.User.Email (@(Model.User.EmailConfirmed ? "confirmed" : "not confirmed"))</dd>
+
+    <dt class="col-sm-3">First Name</dt>
+    <dd class="col-sm-9">@Model.User.FirstName</dd>
+
+    <dt class="col-sm-3">Last Name</dt>
+    <dd class="col-sm-9">@Model.User.LastName</dd>
+
+    <dt class="col-sm-3">Is Active</dt>
+    <dd class="col-sm-9">@(Model.User.IsActive ? "Yes" : "No")</dd>
+
+    <dt class="col-sm-3">Locked Out</dt>
+    <dd class="col-sm-9">
+        @(Model.IsLockedOut ? $"Yes (until {Model.LockoutEnd?.ToString("u") ?? "?"})" : "No")
+    </dd>
+
+    <dt class="col-sm-3">Created</dt>
+    <dd class="col-sm-9">@Model.User.CreatedAt.ToString("u")</dd>
+
+    <dt class="col-sm-3">Last Login</dt>
+    <dd class="col-sm-9">@(Model.User.LastLoginAt?.ToString("u") ?? "-")</dd>
+
+    <dt class="col-sm-3">External Provider</dt>
+    <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.User.ProviderName) ? "(local)" : Model.User.ProviderName)</dd>
+
+    <dt class="col-sm-3">Roles</dt>
+    <dd class="col-sm-9">
+        @if (Model.Roles.Any())
+        {
+            <ul>
+                @foreach (var role in Model.Roles)
+                {
+                    <li>@role</li>
+                }
+            </ul>
+        }
+        else { <em>(none)</em> }
+    </dd>
+
+    <dt class="col-sm-3">Claims</dt>
+    <dd class="col-sm-9">
+        @if (Model.Claims.Any())
+        {
+            <ul>
+                @foreach (var claim in Model.Claims)
+                {
+                    <li>@claim.Type = @claim.Value</li>
+                }
+            </ul>
+        }
+        else { <em>(none)</em> }
+    </dd>
+</dl>
+
+<div class="mb-3">
+    <a asp-page="./Edit" asp-route-id="@Model.User.Id" class="btn btn-primary">Edit</a>
+    <a asp-page="./ResetPassword" asp-route-id="@Model.User.Id" class="btn btn-warning">Reset Password</a>
+
+    @if (Model.IsLockedOut)
+    {
+        <form method="post" asp-page-handler="Unlock" asp-route-id="@Model.User.Id" class="d-inline">
+            <button type="submit" class="btn btn-outline-success">Unlock Account</button>
+        </form>
+    }
+
+    @if (!Model.User.EmailConfirmed)
+    {
+        <form method="post" asp-page-handler="ResendVerification" asp-route-id="@Model.User.Id" class="d-inline">
+            <button type="submit" class="btn btn-outline-info">Re-send Verification Email</button>
+        </form>
+    }
+
+    <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+</div>

@@ -1,4 +1,78 @@
-﻿@page
+@page
 @model Hmm.Idp.Pages.ApiResources.CreateModel
 @{
+    ViewData["Title"] = "Create API Resource";
+}
+
+<h2>Create API Resource</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ApiResource.Name" class="control-label">Name</label>
+                <input asp-for="ApiResource.Name" class="form-control" />
+                <span asp-validation-for="ApiResource.Name" class="text-danger"></span>
+                <small class="form-text text-muted">Unique identifier for this API resource (e.g. <code>hmmapi</code>).</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ApiResource.DisplayName" class="control-label">Display Name</label>
+                <input asp-for="ApiResource.DisplayName" class="form-control" />
+                <span asp-validation-for="ApiResource.DisplayName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ApiResource.Description" class="control-label">Description</label>
+                <textarea asp-for="ApiResource.Description" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="ApiResource.Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="ApiResource.Enabled" class="form-check-input" />
+                <label asp-for="ApiResource.Enabled" class="form-check-label">Enabled</label>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="ApiResource.ShowInDiscoveryDocument" class="form-check-input" />
+                <label asp-for="ApiResource.ShowInDiscoveryDocument" class="form-check-label">Show in Discovery Document</label>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="ApiResource.RequireResourceIndicator" class="form-check-input" />
+                <label asp-for="ApiResource.RequireResourceIndicator" class="form-check-label">Require Resource Indicator</label>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ApiResource.AllowedAccessTokenSigningAlgorithms" class="control-label">Allowed Access Token Signing Algorithms</label>
+                <input asp-for="ApiResource.AllowedAccessTokenSigningAlgorithms" class="form-control" placeholder="RS256, ES256" />
+                <small class="form-text text-muted">Comma-separated. Leave blank to use defaults.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ClaimsInput" class="control-label">User Claims</label>
+                <input asp-for="ClaimsInput" class="form-control" placeholder="name, email, role" />
+                <small class="form-text text-muted">Comma-separated list of user claim types to include in access tokens.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ScopesInput" class="control-label">Scopes</label>
+                <input asp-for="ScopesInput" class="form-control" placeholder="hmmapi, hmmapi.read" />
+                <small class="form-text text-muted">Comma-separated list of scope names. Scopes must already exist as API Scopes.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <input type="submit" value="Create" class="btn btn-primary" />
+                <a asp-page="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

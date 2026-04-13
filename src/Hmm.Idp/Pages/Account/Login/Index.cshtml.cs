@@ -17,7 +17,7 @@ namespace Hmm.Idp.Pages.Login;
 [AllowAnonymous]
 public class Index : PageModel
 {
-    private readonly ApplicationUserRepository _userRepository;
+    private readonly IApplicationUserRepository _userRepository;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IIdentityServerInteractionService _interaction;
     private readonly IEventService _events;
@@ -34,7 +34,7 @@ public class Index : PageModel
         IAuthenticationSchemeProvider schemeProvider,
         IIdentityProviderStore identityProviderStore,
         IEventService events,
-        ApplicationUserRepository userRepository,
+        IApplicationUserRepository userRepository,
         SignInManager<ApplicationUser> signInManager)
     {
         _userRepository = userRepository;

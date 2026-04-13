@@ -1,0 +1,39 @@
+@page
+@model Hmm.Idp.Pages.Admin.ApiScopes.IndexModel
+@{
+    ViewData["Title"] = "API Scopes";
+}
+
+<h1>API Scopes</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Create New API Scope</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Display Name</th>
+            <th>Enabled</th>
+            <th>Required</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var scope in Model.Scopes)
+        {
+            <tr>
+                <td>@scope.Name</td>
+                <td>@scope.DisplayName</td>
+                <td>@(scope.Enabled ? "Yes" : "No")</td>
+                <td>@(scope.Required ? "Yes" : "No")</td>
+                <td>
+                    <a asp-page="./Edit" asp-route-id="@scope.Id" class="btn btn-sm btn-secondary">Edit</a>
+                    <a asp-page="./Details" asp-route-id="@scope.Id" class="btn btn-sm btn-info">Details</a>
+                    <a asp-page="./Delete" asp-route-id="@scope.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model Hmm.Idp.Pages.Admin.Clients.CreateModel
 @{
     ViewData["Title"] = "Create Client";
@@ -7,10 +7,11 @@
 <h1>Create Client</h1>
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-10">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+            <h4>Identity</h4>
             <div class="form-group mb-3">
                 <label asp-for="Client.ClientId" class="control-label"></label>
                 <input asp-for="Client.ClientId" class="form-control" />
@@ -24,32 +25,77 @@
             </div>
 
             <div class="form-group mb-3">
+                <label asp-for="Client.Description" class="control-label"></label>
+                <textarea asp-for="Client.Description" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Client.Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Client.Enabled" class="form-check-input" />
+                <label asp-for="Client.Enabled" class="form-check-label"></label>
+            </div>
+
+            <div class="form-group mb-3">
                 <label asp-for="Client.ClientSecret" class="control-label"></label>
                 <input asp-for="Client.ClientSecret" class="form-control" />
                 <span asp-validation-for="Client.ClientSecret" class="text-danger"></span>
+                <small class="form-text text-muted">Hashed with SHA-256 before storage.</small>
             </div>
 
+            <h4 class="mt-4">Grant Types</h4>
             <div class="form-group mb-3">
-                <div class="form-check">
-                    <input asp-for="Client.RequirePkce" class="form-check-input" />
-                    <label asp-for="Client.RequirePkce" class="form-check-label"></label>
+                <label class="control-label">@Html.DisplayNameFor(m => m.Client.AllowedGrantTypes)</label>
+                @foreach (var grant in Model.AvailableGrantTypes)
+                {
+                    var checked_ = Model.Client?.AllowedGrantTypes?.Contains(grant) == true;
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Client.AllowedGrantTypes" value="@grant" id="gt_@grant" @(checked_ ? "checked" : "") />
+                        <label class="form-check-label" for="gt_@grant">@grant</label>
+                    </div>
+                }
+                <small class="form-text text-muted">Select one or more. PKCE should stay enabled for <code>authorization_code</code>.</small>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Client.RequirePkce" class="form-check-input" />
+                <label asp-for="Client.RequirePkce" class="form-check-label"></label>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Client.AllowOfflineAccess" class="form-check-input" />
+                <label asp-for="Client.AllowOfflineAccess" class="form-check-label"></label>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Client.UpdateAccessTokenClaimsOnRefresh" class="form-check-input" />
+                <label asp-for="Client.UpdateAccessTokenClaimsOnRefresh" class="form-check-label"></label>
+            </div>
+
+            <h4 class="mt-4">Token Lifetimes</h4>
+            <div class="row">
+                <div class="form-group mb-3 col-md-6">
+                    <label asp-for="Client.AccessTokenLifetime" class="control-label"></label>
+                    <input asp-for="Client.AccessTokenLifetime" class="form-control" />
+                    <span asp-validation-for="Client.AccessTokenLifetime" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3 col-md-6">
+                    <label asp-for="Client.IdentityTokenLifetime" class="control-label"></label>
+                    <input asp-for="Client.IdentityTokenLifetime" class="form-control" />
+                    <span asp-validation-for="Client.IdentityTokenLifetime" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3 col-md-6">
+                    <label asp-for="Client.AbsoluteRefreshTokenLifetime" class="control-label"></label>
+                    <input asp-for="Client.AbsoluteRefreshTokenLifetime" class="form-control" />
+                    <span asp-validation-for="Client.AbsoluteRefreshTokenLifetime" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3 col-md-6">
+                    <label asp-for="Client.SlidingRefreshTokenLifetime" class="control-label"></label>
+                    <input asp-for="Client.SlidingRefreshTokenLifetime" class="form-control" />
+                    <span asp-validation-for="Client.SlidingRefreshTokenLifetime" class="text-danger"></span>
                 </div>
             </div>
 
-            <div class="form-group mb-3">
-                <div class="form-check">
-                    <input asp-for="Client.AllowOfflineAccess" class="form-check-input" />
-                    <label asp-for="Client.AllowOfflineAccess" class="form-check-label"></label>
-                </div>
-            </div>
-
-            <div class="form-group mb-3">
-                <div class="form-check">
-                    <input asp-for="Client.UpdateAccessTokenClaimsOnRefresh" class="form-check-input" />
-                    <label asp-for="Client.UpdateAccessTokenClaimsOnRefresh" class="form-check-label"></label>
-                </div>
-            </div>
-
+            <h4 class="mt-4">URIs &amp; Scopes</h4>
             <div class="form-group mb-3">
                 <label asp-for="Client.RedirectUris" class="control-label"></label>
                 <textarea asp-for="Client.RedirectUris" class="form-control" rows="3"></textarea>
@@ -68,7 +114,20 @@
                 <label asp-for="Client.AllowedScopes" class="control-label"></label>
                 <input asp-for="Client.AllowedScopes" class="form-control" />
                 <span asp-validation-for="Client.AllowedScopes" class="text-danger"></span>
-                <small class="form-text text-muted">Enter comma-separated scopes.</small>
+                <small class="form-text text-muted">Comma separated.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Client.AllowedCorsOrigins" class="control-label"></label>
+                <textarea asp-for="Client.AllowedCorsOrigins" class="form-control" rows="2"></textarea>
+                <small class="form-text text-muted">Enter one origin per line (e.g. https://example.com).</small>
+            </div>
+
+            <h4 class="mt-4">Client Claims</h4>
+            <div class="form-group mb-3">
+                <label asp-for="Client.ClientClaims" class="control-label"></label>
+                <textarea asp-for="Client.ClientClaims" class="form-control" rows="3" placeholder="type=value"></textarea>
+                <small class="form-text text-muted">One per line, format: <code>type=value</code>.</small>
             </div>
 
             <div class="form-group mb-3">

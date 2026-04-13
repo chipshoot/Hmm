@@ -1,0 +1,71 @@
+@page "{id:int}"
+@model Hmm.Idp.Pages.Admin.ApiScopes.EditModel
+@{
+    ViewData["Title"] = "Edit API Scope";
+}
+
+<h1>Edit API Scope</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Scope.Id" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Scope.Name" class="control-label"></label>
+                <input asp-for="Scope.Name" class="form-control" readonly />
+                <small class="form-text text-muted">Name cannot be changed after creation.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Scope.DisplayName" class="control-label"></label>
+                <input asp-for="Scope.DisplayName" class="form-control" />
+                <span asp-validation-for="Scope.DisplayName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Scope.Description" class="control-label"></label>
+                <textarea asp-for="Scope.Description" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Scope.Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Scope.Enabled" class="form-check-input" />
+                <label asp-for="Scope.Enabled" class="form-check-label"></label>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Scope.ShowInDiscoveryDocument" class="form-check-input" />
+                <label asp-for="Scope.ShowInDiscoveryDocument" class="form-check-label"></label>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Scope.Required" class="form-check-input" />
+                <label asp-for="Scope.Required" class="form-check-label"></label>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input asp-for="Scope.Emphasize" class="form-check-input" />
+                <label asp-for="Scope.Emphasize" class="form-check-label"></label>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Scope.UserClaims" class="control-label"></label>
+                <input asp-for="Scope.UserClaims" class="form-control" placeholder="name, email, role" />
+                <small class="form-text text-muted">Comma-separated user claim types.</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-page="Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -113,7 +113,7 @@ internal static class HostingExtensions
             .AddResourceOwnerValidator<CustomResourceOwnerPasswordValidator>();
 
         // Register user repository (used by login, external login, and user management)
-        builder.Services.AddScoped<ApplicationUserRepository>();
+        builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
 
         // Register PasswordOptions for PasswordPolicyService
         builder.Services.AddSingleton(new PasswordOptions
@@ -135,10 +135,6 @@ internal static class HostingExtensions
 
         // Add this to ConfigureServices method in HostingExtensions.cs
         builder.Services.AddScoped<ApiResourceService>();
-
-        // Add the user management service
-        builder.Services.AddScoped<UserManagementService>();
-        builder.Services.AddScoped<IUserManagementService>(sp => sp.GetRequiredService<UserManagementService>());
 
         // Add seed data service
         builder.Services.AddScoped<SeedDataService>();
