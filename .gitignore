@@ -376,6 +376,9 @@ nul
 docker/.env
 docker/.env.ftp
 
+# Docker VPS folder
+docker/vps/
+
 # SQLite databases
 *.db
 *.db-shm
