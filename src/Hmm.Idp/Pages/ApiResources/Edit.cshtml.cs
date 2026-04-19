@@ -1,10 +1,12 @@
 // Pages/ApiResources/Edit.cshtml.cs
 using Hmm.Idp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Hmm.Idp.Pages.ApiResources
 {
+    [Authorize(Roles = "Administrator")]
     public class EditModel : PageModel
     {
         private readonly ApiResourceService _apiResourceService;

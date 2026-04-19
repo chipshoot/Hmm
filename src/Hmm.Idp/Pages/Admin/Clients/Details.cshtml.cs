@@ -31,6 +31,9 @@ public class DetailsModel : PageModel
             .Include(c => c.RedirectUris)
             .Include(c => c.PostLogoutRedirectUris)
             .Include(c => c.AllowedGrantTypes)
+            .Include(c => c.AllowedCorsOrigins)
+            .Include(c => c.Claims)
+            .Include(c => c.ClientSecrets)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (Client == null)

@@ -7,12 +7,46 @@ using System.Security.Claims;
 
 namespace Hmm.Idp.Services
 {
-    public class ApplicationUserRepository(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager)
+    /// <summary>
+    /// Repository abstraction over ASP.NET Identity's <see cref="UserManager{TUser}"/> and
+    /// <see cref="RoleManager{TRole}"/>. Exposed as an interface so callers can be unit tested
+    /// with Moq without constructing real Identity infrastructure.
+    /// </summary>
+    public interface IApplicationUserRepository
     {
-        private readonly UserManager<ApplicationUser> _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-        private readonly RoleManager<ApplicationRole> _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+        Task<bool> ValidateCredentialsAsync(string userName, string password);
+        Task<ApplicationUser> FindBySubjectIdAsync(string subjectId);
+        Task<ApplicationUser> FindByUserNameAsync(string userName);
+        Task<ApplicationUser> FindByEmailAsync(string email);
+        Task<ApplicationUser> FindByExternalProviderAsync(string provider, string userId);
+        Task<ApplicationUser> AutoProvisionUserAsync(string provider, string userId, List<Claim> claims);
+        Task<ApplicationUser> CreateUserAsync(string userName, string password, string firstName = null, string lastName = null, string email = null);
+        Task<IEnumerable<Claim>> GetClaimsBySubjectIdAsync(string subjectId);
+        Task<IEnumerable<ApplicationUser>> GetUsersAsync();
+        Task<bool> DeleteUserAsync(string subjectId);
+        Task<bool> UpdateUserAsync(ApplicationUser user);
+        Task<bool> SetPasswordAsync(ApplicationUser user, string newPassword);
+        Task<(IReadOnlyList<ApplicationUser> Users, int Total)> SearchUsersAsync(string query, int page, int pageSize);
+        Task<IList<string>> GetUserRolesAsync(ApplicationUser user);
+        Task<bool> AddUserToRoleAsync(ApplicationUser user, string role);
+        Task<bool> RemoveUserFromRoleAsync(ApplicationUser user, string role);
+        Task UnlockUserAsync(ApplicationUser user);
+        Task<bool> IsLockedOutAsync(ApplicationUser user);
+        Task<IList<Claim>> GetClaimsAsync(ApplicationUser user);
+    }
+
+    public class ApplicationUserRepository : IApplicationUserRepository
+    {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
+
+        public ApplicationUserRepository(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<ApplicationRole> roleManager)
+        {
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+        }
 
         public async Task<bool> ValidateCredentialsAsync(string userName, string password)
         {
@@ -262,6 +296,77 @@ namespace Hmm.Idp.Services
 
             var result = await _userManager.DeleteAsync(user);
             return result.Succeeded;
+        }
+
+        public async Task<bool> UpdateUserAsync(ApplicationUser user)
+        {
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
+        }
+
+        public async Task<bool> SetPasswordAsync(ApplicationUser user, string newPassword)
+        {
+            await _userManager.RemovePasswordAsync(user);
+            var result = await _userManager.AddPasswordAsync(user, newPassword);
+            return result.Succeeded;
+        }
+
+        public async Task<(IReadOnlyList<ApplicationUser> Users, int Total)> SearchUsersAsync(
+            string query, int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 25;
+
+            var users = _userManager.Users.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var q = query.Trim();
+                users = users.Where(u =>
+                    (u.UserName != null && u.UserName.Contains(q)) ||
+                    (u.Email != null && u.Email.Contains(q)));
+            }
+
+            var total = await users.CountAsync();
+            var pageItems = await users
+                .OrderBy(u => u.UserName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (pageItems, total);
+        }
+
+        public async Task<IList<string>> GetUserRolesAsync(ApplicationUser user)
+        {
+            return await _userManager.GetRolesAsync(user);
+        }
+
+        public async Task<bool> AddUserToRoleAsync(ApplicationUser user, string role)
+        {
+            var result = await _userManager.AddToRoleAsync(user, role);
+            return result.Succeeded;
+        }
+
+        public async Task<bool> RemoveUserFromRoleAsync(ApplicationUser user, string role)
+        {
+            var result = await _userManager.RemoveFromRoleAsync(user, role);
+            return result.Succeeded;
+        }
+
+        public async Task UnlockUserAsync(ApplicationUser user)
+        {
+            await _userManager.SetLockoutEndDateAsync(user, null);
+            await _userManager.ResetAccessFailedCountAsync(user);
+        }
+
+        public async Task<bool> IsLockedOutAsync(ApplicationUser user)
+        {
+            return await _userManager.IsLockedOutAsync(user);
+        }
+
+        public async Task<IList<Claim>> GetClaimsAsync(ApplicationUser user)
+        {
+            return await _userManager.GetClaimsAsync(user);
         }
     }
 }

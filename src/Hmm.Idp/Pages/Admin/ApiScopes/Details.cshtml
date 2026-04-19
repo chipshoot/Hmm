@@ -1,0 +1,53 @@
+@page "{id:int}"
+@model Hmm.Idp.Pages.Admin.ApiScopes.DetailsModel
+@{
+    ViewData["Title"] = "API Scope Details";
+}
+
+<h1>API Scope Details</h1>
+
+<div>
+    <h4>@Model.Scope.Name</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Name</dt>
+        <dd class="col-sm-9">@Model.Scope.Name</dd>
+
+        <dt class="col-sm-3">Display Name</dt>
+        <dd class="col-sm-9">@Model.Scope.DisplayName</dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.Scope.Description</dd>
+
+        <dt class="col-sm-3">Enabled</dt>
+        <dd class="col-sm-9">@(Model.Scope.Enabled ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Show In Discovery</dt>
+        <dd class="col-sm-9">@(Model.Scope.ShowInDiscoveryDocument ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Required</dt>
+        <dd class="col-sm-9">@(Model.Scope.Required ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Emphasize</dt>
+        <dd class="col-sm-9">@(Model.Scope.Emphasize ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">User Claims</dt>
+        <dd class="col-sm-9">
+            @if (Model.Scope.UserClaims?.Any() == true)
+            {
+                <ul>
+                    @foreach (var claim in Model.Scope.UserClaims)
+                    {
+                        <li>@claim.Type</li>
+                    }
+                </ul>
+            }
+            else { <em>(none)</em> }
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.Scope.Id" class="btn btn-primary">Edit</a>
+    <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+</div>

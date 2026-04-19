@@ -13,14 +13,14 @@ namespace Hmm.Idp.Tests;
 
 public class AccountControllerTests
 {
-    private readonly Mock<IUserManagementService> _mockUserService;
+    private readonly Mock<IApplicationUserRepository> _mockUserRepository;
     private readonly Mock<IEmailService> _mockEmailService;
     private readonly Mock<ILogger<AccountController>> _mockLogger;
     private readonly PasswordPolicyService _passwordPolicyService;
 
     public AccountControllerTests()
     {
-        _mockUserService = new Mock<IUserManagementService>();
+        _mockUserRepository = new Mock<IApplicationUserRepository>();
         _mockEmailService = new Mock<IEmailService>();
         _mockLogger = new Mock<ILogger<AccountController>>();
         _passwordPolicyService = new PasswordPolicyService(new PasswordOptions
@@ -37,7 +37,7 @@ public class AccountControllerTests
     private AccountController CreateController(string? jsonBody = null)
     {
         var controller = new AccountController(
-            _mockUserService.Object,
+            _mockUserRepository.Object,
             _passwordPolicyService,
             _mockEmailService.Object,
             _mockLogger.Object);
@@ -87,8 +87,8 @@ public class AccountControllerTests
             Email = request.Email
         };
 
-        _mockUserService
-            .Setup(s => s.CreateUser(request.Username, request.Password, null, request.Email))
+        _mockUserRepository
+            .Setup(s => s.CreateUserAsync(request.Username, request.Password, null, null, request.Email))
             .ReturnsAsync(createdUser);
 
         _mockEmailService
@@ -105,8 +105,8 @@ public class AccountControllerTests
         Assert.Equal(request.Email, response.Email);
         Assert.Equal(request.Username, response.Username);
 
-        _mockUserService.Verify(
-            s => s.CreateUser(request.Username, request.Password, null, request.Email),
+        _mockUserRepository.Verify(
+            s => s.CreateUserAsync(request.Username, request.Password, null, null, request.Email),
             Times.Once);
         _mockEmailService.Verify(
             s => s.SendVerificationEmailAsync(request.Email, createdUser.Id, It.IsAny<string>()),
@@ -386,8 +386,8 @@ public class AccountControllerTests
         var request = CreateValidRequest();
         var controller = CreateController(SerializeRequest(request));
 
-        _mockUserService
-            .Setup(s => s.CreateUser(It.IsAny<string>(), It.IsAny<string>(), null, It.IsAny<string>()))
+        _mockUserRepository
+            .Setup(s => s.CreateUserAsync(It.IsAny<string>(), It.IsAny<string>(), null, null, It.IsAny<string>()))
             .ThrowsAsync(new Exception("Username already exists"));
 
         // Act
@@ -414,8 +414,8 @@ public class AccountControllerTests
             Email = request.Email
         };
 
-        _mockUserService
-            .Setup(s => s.CreateUser(request.Username, request.Password, null, request.Email))
+        _mockUserRepository
+            .Setup(s => s.CreateUserAsync(request.Username, request.Password, null, null, request.Email))
             .ReturnsAsync(createdUser);
 
         _mockEmailService

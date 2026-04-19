@@ -7,9 +7,9 @@ namespace Hmm.Idp.Services
 {
     public class IdentityProfileService : IProfileService
     {
-        private readonly ApplicationUserRepository _userRepository;
+        private readonly IApplicationUserRepository _userRepository;
 
-        public IdentityProfileService(ApplicationUserRepository userRepository)
+        public IdentityProfileService(IApplicationUserRepository userRepository)
         {
             _userRepository = userRepository;
         }

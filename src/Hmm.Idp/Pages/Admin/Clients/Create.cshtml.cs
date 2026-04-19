@@ -23,12 +23,16 @@ public class CreateModel : PageModel
     [BindProperty]
     public ViewModel Client { get; set; }
 
+    public List<string> AvailableGrantTypes { get; } = GrantTypeOptions.All;
+
     public IActionResult OnGet()
     {
         // Initialize default values
         Client = new ViewModel
         {
+            Enabled = true,
             RequirePkce = true,
+            AllowedGrantTypes = new List<string> { "authorization_code" },
             AllowedScopes = $"{IdentityServerConstants.StandardScopes.OpenId},{IdentityServerConstants.StandardScopes.Profile}"
         };
 
@@ -47,40 +51,55 @@ public class CreateModel : PageModel
         {
             ClientId = Client.ClientId,
             ClientName = Client.ClientName,
+            Description = Client.Description,
+            Enabled = Client.Enabled,
             AllowOfflineAccess = Client.AllowOfflineAccess,
             UpdateAccessTokenClaimsOnRefresh = Client.UpdateAccessTokenClaimsOnRefresh,
             RequirePkce = Client.RequirePkce,
-            AllowedGrantTypes = Duende.IdentityServer.Models.GrantTypes.Code,
+            AccessTokenLifetime = Client.AccessTokenLifetime,
+            IdentityTokenLifetime = Client.IdentityTokenLifetime,
+            AbsoluteRefreshTokenLifetime = Client.AbsoluteRefreshTokenLifetime,
+            SlidingRefreshTokenLifetime = Client.SlidingRefreshTokenLifetime,
+            AllowedGrantTypes = (Client.AllowedGrantTypes ?? new List<string>())
+                .Where(g => !string.IsNullOrWhiteSpace(g))
+                .Distinct()
+                .ToList()
         };
 
-        // Add redirect URIs
-        if (!string.IsNullOrWhiteSpace(Client.RedirectUris))
+        if (client.AllowedGrantTypes.Count == 0)
         {
-            var uris = Client.RedirectUris.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var uri in uris)
-            {
-                client.RedirectUris.Add(uri.Trim());
-            }
+            ModelState.AddModelError(string.Empty, "At least one grant type must be selected.");
+            return Page();
+        }
+
+        // Add redirect URIs
+        foreach (var uri in SplitLines(Client.RedirectUris))
+        {
+            client.RedirectUris.Add(uri);
         }
 
         // Add post-logout redirect URIs
-        if (!string.IsNullOrWhiteSpace(Client.PostLogoutRedirectUris))
+        foreach (var uri in SplitLines(Client.PostLogoutRedirectUris))
         {
-            var uris = Client.PostLogoutRedirectUris.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var uri in uris)
-            {
-                client.PostLogoutRedirectUris.Add(uri.Trim());
-            }
+            client.PostLogoutRedirectUris.Add(uri);
         }
 
         // Add allowed scopes
-        if (!string.IsNullOrWhiteSpace(Client.AllowedScopes))
+        foreach (var scope in SplitCsv(Client.AllowedScopes))
         {
-            var scopes = Client.AllowedScopes.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var scope in scopes)
-            {
-                client.AllowedScopes.Add(scope.Trim());
-            }
+            client.AllowedScopes.Add(scope);
+        }
+
+        // Add allowed CORS origins
+        foreach (var origin in SplitLines(Client.AllowedCorsOrigins))
+        {
+            client.AllowedCorsOrigins.Add(origin);
+        }
+
+        // Add client claims
+        foreach (var (type, value) in ParseClaims(Client.ClientClaims))
+        {
+            client.Claims.Add(new Duende.IdentityServer.Models.ClientClaim(type, value));
         }
 
         // Add client secret
@@ -97,5 +116,35 @@ public class CreateModel : PageModel
         await _context.SaveChangesAsync();
 
         return RedirectToPage("./Index");
+    }
+
+    private static IEnumerable<string> SplitLines(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) yield break;
+        foreach (var line in input.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var trimmed = line.Trim();
+            if (trimmed.Length > 0) yield return trimmed;
+        }
+    }
+
+    private static IEnumerable<string> SplitCsv(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) yield break;
+        foreach (var part in input.Split(new[] { ',', ' ', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var trimmed = part.Trim();
+            if (trimmed.Length > 0) yield return trimmed;
+        }
+    }
+
+    private static IEnumerable<(string Type, string Value)> ParseClaims(string input)
+    {
+        foreach (var line in SplitLines(input))
+        {
+            var idx = line.IndexOf('=');
+            if (idx <= 0 || idx == line.Length - 1) continue;
+            yield return (line.Substring(0, idx).Trim(), line.Substring(idx + 1).Trim());
+        }
     }
 }

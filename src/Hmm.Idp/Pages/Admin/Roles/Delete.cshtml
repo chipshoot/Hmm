@@ -1,0 +1,31 @@
+@page "{id}"
+@model Hmm.Idp.Pages.Admin.Roles.DeleteModel
+@{
+    ViewData["Title"] = "Delete Role";
+}
+
+<h1>Delete Role</h1>
+
+<div class="alert alert-warning">
+    Are you sure you want to delete this role?
+    @if (Model.UserCount > 0)
+    {
+        <strong>@Model.UserCount user(s) are currently assigned to this role.</strong>
+    }
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Name</dt>
+    <dd class="col-sm-9">@Model.Role.Name</dd>
+
+    <dt class="col-sm-3">Description</dt>
+    <dd class="col-sm-9">@Model.Role.Description</dd>
+
+    <dt class="col-sm-3">Users in Role</dt>
+    <dd class="col-sm-9">@Model.UserCount</dd>
+</dl>
+
+<form method="post">
+    <input type="submit" value="Delete" class="btn btn-danger" />
+    <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+</form>

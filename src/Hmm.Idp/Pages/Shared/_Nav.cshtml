@@ -5,6 +5,11 @@
     {
         name = Context.User?.GetDisplayName();
     }
+    var isAuthenticated = !string.IsNullOrWhiteSpace(name);
+    var isAdmin = Context.User?.IsInRole("Administrator") ?? false;
+    var currentPath = Context.Request.Path.Value ?? string.Empty;
+    var isLogoutPage = currentPath.StartsWith("/Account/Logout", StringComparison.OrdinalIgnoreCase);
+    var returnUrl = isLogoutPage ? "~/" : Context.Request.Path + Context.Request.QueryString;
 }
 
 <div class="nav-page">
@@ -15,25 +20,57 @@
             HomeMadeMessage Identity
         </a>
 
-        @if (!string.IsNullOrWhiteSpace(name))
-        {
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">@name <b class="caret"></b></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" asp-page="/Account/Logout/Index">Logout</a>
-                    </div>
-                </li>
-                <!-- Add this inside the navigation section of your layout -->
-                <li class="nav-item">
-                    <a class="nav-link text-dark" asp-area="" asp-page="/ApiResources/Index">API Resources</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-area="" asp-page="/Admin/Clients/Index">Client Management</a>
-                </li>
+        <div class="collapse navbar-collapse" id="mainNav">
+            @* Admin links — only visible to authenticated administrators *@
+            <ul class="navbar-nav mr-auto">
+                @if (isAuthenticated && isAdmin)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/Admin/User/Index">Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/Admin/Roles/Index">Roles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/Admin/Clients/Index">Clients</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/ApiResources/Index">API Resources</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/Admin/ApiScopes/Index">API Scopes</a>
+                    </li>
+                }
             </ul>
-        }
+
+            @* User menu / Login button — pinned to the far right via ml-auto *@
+            <ul class="navbar-nav ml-auto">
+                @if (isAuthenticated)
+                {
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" id="userMenu"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> @name
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userMenu">
+                            <a class="dropdown-item" asp-page="/Account/Logout/Index">Logout</a>
+                        </div>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light" asp-page="/Account/Login/Index"
+                           asp-route-returnUrl="@returnUrl">Login</a>
+                    </li>
+                }
+            </ul>
+        </div>
 
     </nav>
 </div>

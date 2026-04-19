@@ -1,4 +1,4 @@
-﻿@page "{id:int}"
+@page "{id:int}"
 @model Hmm.Idp.Pages.Admin.Clients.DetailsModel
 @{
     ViewData["Title"] = "Client Details";
@@ -7,7 +7,7 @@
 <h1>Client Details</h1>
 
 <div>
-    <h4>Client</h4>
+    <h4>@Model.Client.ClientName</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-3">Client ID</dt>
@@ -28,6 +28,21 @@
         <dt class="col-sm-3">Allow Offline Access</dt>
         <dd class="col-sm-9">@(Model.Client.AllowOfflineAccess ? "Yes" : "No")</dd>
 
+        <dt class="col-sm-3">Update Claims On Refresh</dt>
+        <dd class="col-sm-9">@(Model.Client.UpdateAccessTokenClaimsOnRefresh ? "Yes" : "No")</dd>
+
+        <dt class="col-sm-3">Access Token Lifetime</dt>
+        <dd class="col-sm-9">@Model.Client.AccessTokenLifetime seconds</dd>
+
+        <dt class="col-sm-3">Identity Token Lifetime</dt>
+        <dd class="col-sm-9">@Model.Client.IdentityTokenLifetime seconds</dd>
+
+        <dt class="col-sm-3">Absolute Refresh Lifetime</dt>
+        <dd class="col-sm-9">@Model.Client.AbsoluteRefreshTokenLifetime seconds</dd>
+
+        <dt class="col-sm-3">Sliding Refresh Lifetime</dt>
+        <dd class="col-sm-9">@Model.Client.SlidingRefreshTokenLifetime seconds</dd>
+
         <dt class="col-sm-3">Grant Types</dt>
         <dd class="col-sm-9">
             @if (Model.Client.AllowedGrantTypes?.Any() == true)
@@ -39,6 +54,7 @@
                     }
                 </ul>
             }
+            else { <em>(none)</em> }
         </dd>
 
         <dt class="col-sm-3">Redirect URIs</dt>
@@ -52,6 +68,7 @@
                     }
                 </ul>
             }
+            else { <em>(none)</em> }
         </dd>
 
         <dt class="col-sm-3">Post-Logout Redirect URIs</dt>
@@ -65,6 +82,7 @@
                     }
                 </ul>
             }
+            else { <em>(none)</em> }
         </dd>
 
         <dt class="col-sm-3">Allowed Scopes</dt>
@@ -78,6 +96,49 @@
                     }
                 </ul>
             }
+            else { <em>(none)</em> }
+        </dd>
+
+        <dt class="col-sm-3">Allowed CORS Origins</dt>
+        <dd class="col-sm-9">
+            @if (Model.Client.AllowedCorsOrigins?.Any() == true)
+            {
+                <ul>
+                    @foreach (var origin in Model.Client.AllowedCorsOrigins)
+                    {
+                        <li>@origin.Origin</li>
+                    }
+                </ul>
+            }
+            else { <em>(none)</em> }
+        </dd>
+
+        <dt class="col-sm-3">Client Claims</dt>
+        <dd class="col-sm-9">
+            @if (Model.Client.Claims?.Any() == true)
+            {
+                <ul>
+                    @foreach (var claim in Model.Client.Claims)
+                    {
+                        <li>@claim.Type = @claim.Value</li>
+                    }
+                </ul>
+            }
+            else { <em>(none)</em> }
+        </dd>
+
+        <dt class="col-sm-3">Secrets</dt>
+        <dd class="col-sm-9">
+            @if (Model.Client.ClientSecrets?.Any() == true)
+            {
+                <ul>
+                    @foreach (var secret in Model.Client.ClientSecrets)
+                    {
+                        <li>@secret.Type (created @secret.Created.ToString("u"))</li>
+                    }
+                </ul>
+            }
+            else { <em>(none)</em> }
         </dd>
     </dl>
 </div>

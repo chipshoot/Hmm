@@ -1,0 +1,34 @@
+@page "{id}"
+@model Hmm.Idp.Pages.Admin.Roles.DetailsModel
+@{
+    ViewData["Title"] = "Role Details";
+}
+
+<h1>Role Details</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Name</dt>
+    <dd class="col-sm-9">@Model.Role.Name</dd>
+
+    <dt class="col-sm-3">Description</dt>
+    <dd class="col-sm-9">@Model.Role.Description</dd>
+
+    <dt class="col-sm-3">Users in Role</dt>
+    <dd class="col-sm-9">
+        @if (Model.UsersInRole.Any())
+        {
+            <ul>
+                @foreach (var user in Model.UsersInRole)
+                {
+                    <li>@user.UserName (@user.Email)</li>
+                }
+            </ul>
+        }
+        else { <em>(none)</em> }
+    </dd>
+</dl>
+
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.Role.Id" class="btn btn-primary">Edit</a>
+    <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+</div>
