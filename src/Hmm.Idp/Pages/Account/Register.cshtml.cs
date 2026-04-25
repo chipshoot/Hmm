@@ -1,6 +1,8 @@
+using System.Text;
 using Hmm.Idp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.WebUtilities;
 using System.ComponentModel.DataAnnotations;
 
 namespace Hmm.Idp.Pages.Account
@@ -64,7 +66,6 @@ namespace Hmm.Idp.Pages.Account
 
             try
             {
-                // Validate password against policy
                 var (isValid, policyErrors) = _passwordPolicyService.ValidatePassword(Input.Password);
                 if (!isValid)
                 {
@@ -75,30 +76,40 @@ namespace Hmm.Idp.Pages.Account
                     return Page();
                 }
 
-                // Create the user
                 var user = await _userRepository.CreateUserAsync(
                     Input.Username,
                     Input.Password,
                     email: Input.Email);
 
-                // Send email verification link
-                var emailSent = await _emailService.SendVerificationEmailAsync(
-                    Input.Email,
-                    user.Id,
-                    "VerificationToken"); // In a real implementation, generate a proper token
+                // Generate a real Identity-issued token, base64url-encode it so that
+                // the `+` / `/` / `=` chars survive the round-trip through the URL,
+                // and build the callback link off the current request scheme/host so
+                // we don't have to keep EmailSettings.ApplicationUrl in sync with the
+                // IDP's own IssuerUri.
+                var rawToken = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
+                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(rawToken));
+
+                var callbackUrl = Url.Page(
+                    "/Account/ConfirmEmail",
+                    pageHandler: null,
+                    values: new { userId = user.Id, token = encodedToken },
+                    protocol: Request.Scheme,
+                    host: Request.Host.Value);
+
+                var emailSent = await _emailService.SendVerificationEmailAsync(Input.Email, callbackUrl);
 
                 if (emailSent)
                 {
-                    _logger.LogInformation("User created successfully and verification email sent to {Email}", Input.Email);
-                    TempData["SuccessMessage"] = "Registration successful. Please check your email to verify your account.";
-                    return RedirectToPage("/Account/Login");
+                    _logger.LogInformation("User created and verification email queued for {Email}", Input.Email);
                 }
                 else
                 {
-                    _logger.LogWarning("User created but failed to send verification email to {Email}", Input.Email);
-                    ModelState.AddModelError(string.Empty, "Registration successful but we couldn't send the verification email. Please contact support.");
-                    return Page();
+                    _logger.LogWarning("User created but verification email failed to send to {Email} — user can request a resend", Input.Email);
                 }
+
+                // Always land on the same confirmation-pending screen — never expose
+                // whether the email succeeded (avoids account-enumeration via send-failure timing).
+                return RedirectToPage("/Account/RegisterConfirmation", new { email = Input.Email });
             }
             catch (Exception ex)
             {

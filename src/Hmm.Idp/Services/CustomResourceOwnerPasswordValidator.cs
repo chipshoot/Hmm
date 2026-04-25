@@ -36,6 +36,18 @@ public class CustomResourceOwnerPasswordValidator : IResourceOwnerPasswordValida
 
         if (result.Succeeded)
         {
+            // Password matched, but the account hasn't been verified yet — surface
+            // a distinct error code so the client app can prompt the user to check
+            // their inbox / hit /Account/ResendConfirmation, instead of just
+            // showing "wrong password".
+            if (!user.EmailConfirmed)
+            {
+                context.Result = new GrantValidationResult(
+                    TokenRequestErrors.InvalidGrant,
+                    "email_not_confirmed");
+                return;
+            }
+
             context.Result = new GrantValidationResult(
                 user.Id,
                 "password");

@@ -1,0 +1,23 @@
+@page
+@model Hmm.Idp.Pages.Account.RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Check Your Inbox";
+}
+
+<div class="register-confirmation-page">
+    <h1>Almost there — check your email</h1>
+    <p>
+        We've sent a verification link
+        @if (!string.IsNullOrWhiteSpace(Model.Email))
+        {
+            <text>to <strong>@Model.Email</strong></text>
+        }.
+    </p>
+    <p>
+        Click the link in the email to verify your address, then come back and sign in.
+    </p>
+    <p class="text-muted">
+        Didn't get the email? Check your spam folder, or
+        <a asp-page="/Account/ResendConfirmation" asp-route-email="@Model.Email">request another one</a>.
+    </p>
+</div>

@@ -136,8 +136,24 @@ public class Index : PageModel
                 }
             }
 
-            await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, "invalid credentials", clientId:context?.Client.ClientId));
-            ModelState.AddModelError(string.Empty, LoginOptions.InvalidCredentialsErrorMessage);
+            // Distinguish "wrong password" from "email not confirmed" so the user
+            // sees a useful next step instead of bouncing on a generic message.
+            // We only return the email-not-confirmed message when the password
+            // *did* check out — otherwise we'd leak which addresses are registered.
+            var probedUser = await _userRepository.FindByUserNameAsync(Input.Username);
+            if (probedUser is { IsActive: true, EmailConfirmed: false }
+                && await _userRepository.ValidateCredentialsAsync(probedUser.UserName, Input.Password) == false
+                && await _signInManager.UserManager.CheckPasswordAsync(probedUser, Input.Password))
+            {
+                await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, "email not confirmed", clientId: context?.Client.ClientId));
+                ModelState.AddModelError(string.Empty,
+                    "Your email isn't verified yet. Please check your inbox for the confirmation link, or request a new one.");
+            }
+            else
+            {
+                await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, "invalid credentials", clientId: context?.Client.ClientId));
+                ModelState.AddModelError(string.Empty, LoginOptions.InvalidCredentialsErrorMessage);
+            }
         }
 
         // something went wrong, show form with error

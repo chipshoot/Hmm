@@ -1,0 +1,28 @@
+@page
+@model Hmm.Idp.Pages.Account.ConfirmEmailModel
+@{
+    ViewData["Title"] = "Confirm Email";
+}
+
+<div class="confirm-email-page">
+    <h1>Email Verification</h1>
+
+    @if (Model.Success)
+    {
+        <div class="alert alert-success">
+            <strong>Verified.</strong> @Model.Message
+        </div>
+        <p>
+            <a class="btn btn-primary" asp-page="/Account/Login/Index">Sign in</a>
+        </p>
+    }
+    else
+    {
+        <div class="alert alert-danger">
+            @Model.Message
+        </div>
+        <p>
+            <a class="btn btn-secondary" asp-page="/Account/ResendConfirmation">Resend verification email</a>
+        </p>
+    }
+</div>

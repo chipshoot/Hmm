@@ -1,0 +1,41 @@
+@page
+@model Hmm.Idp.Pages.Account.ResendConfirmationModel
+@{
+    ViewData["Title"] = "Resend Verification Email";
+}
+
+<div class="resend-confirmation-page">
+    <h1>Resend verification email</h1>
+
+    @if (Model.Submitted)
+    {
+        <div class="alert alert-info">
+            If an account with that email exists and isn't already verified, we've sent another
+            verification link. Please check your inbox (and spam folder).
+        </div>
+        <p>
+            <a class="btn btn-primary" asp-page="/Account/Login/Index">Back to sign in</a>
+        </p>
+    }
+    else
+    {
+        <p>Enter the email address you registered with and we'll send the verification link again.</p>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            <partial name="_ValidationSummary" />
+                            <div class="form-group mb-3">
+                                <label asp-for="Input.Email"></label>
+                                <input asp-for="Input.Email" class="form-control" />
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send link</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
