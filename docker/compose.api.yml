@@ -1,6 +1,11 @@
-# API service overlay - extends compose.base.yml + compose.idp.yml
+# API service overlay - extends compose.base.yml or compose.base-sqlite.yml
+# PostgreSQL runs inside the hmm-api container (single container), mirroring
+# the hmm-idp pattern. No external SQL Server / SQLite needed.
 #
-# Usage: docker compose -f compose.base.yml -f compose.idp.yml -f compose.api.yml up -d
+# Usage: docker compose -f compose.base-sqlite.yml -f compose.idp.yml -f compose.api.yml up -d
+#        (compose.base-sqlite.yml is the smaller base — keeps Seq, drops the
+#         external SQL Server. compose.base.yml still works if you need the
+#         SQL Server container around for other reasons.)
 
 services:
   hmm-api:
@@ -11,15 +16,19 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Server=api-sqlserver;Database=hmm;User Id=sa;Password=${API_SA_PASSWORD};TrustServerCertificate=True
-      - AppSettings__DatabaseProvider=SqlServer
+      # Embedded Postgres lives at 127.0.0.1:5432 *inside* this container.
+      - ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=5432;Database=HmmServiceApi;Username=postgres;Password=${API_POSTGRES_PASSWORD}
+      - AppSettings__DatabaseProvider=PostgreSQL
+      - AppSettings__ConnectionString=Host=127.0.0.1;Port=5432;Database=HmmServiceApi;Username=postgres;Password=${API_POSTGRES_PASSWORD}
       - AppSettings__IdpBaseUrl=http://hmm-idp:80
+      - PG_PASSWORD=${API_POSTGRES_PASSWORD}
+      - PG_DB=HmmServiceApi
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
     ports:
       - "${API_HTTP_PORT}:80"
+    volumes:
+      - api-postgres-data:/var/lib/postgresql/data
     depends_on:
-      api-sqlserver:
-        condition: service_healthy
       seq:
         condition: service_started
       hmm-idp:
@@ -27,3 +36,6 @@ services:
     networks:
       - hmm-network
     restart: unless-stopped
+
+volumes:
+  api-postgres-data:

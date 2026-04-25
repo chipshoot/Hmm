@@ -1,36 +1,36 @@
-# API service with SQLite - no SQL Server needed for API database
+# ============================================================
+# DEPRECATED — SQLite path is no longer the default for the API.
+# The API now embeds PostgreSQL in the same container (see
+# compose.api.yml + src/Hmm.ServiceApi/Dockerfile).
 #
-# Usage (slim base): docker compose -f compose.base-sqlite.yml -f compose.idp.yml -f compose.api-sqlite.yml up -d
-# Usage (full base): docker compose -f compose.base.yml -f compose.idp.yml -f compose.api-sqlite.yml up -d
-#
-# The SQLite database file is stored in a local bind mount (./data).
-# To sync to cloud, change the path:
-#   volumes:
-#     - C:/Users/name/OneDrive/hmm-data:/app/data
+# This file is kept commented-out for reference only. To temporarily
+# bring SQLite back for ad-hoc testing, uncomment the block below
+# and revert src/Hmm.ServiceApi/Dockerfile to the simple aspnet-only
+# base image.
+# ============================================================
 
-services:
-  hmm-api:
-    build:
-      context: ..
-      dockerfile: src/Hmm.ServiceApi/Dockerfile
-    container_name: hmm-api
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Data Source=/app/data/hmm.db
-      - AppSettings__DatabaseProvider=SQLite
-      - AppSettings__IdpBaseUrl=http://hmm-idp:80
-      - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
-    ports:
-      - "${API_HTTP_PORT}:80"
-    volumes:
-      - ./data:/app/data
-    depends_on:
-      seq:
-        condition: service_started
-      hmm-idp:
-        condition: service_started
-    networks:
-      - hmm-network
-    restart: unless-stopped
-
+# services:
+#   hmm-api:
+#     build:
+#       context: ..
+#       dockerfile: src/Hmm.ServiceApi/Dockerfile
+#     container_name: hmm-api
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Docker
+#       - ASPNETCORE_URLS=http://+:80
+#       - ConnectionStrings__DefaultConnection=Data Source=/app/data/hmm.db
+#       - AppSettings__DatabaseProvider=SQLite
+#       - AppSettings__IdpBaseUrl=http://hmm-idp:80
+#       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
+#     ports:
+#       - "${API_HTTP_PORT}:80"
+#     volumes:
+#       - ./data:/app/data
+#     depends_on:
+#       seq:
+#         condition: service_started
+#       hmm-idp:
+#         condition: service_started
+#     networks:
+#       - hmm-network
+#     restart: unless-stopped
