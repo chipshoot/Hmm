@@ -12,7 +12,7 @@ echo "========================================"
 
 PGDATA="${PGDATA:-/var/lib/postgresql/data}"
 PG_USER="${PG_USER:-postgres}"
-PG_DB="${PG_DB:-HmmServiceApi}"
+PG_DB="${PG_DB:-HmmNotes}"
 PG_PASSWORD="${PG_PASSWORD:-ApiDockerPassword1!}"
 
 # Detect PostgreSQL binary directory (Debian: /usr/lib/postgresql/<version>/bin)

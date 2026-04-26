@@ -7,7 +7,7 @@
 # already installed (Postgres, ASP.NET Core 10, Caddy) and only adds
 # what's specific to the API:
 #   - hmm-api system user
-#   - HmmServiceApi Postgres database with dedicated hmm_api role
+#   - HmmNotes Postgres database with dedicated hmm_api role
 #   - /opt/hmm-api, /var/log/hmm-api, /var/lib/hmm-api-data, /etc/hmm-api
 #   - /etc/hmm-api/api.env
 #   - /etc/systemd/system/hmm-api.service  (port 8081)
@@ -27,7 +27,7 @@ DATA_DIR="${DATA_DIR:-/var/lib/hmm-api-data}"  # SQLite fallback / asset uploads
 ENV_DIR="${ENV_DIR:-/etc/hmm-api}"
 ENV_FILE="${ENV_DIR}/api.env"
 APP_PORT="${APP_PORT:-8081}"                   # API listens on 127.0.0.1:${APP_PORT}
-PG_DB="${PG_DB:-HmmServiceApi}"
+PG_DB="${PG_DB:-HmmNotes}"
 PG_USER="${PG_USER:-hmm_api}"
 IDP_BASE_URL="${IDP_BASE_URL:-https://idp.homemademessage.com}"
 DOTNET_CHANNEL="${DOTNET_CHANNEL:-10.0}"

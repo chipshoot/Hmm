@@ -17,12 +17,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:80
       # Embedded Postgres lives at 127.0.0.1:5432 *inside* this container.
-      - ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=5432;Database=HmmServiceApi;Username=postgres;Password=${API_POSTGRES_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Host=127.0.0.1;Port=5432;Database=HmmNotes;Username=postgres;Password=${API_POSTGRES_PASSWORD}
       - AppSettings__DatabaseProvider=PostgreSQL
-      - AppSettings__ConnectionString=Host=127.0.0.1;Port=5432;Database=HmmServiceApi;Username=postgres;Password=${API_POSTGRES_PASSWORD}
+      - AppSettings__ConnectionString=Host=127.0.0.1;Port=5432;Database=HmmNotes;Username=postgres;Password=${API_POSTGRES_PASSWORD}
       - AppSettings__IdpBaseUrl=http://hmm-idp:80
       - PG_PASSWORD=${API_POSTGRES_PASSWORD}
-      - PG_DB=HmmServiceApi
+      - PG_DB=HmmNotes
       - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
     ports:
       - "${API_HTTP_PORT}:80"
