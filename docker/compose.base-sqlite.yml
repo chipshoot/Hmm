@@ -20,6 +20,19 @@ services:
       - hmm-network
     restart: unless-stopped
 
+  # Mailpit — captures all SMTP submissions instead of relaying them. The IDP
+  # points at mailpit:1025 (see compose.idp.yml's EmailSettings__* env vars);
+  # browse the captured verification / password-reset / lockout emails at
+  # http://localhost:${MAILPIT_UI_PORT:-8025}. Zero auth required for SMTP.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: hmm-mailpit
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    networks:
+      - hmm-network
+    restart: unless-stopped
+
 networks:
   hmm-network:
     driver: bridge

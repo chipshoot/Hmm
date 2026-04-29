@@ -160,6 +160,30 @@ ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
 
 ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=${PG_DB};Username=${PG_USER};Password=${PG_PASSWORD_GENERATED}
 IssuerUri=https://${DOMAIN}
+
+# ---- SMTP (verification, password-reset, lockout notifications) -----
+# Fill in the AspHostPortal mailbox credentials after creating
+# accounts@homemademessage.com in their control panel. Until SmtpServer is
+# set to a real host, registration will succeed but the email send will fail
+# (logged, not fatal — user can use /Account/ResendConfirmation later).
+#
+# Typical AspHostPortal values (verify in their cPanel/Plesk mail panel):
+#   EmailSettings__SmtpServer  = mail.homemademessage.com
+#   EmailSettings__SmtpPort    = 587  (STARTTLS) — try 465 if 587 is blocked
+#   EmailSettings__UseSsl      = true
+#   EmailSettings__Username    = accounts@homemademessage.com
+#   EmailSettings__Password    = <mailbox password>
+#
+# Don't forget SPF / DKIM / DMARC at AspHostPortal DNS — without them
+# Gmail and Outlook will junk verification mail.
+EmailSettings__SmtpServer=SET_VIA_ENV_VAR
+EmailSettings__SmtpPort=587
+EmailSettings__UseSsl=true
+EmailSettings__Username=accounts@${DOMAIN#idp.}
+EmailSettings__Password=SET_VIA_ENV_VAR
+EmailSettings__SenderEmail=accounts@${DOMAIN#idp.}
+EmailSettings__SenderName=HomeMadeMessage
+EmailSettings__ApplicationUrl=https://${DOMAIN}
 EOF
   chown root:"$APP_USER" "$ENV_FILE"
   chmod 0640            "$ENV_FILE"
@@ -335,5 +359,9 @@ cat <<EOF
     * Caddy will auto-fetch a Let's Encrypt cert on first request —
       DNS must resolve to this box before that succeeds.
     * Postgres password is in ${ENV_FILE}; back it up off-box.
+    * SMTP creds in ${ENV_FILE} are placeholders — edit
+      EmailSettings__SmtpServer / __Password before users register, then
+      \`sudo systemctl restart hmm-idp\`. SPF/DKIM/DMARC at AspHostPortal
+      DNS are required for inbox delivery.
 ============================================================
 EOF

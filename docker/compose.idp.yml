@@ -18,6 +18,16 @@ services:
       - IssuerUri=http://localhost:${IDP_PORT}
       - PG_PASSWORD=${IDP_POSTGRES_PASSWORD}
       - PG_DB=HmmIdp
+      # SMTP -> mailpit (compose.base-sqlite.yml). Captures verification /
+      # password-reset / lockout mail; browse at http://localhost:8025.
+      - EmailSettings__SmtpServer=mailpit
+      - EmailSettings__SmtpPort=1025
+      - EmailSettings__UseSsl=false
+      - EmailSettings__Username=
+      - EmailSettings__Password=
+      - EmailSettings__SenderEmail=accounts@homemademessage.com
+      - EmailSettings__SenderName=HomeMadeMessage
+      - EmailSettings__ApplicationUrl=http://localhost:${IDP_PORT}
     ports:
       - "${IDP_PORT}:80"
     volumes:
