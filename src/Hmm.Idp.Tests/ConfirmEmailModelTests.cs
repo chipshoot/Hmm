@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Hmm.Idp.Tests;
@@ -20,8 +21,10 @@ public class ConfirmEmailModelTests
 {
     private readonly Mock<IApplicationUserRepository> _repo = new();
     private readonly Mock<ILogger<ConfirmEmailModel>> _logger = new();
+    private readonly IOptions<EmailSettings> _emailSettings =
+        Options.Create(new EmailSettings { PostVerificationUrl = "https://homemademessage.com" });
 
-    private ConfirmEmailModel Build() => new(_repo.Object, _logger.Object);
+    private ConfirmEmailModel Build() => new(_repo.Object, _emailSettings, _logger.Object);
 
     private static string EncodeToken(string raw) =>
         WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(raw));

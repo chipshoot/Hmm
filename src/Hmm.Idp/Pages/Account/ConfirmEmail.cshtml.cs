@@ -1,34 +1,60 @@
 using System.Text;
 using Hmm.Idp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
 namespace Hmm.Idp.Pages.Account
 {
     /// <summary>
-    /// Lands the user when they click the verification link emailed by
-    /// <see cref="RegisterModel"/>. Validates the (base64url-encoded) token
-    /// and flips <c>EmailConfirmed = true</c>.
+    /// Lands the user when they click the verification link emailed at
+    /// registration time (POST /api/account/register from the mobile app, or
+    /// the admin-driven /Admin/User/Create flow). Validates the
+    /// base64url-encoded token and flips <c>EmailConfirmed = true</c>.
     /// </summary>
+    [AllowAnonymous]
     public class ConfirmEmailModel : PageModel
     {
         private readonly IApplicationUserRepository _userRepository;
         private readonly ILogger<ConfirmEmailModel> _logger;
+        private readonly EmailSettings _emailSettings;
 
         public ConfirmEmailModel(
             IApplicationUserRepository userRepository,
+            IOptions<EmailSettings> emailSettings,
             ILogger<ConfirmEmailModel> logger)
         {
             _userRepository = userRepository;
+            _emailSettings = emailSettings.Value;
             _logger = logger;
         }
 
         public bool Success { get; private set; }
         public string Message { get; private set; } = string.Empty;
 
-        public async Task<IActionResult> OnGetAsync(string userId, string token)
+        /// <summary>
+        /// True when the verification link was issued to a user who registered
+        /// via the mobile API (source=mobile). The view suppresses the
+        /// "Sign in" CTA in that case — mobile users should switch back to
+        /// the installed app, not log into a web page.
+        /// </summary>
+        public bool IsFromMobile { get; private set; }
+
+        /// <summary>
+        /// Where the "Sign in" CTA points after successful verification, when
+        /// shown (i.e. when the user did NOT register via the mobile API).
+        /// Configured via <c>EmailSettings.PostVerificationUrl</c>; defaults
+        /// to the consumer-facing site so end users don't land on the IDP's
+        /// identity-management Razor pages.
+        /// </summary>
+        public string SignInUrl => _emailSettings.PostVerificationUrl;
+
+        public async Task<IActionResult> OnGetAsync(string userId, string token, string? source = null)
         {
+            IsFromMobile = string.Equals(source, "mobile", StringComparison.OrdinalIgnoreCase);
+
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
             {
                 Success = false;

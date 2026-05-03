@@ -161,6 +161,19 @@ ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
 ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=${PG_DB};Username=${PG_USER};Password=${PG_PASSWORD_GENERATED}
 IssuerUri=https://${DOMAIN}
 
+# ---- Bootstrap admin (SeedDataService reads these on first IDP start) -----
+# Edit BEFORE first 'systemctl start hmm-idp'. Once SeedDataService has
+# created the admin row, changing these values has no effect — log into
+# /Account/Login as the admin and use /Admin/User/Edit to rotate the
+# password from there.
+#
+# The mobile app's end-user registration goes through the API
+# (/api/account/register); it does NOT use these values. These ONLY exist
+# so an initial Administrator account is bootstrapped without a public
+# self-service Register page.
+IDP_INITIAL_ADMIN_EMAIL=admin@${DOMAIN#idp.}
+IDP_INITIAL_ADMIN_PASSWORD=SET_VIA_ENV_VAR
+
 # ---- SMTP (verification, password-reset, lockout notifications) -----
 # Fill in the AspHostPortal mailbox credentials after creating
 # accounts@homemademessage.com in their control panel. Until SmtpServer is

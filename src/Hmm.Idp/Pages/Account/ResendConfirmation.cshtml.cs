@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Hmm.Idp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -11,6 +12,7 @@ namespace Hmm.Idp.Pages.Account
     /// Lets a user request another verification email — used when the original
     /// link was missed, the token expired, or SMTP failed at registration time.
     /// </summary>
+    [AllowAnonymous]
     public class ResendConfirmationModel : PageModel
     {
         private readonly IApplicationUserRepository _userRepository;
@@ -66,10 +68,13 @@ namespace Hmm.Idp.Pages.Account
                     var rawToken = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
                     var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(rawToken));
 
+                    // This page is web-only — issued by users browsing to
+                    // /Account/ResendConfirmation. Tag the link source=web so
+                    // ConfirmEmail keeps the Sign In CTA visible afterward.
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
-                        values: new { userId = user.Id, token = encodedToken },
+                        values: new { userId = user.Id, token = encodedToken, source = "web" },
                         protocol: Request.Scheme,
                         host: Request.Host.Value);
 

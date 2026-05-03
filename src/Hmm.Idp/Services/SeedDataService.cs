@@ -1,5 +1,6 @@
 using Hmm.Idp.Pages.Admin.User;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 
 
@@ -9,15 +10,25 @@ public class SeedDataService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<SeedDataService> _logger;
+
+    // Default admin credentials — used only if the environment doesn't override
+    // them. These are fine for local dev / functional tests but MUST be
+    // overridden in production via IDP_INITIAL_ADMIN_EMAIL +
+    // IDP_INITIAL_ADMIN_PASSWORD env vars (see scripts/setup-idp-vps.sh).
+    private const string DevAdminEmail = "admin@hmm.local";
+    private const string DevAdminPassword = "Admin@12345678#";
 
     public SeedDataService(
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
+        IConfiguration configuration,
         ILogger<SeedDataService> logger)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -50,12 +61,28 @@ public class SeedDataService
 
     private async Task SeedUsersAsync()
     {
-        // Seed admin user
+        // Resolve the bootstrap admin credentials. Production deployments are
+        // expected to set IDP_INITIAL_ADMIN_EMAIL + IDP_INITIAL_ADMIN_PASSWORD
+        // in /etc/hmm-idp/idp.env before first start; dev / functest defaults
+        // kick in when those env vars are absent so test-env.sh keeps working.
+        var adminEmail = _configuration["IDP_INITIAL_ADMIN_EMAIL"]
+                         ?? DevAdminEmail;
+        var adminPassword = _configuration["IDP_INITIAL_ADMIN_PASSWORD"]
+                            ?? DevAdminPassword;
+
+        if (adminEmail == DevAdminEmail && adminPassword == DevAdminPassword)
+        {
+            _logger.LogWarning(
+                "Seeding admin user with built-in dev credentials. Set "
+                + "IDP_INITIAL_ADMIN_EMAIL + IDP_INITIAL_ADMIN_PASSWORD before "
+                + "running in production.");
+        }
+
         await CreateUserIfNotExistsAsync(new SeedUserInfo
         {
-            UserName = "admin@hmm.local",
-            Email = "admin@hmm.local",
-            Password = "Admin@12345678#",
+            UserName = adminEmail,
+            Email = adminEmail,
+            Password = adminPassword,
             FirstName = "System",
             LastName = "Administrator",
             Roles = ["Administrator"],
@@ -64,7 +91,7 @@ public class SeedDataService
                 new Claim("name", "System Administrator"),
                 new Claim("given_name", "System"),
                 new Claim("family_name", "Administrator"),
-                new Claim("email", "admin@hmm.local"),
+                new Claim("email", adminEmail),
                 new Claim("email_verified", "true"),
                 new Claim("role", "Administrator")
             ]

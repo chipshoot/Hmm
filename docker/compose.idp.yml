@@ -18,6 +18,12 @@ services:
       - IssuerUri=http://localhost:${IDP_PORT}
       - PG_PASSWORD=${IDP_POSTGRES_PASSWORD}
       - PG_DB=HmmIdp
+      # Bootstrap admin — SeedDataService reads these on first IDP boot of an
+      # empty HmmIdp database. Defaults to admin@hmm.local / Admin@12345678#
+      # if unset; explicit values keep dev/functest stable but production
+      # MUST override in /etc/hmm-idp/idp.env on the VPS.
+      - IDP_INITIAL_ADMIN_EMAIL=admin@hmm.local
+      - IDP_INITIAL_ADMIN_PASSWORD=Admin@12345678#
       # SMTP -> mailpit (compose.base-sqlite.yml). Captures verification /
       # password-reset / lockout mail; browse at http://localhost:8025.
       - EmailSettings__SmtpServer=mailpit
@@ -28,6 +34,11 @@ services:
       - EmailSettings__SenderEmail=accounts@homemademessage.com
       - EmailSettings__SenderName=HomeMadeMessage
       - EmailSettings__ApplicationUrl=http://localhost:${IDP_PORT}
+      # Dev: Sign-in CTA on the verify-success page lands back on the IDP's
+      # own login so local devs can complete the round-trip without needing
+      # a homemademessage.com mock running. Production leaves this unset
+      # (defaults to https://homemademessage.com via EmailSettings.cs).
+      - EmailSettings__PostVerificationUrl=http://localhost:${IDP_PORT}/Account/Login
     ports:
       - "${IDP_PORT}:80"
     volumes:

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -9,6 +10,7 @@ namespace Hmm.Idp.Pages.Account
     /// way the response can't be used to enumerate which addresses our SMTP
     /// host accepts.
     /// </summary>
+    [AllowAnonymous]
     public class RegisterConfirmationModel : PageModel
     {
         [FromQuery]

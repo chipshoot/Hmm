@@ -210,5 +210,14 @@ namespace Hmm.Idp.Services
         public string Password { get; set; }
         public bool UseSsl { get; set; }
         public string ApplicationUrl { get; set; }
+
+        /// <summary>
+        /// Where the "Sign in" button on the email-verification success page
+        /// points. Production should point at the consumer-facing site
+        /// (https://homemademessage.com), not the IDP's own /Account/Login —
+        /// the IDP UI is for identity management and shouldn't be the
+        /// landing page for end users. Dev can override to localhost.
+        /// </summary>
+        public string PostVerificationUrl { get; set; } = "https://homemademessage.com";
     }
 }

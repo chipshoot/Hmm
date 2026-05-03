@@ -43,6 +43,8 @@ public class AccountControllerTests
             _mockLogger.Object);
 
         var httpContext = new DefaultHttpContext();
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new Microsoft.AspNetCore.Http.HostString("localhost", 5001);
         if (jsonBody != null)
         {
             var stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonBody));
@@ -90,9 +92,12 @@ public class AccountControllerTests
         _mockUserRepository
             .Setup(s => s.CreateUserAsync(request.Username, request.Password, null, null, request.Email))
             .ReturnsAsync(createdUser);
+        _mockUserRepository
+            .Setup(s => s.GenerateEmailConfirmationTokenAsync(createdUser))
+            .ReturnsAsync("test-confirmation-token");
 
         _mockEmailService
-            .Setup(s => s.SendVerificationEmailAsync(request.Email, createdUser.Id, It.IsAny<string>()))
+            .Setup(s => s.SendVerificationEmailAsync(request.Email, It.IsAny<string>()))
             .ReturnsAsync(true);
 
         // Act
@@ -109,7 +114,7 @@ public class AccountControllerTests
             s => s.CreateUserAsync(request.Username, request.Password, null, null, request.Email),
             Times.Once);
         _mockEmailService.Verify(
-            s => s.SendVerificationEmailAsync(request.Email, createdUser.Id, It.IsAny<string>()),
+            s => s.SendVerificationEmailAsync(request.Email, It.IsAny<string>()),
             Times.Once);
     }
 
@@ -417,9 +422,12 @@ public class AccountControllerTests
         _mockUserRepository
             .Setup(s => s.CreateUserAsync(request.Username, request.Password, null, null, request.Email))
             .ReturnsAsync(createdUser);
+        _mockUserRepository
+            .Setup(s => s.GenerateEmailConfirmationTokenAsync(createdUser))
+            .ReturnsAsync("test-confirmation-token");
 
         _mockEmailService
-            .Setup(s => s.SendVerificationEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(s => s.SendVerificationEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(false);
 
         // Act

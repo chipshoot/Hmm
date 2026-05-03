@@ -29,6 +29,14 @@ public class Index : PageModel
     [BindProperty]
     public InputModel Input { get; set; }
 
+    /// <summary>
+    /// When non-null, the password was correct but the user's email isn't
+    /// confirmed yet. The view renders a dedicated alert with a clickable
+    /// "Resend verification email" link pre-filled with this address —
+    /// rather than relying on the plain-text ModelState error.
+    /// </summary>
+    public string EmailNotConfirmedFor { get; private set; }
+
     public Index(
         IIdentityServerInteractionService interaction,
         IAuthenticationSchemeProvider schemeProvider,
@@ -146,8 +154,10 @@ public class Index : PageModel
                 && await _signInManager.UserManager.CheckPasswordAsync(probedUser, Input.Password))
             {
                 await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, "email not confirmed", clientId: context?.Client.ClientId));
-                ModelState.AddModelError(string.Empty,
-                    "Your email isn't verified yet. Please check your inbox for the confirmation link, or request a new one.");
+                // Render via a dedicated alert in the .cshtml so we can include
+                // a real <a> link to the resend page — ModelState errors are
+                // plain text only.
+                EmailNotConfirmedFor = probedUser.Email ?? Input.Username;
             }
             else
             {

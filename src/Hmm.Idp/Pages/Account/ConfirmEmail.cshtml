@@ -12,9 +12,16 @@
         <div class="alert alert-success">
             <strong>Verified.</strong> @Model.Message
         </div>
-        <p>
-            <a class="btn btn-primary" asp-page="/Account/Login/Index">Sign in</a>
-        </p>
+        @if (Model.IsFromMobile)
+        {
+            <p>You can now close this tab and sign in from the Hmm Console app on your device.</p>
+        }
+        else
+        {
+            <p>
+                <a class="btn btn-primary" href="@Model.SignInUrl">Sign in</a>
+            </p>
+        }
     }
     else
     {

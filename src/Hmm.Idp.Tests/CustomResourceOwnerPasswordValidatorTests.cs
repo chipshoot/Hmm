@@ -11,8 +11,13 @@ using Moq;
 namespace Hmm.Idp.Tests;
 
 /// <summary>
-/// Covers the OAuth ROPC validator's branches, including the new
-/// <c>email_not_confirmed</c> grant-validation result.
+/// Covers the OAuth ROPC validator's branches.
+///
+/// The validator deliberately uses <see cref="UserManager{T}.CheckPasswordAsync"/>
+/// rather than <see cref="SignInManager{T}.CheckPasswordSignInAsync"/> so that
+/// SignInOptions like RequireConfirmedEmail don't make it impossible to
+/// distinguish wrong-password from right-password-but-unconfirmed. These
+/// tests exercise that distinction.
 /// </summary>
 public class CustomResourceOwnerPasswordValidatorTests
 {
@@ -73,18 +78,37 @@ public class CustomResourceOwnerPasswordValidatorTests
     }
 
     [Fact]
+    public async Task ValidateAsync_AlreadyLockedOut_ReturnsAccountLockedBeforePasswordCheck()
+    {
+        var user = new ApplicationUser { Id = "u1", UserName = "alice", IsActive = true, EmailConfirmed = true };
+        _userManager.Setup(m => m.FindByNameAsync("alice")).ReturnsAsync(user);
+        _userManager.Setup(m => m.IsLockedOutAsync(user)).ReturnsAsync(true);
+        var ctx = Ctx("alice", "pw");
+
+        await Build().ValidateAsync(ctx);
+
+        Assert.True(ctx.Result.IsError);
+        Assert.Equal("account_locked", ctx.Result.ErrorDescription);
+        // We bailed early — never even ran the password check.
+        _userManager.Verify(m => m.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public async Task ValidateAsync_ActiveUserCorrectPasswordButEmailNotConfirmed_ReturnsEmailNotConfirmed()
     {
         var user = new ApplicationUser { Id = "u1", UserName = "alice", IsActive = true, EmailConfirmed = false };
         _userManager.Setup(m => m.FindByNameAsync("alice")).ReturnsAsync(user);
-        _signInManager.Setup(m => m.CheckPasswordSignInAsync(user, "pw", true))
-                      .ReturnsAsync(SignInResult.Success);
+        _userManager.Setup(m => m.IsLockedOutAsync(user)).ReturnsAsync(false);
+        _userManager.Setup(m => m.CheckPasswordAsync(user, "pw")).ReturnsAsync(true);
+        _userManager.Setup(m => m.ResetAccessFailedCountAsync(user)).ReturnsAsync(IdentityResult.Success);
         var ctx = Ctx("alice", "pw");
 
         await Build().ValidateAsync(ctx);
 
         Assert.True(ctx.Result.IsError);
         Assert.Equal("email_not_confirmed", ctx.Result.ErrorDescription);
+        // Successful password should still reset the failed-attempt counter.
+        _userManager.Verify(m => m.ResetAccessFailedCountAsync(user), Times.Once);
     }
 
     [Fact]
@@ -92,8 +116,9 @@ public class CustomResourceOwnerPasswordValidatorTests
     {
         var user = new ApplicationUser { Id = "u1", UserName = "alice", IsActive = true, EmailConfirmed = true };
         _userManager.Setup(m => m.FindByNameAsync("alice")).ReturnsAsync(user);
-        _signInManager.Setup(m => m.CheckPasswordSignInAsync(user, "pw", true))
-                      .ReturnsAsync(SignInResult.Success);
+        _userManager.Setup(m => m.IsLockedOutAsync(user)).ReturnsAsync(false);
+        _userManager.Setup(m => m.CheckPasswordAsync(user, "pw")).ReturnsAsync(true);
+        _userManager.Setup(m => m.ResetAccessFailedCountAsync(user)).ReturnsAsync(IdentityResult.Success);
         var ctx = Ctx("alice", "pw");
 
         await Build().ValidateAsync(ctx);
@@ -103,12 +128,34 @@ public class CustomResourceOwnerPasswordValidatorTests
     }
 
     [Fact]
-    public async Task ValidateAsync_LockedOut_ReturnsAccountLocked()
+    public async Task ValidateAsync_WrongPassword_TracksFailureAndReturnsInvalidGrant()
     {
         var user = new ApplicationUser { Id = "u1", UserName = "alice", IsActive = true, EmailConfirmed = true };
         _userManager.Setup(m => m.FindByNameAsync("alice")).ReturnsAsync(user);
-        _signInManager.Setup(m => m.CheckPasswordSignInAsync(user, "pw", true))
-                      .ReturnsAsync(SignInResult.LockedOut);
+        _userManager.SetupSequence(m => m.IsLockedOutAsync(user))
+                    .ReturnsAsync(false)   // pre-check
+                    .ReturnsAsync(false);  // post-AccessFailed (still under threshold)
+        _userManager.Setup(m => m.CheckPasswordAsync(user, "pw")).ReturnsAsync(false);
+        _userManager.Setup(m => m.AccessFailedAsync(user)).ReturnsAsync(IdentityResult.Success);
+        var ctx = Ctx("alice", "pw");
+
+        await Build().ValidateAsync(ctx);
+
+        Assert.True(ctx.Result.IsError);
+        Assert.Equal("invalid_username_or_password", ctx.Result.ErrorDescription);
+        _userManager.Verify(m => m.AccessFailedAsync(user), Times.Once);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_WrongPasswordCrossingLockoutThreshold_ReturnsAccountLocked()
+    {
+        var user = new ApplicationUser { Id = "u1", UserName = "alice", IsActive = true, EmailConfirmed = true };
+        _userManager.Setup(m => m.FindByNameAsync("alice")).ReturnsAsync(user);
+        _userManager.SetupSequence(m => m.IsLockedOutAsync(user))
+                    .ReturnsAsync(false)   // pre-check (still allowed in)
+                    .ReturnsAsync(true);   // post-AccessFailed (crossed threshold)
+        _userManager.Setup(m => m.CheckPasswordAsync(user, "pw")).ReturnsAsync(false);
+        _userManager.Setup(m => m.AccessFailedAsync(user)).ReturnsAsync(IdentityResult.Success);
         var ctx = Ctx("alice", "pw");
 
         await Build().ValidateAsync(ctx);
@@ -118,28 +165,14 @@ public class CustomResourceOwnerPasswordValidatorTests
     }
 
     [Fact]
-    public async Task ValidateAsync_WrongPassword_InvalidGrant()
-    {
-        var user = new ApplicationUser { Id = "u1", UserName = "alice", IsActive = true, EmailConfirmed = true };
-        _userManager.Setup(m => m.FindByNameAsync("alice")).ReturnsAsync(user);
-        _signInManager.Setup(m => m.CheckPasswordSignInAsync(user, "pw", true))
-                      .ReturnsAsync(SignInResult.Failed);
-        var ctx = Ctx("alice", "pw");
-
-        await Build().ValidateAsync(ctx);
-
-        Assert.True(ctx.Result.IsError);
-        Assert.Equal("invalid_username_or_password", ctx.Result.ErrorDescription);
-    }
-
-    [Fact]
     public async Task ValidateAsync_FallsBackToFindByEmailWhenUserNameMisses()
     {
         var user = new ApplicationUser { Id = "u1", UserName = "alice", IsActive = true, EmailConfirmed = true, Email = "alice@x.test" };
         _userManager.Setup(m => m.FindByNameAsync("alice@x.test")).ReturnsAsync((ApplicationUser?)null);
         _userManager.Setup(m => m.FindByEmailAsync("alice@x.test")).ReturnsAsync(user);
-        _signInManager.Setup(m => m.CheckPasswordSignInAsync(user, "pw", true))
-                      .ReturnsAsync(SignInResult.Success);
+        _userManager.Setup(m => m.IsLockedOutAsync(user)).ReturnsAsync(false);
+        _userManager.Setup(m => m.CheckPasswordAsync(user, "pw")).ReturnsAsync(true);
+        _userManager.Setup(m => m.ResetAccessFailedCountAsync(user)).ReturnsAsync(IdentityResult.Success);
         var ctx = Ctx("alice@x.test", "pw");
 
         await Build().ValidateAsync(ctx);
