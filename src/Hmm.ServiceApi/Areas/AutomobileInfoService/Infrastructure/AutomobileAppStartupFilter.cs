@@ -54,11 +54,35 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
             try
             {
                 var dbContext = serviceProvider.GetService<HmmDataContext>();
-                if (dbContext?.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
+                if (dbContext == null) return;
+
+                var providerName = dbContext.Database.ProviderName ?? string.Empty;
+
+                if (providerName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
                 {
+                    // SQLite path: no migrations exist for this provider in the
+                    // repo, so let EF spin the schema up from the model.
                     dbContext.Database.EnsureCreated();
                     dbContext.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
                     _logger?.LogInformation("SQLite database created/verified with WAL mode");
+                }
+                else if (providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+                {
+                    // PostgreSQL path: apply EF Core migrations. Idempotent —
+                    // a fresh database gets every migration; subsequent boots
+                    // are a no-op once they're already in __EFMigrationsHistory.
+                    dbContext.Database.Migrate();
+                    _logger?.LogInformation("PostgreSQL migrations applied");
+                }
+                else if (providerName.Contains("SqlServer", StringComparison.OrdinalIgnoreCase))
+                {
+                    // SQL Server path (dev/legacy): if there are pending
+                    // migrations, apply them; otherwise no-op.
+                    if (dbContext.Database.GetPendingMigrations().Any())
+                    {
+                        dbContext.Database.Migrate();
+                        _logger?.LogInformation("SQL Server migrations applied");
+                    }
                 }
             }
             catch (Exception ex)

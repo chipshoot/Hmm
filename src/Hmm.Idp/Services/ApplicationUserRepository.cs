@@ -33,6 +33,18 @@ namespace Hmm.Idp.Services
         Task UnlockUserAsync(ApplicationUser user);
         Task<bool> IsLockedOutAsync(ApplicationUser user);
         Task<IList<Claim>> GetClaimsAsync(ApplicationUser user);
+
+        /// <summary>
+        /// Generates a one-time email-confirmation token for <paramref name="user"/>.
+        /// The token is opaque from the caller's POV; pass it back to
+        /// <see cref="ConfirmEmailAsync"/> to verify.
+        /// </summary>
+        Task<string> GenerateEmailConfirmationTokenAsync(ApplicationUser user);
+
+        /// <summary>
+        /// Validates the token and, on success, sets <c>EmailConfirmed = true</c>.
+        /// </summary>
+        Task<IdentityResult> ConfirmEmailAsync(ApplicationUser user, string token);
     }
 
     public class ApplicationUserRepository : IApplicationUserRepository
@@ -52,7 +64,9 @@ namespace Hmm.Idp.Services
         {
             var user = await FindByUserNameAsync(userName);
 
-            if (user is { IsActive: true })
+            // Only consider active accounts whose email has been verified. Unverified
+            // accounts must hit /Account/ResendConfirmation first.
+            if (user is { IsActive: true, EmailConfirmed: true })
             {
                 return await _userManager.CheckPasswordAsync(user, password);
             }
@@ -193,13 +207,17 @@ namespace Hmm.Idp.Services
             // Create unique identifier
             var sub = CryptoRandom.CreateUniqueId(format: CryptoRandom.OutputFormat.Hex);
 
-            // Create new user
+            // Create new user. Self-service signups always start with EmailConfirmed=false;
+            // the caller is expected to follow up with a verification email so the user can
+            // call ConfirmEmailAsync before logging in. Admin-created users (in
+            // Pages/Admin/User) and external-provider auto-provisioned users go through
+            // their own paths where EmailConfirmed is set explicitly.
             var user = new ApplicationUser
             {
                 Id = sub,
                 UserName = userName,
                 Email = email,
-                EmailConfirmed = !string.IsNullOrWhiteSpace(email),
+                EmailConfirmed = false,
                 FirstName = firstName,
                 LastName = lastName
             };
@@ -367,6 +385,16 @@ namespace Hmm.Idp.Services
         public async Task<IList<Claim>> GetClaimsAsync(ApplicationUser user)
         {
             return await _userManager.GetClaimsAsync(user);
+        }
+
+        public Task<string> GenerateEmailConfirmationTokenAsync(ApplicationUser user)
+        {
+            return _userManager.GenerateEmailConfirmationTokenAsync(user);
+        }
+
+        public Task<IdentityResult> ConfirmEmailAsync(ApplicationUser user, string token)
+        {
+            return _userManager.ConfirmEmailAsync(user, token);
         }
     }
 }

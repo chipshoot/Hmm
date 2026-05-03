@@ -1,12 +1,38 @@
-# Exposes PostgreSQL port from hmm-idp container for external browsing
-# Usage: add -f compose.pgport.yml to your docker compose command
+# Exposes the embedded PostgreSQL inside hmm-idp and hmm-api containers
+# to the host so external tools (DBeaver, pgAdmin, psql) can connect.
 #
-# Connect with DBeaver:
-#   Host: localhost    Port: 5432
-#   Database: HmmIdp   User: postgres
-#   Password: (see IDP_POSTGRES_PASSWORD in .env)
+# Each container has its own embedded Postgres on internal port 5432.
+# Host ports are taken from docker/.env to avoid collisions:
+#   localhost:${IDP_PG_HOST_PORT}  -> hmm-idp's Postgres  (HmmIdp database)
+#   localhost:${API_PG_HOST_PORT}  -> hmm-api's Postgres  (HmmNotes database)
+#
+# Usage: append `-f compose.pgport.yml` to your `docker compose` command.
+#   docker compose -f compose.base-sqlite.yml -f compose.idp.yml -f compose.api.yml -f compose.pgport.yml up -d
+#
+# DBeaver / pgAdmin connection settings:
+#   --- IDP ---
+#     Host:     localhost
+#     Port:     ${IDP_PG_HOST_PORT}            (default 5432)
+#     Database: HmmIdp
+#     User:     postgres
+#     Password: ${IDP_POSTGRES_PASSWORD}      (see docker/.env)
+#
+#   --- API ---
+#     Host:     localhost
+#     Port:     ${API_PG_HOST_PORT}            (default 5433)
+#     Database: HmmNotes
+#     User:     postgres
+#     Password: ${API_POSTGRES_PASSWORD}      (see docker/.env)
+#
+# SECURITY: This overlay is for local development only. Never use it on a
+# host that's reachable from the public internet — the embedded Postgres
+# password lives in docker/.env (committed) and would be exposed.
 
 services:
   hmm-idp:
     ports:
-      - "5432:5432"
+      - "${IDP_PG_HOST_PORT}:5432"
+
+  hmm-api:
+    ports:
+      - "${API_PG_HOST_PORT}:5432"

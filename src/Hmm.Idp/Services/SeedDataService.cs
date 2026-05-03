@@ -1,5 +1,6 @@
 using Hmm.Idp.Pages.Admin.User;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 
 
@@ -9,15 +10,26 @@ public class SeedDataService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<SeedDataService> _logger;
+
+    // Default admin email — usernames aren't secrets, so a sensible
+    // dev-friendly default is fine. The PASSWORD has no fallback: if
+    // IDP_INITIAL_ADMIN_PASSWORD is unset the admin is not seeded so a
+    // missing-env-var deploy fails closed instead of bringing up a publicly
+    // documented credential. Override the email too in production via
+    // IDP_INITIAL_ADMIN_EMAIL (see scripts/setup-idp-vps.sh).
+    private const string DefaultAdminEmail = "admin@hmm.local";
 
     public SeedDataService(
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
+        IConfiguration configuration,
         ILogger<SeedDataService> logger)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -50,12 +62,35 @@ public class SeedDataService
 
     private async Task SeedUsersAsync()
     {
-        // Seed admin user
+        await SeedAdminAsync();
+        await SeedTestUsersAsync();
+    }
+
+    private async Task SeedAdminAsync()
+    {
+        // Production MUST set IDP_INITIAL_ADMIN_PASSWORD (and typically also
+        // IDP_INITIAL_ADMIN_EMAIL) in /etc/hmm-idp/idp.env before first start.
+        // No password fallback — a missing env var skips the seed entirely so
+        // an unconfigured deploy fails closed rather than provisioning a
+        // public default admin.
+        var adminPassword = _configuration["IDP_INITIAL_ADMIN_PASSWORD"];
+        if (string.IsNullOrWhiteSpace(adminPassword))
+        {
+            _logger.LogError(
+                "IDP_INITIAL_ADMIN_PASSWORD is not set. Skipping admin seed. "
+                + "Set it in /etc/hmm-idp/idp.env (or compose env) and restart "
+                + "to provision the bootstrap administrator.");
+            return;
+        }
+
+        var adminEmail = _configuration["IDP_INITIAL_ADMIN_EMAIL"]
+                         ?? DefaultAdminEmail;
+
         await CreateUserIfNotExistsAsync(new SeedUserInfo
         {
-            UserName = "admin@hmm.local",
-            Email = "admin@hmm.local",
-            Password = "Admin@12345678#",
+            UserName = adminEmail,
+            Email = adminEmail,
+            Password = adminPassword,
             FirstName = "System",
             LastName = "Administrator",
             Roles = ["Administrator"],
@@ -64,13 +99,34 @@ public class SeedDataService
                 new Claim("name", "System Administrator"),
                 new Claim("given_name", "System"),
                 new Claim("family_name", "Administrator"),
-                new Claim("email", "admin@hmm.local"),
+                new Claim("email", adminEmail),
                 new Claim("email_verified", "true"),
                 new Claim("role", "Administrator")
             ]
         });
+    }
 
-        // Seed test user for functional testing
+    private async Task SeedTestUsersAsync()
+    {
+        // Test fixtures (testuser / alice / bob / serviceapi) are referenced
+        // by functional tests + the Flutter dev login. They have well-known
+        // passwords, so we only seed them when IDP_SEED_TEST_USERS=true is
+        // explicit — set in compose.idp.yml for dev/functest, never on the
+        // VPS env file.
+        var seedTestUsers = string.Equals(
+            _configuration["IDP_SEED_TEST_USERS"], "true",
+            StringComparison.OrdinalIgnoreCase);
+        if (!seedTestUsers)
+        {
+            _logger.LogInformation(
+                "IDP_SEED_TEST_USERS is not 'true' — skipping test fixture users.");
+            return;
+        }
+
+        _logger.LogWarning(
+            "Seeding test fixture users (testuser/alice/bob/serviceapi) with "
+            + "well-known passwords. This must NEVER run in production.");
+
         await CreateUserIfNotExistsAsync(new SeedUserInfo
         {
             UserName = "testuser@hmm.local",
@@ -90,7 +146,6 @@ public class SeedDataService
             ]
         });
 
-        // Seed Alice (from TestUsers)
         await CreateUserIfNotExistsAsync(new SeedUserInfo
         {
             UserName = "alice",
@@ -111,7 +166,6 @@ public class SeedDataService
             ]
         });
 
-        // Seed Bob (from TestUsers)
         await CreateUserIfNotExistsAsync(new SeedUserInfo
         {
             UserName = "bob",
@@ -132,7 +186,6 @@ public class SeedDataService
             ]
         });
 
-        // Seed API client user (for ServiceApi)
         await CreateUserIfNotExistsAsync(new SeedUserInfo
         {
             UserName = "serviceapi@hmm.local",

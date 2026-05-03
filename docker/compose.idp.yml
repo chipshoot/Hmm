@@ -18,6 +18,33 @@ services:
       - IssuerUri=http://localhost:${IDP_PORT}
       - PG_PASSWORD=${IDP_POSTGRES_PASSWORD}
       - PG_DB=HmmIdp
+      # Bootstrap admin — SeedDataService reads these on first IDP boot of
+      # an empty HmmIdp database. There is NO password fallback in code: if
+      # IDP_INITIAL_ADMIN_PASSWORD is unset the admin row is skipped, so
+      # missing-env-var prod deploys fail closed instead of provisioning a
+      # public default credential. Production overrides via
+      # /etc/hmm-idp/idp.env on the VPS.
+      - IDP_INITIAL_ADMIN_EMAIL=admin@hmm.local
+      - IDP_INITIAL_ADMIN_PASSWORD=Admin@12345678#
+      # Test fixtures (testuser / alice / bob / serviceapi) — well-known
+      # passwords, only seeded when this flag is explicitly true. NEVER set
+      # this in /etc/hmm-idp/idp.env on a public-facing VPS.
+      - IDP_SEED_TEST_USERS=true
+      # SMTP -> mailpit (compose.base-sqlite.yml). Captures verification /
+      # password-reset / lockout mail; browse at http://localhost:8025.
+      - EmailSettings__SmtpServer=mailpit
+      - EmailSettings__SmtpPort=1025
+      - EmailSettings__UseSsl=false
+      - EmailSettings__Username=
+      - EmailSettings__Password=
+      - EmailSettings__SenderEmail=accounts@homemademessage.com
+      - EmailSettings__SenderName=HomeMadeMessage
+      - EmailSettings__ApplicationUrl=http://localhost:${IDP_PORT}
+      # Dev: Sign-in CTA on the verify-success page lands back on the IDP's
+      # own login so local devs can complete the round-trip without needing
+      # a homemademessage.com mock running. Production leaves this unset
+      # (defaults to https://homemademessage.com via EmailSettings.cs).
+      - EmailSettings__PostVerificationUrl=http://localhost:${IDP_PORT}/Account/Login
     ports:
       - "${IDP_PORT}:80"
     volumes:

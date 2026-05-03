@@ -9,6 +9,17 @@
 
     <partial name="_ValidationSummary" />
 
+    @if (!string.IsNullOrEmpty(Model.EmailNotConfirmedFor))
+    {
+        <div class="alert alert-warning" role="alert">
+            <strong>Your email isn't verified yet.</strong>
+            Please check your inbox for the confirmation link, or
+            <a asp-page="/Account/ResendConfirmation"
+               asp-route-email="@Model.EmailNotConfirmedFor"
+               class="alert-link">request a new one</a>.
+        </div>
+    }
+
     <div class="row">
 
         @if (Model.View.EnableLocalLogin)

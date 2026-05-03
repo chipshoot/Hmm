@@ -32,25 +32,62 @@ public class CustomResourceOwnerPasswordValidator : IResourceOwnerPasswordValida
             return;
         }
 
-        var result = await _signInManager.CheckPasswordSignInAsync(user, context.Password, lockoutOnFailure: true);
-
-        if (result.Succeeded)
-        {
-            context.Result = new GrantValidationResult(
-                user.Id,
-                "password");
-        }
-        else if (result.IsLockedOut)
+        // Bail early if the account is already locked out — short-circuits both
+        // the password check and the email-confirmation check.
+        if (await _userManager.IsLockedOutAsync(user))
         {
             context.Result = new GrantValidationResult(
                 TokenRequestErrors.InvalidGrant,
                 "account_locked");
+            return;
         }
-        else
+
+        // Verify the password directly through UserManager. We avoid
+        // SignInManager.CheckPasswordSignInAsync here because that method
+        // *also* enforces SignInOptions like RequireConfirmedEmail — which
+        // would make it impossible to distinguish "wrong password" from
+        // "right password but unconfirmed". For our two-tier UX (Resend
+        // Email vs. retry password), we need that distinction.
+        var passwordOk = await _userManager.CheckPasswordAsync(user, context.Password);
+
+        if (!passwordOk)
         {
+            // Track the failed attempt in Identity's lockout counter so the
+            // user still gets locked out after enough wrong guesses, even
+            // though we bypassed CheckPasswordSignInAsync's bookkeeping.
+            await _userManager.AccessFailedAsync(user);
+
+            // If that flip put them over the edge, report account_locked.
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                context.Result = new GrantValidationResult(
+                    TokenRequestErrors.InvalidGrant,
+                    "account_locked");
+                return;
+            }
+
             context.Result = new GrantValidationResult(
                 TokenRequestErrors.InvalidGrant,
                 "invalid_username_or_password");
+            return;
         }
+
+        // Password is correct — reset failed-attempt counter so prior wrong
+        // guesses don't accumulate forever.
+        await _userManager.ResetAccessFailedCountAsync(user);
+
+        // Now the email-confirmation gate. Distinct error so the client can
+        // surface a Resend Email prompt instead of "wrong password".
+        if (!user.EmailConfirmed)
+        {
+            context.Result = new GrantValidationResult(
+                TokenRequestErrors.InvalidGrant,
+                "email_not_confirmed");
+            return;
+        }
+
+        context.Result = new GrantValidationResult(
+            user.Id,
+            "password");
     }
 }
