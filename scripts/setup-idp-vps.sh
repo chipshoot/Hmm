@@ -167,12 +167,22 @@ IssuerUri=https://${DOMAIN}
 # /Account/Login as the admin and use /Admin/User/Edit to rotate the
 # password from there.
 #
+# IMPORTANT: there is NO password fallback in code. If
+# IDP_INITIAL_ADMIN_PASSWORD is missing or blank, the admin user is NOT
+# seeded and the IDP boots with no Administrator account. Replace the
+# placeholder below with a strong password (>= 12 chars, mixed case, digit,
+# special) before starting hmm-idp.
+#
 # The mobile app's end-user registration goes through the API
 # (/api/account/register); it does NOT use these values. These ONLY exist
 # so an initial Administrator account is bootstrapped without a public
 # self-service Register page.
+#
+# Note: IDP_SEED_TEST_USERS is intentionally NOT set here. On a public VPS,
+# leaving it unset means well-known dev fixtures (testuser/alice/bob/
+# serviceapi) are never seeded into production.
 IDP_INITIAL_ADMIN_EMAIL=admin@${DOMAIN#idp.}
-IDP_INITIAL_ADMIN_PASSWORD=SET_VIA_ENV_VAR
+IDP_INITIAL_ADMIN_PASSWORD=REPLACE_WITH_STRONG_PASSWORD_BEFORE_FIRST_BOOT
 
 # ---- SMTP (verification, password-reset, lockout notifications) -----
 # Fill in the AspHostPortal mailbox credentials after creating
