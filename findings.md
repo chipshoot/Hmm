@@ -13,7 +13,7 @@
 - **Result filters**: `[TypeFilter(typeof(XxxResultFilter))]` for automatic domain→DTO mapping
 - **DI registration**: All in `AutomobileInfoServiceStartup.cs`
 - **AutoMapper**: Profiles in `AutomobileMappingProfile.cs`
-- **Controller routing**: `[Route("/api/v{version:apiVersion}/automobiles/...")]`
+- **Controller routing**: `[Route("/v{version:apiVersion}/automobiles/...")]`
 - **Authorization**: `[Authorize]` on all controllers
 
 ### Nominatim Reverse Geocoding API

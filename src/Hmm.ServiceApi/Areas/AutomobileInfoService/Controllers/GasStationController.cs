@@ -23,7 +23,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/automobiles/gasstations")]
+    [Route("/v{version:apiVersion}/automobiles/gasstations")]
     [Produces("application/json")]
     public class GasStationController : Controller
     {

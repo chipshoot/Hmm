@@ -25,7 +25,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/contacts")]
+    [Route("/v{version:apiVersion}/contacts")]
     [Produces("application/json")]
     public class ContactController : Controller
     {

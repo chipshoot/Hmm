@@ -11,7 +11,7 @@ namespace Hmm.ServiceApi.Areas.UtilityService.Controllers
     [ApiController]
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/currency")]
+    [Route("/v{version:apiVersion}/currency")]
     [Produces("application/json")]
     public class CurrencyController : Controller
     {

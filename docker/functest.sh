@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-API="http://localhost:5010/api/v1"
+API="http://localhost:5010/v1"
 
 # Get token (URL-encode special chars: ! -> %21, @ -> %40)
 TOKEN_RESP=$(curl -s "http://localhost:5001/connect/token" \

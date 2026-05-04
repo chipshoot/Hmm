@@ -816,8 +816,8 @@ API DESIGN DEFECTS (P2 - POOR CLIENT EXPERIENCE)
       * GetTagByName_ReturnsBadRequest_WhenNameIsEmptyOrWhitespace (2 cases)
       * GetTagByName_ReturnsBadRequest_WhenNameIsNull
     New routes:
-    - GET /api/v1/tags/{id:int} → Get tag by numeric ID
-    - GET /api/v1/tags/by-name/{name} → Get tag by name (unambiguous)
+    - GET /v1/tags/{id:int} → Get tag by numeric ID
+    - GET /v1/tags/by-name/{name} → Get tag by name (unambiguous)
     Impact: Numeric tag names no longer cause route conflicts; clear API design
 
 49. **[RESOLVED] INCONSISTENT API VERSIONING**
@@ -826,16 +826,16 @@ API DESIGN DEFECTS (P2 - POOR CLIENT EXPERIENCE)
     Problem: Routes used /v{version}/notes without /api prefix, conflicting with web app routes
     Resolution: Added /api prefix to all controller routes and updated documentation
     Changes made:
-    - Updated all 9 controller route attributes to use /api/v{version:apiVersion}/ prefix:
-      * HmmNoteController: /api/v{version}/notes
-      * AuthorController: /api/v{version}/authors
-      * ContactController: /api/v{version}/contacts
-      * TagController: /api/v{version}/tags
-      * NoteCatalogController: /api/v{version}/notecatalogs
-      * AutomobileController: /api/v{version}/automobiles
-      * GasLogController: /api/v{version}/automobiles/{autoId}/gaslogs
-      * GasDiscountController: /api/v{version}/automobiles/gaslogs/discounts
-      * GasStationController: /api/v{version}/automobiles/gasstations
+    - Updated all 9 controller route attributes to use /v{version:apiVersion}/ prefix:
+      * HmmNoteController: /v{version}/notes
+      * AuthorController: /v{version}/authors
+      * ContactController: /v{version}/contacts
+      * TagController: /v{version}/tags
+      * NoteCatalogController: /v{version}/notecatalogs
+      * AutomobileController: /v{version}/automobiles
+      * GasLogController: /v{version}/automobiles/{autoId}/gaslogs
+      * GasDiscountController: /v{version}/automobiles/gaslogs/discounts
+      * GasStationController: /v{version}/automobiles/gasstations
     - Updated CLAUDE.md documentation to reflect new route structure
     - Updated Hmm.ServiceApi.http with all 95+ API route references
     - Enables domain homemademessage.com to serve both API (/api/*) and web application (/*) routes
@@ -1389,7 +1389,7 @@ DOCUMENTATION DEFECTS (P3 - DEVELOPER EXPERIENCE)
 94. **[RESOLVED] ROUTE DOCUMENTATION MISMATCH**
     Status: ✓ FIXED (Verified 2026-02-08)
     Location: CLAUDE.md API Versioning section (lines 248-261)
-    Problem: Documentation allegedly said /api/v1/HmmNoteService as a route prefix
+    Problem: Documentation allegedly said /v1/HmmNoteService as a route prefix
     Resolution: CLAUDE.md documentation now accurately matches all controller routes:
     - "HmmNoteService" and "AutomobileInfoService" used only as section headers (matching Area names)
     - All 10 documented routes match actual [Route] attributes on controllers

@@ -24,7 +24,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/authors")]
+    [Route("/v{version:apiVersion}/authors")]
     [Produces("application/json")]
     public class AuthorController : Controller
     {

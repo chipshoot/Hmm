@@ -327,7 +327,7 @@ A successful token request returns:
 Add the token to your API requests:
 
 ```http
-GET https://localhost:5001/api/v1/notes
+GET https://localhost:5001/v1/notes
 Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 

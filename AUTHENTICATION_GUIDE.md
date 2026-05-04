@@ -38,7 +38,7 @@ Your API uses **IdentityServer/Duende IdentityServer** for authentication. Here 
 6. **Test an API endpoint** - scroll down and click ▶ next to any request:
    ```http
    ### Get all notes
-   GET {{baseUrl}}/api/v{{apiVersion}}/notes
+   GET {{baseUrl}}/v{{apiVersion}}/notes
    Authorization: Bearer {{token}}
    ```
 

@@ -134,7 +134,7 @@ $token | Set-Clipboard
 
 ```http
 ### Test Authentication
-GET {{baseUrl}}/api/v1.0/authors
+GET {{baseUrl}}/v1.0/authors
 Authorization: Bearer {{token}}
 ```
 
@@ -184,7 +184,7 @@ Authorization: Bearer {{token}}
 curl https://localhost:5001/.well-known/openid-configuration --insecure
 
 # Test token (replace with your token)
-curl -H "Authorization: Bearer YOUR_TOKEN" https://localhost:5002/api/v1.0/authors
+curl -H "Authorization: Bearer YOUR_TOKEN" https://localhost:5002/v1.0/authors
 ```
 
 ---

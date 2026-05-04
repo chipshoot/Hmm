@@ -32,7 +32,7 @@
 6. **Test any API endpoint!** Scroll down and click ▶ next to any request:
    ```http
    ### Get all notes
-   GET {{baseUrl}}/api/v{{apiVersion}}/notes
+   GET {{baseUrl}}/v{{apiVersion}}/notes
    Authorization: Bearer {{token}}
    ```
 
@@ -109,7 +109,7 @@ After getting a token, test with curl:
 
 ```powershell
 # Replace <YOUR_TOKEN> with the actual token
-curl -H "Authorization: Bearer <YOUR_TOKEN>" https://localhost:5002/api/v1.0/authors --insecure
+curl -H "Authorization: Bearer <YOUR_TOKEN>" https://localhost:5002/v1.0/authors --insecure
 ```
 
 **Expected:** JSON response with authors data
@@ -175,7 +175,7 @@ Now test APIs ↓
 
 ┌─────────────────────────────────────────────────────────┐
 │ ### Get all notes                                       │
-│ ▶ GET {{baseUrl}}/api/v1.0/notes        ← CLICK TO TEST│
+│ ▶ GET {{baseUrl}}/v1.0/notes        ← CLICK TO TEST│
 │ Authorization: Bearer {{token}}                         │
 └─────────────────────────────────────────────────────────┘
 ```

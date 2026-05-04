@@ -54,7 +54,7 @@ Add a new API endpoint that returns address information (street, city, state, co
 **3.3 Create Controller Endpoint**
 - File: `src/Hmm.ServiceApi/Areas/AutomobileInfoService/Controllers/GeocodingController.cs`
 - Or add to existing `GasStationController.cs` as a new action
-- Endpoint: `GET /api/v1/automobiles/geocoding/reverse?latitude={lat}&longitude={lng}`
+- Endpoint: `GET /v1/automobiles/geocoding/reverse?latitude={lat}&longitude={lng}`
 - Validate coordinates: latitude [-90, 90], longitude [-180, 180]
 - Return `ApiGeoAddress`
 

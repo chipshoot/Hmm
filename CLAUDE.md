@@ -80,7 +80,7 @@ Infrastructure (Hmm.Utility)
 ### Key Projects and Responsibilities
 
 **Hmm.ServiceApi** - ASP.NET Core 10.0 REST API
-- API routes use `/api/v{version}/` prefix to separate from web application routes
+- API routes use `/v{version}/` prefix for versioning (served from the `api.` subdomain — no `/api/` namespace needed)
 - JWT Bearer authentication validated against Hmm.Idp
 - Swagger/OpenAPI documentation at `/swagger`
 - Controllers organized by domain areas (HmmNoteService, AutomobileInfoService)
@@ -299,20 +299,20 @@ Migrations are managed in `Hmm.Core.Dal.EF` project. When adding new entities:
 4. Apply with `dotnet ef database update`
 
 ### API Versioning
-Current API version is v1.0. All API routes use `/api/v{version}/` prefix to allow the same domain (homemademessage.com) to serve both API and web application:
+Current API version is v1.0. The API is served at `api.homemademessage.com` and routes use a `/v{version}/` path prefix for version negotiation:
 
 **HmmNoteService endpoints:**
-- `/api/v1/notes` - Note CRUD operations
-- `/api/v1/authors` - Author management
-- `/api/v1/contacts` - Contact information
-- `/api/v1/tags` - Tag operations (GET by name: `/api/v1/tags/by-name/{name}`)
-- `/api/v1/notecatalogs` - Note catalog/template management
+- `/v1/notes` - Note CRUD operations
+- `/v1/authors` - Author management
+- `/v1/contacts` - Contact information
+- `/v1/tags` - Tag operations (GET by name: `/v1/tags/by-name/{name}`)
+- `/v1/notecatalogs` - Note catalog/template management
 
 **AutomobileInfoService endpoints:**
-- `/api/v1/automobiles` - Automobile management
-- `/api/v1/automobiles/{autoId}/gaslogs` - Gas log entries for specific automobile
-- `/api/v1/automobiles/gaslogs/discounts` - Discount program management
-- `/api/v1/automobiles/gasstations` - Gas station management
+- `/v1/automobiles` - Automobile management
+- `/v1/automobiles/{autoId}/gaslogs` - Gas log entries for specific automobile
+- `/v1/automobiles/gaslogs/discounts` - Discount program management
+- `/v1/automobiles/gasstations` - Gas station management
 
 ### Result Filters
 Controllers use result filters to automatically map entities to DTOs:

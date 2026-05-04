@@ -276,12 +276,12 @@ else
         failed=$((failed + 1))
     fi
 
-    # Test 6: Authenticated API call (GET /api/v1/authors)
-    step "Test 6: Authenticated API call (GET /api/v1/authors)"
+    # Test 6: Authenticated API call (GET /v1/authors)
+    step "Test 6: Authenticated API call (GET /v1/authors)"
     if [ -n "$access_token" ]; then
         api_response=$(curl -sf --max-time 10 \
             -H "Authorization: Bearer $access_token" \
-            "$API_BASE_URL/api/v1/authors" 2>/dev/null || true)
+            "$API_BASE_URL/v1/authors" 2>/dev/null || true)
         if [ -n "$api_response" ]; then
             ok "API returned authors successfully"
             passed=$((passed + 1))
@@ -367,7 +367,7 @@ echo -e "    bob                  / Bob@123456789#     (User)"
 echo ""
 echo -e "  ${CYAN}Hmm_Console (Flutter) connection:${NC}"
 echo -e "    IDP Authority:   ${WHITE}http://localhost:5001${NC}"
-echo -e "    API Base URL:    ${WHITE}http://localhost:5010/api/v1${NC}"
+echo -e "    API Base URL:    ${WHITE}http://localhost:5010/v1${NC}"
 echo -e "    Client ID:       ${WHITE}hmm.functest${NC}"
 echo -e "    Client Secret:   ${WHITE}FuncTestSecret123#${NC}"
 echo ""

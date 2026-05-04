@@ -28,7 +28,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [ApiController]
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
+    [Route("/v{version:apiVersion}/automobiles/{autoId:int}/gaslogs")]
     [Produces("application/json")]
     public class GasLogController : Controller
     {

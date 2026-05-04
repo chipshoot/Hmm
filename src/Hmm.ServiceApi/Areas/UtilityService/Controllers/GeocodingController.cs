@@ -14,7 +14,7 @@ namespace Hmm.ServiceApi.Areas.UtilityService.Controllers
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/geocoding")]
+    [Route("/v{version:apiVersion}/geocoding")]
     [Produces("application/json")]
     public class GeocodingController : Controller
     {

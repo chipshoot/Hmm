@@ -25,7 +25,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Controllers
     [ApiController]
     [EnableCors("AllowCors")]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/automobiles")]
+    [Route("/v{version:apiVersion}/automobiles")]
     [Produces("application/json")]
     public class AutomobileController : Controller
     {

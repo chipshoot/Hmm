@@ -338,12 +338,12 @@ else {
         $failed++
     }
 
-    # Test 6: Authenticated API call (GET /api/v1/authors)
-    Write-Step "Test 6: Authenticated API call (GET /api/v1/authors)"
+    # Test 6: Authenticated API call (GET /v1/authors)
+    Write-Step "Test 6: Authenticated API call (GET /v1/authors)"
     if ($accessToken) {
         try {
             $headers = @{ Authorization = "Bearer $accessToken" }
-            $apiResponse = Invoke-RestMethod -Uri "$ApiBaseUrl/api/v1/authors" `
+            $apiResponse = Invoke-RestMethod -Uri "$ApiBaseUrl/v1/authors" `
                 -Method Get `
                 -Headers $headers `
                 -TimeoutSec 10 `
@@ -433,7 +433,7 @@ Write-Host "    bob                  / Bob@123456789#     (User)" -ForegroundCol
 Write-Host ""
 Write-Host "  Hmm_Console (Flutter) connection:" -ForegroundColor Cyan
 Write-Host "    IDP Authority:   http://localhost:5001" -ForegroundColor White
-Write-Host "    API Base URL:    http://localhost:5010/api/v1" -ForegroundColor White
+Write-Host "    API Base URL:    http://localhost:5010/v1" -ForegroundColor White
 Write-Host "    Client ID:       hmm.functest" -ForegroundColor White
 Write-Host "    Client Secret:   FuncTestSecret123#" -ForegroundColor White
 Write-Host ""

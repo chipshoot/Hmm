@@ -24,7 +24,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/tags")]
+    [Route("/v{version:apiVersion}/tags")]
     [Produces("application/json")]
     public class TagController : Controller
     {

@@ -24,7 +24,7 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
     [Authorize]
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("/api/v{version:apiVersion}/notecatalogs")]
+    [Route("/v{version:apiVersion}/notecatalogs")]
     [Produces("application/json")]
     public class NoteCatalogController : Controller
     {

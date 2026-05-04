@@ -120,7 +120,7 @@ docker compose -f compose.base-sqlite.yml -f compose.idp.yml -f compose.api-sqli
 | Service | URL | Expected |
 |---------|-----|----------|
 | API Swagger | http://localhost:5010/swagger | Swagger UI |
-| API endpoint | http://localhost:5010/api/v1/authors | 401 Unauthorized |
+| API endpoint | http://localhost:5010/v1/authors | 401 Unauthorized |
 | IDP | http://localhost:5001 | IdentityServer page |
 | Seq dashboard | http://localhost:8081 | Seq log viewer |
 
