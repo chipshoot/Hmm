@@ -5,6 +5,7 @@ using Duende.IdentityServer.Models;
 using Hmm.Idp.Data;
 using Hmm.Idp.Pages.Admin.User;
 using Hmm.Idp.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -12,6 +13,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using Serilog;
 using IServiceScopeFactory = Microsoft.Extensions.DependencyInjection.IServiceScopeFactory;
+using Secret = Duende.IdentityServer.Models.Secret;
 
 namespace Hmm.Idp;
 
@@ -90,6 +92,33 @@ internal static class HostingExtensions
 
         // Configure email settings
         builder.Services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
+
+        // Persist Data Protection keys to the filesystem so they survive
+        // process restarts. Without this the default on Linux (no user
+        // profile, no HKLM) is an in-memory ephemeral repository, which
+        // means every restart silently invalidates the encrypted
+        // IdentityServer signing-key rows in the DB and breaks any
+        // outstanding cookie / refresh-token / persisted-grant.
+        // Path is provisioned by scripts/setup-idp-vps.sh, owned by the
+        // service account, and listed in the unit's ReadWritePaths.
+        var dpKeyDir = configuration.GetValue<string>("DataProtection:KeyPath")
+                       ?? "/var/lib/hmm-idp/dp-keys";
+        if (Directory.Exists(dpKeyDir))
+        {
+            builder.Services
+                .AddDataProtection()
+                .SetApplicationName("Hmm.Idp")
+                .PersistKeysToFileSystem(new DirectoryInfo(dpKeyDir));
+        }
+        else
+        {
+            Log.Warning(
+                "DataProtection key directory '{Path}' does not exist — falling " +
+                "back to ephemeral in-memory keys. Encrypted state (signing " +
+                "keys, refresh tokens, cookies) will not survive a restart. " +
+                "Create the directory with hmm-idp ownership to enable " +
+                "persistent keys.", dpKeyDir);
+        }
 
         var identityServerBuilder = builder.Services.AddIdentityServer(options =>
             {

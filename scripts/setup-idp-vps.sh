@@ -32,6 +32,8 @@ DOMAIN="${DOMAIN:-idp.homemademessage.com}"
 APP_USER="${APP_USER:-hmm-idp}"
 APP_DIR="${APP_DIR:-/opt/hmm-idp}"
 LOG_DIR="${LOG_DIR:-/var/log/hmm-idp}"
+DATA_DIR="${DATA_DIR:-/var/lib/hmm-idp}"   # ASP.NET DataProtection keys live here
+DP_KEY_DIR="${DP_KEY_DIR:-${DATA_DIR}/dp-keys}"
 ENV_DIR="${ENV_DIR:-/etc/hmm-idp}"
 ENV_FILE="${ENV_DIR}/idp.env"
 APP_PORT="${APP_PORT:-8080}"              # IDP listens on 127.0.0.1:${APP_PORT}
@@ -138,9 +140,10 @@ SQL
 fi
 
 # ----- 5. App directories ---------------------------------------
-log "Preparing $APP_DIR, $LOG_DIR, $ENV_DIR"
-mkdir -p "$APP_DIR" "$LOG_DIR" "$ENV_DIR"
-chown -R "$APP_USER:$APP_USER" "$APP_DIR" "$LOG_DIR"
+log "Preparing $APP_DIR, $LOG_DIR, $DATA_DIR, $DP_KEY_DIR, $ENV_DIR"
+mkdir -p "$APP_DIR" "$LOG_DIR" "$DATA_DIR" "$DP_KEY_DIR" "$ENV_DIR"
+chown -R "$APP_USER:$APP_USER" "$APP_DIR" "$LOG_DIR" "$DATA_DIR"
+chmod 0700                     "$DP_KEY_DIR"
 chown root:"$APP_USER"         "$ENV_DIR"
 chmod 0750                     "$ENV_DIR"
 
@@ -306,7 +309,7 @@ After=network.target postgresql.service
 Wants=postgresql.service
 
 [Service]
-Type=notify
+Type=exec
 WorkingDirectory=${APP_DIR}
 ExecStart=/usr/bin/dotnet ${APP_DIR}/Hmm.Idp.dll
 Restart=always
@@ -321,7 +324,7 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=${LOG_DIR}
+ReadWritePaths=${LOG_DIR} ${DATA_DIR}
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true

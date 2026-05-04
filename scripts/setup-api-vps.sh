@@ -131,7 +131,7 @@ After=network.target postgresql.service
 Wants=postgresql.service
 
 [Service]
-Type=notify
+Type=exec
 WorkingDirectory=${APP_DIR}
 ExecStart=/usr/bin/dotnet ${APP_DIR}/Hmm.ServiceApi.dll
 Restart=always
