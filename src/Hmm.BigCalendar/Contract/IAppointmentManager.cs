@@ -21,6 +21,6 @@ namespace Hmm.BigCalendar.Contract
 
         IEnumerable<Appointment> GetAppointments(Expression<Func<Appointment, bool>> query = null, ResourceCollectionParameters resourceCollectionParameters = null);
 
-        ProcessingResult ProcessResult { get; }
+        ProcessingResult<Unit> ProcessResult { get; }
     }
 }
