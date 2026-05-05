@@ -1,6 +1,8 @@
 using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace Hmm.Idp.Services
 {
@@ -19,25 +21,37 @@ namespace Hmm.Idp.Services
         {
             try
             {
-                var message = new MailMessage
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(_emailSettings.SenderName, _emailSettings.SenderEmail));
+                message.To.Add(MailboxAddress.Parse(to));
+                message.Subject = subject;
+                message.Body = new TextPart("html") { Text = htmlMessage };
+
+                using var client = new SmtpClient();
+
+                // Map UseSsl + port to MailKit's connection mode:
+                //   UseSsl=false  → cleartext (e.g. mailpit on 1025)
+                //   UseSsl=true + port 465 → implicit TLS (Resend, Amazon SES, most SMTPS)
+                //   UseSsl=true + any other port → STARTTLS upgrade (port 587 etc.)
+                // System.Net.Mail.SmtpClient (replaced) only ever did STARTTLS even
+                // when EnableSsl=true was set against port 465, which is why the
+                // previous code couldn't talk to providers that only expose SMTPS.
+                var secureOption = _emailSettings.UseSsl
+                    ? (_emailSettings.SmtpPort == 465
+                        ? SecureSocketOptions.SslOnConnect
+                        : SecureSocketOptions.StartTls)
+                    : SecureSocketOptions.None;
+
+                await client.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.SmtpPort, secureOption);
+
+                if (!string.IsNullOrWhiteSpace(_emailSettings.Username))
                 {
-                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
-                    Subject = subject,
-                    Body = htmlMessage,
-                    IsBodyHtml = true
-                };
+                    await client.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
+                }
 
-                message.To.Add(new MailAddress(to));
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
 
-                using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
-                {
-                    EnableSsl = _emailSettings.UseSsl,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password)
-                };
-
-                await client.SendMailAsync(message);
                 _logger.LogInformation("Email sent successfully to {EmailAddress}", to);
                 return true;
             }
