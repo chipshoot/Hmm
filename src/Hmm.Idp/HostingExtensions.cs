@@ -402,6 +402,37 @@ internal static class HostingExtensions
             Log.Information("Seeded Client: hmm.web");
         }
 
+        // hmm.mobile - Native iOS / Android (Flutter) app.
+        // Public client: no secret. RFC 8252 (OAuth 2.0 for Native Apps) says
+        // anything baked into a shipped binary isn't a real secret, so we
+        // don't pretend.
+        // Today: ROPC (grant_type=password) — matches what IdpTokenService in
+        // hmm_console already does. TODO: migrate the Flutter app to
+        // authorization_code + PKCE and drop ResourceOwnerPassword from this
+        // client; OAuth 2.1 deprecates ROPC.
+        if (!context.Clients.Any(c => c.ClientId == "hmm.mobile"))
+        {
+            var mobileClient = new Client
+            {
+                ClientId = "hmm.mobile",
+                ClientName = "Hmm Mobile App",
+                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword
+                    .Concat(new[] { "refresh_token" }).ToArray(),
+                RequireClientSecret = false,
+                AllowedScopes = { "openid", "profile", "email", "hmmapi" },
+                AllowOfflineAccess = true,
+                UpdateAccessTokenClaimsOnRefresh = true,
+                AccessTokenLifetime = 3600,                    // 1 hour
+                RefreshTokenUsage = TokenUsage.OneTimeOnly,    // rotate on every refresh
+                RefreshTokenExpiration = TokenExpiration.Sliding,
+                SlidingRefreshTokenLifetime = 60 * 60 * 24 * 30 // 30 days
+            };
+
+            context.Clients.Add(mobileClient.ToEntity());
+            context.SaveChanges();
+            Log.Information("Seeded Client: hmm.mobile");
+        }
+
         // hmm.serviceapi - Client Credentials + Token Introspection
         if (!context.Clients.Any(c => c.ClientId == "hmm.serviceapi"))
         {
