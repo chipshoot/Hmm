@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AutoScheduledService Note",
+  "type": "object",
+  "required": ["note"],
+  "properties": {
+    "note": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "object",
+          "required": ["AutoScheduledService"],
+          "properties": {
+            "AutoScheduledService": {
+              "type": "object",
+              "required": ["automobileId", "name", "type"],
+              "properties": {
+                "automobileId": { "type": "integer", "minimum": 1 },
+                "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+                "type": {
+                  "type": "string",
+                  "enum": ["OilChange", "TireRotation", "Brake", "Inspection", "Repair", "Other"]
+                },
+                "intervalDays": { "type": "integer", "minimum": 1 },
+                "intervalMileage": { "type": "integer", "minimum": 1 },
+                "nextDueDate": { "type": "string", "format": "date-time" },
+                "nextDueMileage": { "type": "integer", "minimum": 0 },
+                "isActive": { "type": "boolean" },
+                "notes": { "type": "string", "maxLength": 1000 },
+                "createdDate": { "type": "string", "format": "date-time" },
+                "lastModifiedDate": { "type": "string", "format": "date-time" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

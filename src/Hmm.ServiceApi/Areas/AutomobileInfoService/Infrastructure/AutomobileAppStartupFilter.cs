@@ -126,7 +126,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     {
                         Name = catalogName,
                         Type = NoteContentFormatType.Json,
-                        Schema = string.Empty,
+                        Schema = GetSchemaFor(catalogName),
                         IsDefault = false
                     };
 
@@ -142,5 +142,16 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                 }
             }
         }
+
+        // Schemas are only attached to the catalogs introduced alongside this code path.
+        // Older catalogs (Automobile/GasLog/GasDiscount/GasStation) keep an empty schema to
+        // preserve compatibility with notes already stored in production.
+        private static string GetSchemaFor(string catalogName) => catalogName switch
+        {
+            AutomobileConstant.AutoInsurancePolicyCatalogName => NoteCatalogSchemas.AutoInsurancePolicySchema,
+            AutomobileConstant.ServiceRecordCatalogName => NoteCatalogSchemas.ServiceRecordSchema,
+            AutomobileConstant.AutoScheduledServiceCatalogName => NoteCatalogSchemas.AutoScheduledServiceSchema,
+            _ => string.Empty
+        };
     }
 }

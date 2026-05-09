@@ -27,6 +27,9 @@ public static class NoteCatalogSchemas
     private static readonly Lazy<string> _gasLogSchema = new(() => LoadSchema("GasLog.schema.json"));
     private static readonly Lazy<string> _gasDiscountSchema = new(() => LoadSchema("GasDiscount.schema.json"));
     private static readonly Lazy<string> _gasStationSchema = new(() => LoadSchema("GasStation.schema.json"));
+    private static readonly Lazy<string> _autoInsurancePolicySchema = new(() => LoadSchema("AutoInsurancePolicy.schema.json"));
+    private static readonly Lazy<string> _serviceRecordSchema = new(() => LoadSchema("ServiceRecord.schema.json"));
+    private static readonly Lazy<string> _autoScheduledServiceSchema = new(() => LoadSchema("AutoScheduledService.schema.json"));
 
     /// <summary>
     /// JSON Schema for AutomobileInfo entities.
@@ -56,6 +59,24 @@ public static class NoteCatalogSchemas
     /// ZipCode (max 20), Description (max 500), and IsActive flag.
     /// </summary>
     public static string GasStationSchema => _gasStationSchema.Value;
+
+    /// <summary>
+    /// JSON Schema for AutoInsurancePolicy entities. Validates required policy
+    /// fields, Money premium, optional deductible, and the embedded coverage list.
+    /// </summary>
+    public static string AutoInsurancePolicySchema => _autoInsurancePolicySchema.Value;
+
+    /// <summary>
+    /// JSON Schema for ServiceRecord entities. Validates required automobile/date/mileage/type
+    /// fields, optional Money cost, and the embedded parts list.
+    /// </summary>
+    public static string ServiceRecordSchema => _serviceRecordSchema.Value;
+
+    /// <summary>
+    /// JSON Schema for AutoScheduledService entities. Validates required name/type
+    /// and optional interval / next-due fields.
+    /// </summary>
+    public static string AutoScheduledServiceSchema => _autoScheduledServiceSchema.Value;
 
     private static string LoadSchema(string fileName)
     {

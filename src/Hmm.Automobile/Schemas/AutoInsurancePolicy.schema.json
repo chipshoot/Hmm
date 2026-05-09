@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AutoInsurancePolicy Note",
+  "type": "object",
+  "required": ["note"],
+  "definitions": {
+    "money": {
+      "type": "object",
+      "required": ["value", "currencyCode"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "currencyCode": { "type": "string" }
+      }
+    },
+    "coverageItem": {
+      "type": "object",
+      "required": ["type", "limit"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "limit": { "type": "number", "minimum": 0 },
+        "deductible": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "maxLength": 10 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "note": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "object",
+          "required": ["AutoInsurancePolicy"],
+          "properties": {
+            "AutoInsurancePolicy": {
+              "type": "object",
+              "required": ["automobileId", "provider", "policyNumber", "effectiveDate", "expiryDate", "premium"],
+              "properties": {
+                "automobileId": { "type": "integer", "minimum": 1 },
+                "provider": { "type": "string", "minLength": 1, "maxLength": 100 },
+                "policyNumber": { "type": "string", "minLength": 1, "maxLength": 50 },
+                "effectiveDate": { "type": "string", "format": "date-time" },
+                "expiryDate": { "type": "string", "format": "date-time" },
+                "premium": { "$ref": "#/definitions/money" },
+                "deductible": { "type": "number", "minimum": 0 },
+                "coverage": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/coverageItem" }
+                },
+                "notes": { "type": "string", "maxLength": 1000 },
+                "isActive": { "type": "boolean" },
+                "createdDate": { "type": "string", "format": "date-time" },
+                "lastModifiedDate": { "type": "string", "format": "date-time" }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

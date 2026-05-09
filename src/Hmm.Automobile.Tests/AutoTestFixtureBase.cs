@@ -151,7 +151,7 @@ namespace Hmm.Automobile.Tests
                 Name = AutomobileConstant.AutoInsurancePolicyCatalogName,
                 Type = DomainNoteContentFormatType.Json,
                 Description = "Auto insurance policy catalog",
-                Schema = string.Empty
+                Schema = NoteCatalogSchemas.AutoInsurancePolicySchema
             };
 
             var serviceRecordCatalog = new NoteCatalog
@@ -160,7 +160,7 @@ namespace Hmm.Automobile.Tests
                 Name = AutomobileConstant.ServiceRecordCatalogName,
                 Type = DomainNoteContentFormatType.Json,
                 Description = "Service record catalog",
-                Schema = string.Empty
+                Schema = NoteCatalogSchemas.ServiceRecordSchema
             };
 
             var scheduledServiceCatalog = new NoteCatalog
@@ -169,7 +169,7 @@ namespace Hmm.Automobile.Tests
                 Name = AutomobileConstant.AutoScheduledServiceCatalogName,
                 Type = DomainNoteContentFormatType.Json,
                 Description = "Auto scheduled service catalog",
-                Schema = string.Empty
+                Schema = NoteCatalogSchemas.AutoScheduledServiceSchema
             };
 
             var catalogs = new[]
@@ -252,7 +252,7 @@ namespace Hmm.Automobile.Tests
                 {
                     Id = 204,
                     Name = AutomobileConstant.AutoInsurancePolicyCatalogName,
-                    Schema = string.Empty,
+                    Schema = NoteCatalogSchemas.AutoInsurancePolicySchema,
                     Type = DomainNoteContentFormatType.Json,
                     Description = "Auto insurance policy catalog"
                 },
@@ -260,7 +260,7 @@ namespace Hmm.Automobile.Tests
                 {
                     Id = 205,
                     Name = AutomobileConstant.ServiceRecordCatalogName,
-                    Schema = string.Empty,
+                    Schema = NoteCatalogSchemas.ServiceRecordSchema,
                     Type = DomainNoteContentFormatType.Json,
                     Description = "Service record catalog"
                 },
@@ -268,7 +268,7 @@ namespace Hmm.Automobile.Tests
                 {
                     Id = 206,
                     Name = AutomobileConstant.AutoScheduledServiceCatalogName,
-                    Schema = string.Empty,
+                    Schema = NoteCatalogSchemas.AutoScheduledServiceSchema,
                     Type = DomainNoteContentFormatType.Json,
                     Description = "Auto scheduled service catalog"
                 },
