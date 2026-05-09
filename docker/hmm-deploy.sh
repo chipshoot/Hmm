@@ -4,8 +4,10 @@
 # ============================================================
 #
 # Deploys API + IDP in Docker:
-#   - API uses SQLite database on the host
-#   - IDP uses PostgreSQL (embedded in hmm-idp container)
+#   - API uses PostgreSQL embedded in the hmm-api container
+#     (volume: api-postgres-data — see compose.api.yml).
+#   - IDP uses PostgreSQL embedded in the hmm-idp container
+#     (volume: idp-postgres-data — see compose.idp.yml).
 # Designed for macOS with Cloudflare Tunnel for public access.
 #
 # Usage:
@@ -21,11 +23,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Compose file combination for production (API: SQLite, IDP: PostgreSQL)
-COMPOSE_FILES="-f compose.base-sqlite.yml -f compose.idp.yml -f compose.api-sqlite.yml"
+# Compose file combination for production. compose.base-sqlite.yml hosts the
+# shared infra (Seq + Mailpit) without the legacy SQL Server container — the
+# API and IDP each embed their own Postgres instance.
+COMPOSE_FILES="-f compose.base-sqlite.yml -f compose.idp.yml -f compose.api.yml"
 
-# Default OneDrive path on macOS
-SQLITE_DATA_DIR="${HMM_DATA_DIR:-$HOME/Library/CloudStorage/OneDrive-Personal/hmm-data}"
 BACKUP_DIR="${HMM_BACKUP_DIR:-$HOME/hmm-backups}"
 
 # Parse arguments
@@ -75,14 +77,13 @@ while [[ $# -gt 0 ]]; do
             echo "  --stop              Stop and remove containers"
             echo "  --status            Show container status and health"
             echo "  --logs [service]    Follow logs (optional: hmm-api, hmm-idp, hmm-seq)"
-            echo "  --backup            Backup API SQLite and IDP PostgreSQL databases"
+            echo "  --backup            Backup API + IDP PostgreSQL databases (pg_dump)"
             echo ""
             echo "Options:"
             echo "  --build, -b         Build images before starting"
             echo "  --rebuild, -r       Rebuild images from scratch (no cache)"
             echo ""
             echo "Environment variables:"
-            echo "  HMM_DATA_DIR        API SQLite data directory (default: ~/Library/CloudStorage/OneDrive-Personal/hmm-data)"
             echo "  HMM_BACKUP_DIR      Backup directory (default: ~/hmm-backups)"
             exit 0
             ;;
@@ -114,16 +115,8 @@ case $ACTION in
     start)
         check_docker
         echo "============================================================"
-        echo "Hmm Production Deployment (API: SQLite, IDP: PostgreSQL)"
+        echo "Hmm Production Deployment (API + IDP: embedded PostgreSQL)"
         echo "============================================================"
-        echo ""
-
-        # Ensure API SQLite data directory exists
-        if [ ! -d "$SQLITE_DATA_DIR" ]; then
-            echo "Creating data directory: $SQLITE_DATA_DIR"
-            mkdir -p "$SQLITE_DATA_DIR"
-        fi
-        echo "API SQLite data: $SQLITE_DATA_DIR"
         echo ""
 
         # Handle rebuild
@@ -159,9 +152,10 @@ case $ACTION in
         echo "  Swagger:     http://localhost:5010/swagger"
         echo "  IDP:         http://localhost:5001"
         echo "  Seq:         http://localhost:8081"
+        echo "  Mailpit UI:  http://localhost:8025"
         echo ""
-        echo "API SQLite database: $SQLITE_DATA_DIR/hmm.db"
-        echo "IDP PostgreSQL:     embedded in hmm-idp container (volume: idp-postgres-data)"
+        echo "API PostgreSQL: embedded in hmm-api container (volume: api-postgres-data)"
+        echo "IDP PostgreSQL: embedded in hmm-idp container (volume: idp-postgres-data)"
         echo ""
         echo "Commands:"
         echo "  Stop:    ./hmm-deploy.sh --stop"
@@ -188,19 +182,18 @@ case $ACTION in
         docker ps --filter "name=hmm-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
         echo ""
 
-        # Check API SQLite database
-        if [ -f "$SQLITE_DATA_DIR/hmm.db" ]; then
-            DB_SIZE=$(du -h "$SQLITE_DATA_DIR/hmm.db" | cut -f1)
-            echo "API SQLite database: $SQLITE_DATA_DIR/hmm.db ($DB_SIZE)"
+        # Check API PostgreSQL
+        if docker ps --format '{{.Names}}' | grep -q hmm-api; then
+            echo "API PostgreSQL: embedded in hmm-api container (volume: api-postgres-data)"
         else
-            echo "API SQLite database: not created yet"
+            echo "API PostgreSQL: hmm-api container not running"
         fi
 
         # Check IDP PostgreSQL
         if docker ps --format '{{.Names}}' | grep -q hmm-idp; then
-            echo "IDP PostgreSQL:     embedded in hmm-idp container (volume: idp-postgres-data)"
+            echo "IDP PostgreSQL: embedded in hmm-idp container (volume: idp-postgres-data)"
         else
-            echo "IDP PostgreSQL:     hmm-idp container not running"
+            echo "IDP PostgreSQL: hmm-idp container not running"
         fi
         echo ""
 
@@ -243,18 +236,15 @@ case $ACTION in
         TIMESTAMP=$(date +%Y%m%d_%H%M%S)
         mkdir -p "$BACKUP_DIR"
 
-        # Backup API SQLite
-        if [ -f "$SQLITE_DATA_DIR/hmm.db" ]; then
-            echo "Backing up API SQLite database..."
-            echo "  Stopping API to checkpoint WAL..."
-            docker stop hmm-api 2>/dev/null || true
-            sleep 2
-            cp "$SQLITE_DATA_DIR/hmm.db" "$BACKUP_DIR/hmm-$TIMESTAMP.db"
-            echo "  Starting API..."
-            docker start hmm-api
-            echo "  Saved: $BACKUP_DIR/hmm-$TIMESTAMP.db"
+        # Backup API PostgreSQL (embedded in hmm-api container)
+        echo "Backing up API PostgreSQL database..."
+        if docker ps --format '{{.Names}}' | grep -q hmm-api; then
+            docker exec hmm-api su postgres -c "pg_dump -h 127.0.0.1 HmmNotes" \
+                > "$BACKUP_DIR/HmmNotes-$TIMESTAMP.sql" 2>/dev/null && \
+            echo "  Saved: $BACKUP_DIR/HmmNotes-$TIMESTAMP.sql" || \
+            echo "  API PostgreSQL backup failed (database may not exist yet)"
         else
-            echo "  API SQLite database not found, skipping."
+            echo "  hmm-api container not running, skipping."
         fi
         echo ""
 
