@@ -53,12 +53,18 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     .AddScoped<IHmmValidator<GasDiscount>, GasDiscountValidator>()
                     .AddScoped<IHmmValidator<GasLog>, GasLogValidator>()
                     .AddScoped<IHmmValidator<GasStation>, GasStationValidator>()
+                    .AddScoped<IHmmValidator<AutoInsurancePolicy>, AutoInsurancePolicyValidator>()
+                    .AddScoped<IHmmValidator<ServiceRecord>, ServiceRecordValidator>()
+                    .AddScoped<IHmmValidator<AutoScheduledService>, AutoScheduledServiceValidator>()
 
                     // Note serializers
                     .AddScoped<INoteSerializer<AutomobileInfo>, AutomobileJsonNoteSerialize>()
                     .AddScoped<INoteSerializer<GasDiscount>, GasDiscountJsonNoteSerialize>()
                     .AddScoped<INoteSerializer<GasLog>, GasLogJsonNoteSerialize>()
                     .AddScoped<INoteSerializer<GasStation>, GasStationJsonNoteSerialize>()
+                    .AddScoped<INoteSerializer<AutoInsurancePolicy>, AutoInsurancePolicyJsonNoteSerialize>()
+                    .AddScoped<INoteSerializer<ServiceRecord>, ServiceRecordJsonNoteSerialize>()
+                    .AddScoped<INoteSerializer<AutoScheduledService>, AutoScheduledServiceJsonNoteSerialize>()
 
                     // Entity managers (use IAuthorProvider which resolves to CurrentUserAuthorProvider)
                     .AddScoped<IAutoEntityManager<AutomobileInfo>, AutomobileManager>()
@@ -66,6 +72,15 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     .AddScoped<IGasLogManager, GasLogManager>()
                     .AddScoped<GasStationManager>()
                     .AddScoped<IAutoEntityManager<GasStation>>(sp => sp.GetRequiredService<GasStationManager>())
+
+                    // Insurance / service managers + snapshot updater
+                    .AddScoped<IAutoInsurancePolicyManager, AutoInsurancePolicyManager>()
+                    .AddScoped<IAutoEntityManager<AutoInsurancePolicy>>(sp => sp.GetRequiredService<IAutoInsurancePolicyManager>())
+                    .AddScoped<IServiceRecordManager, ServiceRecordManager>()
+                    .AddScoped<IAutoEntityManager<ServiceRecord>>(sp => sp.GetRequiredService<IServiceRecordManager>())
+                    .AddScoped<IAutoScheduledServiceManager, AutoScheduledServiceManager>()
+                    .AddScoped<IAutoEntityManager<AutoScheduledService>>(sp => sp.GetRequiredService<IAutoScheduledServiceManager>())
+                    .AddScoped<IAutomobileSnapshotUpdater, AutomobileSnapshotUpdater>()
 
                     // Startup filter
                     .AddTransient<IStartupFilter, AutomobileAppStartupFilter>();

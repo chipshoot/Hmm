@@ -92,6 +92,9 @@ namespace Hmm.Automobile
                 NoteCatalogType.GasDiscount => AutomobileConstant.GasDiscountCatalogName,
                 NoteCatalogType.GasLog => AutomobileConstant.GasLogCatalogName,
                 NoteCatalogType.GasStation => AutomobileConstant.GasStationCatalogName,
+                NoteCatalogType.AutoInsurancePolicy => AutomobileConstant.AutoInsurancePolicyCatalogName,
+                NoteCatalogType.ServiceRecord => AutomobileConstant.ServiceRecordCatalogName,
+                NoteCatalogType.AutoScheduledService => AutomobileConstant.AutoScheduledServiceCatalogName,
                 _ => null
             };
         }

@@ -62,6 +62,9 @@ namespace Hmm.Automobile.NoteSerialize
                 GasDiscount => AutomobileConstant.GasDiscountRecordSubject,
                 GasLog log => GasLog.GetNoteSubject(log.AutomobileId),
                 GasStation => AutomobileConstant.GasStationRecordSubject,
+                AutoInsurancePolicy policy => AutoInsurancePolicy.GetNoteSubject(policy.AutomobileId),
+                ServiceRecord record => ServiceRecord.GetNoteSubject(record.AutomobileId),
+                AutoScheduledService schedule => AutoScheduledService.GetNoteSubject(schedule.AutomobileId),
                 _ => typeof(T).Name
             };
         }

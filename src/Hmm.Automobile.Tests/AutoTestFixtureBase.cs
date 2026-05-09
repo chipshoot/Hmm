@@ -145,7 +145,38 @@ namespace Hmm.Automobile.Tests
                 Schema = NoteCatalogSchemas.GasStationSchema
             };
 
-            var catalogs = new[] { automobileCatalog, gasLogCatalog, gasDiscountCatalog, gasStationCatalog };
+            var insurancePolicyCatalog = new NoteCatalog
+            {
+                Id = 204,
+                Name = AutomobileConstant.AutoInsurancePolicyCatalogName,
+                Type = DomainNoteContentFormatType.Json,
+                Description = "Auto insurance policy catalog",
+                Schema = string.Empty
+            };
+
+            var serviceRecordCatalog = new NoteCatalog
+            {
+                Id = 205,
+                Name = AutomobileConstant.ServiceRecordCatalogName,
+                Type = DomainNoteContentFormatType.Json,
+                Description = "Service record catalog",
+                Schema = string.Empty
+            };
+
+            var scheduledServiceCatalog = new NoteCatalog
+            {
+                Id = 206,
+                Name = AutomobileConstant.AutoScheduledServiceCatalogName,
+                Type = DomainNoteContentFormatType.Json,
+                Description = "Auto scheduled service catalog",
+                Schema = string.Empty
+            };
+
+            var catalogs = new[]
+            {
+                automobileCatalog, gasLogCatalog, gasDiscountCatalog, gasStationCatalog,
+                insurancePolicyCatalog, serviceRecordCatalog, scheduledServiceCatalog
+            };
 
             // Setup GetEntitiesAsync for NoteCatalog domain entity
             lookupMock.Setup(lk => lk.GetEntitiesAsync(
@@ -216,6 +247,30 @@ namespace Hmm.Automobile.Tests
                     Schema = NoteCatalogSchemas.GasStationSchema,
                     Type = DomainNoteContentFormatType.Json,
                     Description = "Gas station catalog"
+                },
+                NoteCatalogType.AutoInsurancePolicy => new NoteCatalog
+                {
+                    Id = 204,
+                    Name = AutomobileConstant.AutoInsurancePolicyCatalogName,
+                    Schema = string.Empty,
+                    Type = DomainNoteContentFormatType.Json,
+                    Description = "Auto insurance policy catalog"
+                },
+                NoteCatalogType.ServiceRecord => new NoteCatalog
+                {
+                    Id = 205,
+                    Name = AutomobileConstant.ServiceRecordCatalogName,
+                    Schema = string.Empty,
+                    Type = DomainNoteContentFormatType.Json,
+                    Description = "Service record catalog"
+                },
+                NoteCatalogType.AutoScheduledService => new NoteCatalog
+                {
+                    Id = 206,
+                    Name = AutomobileConstant.AutoScheduledServiceCatalogName,
+                    Schema = string.Empty,
+                    Type = DomainNoteContentFormatType.Json,
+                    Description = "Auto scheduled service catalog"
                 },
                 _ => null
             };

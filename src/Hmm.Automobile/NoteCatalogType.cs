@@ -8,6 +8,12 @@
 
         GasLog,
 
-        GasStation
+        GasStation,
+
+        AutoInsurancePolicy,
+
+        ServiceRecord,
+
+        AutoScheduledService
     }
 }

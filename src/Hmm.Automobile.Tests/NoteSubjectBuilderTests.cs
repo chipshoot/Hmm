@@ -124,5 +124,63 @@ namespace Hmm.Automobile.Tests
         }
 
         #endregion
+
+        #region Insurance / Service / Schedule Subject Tests
+
+        [Fact]
+        public void BuildAutoInsurancePolicySubject_ReturnsExpectedFormat()
+        {
+            var subject = NoteSubjectBuilder.BuildAutoInsurancePolicySubject(7);
+            Assert.Equal("AutoInsurancePolicy,AutomobileId:7", subject);
+        }
+
+        [Fact]
+        public void BuildServiceRecordSubject_ReturnsExpectedFormat()
+        {
+            var subject = NoteSubjectBuilder.BuildServiceRecordSubject(7);
+            Assert.Equal("ServiceRecord,AutomobileId:7", subject);
+        }
+
+        [Fact]
+        public void BuildAutoScheduledServiceSubject_ReturnsExpectedFormat()
+        {
+            var subject = NoteSubjectBuilder.BuildAutoScheduledServiceSubject(7);
+            Assert.Equal("AutoScheduledService,AutomobileId:7", subject);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(99)]
+        [InlineData(54321)]
+        public void TryParseAutomobileId_RoundTripsForInsuranceSubject(int autoId)
+        {
+            var subject = NoteSubjectBuilder.BuildAutoInsurancePolicySubject(autoId);
+            Assert.True(NoteSubjectBuilder.TryParseAutomobileId(subject, out var parsed));
+            Assert.Equal(autoId, parsed);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(99)]
+        [InlineData(54321)]
+        public void TryParseAutomobileId_RoundTripsForServiceRecordSubject(int autoId)
+        {
+            var subject = NoteSubjectBuilder.BuildServiceRecordSubject(autoId);
+            Assert.True(NoteSubjectBuilder.TryParseAutomobileId(subject, out var parsed));
+            Assert.Equal(autoId, parsed);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(99)]
+        [InlineData(54321)]
+        public void TryParseAutomobileId_RoundTripsForScheduledServiceSubject(int autoId)
+        {
+            var subject = NoteSubjectBuilder.BuildAutoScheduledServiceSubject(autoId);
+            Assert.True(NoteSubjectBuilder.TryParseAutomobileId(subject, out var parsed));
+            Assert.Equal(autoId, parsed);
+        }
+
+        #endregion
     }
 }

@@ -40,6 +40,33 @@ namespace Hmm.Automobile
         }
 
         /// <summary>
+        /// Builds a note subject for an auto insurance policy associated with a specific automobile.
+        /// </summary>
+        public static string BuildAutoInsurancePolicySubject(int automobileId)
+        {
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{AutomobileConstant.AutoInsurancePolicyRecordSubject}{ParameterDelimiter}{AutomobileIdKey}{KeyValueDelimiter}{automobileId}");
+        }
+
+        /// <summary>
+        /// Builds a note subject for a service record associated with a specific automobile.
+        /// </summary>
+        public static string BuildServiceRecordSubject(int automobileId)
+        {
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{AutomobileConstant.ServiceRecordSubject}{ParameterDelimiter}{AutomobileIdKey}{KeyValueDelimiter}{automobileId}");
+        }
+
+        /// <summary>
+        /// Builds a note subject for a scheduled service associated with a specific automobile.
+        /// </summary>
+        public static string BuildAutoScheduledServiceSubject(int automobileId)
+        {
+            return string.Create(CultureInfo.InvariantCulture,
+                $"{AutomobileConstant.AutoScheduledServiceSubject}{ParameterDelimiter}{AutomobileIdKey}{KeyValueDelimiter}{automobileId}");
+        }
+
+        /// <summary>
         /// Attempts to extract the automobile ID from a note subject string.
         /// </summary>
         /// <param name="subject">The subject string to parse.</param>

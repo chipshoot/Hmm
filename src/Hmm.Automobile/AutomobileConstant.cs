@@ -12,6 +12,12 @@ namespace Hmm.Automobile
 
         public const string GasStationCatalogName = "Hmm.AutomobileMan.GasStation";
 
+        public const string AutoInsurancePolicyCatalogName = "Hmm.AutomobileMan.AutoInsurancePolicy";
+
+        public const string ServiceRecordCatalogName = "Hmm.AutomobileMan.ServiceRecord";
+
+        public const string AutoScheduledServiceCatalogName = "Hmm.AutomobileMan.AutoScheduledService";
+
         /// <summary>
         /// Base subject is used for root element of <see cref="AutomobileInfo"/> note XML content
         /// </summary>
@@ -31,5 +37,20 @@ namespace Hmm.Automobile
         /// Base subject is used for root element of <see cref="GasStation"/> note JSON content
         /// </summary>
         public const string GasStationRecordSubject = "GasStation";
+
+        /// <summary>
+        /// Subject prefix for <see cref="AutoInsurancePolicy"/> notes.
+        /// </summary>
+        public const string AutoInsurancePolicyRecordSubject = "AutoInsurancePolicy";
+
+        /// <summary>
+        /// Subject prefix for <see cref="ServiceRecord"/> notes.
+        /// </summary>
+        public const string ServiceRecordSubject = "ServiceRecord";
+
+        /// <summary>
+        /// Subject prefix for <see cref="AutoScheduledService"/> notes.
+        /// </summary>
+        public const string AutoScheduledServiceSubject = "AutoScheduledService";
     }
 }

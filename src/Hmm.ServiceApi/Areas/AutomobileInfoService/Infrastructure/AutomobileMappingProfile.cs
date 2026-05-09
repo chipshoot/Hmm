@@ -197,6 +197,113 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
             CreateMap<PageList<GasStation>, PageList<ApiGasStation>>()
                 .ConvertUsing(new PageListConverter<GasStation, ApiGasStation>());
 
+            // CoverageItem mappings (value object inside AutoInsurancePolicy)
+            CreateMap<CoverageItem, ApiCoverageItem>();
+            CreateMap<ApiCoverageItem, CoverageItem>();
+
+            // AutoInsurancePolicy mappings
+            CreateMap<AutoInsurancePolicy, ApiAutoInsurancePolicy>()
+                .ForMember(d => d.Premium, opt => opt.MapFrom(s => s.Premium != null ? s.Premium.Amount : 0m))
+                .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Premium != null ? s.Premium.Currency.ToString() : null));
+
+            CreateMap<ApiAutoInsurancePolicyForCreate, AutoInsurancePolicy>()
+                .ForMember(d => d.Premium, opt => opt.MapFrom(s => new Money(s.Premium, ParseCurrency(s.Currency))))
+                .ForMember(d => d.AutomobileId, opt => opt.Ignore())
+                .ForMember(d => d.CreatedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(d => d.LastModifiedDate, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
+            CreateMap<ApiAutoInsurancePolicyForUpdate, AutoInsurancePolicy>()
+                .ForMember(d => d.Premium, opt =>
+                {
+                    opt.PreCondition(s => s.Premium.HasValue);
+                    opt.MapFrom(s => new Money(s.Premium.Value, ParseCurrency(s.Currency)));
+                })
+                .ForMember(d => d.LastModifiedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<AutoInsurancePolicy, ApiAutoInsurancePolicyForUpdate>()
+                .ForMember(d => d.Premium, opt => opt.MapFrom(s => s.Premium != null ? (decimal?)s.Premium.Amount : null))
+                .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Premium != null ? s.Premium.Currency.ToString() : null))
+                .ForMember(d => d.IsActive, opt => opt.MapFrom(s => (bool?)s.IsActive));
+
+            CreateMap<PageList<AutoInsurancePolicy>, PageList<ApiAutoInsurancePolicy>>()
+                .ConvertUsing(new PageListConverter<AutoInsurancePolicy, ApiAutoInsurancePolicy>());
+
+            // PartItem mappings (value object inside ServiceRecord)
+            CreateMap<PartItem, ApiPartItem>()
+                .ForMember(d => d.UnitCost, opt => opt.MapFrom(s => s.UnitCost != null ? (decimal?)s.UnitCost.Amount : null))
+                .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.UnitCost != null ? s.UnitCost.Currency.ToString() : null));
+            CreateMap<ApiPartItem, PartItem>()
+                .ForMember(d => d.UnitCost, opt =>
+                {
+                    opt.PreCondition(s => s.UnitCost.HasValue);
+                    opt.MapFrom(s => new Money(s.UnitCost.Value, ParseCurrency(s.Currency)));
+                });
+
+            // ServiceRecord mappings
+            CreateMap<ServiceRecord, ApiServiceRecord>()
+                .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
+                .ForMember(d => d.Cost, opt => opt.MapFrom(s => s.Cost != null ? (decimal?)s.Cost.Amount : null))
+                .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Cost != null ? s.Cost.Currency.ToString() : null));
+
+            CreateMap<ApiServiceRecordForCreate, ServiceRecord>()
+                .ForMember(d => d.AutomobileId, opt => opt.Ignore())
+                .ForMember(d => d.Type, opt => opt.MapFrom(s =>
+                    string.IsNullOrEmpty(s.Type) ? ServiceType.Other : Enum.Parse<ServiceType>(s.Type, true)))
+                .ForMember(d => d.Cost, opt =>
+                {
+                    opt.PreCondition(s => s.Cost.HasValue);
+                    opt.MapFrom(s => new Money(s.Cost.Value, ParseCurrency(s.Currency)));
+                })
+                .ForMember(d => d.CreatedDate, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
+            CreateMap<ApiServiceRecordForUpdate, ServiceRecord>()
+                .ForMember(d => d.Type, opt =>
+                {
+                    opt.PreCondition(s => !string.IsNullOrEmpty(s.Type));
+                    opt.MapFrom(s => Enum.Parse<ServiceType>(s.Type, true));
+                })
+                .ForMember(d => d.Cost, opt =>
+                {
+                    opt.PreCondition(s => s.Cost.HasValue);
+                    opt.MapFrom(s => new Money(s.Cost.Value, ParseCurrency(s.Currency)));
+                })
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<ServiceRecord, ApiServiceRecordForUpdate>()
+                .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
+                .ForMember(d => d.Cost, opt => opt.MapFrom(s => s.Cost != null ? (decimal?)s.Cost.Amount : null))
+                .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Cost != null ? s.Cost.Currency.ToString() : null));
+
+            CreateMap<PageList<ServiceRecord>, PageList<ApiServiceRecord>>()
+                .ConvertUsing(new PageListConverter<ServiceRecord, ApiServiceRecord>());
+
+            // AutoScheduledService mappings
+            CreateMap<AutoScheduledService, ApiAutoScheduledService>()
+                .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()));
+
+            CreateMap<ApiAutoScheduledServiceForCreate, AutoScheduledService>()
+                .ForMember(d => d.AutomobileId, opt => opt.Ignore())
+                .ForMember(d => d.Type, opt => opt.MapFrom(s =>
+                    string.IsNullOrEmpty(s.Type) ? ServiceType.Other : Enum.Parse<ServiceType>(s.Type, true)))
+                .ForMember(d => d.CreatedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(d => d.LastModifiedDate, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
+            CreateMap<ApiAutoScheduledServiceForUpdate, AutoScheduledService>()
+                .ForMember(d => d.Type, opt =>
+                {
+                    opt.PreCondition(s => !string.IsNullOrEmpty(s.Type));
+                    opt.MapFrom(s => Enum.Parse<ServiceType>(s.Type, true));
+                })
+                .ForMember(d => d.LastModifiedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<AutoScheduledService, ApiAutoScheduledServiceForUpdate>()
+                .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
+                .ForMember(d => d.IsActive, opt => opt.MapFrom(s => (bool?)s.IsActive));
+
+            CreateMap<PageList<AutoScheduledService>, PageList<ApiAutoScheduledService>>()
+                .ConvertUsing(new PageListConverter<AutoScheduledService, ApiAutoScheduledService>());
         }
     }
 }

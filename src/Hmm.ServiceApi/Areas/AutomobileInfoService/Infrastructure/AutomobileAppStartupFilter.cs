@@ -105,7 +105,10 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                 AutomobileConstant.AutoMobileInfoCatalogName,
                 AutomobileConstant.GasDiscountCatalogName,
                 AutomobileConstant.GasLogCatalogName,
-                AutomobileConstant.GasStationCatalogName
+                AutomobileConstant.GasStationCatalogName,
+                AutomobileConstant.AutoInsurancePolicyCatalogName,
+                AutomobileConstant.ServiceRecordCatalogName,
+                AutomobileConstant.AutoScheduledServiceCatalogName
             };
 
             foreach (var catalogName in requiredCatalogs)

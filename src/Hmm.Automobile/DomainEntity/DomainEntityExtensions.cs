@@ -16,6 +16,9 @@ namespace Hmm.Automobile.DomainEntity
                 GasDiscount => AutomobileConstant.GasDiscountRecordSubject,
                 GasLog => AutomobileConstant.GasLogRecordSubject,
                 GasStation => AutomobileConstant.GasStationRecordSubject,
+                AutoInsurancePolicy => AutomobileConstant.AutoInsurancePolicyRecordSubject,
+                ServiceRecord => AutomobileConstant.ServiceRecordSubject,
+                AutoScheduledService => AutomobileConstant.AutoScheduledServiceSubject,
                 _ => string.Empty
             };
         }
@@ -30,6 +33,9 @@ namespace Hmm.Automobile.DomainEntity
                 GasDiscount => AutomobileConstant.GasDiscountCatalogName,
                 GasLog => AutomobileConstant.GasLogCatalogName,
                 GasStation => AutomobileConstant.GasStationCatalogName,
+                AutoInsurancePolicy => AutomobileConstant.AutoInsurancePolicyCatalogName,
+                ServiceRecord => AutomobileConstant.ServiceRecordCatalogName,
+                AutoScheduledService => AutomobileConstant.AutoScheduledServiceCatalogName,
                 _ => null
             };
 
