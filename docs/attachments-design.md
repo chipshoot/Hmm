@@ -8,11 +8,14 @@ model that this doc builds on).
 
 ## Why
 
-Hmm needs to attach images and other files to notes — starting with
-a car photo on `AutomobileInfo` and growing to receipts on service
+Hmm needs to attach images and other files to notes. Attachments are
+a property of the **`HmmNote`** itself, so the same mechanism covers
+every note type — the first user-visible use is a car photo on a
+vehicle's note, and it extends unchanged to receipts on service
 records, policy PDFs on insurance policies, etc. Today there is no
 attachment story on the .NET API at all, and the Flutter side has
-half-built infrastructure that doesn't survive a cross-device sync.
+half-built, note-keyed infrastructure that doesn't survive a
+cross-device sync.
 
 This doc picks an **Obsidian-style file vault** as the universal
 fallback, *plus* two smart-reference shortcuts so we don't copy
@@ -27,61 +30,72 @@ OneDrive / iCloud Drive.
 > iCloud Drive. Whichever is cheapest and most stable for that
 > specific photo.
 
-## Reference shape (inside note content)
+## Reference shape (on the note)
 
-A tagged union. Stored as siblings of the existing fields in the
-note's JSON content. Two slots: a singular `primaryImage` plus a
-list `images`. The two slots are **disjoint** — a photo lives in
-exactly one of them, never both; promoting a gallery image to
-primary moves it out of `images`.
+Attachments belong to the **`HmmNote`**, not to whatever domain
+object lives inside its `Content` — so *every* note can carry
+photos/files (a vehicle, a service record, a plain-text note, all
+the same way), with no per-type opt-in and no change to any domain
+serializer.
+
+They're stored in a new nullable **`attachments` column on the
+`Notes` table** (a JSON string column, mirroring how `Content` and
+`NoteCatalog.Schema` already store structured JSON in a column). The
+column holds one object:
 
 ```jsonc
+// Notes.attachments  (null when the note has no attachments)
 {
-  "note": {
-    "content": {
-      "AutomobileInfo": {
-        "vin": "...",
-        "primaryImage": {
-          "kind": "phasset",
-          "id": "ABC-123-DEF/L0/001",
-          "originalName": "IMG_2031.HEIC",
-          "contentType": "image/heic",
-          "byteSize": 423112
-        },
-        "images": [
-          { "kind": "phasset", "id": "...", ... },
-          {
-            "kind": "cloudFile",
-            "provider": "oneDrive",
-            "path": "Pictures/Cars/IMG_2031.jpg",
-            "originalName": "IMG_2031.jpg",
-            "contentType": "image/jpeg",
-            "byteSize": 423112
-          },
-          {
-            "kind": "vault",
-            "path": "attachments/note-5/9c8a-photo.jpg",
-            "originalName": "old-photo.jpg",
-            "contentType": "image/jpeg",
-            "byteSize": 423112
-          }
-        ]
-      }
+  "primaryImage": {
+    "kind": "phasset",
+    "id": "ABC-123-DEF/L0/001",
+    "originalName": "IMG_2031.HEIC",
+    "contentType": "image/heic",
+    "byteSize": 423112
+  },
+  "images": [
+    { "kind": "phasset", "id": "...", ... },
+    {
+      "kind": "cloudFile",
+      "provider": "oneDrive",
+      "path": "Pictures/Cars/IMG_2031.jpg",
+      "originalName": "IMG_2031.jpg",
+      "contentType": "image/jpeg",
+      "byteSize": 423112
+    },
+    {
+      "kind": "vault",
+      "path": "attachments/note-5/9c8a-photo.jpg",
+      "originalName": "old-photo.jpg",
+      "contentType": "image/jpeg",
+      "byteSize": 423112
     }
-  }
+  ]
 }
 ```
 
-`originalName`, `contentType`, and `byteSize` are common to all
-kinds (best-effort — `byteSize` may be `null` for `phasset`/`cloudFile`
-when the OS doesn't expose it cheaply). **Only `vault` refs are
-guaranteed to carry `byteSize`**, so the JSON Schema for any note
-type that gains these fields (e.g. `AutomobileInfo.schema.json`)
-must declare `byteSize` nullable.
+Two slots: a singular `primaryImage` plus a list `images`. The two
+slots are **disjoint** — a photo lives in exactly one of them, never
+both; promoting a gallery image to primary moves it out of `images`.
 
-The reference shape generalises to other note types — receipts on
-service records, policy PDFs on insurance policies — by adding the
-same two field names.
+Each reference is a tagged union on `kind`. `originalName`,
+`contentType`, and `byteSize` are common to all kinds (best-effort —
+`byteSize` may be `null` for `phasset`/`cloudFile` when the OS
+doesn't expose it cheaply). **Only `vault` refs are guaranteed to
+carry `byteSize`.** The column value validates against a small JSON
+Schema (`src/Hmm.Core/Schemas/NoteAttachments.schema.json`) that
+declares `byteSize` nullable; it's checked whenever the column is
+written (same pattern as the per-domain content schemas).
+
+Why a column rather than embedding in `Content`: `Content` is a raw
+string for plain-text/HTML notes, so it can't carry structured
+sibling fields without breaking that contract; a dedicated column
+makes attachments genuinely note-universal and keeps domain
+serializers untouched. (A relational child table was the alternative
+considered; the JSON column wins on cost — one migration, no new
+repo/manager/controller — and we don't need attachments to be
+SQL-queryable. Revisit a child table if orphan-GC or dedup ever
+needs server-side queries.)
 
 ## Reference kinds and resolvers
 
@@ -191,8 +205,8 @@ The client iterates every note's attachment refs and resolves
 non-vault kinds **before** the switch flips:
 
 1. For each `phasset` ref → load bytes via PhotoKit, write to a
-   temp `vault://...` path, replace the ref in note content with the
-   new `vault` reference.
+   temp `vault://...` path, replace the ref in the note's
+   `attachments` column with the new `vault` reference.
 2. For each `cloudFile` ref → load bytes via the OS / Graph SDK,
    same swap.
 3. Then upload all `vault` files via `POST /v1/vault/{path}`
@@ -278,6 +292,23 @@ before files are placed.
 - Mode-aware provider in `repository_providers.dart` returns the
   right vault store based on `dataModeProvider`.
 
+### Note storage
+- New nullable `attachments` text column on the Drift `Notes` table
+  (a Drift migration); holds the `{ "primaryImage": ..., "images":
+  [...] }` JSON described above.
+- The `HmmNote` model gains `AttachmentRef? primaryImage` +
+  `List<AttachmentRef> images`; `LocalNoteRepository` round-trips
+  the column via the `AttachmentRef` JSON codec.
+- Domain entities that display attachments (e.g. `Automobile`)
+  surface `primaryImage` / `images` as a **read-through projection
+  of the owning note**; on save, the domain repo writes them into
+  the note's `attachments` column alongside the serialized content.
+  No attachment data lives inside the domain payload.
+- The half-built `Attachments` Drift table + `IAttachmentRepository`
+  + `local_attachment_repository.dart` + `attachmentRepositoryProvider`
+  are removed (they're unused) — the column-on-`Notes` model
+  replaces them.
+
 ### Picker
 - iOS / Android: `image_picker` (gives PHAsset on iOS, MediaStore on
   Android). Add to `pubspec.yaml`.
@@ -301,10 +332,6 @@ before files are placed.
   resolver, shows shimmer while loading, falls back to placeholder
   + Replace button on resolution failure.
 
-### Cleanup
-- Drift `Attachments` table and `local_attachment_repository.dart`
-  go away (or are reduced to a deprecation stub).
-
 ## .NET implementation
 
 ### Stack
@@ -322,6 +349,25 @@ before files are placed.
 - `RequireActiveSubscriptionAttribute` (defined in the sync doc)
   decorates the write endpoints.
 
+### `HmmNote` attachments
+- `HmmNote` (`src/Hmm.Core.Map/DomainEntity/HmmNote.cs`) gains
+  `VaultRef? PrimaryImage` + `IList<VaultRef> Images`.
+- `HmmNoteDao` gains a nullable `string? Attachments` column → one
+  EF migration: add `Attachments NVARCHAR(MAX) NULL` to `Notes`
+  (and the SQLite / PostgreSQL equivalents).
+- The AutoMapper profile maps the JSON column ↔ the two domain
+  properties via a value converter that uses the `NoteAttachments`
+  codec.
+- On write, the serialized column is validated against
+  `NoteAttachments.schema.json` (same place the per-domain content
+  schemas live); invalid → `ProcessingResult` failure.
+- `ApiNote`, `ApiNoteForCreate`, `ApiNoteForUpdate` surface
+  `primaryImage` + `images`; `ApiMappingProfile` maps them; the
+  note result filters pass them through.
+- Domain modules that want a flattened view (e.g. an `ApiAutomobile`
+  that shows the car's photo) project from the owning note's fields
+  — they don't add their own storage.
+
 ### `VaultRef` value object
 The .NET side only knows about `VaultRef` (`{Path, OriginalName,
 ContentType, ByteSize}`) and lives in the `Hmm.Core.Vault` project.
@@ -329,15 +375,15 @@ It never sees `phasset` / `cloudFile` references — those are
 client-side concepts that get rewritten to `vault` during the
 migration upload.
 
-The API DTOs (`ApiAutomobile`, `ApiAutomobileForCreate`,
-`ApiAutomobileForUpdate`, …) carry `VaultRef` **directly** — not a
-polymorphic `AttachmentRef` with a `kind` discriminator. There is no
-non-vault shape on the wire to .NET, so a `phasset` / `cloudFile`
-payload deserializes to a `VaultRef` with a null `Path` and is
-rejected by schema validation — it can never become a valid
-server-side object. (Belt-and-braces: the serializer also rejects an
-explicit `kind` that isn't `vault` with a `400`, in case a
-hand-crafted payload sets `path` *and* `kind: phasset`.)
+The `attachments` column and the `ApiNote*` DTOs carry `VaultRef`
+**directly** — not a polymorphic `AttachmentRef` with a `kind`
+discriminator. There is no non-vault shape on the wire to .NET, so a
+`phasset` / `cloudFile` payload deserializes to a `VaultRef` with a
+null `Path` and is rejected by `NoteAttachments.schema.json` — it
+can never become a valid server-side object. (Belt-and-braces: the
+codec also rejects an explicit `kind` that isn't `vault` with a
+`400`, in case a hand-crafted payload sets `path` *and*
+`kind: phasset`.)
 
 ### Server-side image processing
 - Use `SkiaSharp` (cross-platform, no native deps on Linux Docker)
@@ -369,41 +415,55 @@ Each step ships independently.
 
 1. **Spec the path utility shared between client and server.**
    POSIX-style joins, sanitisation rules.
-2. **Spec the `AttachmentRef` JSON schema** (the tagged union)
-   shared between client and server.
+2. **Spec the JSON schemas shared between client and server**: the
+   `AttachmentRef` tagged union, and the `NoteAttachments` wrapper
+   (`{ primaryImage, images }`).
 3. **.NET: new `Hmm.Core.Vault` project — `IVaultBlobStore` +
    `FilesystemVaultBlobStore` + `VaultRef` + tests.**
 4. **.NET: `VaultController` + `AttachmentSettings` + DI wiring.**
 5. **.NET: server-side image downsize on upload.**
-6. **.NET: extend `/v1/migration/{upload,export,replace}` for
-   vault contents.**
-7. **.NET: extend `hmm-deploy.sh --backup` to tar the vault dir +
+6. **.NET: `Notes.attachments` column — `HmmNoteDao` column + EF
+   migration + `HmmNote.PrimaryImage`/`Images` + AutoMapper
+   converter + `NoteAttachments.schema.json` validation + `ApiNote*`
+   DTOs + result-filter pass-through + tests.**
+7. **.NET: extend `/v1/migration/{upload,export,replace}` for
+   vault contents (now reads/writes the `attachments` column).**
+8. **.NET: extend `hmm-deploy.sh --backup` to tar the vault dir +
    add `/var/lib/hmm-vault` Docker volume.**
-8. **Flutter: `AttachmentRef` sealed class + JSON codec.**
-9. **Flutter: `IVaultStore` interface + `LocalVaultStore`.**
-10. **Flutter: `ApiVaultStore` + mode-aware provider.**
-11. **Flutter: `VaultResolver` (renders `VaultRef`).**
-12. **Flutter: `image_picker` integration + the picker → `AttachmentRef`
-    decision logic. v1 picker only emits `VaultRef` until the
-    PHAsset resolver lands; bytes always copied into vault for
-    safety.**
-13. **Flutter: `PhAssetResolver` (iOS) — picker now emits
+9. **Flutter: `AttachmentRef` sealed class + JSON codec + the
+   `NoteAttachments` wrapper codec.**
+10. **Flutter: `IVaultStore` interface + `LocalVaultStore`.**
+11. **Flutter: `attachments` column on the Drift `Notes` table +
+    Drift migration; `HmmNote` model gains `primaryImage`/`images`;
+    `LocalNoteRepository` round-trips it; remove the old
+    `Attachments` table + `IAttachmentRepository` +
+    `local_attachment_repository.dart` + `attachmentRepositoryProvider`.**
+12. **Flutter: surface read-through `primaryImage`/`images` on the
+    `Automobile` entity; the local automobile repo writes them to
+    the owning note's `attachments` column on save.**
+13. **Flutter: `image_picker` integration + the picker →
+    `AttachmentRef` decision logic. v1 picker only emits `VaultRef`
+    until the PHAsset resolver lands; bytes always copied into vault
+    for safety.**
+14. **Flutter: `VaultResolver` (renders `VaultRef`) + image picker /
+    viewer widget on the vehicle screen.** ← first visible feature
+15. **Flutter: `ApiVaultStore` + mode-aware vault-store provider.**
+16. **Flutter: `PhAssetResolver` (iOS) — picker now emits
     `PhAssetRef` instead of copying.**
-14. **Flutter: `CloudFileResolver` for macOS / Windows OneDrive /
+17. **Flutter: `CloudFileResolver` for macOS / Windows OneDrive /
     iCloud Drive — picker now emits `CloudFileRef` when applicable.**
-15. **Flutter: extend `Automobile` domain entity with `primaryImage`
-    + `images`; serialize round-trip.**
-16. **Flutter: image picker + viewer widget on the vehicle screen.**
-17. **Flutter: Free → Paid migration extension — resolve all
+18. **Flutter: Free → Paid migration extension — resolve all
     non-vault refs to vault before upload.**
-18. **iOS: set `Info.plist` flags so the vault is browsable in
+19. **iOS: set `Info.plist` flags so the vault is browsable in
     Files.**
-19. **Sunset: deprecate the Drift `Attachments` table and the
-    `IAttachmentRepository` interface; remove after one release if
-    nothing depends on it.**
 
-Steps 1–7 ship without any client UX change. Step 16 is the first
-visible feature (vault-only photos). Steps 13–14 are the
-smart-reference power-ups; the app works without them, just less
-efficiently. Step 17 is required *before* anyone in `phasset` /
-`cloudFile` mode can upgrade to paid — gate it.
+Steps 1–8 ship without any client UX change. Step 14 is the first
+visible feature (vault-only photos, local mode). Step 15 lights up
+the paid tier. Steps 16–17 are the smart-reference power-ups; the
+app works without them, just less efficiently. Step 18 is required
+*before* anyone in `phasset` / `cloudFile` mode can upgrade to paid
+— gate it.
+
+**The Flutter local-mode vertical slice** (the chosen first body of
+work) is steps 1 → 2 → 9 → 10 → 11 → 12 → 13 → 14. No .NET work
+required.

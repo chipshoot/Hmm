@@ -1,18 +1,21 @@
 # Task Plan
 
 ## Objective
-Design and implement an Obsidian-style file-vault for Hmm — and use
-it to attach a car photo (primary + optional gallery) to
-`AutomobileInfo`.
+Design and implement an Obsidian-style file-vault for Hmm and a
+**note-level attachments facility** on top of it — then use it to
+attach a car photo (primary + optional gallery) to a vehicle's note.
 
-The vault must work in **all three data modes** (`local`,
-`cloudStorage`, `cloudApi`) and align with the migration model in
-`docs/multi-device-cloud-sync.md`.
+Attachments belong to the `HmmNote` (a new nullable `attachments`
+JSON column on the `Notes` table), so the same mechanism covers
+every note type. The vault must work in **all three data modes**
+(`local`, `cloudStorage`, `cloudApi`) and align with the migration
+model in `docs/multi-device-cloud-sync.md`.
 
 ## Why
-- Flutter's existing asset-catalog plumbing
+- Flutter's existing note-keyed attachment plumbing
   (`local_attachment_repository.dart` + Drift `Attachments` table)
-  doesn't survive cross-device sync, and the .NET API has nothing.
+  is half-built, doesn't survive cross-device sync, and uses an
+  asset-catalog shape we're not keeping; the .NET API has nothing.
 - Prior-art note apps (Obsidian, Apple Notes, OneNote, Notion)
   uniformly store bytes somewhere addressable by every viewing
   device — none rely on URI-only references to the user's photo
@@ -20,14 +23,16 @@ The vault must work in **all three data modes** (`local`,
 - Of those, **Obsidian's file-vault model** maps cleanly onto our
   three tiers: free `cloudStorage` mode gets multi-device sync
   "for free" via OneDrive's file-level sync; the paid tier needs a
-  small file-server API but reuses the same path/reference
-  shape.
+  small file-server API but reuses the same path/reference shape.
+- Storing the references on the `HmmNote` itself (not inside a
+  domain payload) means plain-text/HTML notes can carry attachments
+  too, and no domain serializer changes.
 
 ## Phases
 
 ### Phase 1: Research & Discovery — DONE
-- [x] Confirm Flutter has half-built attachment plumbing (Drift
-      `Attachments` table + `IAttachmentRepository`)
+- [x] Confirm Flutter has half-built, note-keyed attachment plumbing
+      (Drift `Attachments` table + `IAttachmentRepository`)
 - [x] Confirm .NET side has zero attachment infrastructure
 - [x] Survey Obsidian / OneNote / Apple Notes / Notion / Bear /
       Logseq prior art
@@ -35,58 +40,64 @@ The vault must work in **all three data modes** (`local`,
       asset-catalog
 
 ### Phase 2: Design Doc — DONE
-- [x] Decide reference shape: `primaryImage` + `images[]` siblings
-      inside the existing note JSON content (no per-entity FK)
 - [x] Pick storage model: file vault, identical layout per tier,
       transport varies (local FS / OneDrive / API)
+- [x] Decide reference shape: tagged union (`vault`/`phasset`/
+      `cloudFile`); `primaryImage` + `images[]`; **stored on the
+      note in a new `attachments` JSON column**, not in the domain
+      payload (revised 2026-05-11 — was "siblings in note content")
 - [x] Decide MIME / size limits + server-side downsize
 - [x] Decide EXIF / virus scan / thumbnail policy (defer)
 - [x] Define API surface (`/v1/vault/{path}`) with subscription
       gating
-- [x] Document iOS file-visibility flags
-- [x] Document backup integration
+- [x] Document iOS file-visibility flags + backup integration
 - [x] Write `docs/attachments-design.md`
 - [x] **GATE**: reviewed with user 2026-05-11 — 7 doc follow-ups
-      raised (see "Design-doc follow-ups" below); user chose the
-      **Flutter local-mode vertical slice** as the first work.
+      raised (below), 4 code-shaping edits applied to the doc, the
+      attachments-on-`HmmNote` pivot + sidecar-JSON-column decision
+      taken; user chose the **Flutter local-mode vertical slice** as
+      the first work.
 
 ## Design-doc follow-ups (from 2026-05-11 review)
 
-Code-shaping decisions — all now written into
-`docs/attachments-design.md` (2026-05-11); implement in the phase
-noted:
-- [x] `Hmm.Core.Vault` as its own project from day one (not
-      `IVaultBlobStore` inside `Hmm.Core`) → land in Phase 4
-- [x] `primaryImage` and `images` are **disjoint** — a photo lives
-      in one slot, never both → enforce in the Phase 9 codec & Phase
-      10 model
-- [x] Note schema declares `byteSize` **nullable** (only `vault`
-      refs guarantee it) → apply in Phase 8 (`AutomobileInfo.schema.json`)
-- [x] .NET API DTOs typed `VaultRef`, not polymorphic
-      `AttachmentRef` → apply in Phase 8 DTOs
+Code-shaping decisions — all written into `docs/attachments-design.md`
+(2026-05-11); implement in the phase noted:
+- [x] `Hmm.Core.Vault` as its own project from day one → Phase 4
+- [x] `primaryImage` / `images` are **disjoint** slots → enforce in
+      the Phase 9 codec & Phase 12 projection
+- [x] `byteSize` is **nullable** (only `vault` refs guarantee it) →
+      `NoteAttachments.schema.json` in Phase 6 + the Phase 9 codec
+- [x] The `attachments` column + `ApiNote*` DTOs are typed `VaultRef`,
+      not polymorphic `AttachmentRef` → Phase 6
+- [x] Attachments live on the `HmmNote`, in a sidecar `attachments`
+      JSON column on `Notes` → Phases 6 (.NET) + 11 (Flutter)
 
-Later-phase (Phase 13+ concerns, parked):
+Later-phase (Phase 16+ concerns, parked):
 - [ ] HEIC on Android `cloudApi` viewers — document "view natively"
       vs. server-side transcode to JPEG
 - [ ] `image_picker` vs `photo_manager` — verify which package
-      actually yields a `PHAsset.localIdentifier` before Phase 13
-- [ ] Spell out the step-17-before-13/14 gate — feature-flag the
-      picker by tier so non-vault refs only get created in `local`/
-      `cloudStorage` modes
+      actually yields a `PHAsset.localIdentifier` before Phase 16
+- [ ] Spell out the migration-gate — feature-flag the picker by tier
+      so non-vault refs only get created in `local`/`cloudStorage`
+      modes (Phase 18 must land before Phases 16–17 reach paid users)
 
-### Phase 3: Path utility (shared spec)
+### Phase 3: Shared specs
 - [ ] Spec the relative-path rules (POSIX separators, no `..`, no
       leading `/`, allowed chars)
-- [ ] Implement once on each side as a pure function with unit tests
+- [ ] Spec the `AttachmentRef` tagged-union JSON schema + the
+      `NoteAttachments` wrapper schema (`{primaryImage, images}`,
+      `byteSize` nullable)
+- [ ] Path utility implemented as a pure function on each side with
+      unit tests
 
-### Phase 4: .NET vault store
-- [ ] `IVaultBlobStore` interface in `Hmm.Core` (or new
-      `Hmm.Core.Vault` project)
-- [ ] `FilesystemVaultBlobStore` implementation, root from
-      `AttachmentSettings`
+### Phase 4: .NET vault store (`Hmm.Core.Vault` — new project)
+- [ ] New `Hmm.Core.Vault` project; `IVaultBlobStore` interface
+- [ ] `FilesystemVaultBlobStore`, root from `AttachmentSettings`
+- [ ] `VaultRef` value object (`{Path, OriginalName, ContentType,
+      ByteSize}`)
 - [ ] xUnit tests covering put / get / delete / list / sanitisation
-- [ ] DI registration in `Hmm.ServiceApi`
-- [ ] `AttachmentSettings` bound from `appsettings.json`
+- [ ] DI registration in `Hmm.ServiceApi`; `AttachmentSettings`
+      bound from `appsettings.json`
 
 ### Phase 5: .NET vault HTTP surface
 - [ ] `VaultController` with the five endpoints
@@ -97,68 +108,111 @@ Later-phase (Phase 13+ concerns, parked):
 - [ ] xUnit tests for controller + integration tests for upload
       round-trip
 
-### Phase 6: .NET migration endpoints integration
+### Phase 6: .NET `Notes.attachments` column wiring
+- [ ] Add nullable `string? Attachments` column to `HmmNoteDao` →
+      EF migration (`Attachments NVARCHAR(MAX) NULL` + SQLite /
+      PostgreSQL equivalents)
+- [ ] Add `VaultRef? PrimaryImage` + `IList<VaultRef> Images` to the
+      `HmmNote` domain entity
+- [ ] AutoMapper value converter: JSON column ↔ the two domain props
+- [ ] `NoteAttachments.schema.json` validation on write →
+      `ProcessingResult` failure on invalid
+- [ ] `ApiNote`, `ApiNoteForCreate`, `ApiNoteForUpdate` surface
+      `primaryImage` + `images`; `ApiMappingProfile` + note result
+      filters pass them through
+- [ ] Tests: column round-trip, schema rejection, DTO mapping
+
+### Phase 7: .NET migration endpoints integration
 - [ ] Extend `POST /v1/migration/upload` to accept vault bytes
 - [ ] Extend `GET /v1/migration/export` to stream the vault as a
-      zip alongside the record JSON
+      zip alongside the record JSON (incl. the `attachments` column)
 - [ ] Extend `POST /v1/migration/replace` to wipe the vault on the
       server before re-upload
-- [ ] Update `MigrationLog.RecordCounts` to include `vaultFiles` +
-      `vaultBytes`
+- [ ] Update `MigrationLog.RecordCounts` → `vaultFiles`,
+      `vaultBytes`, `resolvedPhAssets`, `resolvedCloudFiles`,
+      `unresolvedRefs`
 
-### Phase 7: .NET deploy + backup integration
+### Phase 8: .NET deploy + backup integration
 - [ ] Add `/var/lib/hmm-vault` Docker volume to `compose.api.yml`
 - [ ] Extend `docker/hmm-deploy.sh --backup` to tar the vault
-- [ ] Document restore order in the deploy script's help
+- [ ] Document restore order (pg first, then vault) in the script's
+      help
 
-### Phase 8: AutomobileInfo model wiring (.NET)
-- [ ] Add `VaultRef PrimaryImage` (nullable) +
-      `List<VaultRef> Images` to the `AutomobileInfo` domain entity
-- [ ] Define `VaultRef` value object (`{Path, OriginalName,
-      ContentType, ByteSize}`) in `Hmm.Core` (shared)
-- [ ] Update `AutomobileJsonNoteSerialize` to round-trip the new
-      fields
-- [ ] Update `Schemas/AutomobileInfo.schema.json`
-- [ ] Update `ApiAutomobile`, `ApiAutomobileForCreate`,
-      `ApiAutomobileForUpdate` DTOs
-- [ ] Update `AutomobileMappingProfile`
-- [ ] Tests: serializer round-trip + manager pass-through
+### Phase 9: Flutter — `AttachmentRef` + codec
+- [ ] `AttachmentRef` sealed class in `lib/core/data/attachments/`
+      (`VaultRef` / `PhAssetRef` / `CloudFileRef`)
+- [ ] `AttachmentRef` JSON codec + the `NoteAttachments` wrapper
+      codec (`{primaryImage, images}`, disjoint slots)
+- [ ] Unit tests for the codec round-trip + rejection of bad input
 
-### Phase 9: Flutter vault store
+### Phase 10: Flutter — vault store
 - [ ] `IVaultStore` interface in `lib/core/data/vault/`
-- [ ] `LocalVaultStore` implementation (path_provider + dart:io)
-- [ ] `ApiVaultStore` implementation (Dio-backed)
-- [ ] Mode-aware `vaultStoreProvider` in `repository_providers.dart`
+- [ ] `LocalVaultStore` (path_provider + dart:io)
 - [ ] In-memory cache wrapper for repeat reads
-- [ ] Unit tests on each impl with a tmp-dir fake
+- [ ] Unit tests against a tmp-dir fake
 
-### Phase 10: Flutter — Automobile model + UI
-- [ ] Extend `Automobile` domain entity with `primaryImage` +
-      `images`
-- [ ] Update `LocalAutomobileRepository` JSON envelope round-trip
-- [ ] Update API model (`api_automobile.dart` + create/update DTOs)
-      and mapper
-- [ ] Image picker via `file_picker` (camera capture later if
-      needed)
-- [ ] Image viewer widget with thumbnail + tap-to-fullscreen
-- [ ] Wire into the `AutomobileEditScreen` as a new editable card
-      above the identity card
+### Phase 11: Flutter — `Notes.attachments` column + `HmmNote` model
+- [ ] New nullable `attachments` text column on the Drift `Notes`
+      table + Drift migration
+- [ ] `HmmNote` model gains `AttachmentRef? primaryImage` +
+      `List<AttachmentRef> images`; `LocalNoteRepository`
+      round-trips the column via the codec
+- [ ] Remove the old `Attachments` Drift table,
+      `IAttachmentRepository`, `local_attachment_repository.dart`,
+      `attachmentRepositoryProvider` (unused — column replaces them)
+- [ ] Tests: note round-trip with/without attachments
 
-### Phase 11: Flutter — sunset old attachment code
-- [ ] Mark `IAttachmentRepository` + `LocalAttachmentRepository` +
-      Drift `Attachments` table deprecated; add migration that
-      drops the table after one release window
-- [ ] Remove `attachmentRepositoryProvider`
+### Phase 12: Flutter — `Automobile` read-through projection
+- [ ] Surface read-through `primaryImage` / `images` on the
+      `Automobile` entity (projected from the owning note)
+- [ ] `LocalAutomobileRepository` writes them to the note's
+      `attachments` column on save (alongside serialized content)
+- [ ] Tests: edit a car → attachments persist on its note
 
-### Phase 12: iOS visibility
-- [ ] Set `UIFileSharingEnabled = YES` and
+### Phase 13: Flutter — picker plumbing (vault-only v1)
+- [ ] Add `image_picker` to `pubspec.yaml`
+- [ ] Picker → `AttachmentRef` decision logic; v1 emits `VaultRef`
+      only (bytes always copied into the vault for safety)
+- [ ] "Make a permanent copy" toggle stub (forces `VaultRef`)
+
+### Phase 14: Flutter — viewer + vehicle screen UI ← first visible feature
+- [ ] `VaultResolver` (renders `VaultRef`)
+- [ ] `AttachmentImage` widget — shimmer while loading, placeholder
+      + Replace button on resolution failure
+- [ ] Image picker + viewer (thumbnail + tap-to-fullscreen) on the
+      `AutomobileEditScreen` as a new card above the identity card
+
+### Phase 15: Flutter — API vault store + mode-aware provider
+- [ ] `ApiVaultStore` (Dio-backed `/v1/vault/{path}`)
+- [ ] Mode-aware `vaultStoreProvider` in `repository_providers.dart`
+      keyed off `dataModeProvider`
+
+### Phase 16: Flutter — `PhAssetResolver` (iOS)
+- [ ] `PhAssetResolver` via `photo_manager`; iOS-only, null
+      elsewhere
+- [ ] Picker emits `PhAssetRef` for iOS Photos picks instead of
+      copying
+
+### Phase 17: Flutter — `CloudFileResolver` (macOS / Windows)
+- [ ] Detect OneDrive / iCloud Drive roots by path prefix
+- [ ] `CloudFileResolver` (OS-level file read)
+- [ ] Picker emits `CloudFileRef` for picks under a detected root
+
+### Phase 18: Flutter — Free → Paid migration extension
+- [ ] Resolve every non-vault ref to a `vault` ref before upload;
+      rewrite the note's `attachments` column
+- [ ] Consent dialog surfaces counts + unresolvable refs
+- [ ] Gate Phases 16–17 picker output by tier so this is always
+      possible
+
+### Phase 19: iOS visibility
+- [ ] Set `UIFileSharingEnabled = YES` +
       `LSSupportsOpeningDocumentsInPlace = YES` in
       `ios/Runner/Info.plist`
 - [ ] Verify the vault appears in iOS Files app on a device
 
-### Phase 13: Verification
-- [ ] `flutter analyze` clean
-- [ ] `flutter test` clean
+### Phase 20: Verification
+- [ ] `flutter analyze` + `flutter test` clean
 - [ ] `dotnet build Hmm.sln && dotnet test Hmm.sln` clean
 - [ ] Smoke: pick photo on iOS sim → save → reopen → still there
       (local mode)
@@ -171,24 +225,33 @@ Later-phase (Phase 13+ concerns, parked):
 |----------|-----------|------|
 | Obsidian-style file vault, not asset catalog | Reuses OneDrive sync for `cloudStorage`; simpler code; matches mental model of "your files in your folder" | 2026-05-09 |
 | Filesystem-backed `IVaultBlobStore` v1, abstraction in place for S3 later | Personal-use VPS today; keep optionality cheap | 2026-05-09 |
-| Reference attachments via `path` + sibling metadata in note JSON content | Avoids per-entity FK migrations; aligns with the existing JSON-in-note serializer pattern | 2026-05-09 |
 | Implement `primaryImage` + `images[]` data shape, wire only `primaryImage` UI in v1 | Cheap to land; future gallery doesn't need a schema bump | 2026-05-09 |
 | Defer EXIF strip, virus scan, server-side thumbnails | Personal-use scale; revisit when the cap stings | 2026-05-09 |
-| Drop the Drift `Attachments` table | Files-on-disk-by-relative-path is the source of truth; the table was building toward a different model | 2026-05-09 |
-| Design-doc gate cleared; first work = Flutter local-mode vertical slice (Phases 3 → 9 → 10 → 12, `vault` kind only) | Shortest path to a visible feature (photo on a car in local mode); de-risks the data shape; no .NET dependency | 2026-05-11 |
+| Tagged-union refs (`vault`/`phasset`/`cloudFile`); paid tier vault-only; non-vault refs resolved at the Free→Paid boundary | Don't duplicate bytes Apple/Microsoft already sync; server can't reach a remote device's Photos/cloud folder | 2026-05-09 |
+| Design-doc gate cleared; first work = Flutter local-mode vertical slice (Phases 3 → 9 → 10 → 11 → 12 → 13 → 14, `vault` kind only) | Shortest path to a visible feature (photo on a car in local mode); de-risks the data shape; no .NET dependency | 2026-05-11 |
 | `primaryImage` / `images` are disjoint slots | Cheaper to reason about; avoids "is the primary also in the gallery?" ambiguity in the codec | 2026-05-11 |
+| **Attachments are a `HmmNote`-level facility, stored in a new sidecar `attachments` JSON column on `Notes`** (replaces the earlier "siblings in note content" decision) | `Content` is a raw string for plain-text/HTML notes, so it can't carry structured siblings; a column makes attachments note-universal, leaves every domain serializer untouched, costs one EF migration + one Drift migration, and adds no new repo/manager/controller. A relational `NoteAttachment` child table was the alternative — rejected because we don't need attachments SQL-queryable yet (revisit for orphan-GC/dedup later). | 2026-05-11 |
+| `Hmm.Core.Vault` as its own project from day one | Interface + filesystem impl + `VaultRef` + tests already justify it; splitting later relocates public types across packages | 2026-05-11 |
+| The `attachments` column + `ApiNote*` DTOs carry `VaultRef` directly, no `kind` discriminator on the wire to .NET | A `phasset`/`cloudFile` payload deserializes to a `VaultRef` with null `Path` → dies in schema validation; can never become a valid server-side object | 2026-05-11 |
 
 ## Active work: Flutter local-mode vertical slice
 
-Order (design-doc steps 1, 8–10, 15–16): path utility (Dart side +
-shared spec) → `AttachmentRef`/`VaultRef` sealed class + JSON codec
-(`vault` kind only) → `LocalVaultStore` (`path_provider` + `dart:io`)
-→ extend `Automobile` domain entity + `LocalAutomobileRepository`
-serialize round-trip → `image_picker` (vault-only) + viewer widget on
-the vehicle screen. Done when: pick a photo on the iOS sim → save →
-reopen → still there.
+Phases 3 → 9 → 10 → 11 → 12 → 13 → 14 (design-doc steps
+1 → 2 → 9 → 10 → 11 → 12 → 13 → 14). No .NET work required.
+
+Sequence: shared specs (path util + JSON schemas) → `AttachmentRef`
+sealed class + `NoteAttachments` codec (`vault` kind only) →
+`IVaultStore` + `LocalVaultStore` → `attachments` column on the
+Drift `Notes` table + `HmmNote` model round-trip + remove the old
+`Attachments` table → `Automobile` read-through projection +
+`LocalAutomobileRepository` writes to the owning note's column →
+`image_picker` (vault-only) → `VaultResolver` + viewer widget on the
+vehicle screen.
+
+Done when: pick a photo on the iOS sim → save the car → reopen →
+the photo's still there.
 
 **Blocker**: `~/Projects/hmm_console` must be added as a working
 directory before any Dart edits.
 
-## Status: PHASE 2 COMPLETE, gate cleared (2026-05-11). Next: Flutter local-mode slice — blocked on adding the `hmm_console` working directory.
+## Status: PHASE 2 COMPLETE, gate cleared (2026-05-11); design doc revised for the attachments-on-`HmmNote` model. Next: Flutter local-mode slice (Phase 3 first) — blocked on adding the `hmm_console` working directory.

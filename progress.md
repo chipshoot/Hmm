@@ -43,16 +43,32 @@
 
 ### Completed
 - [x] Walked the user through `docs/attachments-design.md` section
-      by section. Raised 7 follow-ups (4 code-shaping, 3 Phase-13+);
+      by section. Raised 7 follow-ups (4 code-shaping, 3 later-phase);
       recorded in `task_plan.md` under "Design-doc follow-ups".
-- [x] Confirmed scope clarification with user: "image on HmmNote" =
-      attachment ref *inside the note's JSON content* (i.e.
-      `AutomobileInfo.primaryImage` / `.images`). **No `HmmNote`
-      entity / `Notes` table / EF migration change.** .NET work lands
-      in `Hmm.Automobile` (serializer + schema + DTOs).
 - [x] **Gate cleared.** User chose the Flutter local-mode vertical
       slice as the first coding work.
 - [x] Decision: `primaryImage` / `images` are disjoint slots.
+- [x] Applied the 4 code-shaping edits to the design doc
+      (`Hmm.Core.Vault` project up front, disjoint slots, nullable
+      `byteSize`, `VaultRef`-typed DTOs). Committed `8abdc00`.
+- [x] **Architecture pivot (user-directed): attachments are a
+      `HmmNote`-level facility, not per-domain.** Earlier the doc
+      embedded refs inside `AutomobileInfo`'s JSON content; now they
+      live on the note itself in a **new nullable `attachments` JSON
+      column on the `Notes` table**. Chosen over a relational
+      `NoteAttachment` child table — JSON column is cheaper (one EF
+      migration, one Drift migration, no new repo/manager/controller)
+      and we don't need attachments SQL-queryable yet.
+      - Rewrote `docs/attachments-design.md`: "Reference shape" →
+        column-on-`Notes`; new ".NET → HmmNote attachments" subsec;
+        new "Flutter → Note storage" subsec; reworked the 19-step
+        implementation order (added a `.NET Notes.attachments` step
+        + a Flutter `Notes.attachments` step; re-noted the
+        old-table removal).
+      - Rewrote `task_plan.md` phases to match (now 20 phases; the
+        local-mode slice is Phases 3 → 9 → 10 → 11 → 12 → 13 → 14).
+      - `NoteAttachments.schema.json` (new) validates the column
+        value on write; `byteSize` nullable there.
 
 ### In Progress
 - [ ] Flutter local-mode slice — see `task_plan.md` "Active work".
