@@ -24,4 +24,8 @@
     <Folder Include="NoteSerializer\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\*.schema.json" />
+  </ItemGroup>
+
 </Project>
