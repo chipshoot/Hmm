@@ -88,6 +88,49 @@
   there from now on. Hmm's branch carries the unpushed design +
   planning commits; hmm_console's branch is at `9fc1e86`.
 
+## Session: 2026-05-13 — local-mode slice Phases 3, 9, 10, 11
+
+### Completed (`hmm_console`, `feature/note-attachments`)
+- [x] **Phase 3 .NET**: `docs/attachments-path-spec.md` (Hmm) +
+      `src/Hmm.Core/Schemas/NoteAttachments.schema.json` as an
+      embedded resource. Commit `16416bf` on Hmm.
+- [x] **Phase 3 Dart**: `lib/core/data/vault/vault_path.dart`
+      (`vaultRelativePathJoin` / `Validate` — pure functions);
+      36 tests pass. Commit `1f6bb5e`.
+- [x] **Phase 9**: `AttachmentRef` sealed class hierarchy + JSON
+      codec (vault/phasset/cloudFile) + `NoteAttachments` wrapper
+      with disjointness enforced at construction. 28 tests.
+      Commit `77f3908`.
+- [x] **Phase 10**: `IVaultStore` interface + `LocalVaultStore`
+      (atomic put-then-rename writes, defensive prefix listing).
+      17 tests. Commit `9f4340c`.
+- [x] **Phase 11**: Drift `Notes.attachments` column (v3 → v4
+      migration); `HmmNote.attachments` + `effectiveAttachments`;
+      `HmmNoteMapper` decodes; `HmmNoteCreate` / `HmmNoteUpdate`
+      gain patch-semantics attachments; `LocalHmmNoteRepository`
+      encode-on-write. Removed truly-unused
+      `IAttachmentRepository` / `LocalAttachmentRepository` /
+      `attachmentRepositoryProvider`. 7 round-trip tests; full
+      suite (379) pass. Commit `e78d897`.
+
+### Architecture decision logged
+- **Phase 11.5 (deferred)**: The Drift `Attachments` child table
+  was supposed to be dropped in Phase 11, but `SyncOrchestrator`
+  (cloudStorage tier's sync engine, wired into `settings_screen.dart`)
+  actively uses it with its own ad-hoc vault layout
+  (`attachments/{uuid}{ext}`, flat — no per-note subfolder). Dropping
+  the table now would break sync compilation. So Phase 11 added the
+  new column alongside the old table; the table + sync rewire is
+  Phase 11.5, required before cloudStorage sync can ship.
+
+### In Progress
+- Phase 12 (Flutter — surface read-through `primaryImage` /
+  `images` on the `Automobile` entity; the local automobile repo
+  writes them to the owning note's `attachments` column on save).
+- Phase 13 (`image_picker` integration, vault-only).
+- Phase 14 (VaultResolver + image picker / viewer widget on the
+  vehicle screen).
+
 ### Decisions snapshot
 - Tagged-union references (`vault` / `phasset` / `cloudFile`) on
   top of an Obsidian-style file vault. Vault is universal; the

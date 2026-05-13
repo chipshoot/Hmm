@@ -81,14 +81,16 @@ Later-phase (Phase 16+ concerns, parked):
       so non-vault refs only get created in `local`/`cloudStorage`
       modes (Phase 18 must land before Phases 16–17 reach paid users)
 
-### Phase 3: Shared specs
-- [ ] Spec the relative-path rules (POSIX separators, no `..`, no
-      leading `/`, allowed chars)
-- [ ] Spec the `AttachmentRef` tagged-union JSON schema + the
-      `NoteAttachments` wrapper schema (`{primaryImage, images}`,
-      `byteSize` nullable)
-- [ ] Path utility implemented as a pure function on each side with
-      unit tests
+### Phase 3: Shared specs — DONE 2026-05-13
+- [x] `docs/attachments-path-spec.md` — POSIX-only, no `..`, ASCII-
+      only allowed-char set, Windows-reserved names rejected,
+      verbatim test-vector tables; both sides implement to this.
+- [x] `src/Hmm.Core/Schemas/NoteAttachments.schema.json` — embedded
+      resource on `Hmm.Core`; covers the `{primaryImage, images}`
+      wrapper + the vault/phasset/cloudFile tagged-union refs;
+      `byteSize` nullable for non-vault kinds.
+- [x] Dart `vaultRelativePathJoin` / `vaultRelativePathValidate` in
+      `lib/core/data/vault/vault_path.dart`; 36 tests pass.
 
 ### Phase 4: .NET vault store (`Hmm.Core.Vault` — new project)
 - [ ] New `Hmm.Core.Vault` project; `IVaultBlobStore` interface
@@ -138,29 +140,34 @@ Later-phase (Phase 16+ concerns, parked):
 - [ ] Document restore order (pg first, then vault) in the script's
       help
 
-### Phase 9: Flutter — `AttachmentRef` + codec
-- [ ] `AttachmentRef` sealed class in `lib/core/data/attachments/`
+### Phase 9: Flutter — `AttachmentRef` + codec — DONE 2026-05-13
+- [x] `AttachmentRef` sealed class in `lib/core/data/attachments/`
       (`VaultRef` / `PhAssetRef` / `CloudFileRef`)
-- [ ] `AttachmentRef` JSON codec + the `NoteAttachments` wrapper
-      codec (`{primaryImage, images}`, disjoint slots)
-- [ ] Unit tests for the codec round-trip + rejection of bad input
+- [x] `AttachmentRefCodec` + `NoteAttachmentsCodec` (the
+      `{primaryImage, images}` wrapper, disjoint slots)
+- [x] 28 codec tests pass
 
-### Phase 10: Flutter — vault store
-- [ ] `IVaultStore` interface in `lib/core/data/vault/`
-- [ ] `LocalVaultStore` (path_provider + dart:io)
-- [ ] In-memory cache wrapper for repeat reads
-- [ ] Unit tests against a tmp-dir fake
+### Phase 10: Flutter — vault store — DONE 2026-05-13
+- [x] `IVaultStore` interface in `lib/core/data/vault/`
+- [x] `LocalVaultStore` (path_provider + dart:io); atomic
+      put-then-rename writes
+- [ ] In-memory cache wrapper for repeat reads — deferred to a
+      perf-needs-it phase
+- [x] 17 tests against a tmp-dir pass
 
-### Phase 11: Flutter — `Notes.attachments` column + `HmmNote` model
-- [ ] New nullable `attachments` text column on the Drift `Notes`
-      table + Drift migration
-- [ ] `HmmNote` model gains `AttachmentRef? primaryImage` +
-      `List<AttachmentRef> images`; `LocalNoteRepository`
+### Phase 11: Flutter — `Notes.attachments` column + `HmmNote` model — DONE 2026-05-13
+- [x] New nullable `attachments` text column on the Drift `Notes`
+      table + Drift migration (v3 → v4)
+- [x] `HmmNote` model gains nullable `NoteAttachments? attachments`
+      + `effectiveAttachments` getter; `LocalHmmNoteRepository`
       round-trips the column via the codec
-- [ ] Remove the old `Attachments` Drift table,
-      `IAttachmentRepository`, `local_attachment_repository.dart`,
-      `attachmentRepositoryProvider` (unused — column replaces them)
-- [ ] Tests: note round-trip with/without attachments
+- [x] Remove the truly-unused `IAttachmentRepository`,
+      `LocalAttachmentRepository`, `attachmentRepositoryProvider`
+- [ ] **Phase 11.5 (deferred)**: Drift `Attachments` child table
+      stays in place — `SyncOrchestrator` still uses it; once the
+      sync layer is rewired to the vault + the new `attachments`
+      column, drop the table.
+- [x] 7 repository round-trip tests pass; full suite (379) clean
 
 ### Phase 12: Flutter — `Automobile` read-through projection
 - [ ] Surface read-through `primaryImage` / `images` on the
@@ -254,4 +261,4 @@ the photo's still there.
 **Blocker**: `~/Projects/hmm_console` must be added as a working
 directory before any Dart edits.
 
-## Status: PHASE 2 COMPLETE, gate cleared (2026-05-11); design doc revised for the attachments-on-`HmmNote` model. Next: Flutter local-mode slice (Phase 3 first) — blocked on adding the `hmm_console` working directory.
+## Status: Phases 3, 9, 10, 11 complete (2026-05-13). Next in the local-mode slice: Phase 12 (Automobile read-through projection), Phase 13 (image_picker, vault-only), Phase 14 (VaultResolver + viewer widget on the vehicle screen). Phase 11.5 (drop the old `Attachments` table after rewiring `SyncOrchestrator` to the new model) deferred — needed before cloudStorage sync ships.
