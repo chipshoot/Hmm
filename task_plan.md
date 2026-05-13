@@ -169,25 +169,39 @@ Later-phase (Phase 16+ concerns, parked):
       column, drop the table.
 - [x] 7 repository round-trip tests pass; full suite (379) clean
 
-### Phase 12: Flutter — `Automobile` read-through projection
-- [ ] Surface read-through `primaryImage` / `images` on the
-      `Automobile` entity (projected from the owning note)
-- [ ] `LocalAutomobileRepository` writes them to the note's
-      `attachments` column on save (alongside serialized content)
-- [ ] Tests: edit a car → attachments persist on its note
+### Phase 12: Flutter — `Automobile` read-through projection — DONE 2026-05-13
+- [x] `Automobile` gains `AttachmentRef? primaryImage` +
+      `List<AttachmentRef> images` (default null / `[]`)
+- [x] `LocalAutomobileRepository._deserialize` reads them from the
+      owning note's `attachments` column; `_serialize` does NOT
+      include them in the JSON content payload.
+- [x] `createAutomobile` / `updateAutomobile` pass
+      `_attachmentsFor(auto)` through `HmmNoteCreate/Update`; a car
+      with no photos clears the column.
+- [x] 6 tests pass.
 
-### Phase 13: Flutter — picker plumbing (vault-only v1)
-- [ ] Add `image_picker` to `pubspec.yaml`
-- [ ] Picker → `AttachmentRef` decision logic; v1 emits `VaultRef`
-      only (bytes always copied into the vault for safety)
-- [ ] "Make a permanent copy" toggle stub (forces `VaultRef`)
+### Phase 13: Flutter — picker plumbing (vault-only v1) — DONE 2026-05-13
+- [x] `image_picker ^1.1.2` added.
+- [x] `VaultImageAttachmentPicker` — `pickForNote(noteId, source)`
+      returns a `VaultRef` after copying bytes into the vault; pure
+      `persistToVault(...)` helper for headless callers/tests.
+- [x] Validates MIME against allow-list (jpeg/png/heic/webp);
+      rejects empty / oversized files; resolves content-type from
+      hint or extension (hint loses for vague values like
+      `image/*`).
+- [x] 8 tests pass.
 
-### Phase 14: Flutter — viewer + vehicle screen UI ← first visible feature
-- [ ] `VaultResolver` (renders `VaultRef`)
-- [ ] `AttachmentImage` widget — shimmer while loading, placeholder
-      + Replace button on resolution failure
-- [ ] Image picker + viewer (thumbnail + tap-to-fullscreen) on the
-      `AutomobileEditScreen` as a new card above the identity card
+### Phase 14: Flutter — viewer + vehicle screen UI — IN PROGRESS
+- [x] **Data layer (2026-05-13)**: `VaultResolver` +
+      `CompositeAttachmentResolver` + `AttachmentImage` widget +
+      `attachment_providers.dart` (mode-aware vault root, vault
+      store, resolver, picker). 9 tests pass; full suite 402 clean.
+- [ ] **Screen integration (deferred)**: add a Photo
+      `EditableInfoCard` to `AutomobileEditScreen` with pending-
+      photo state, picker invocation, Replace + Remove buttons,
+      and a save path through the existing `_cloneWith` + `_persist`
+      pattern with `primaryImage` added. UX details to decide with
+      user.
 
 ### Phase 15: Flutter — API vault store + mode-aware provider
 - [ ] `ApiVaultStore` (Dio-backed `/v1/vault/{path}`)
@@ -261,4 +275,4 @@ the photo's still there.
 **Blocker**: `~/Projects/hmm_console` must be added as a working
 directory before any Dart edits.
 
-## Status: Phases 3, 9, 10, 11 complete (2026-05-13). Next in the local-mode slice: Phase 12 (Automobile read-through projection), Phase 13 (image_picker, vault-only), Phase 14 (VaultResolver + viewer widget on the vehicle screen). Phase 11.5 (drop the old `Attachments` table after rewiring `SyncOrchestrator` to the new model) deferred — needed before cloudStorage sync ships.
+## Status: Phases 3, 9, 10, 11, 12, 13 complete (2026-05-13) + Phase 14 data layer (resolver/widget/DI providers). Tests: 402 pass; analyze clean. Remaining: Phase 14 screen integration (Photo card on `AutomobileEditScreen`) — paused for review + UX discussion. Phase 11.5 (drop old `Attachments` table after rewiring `SyncOrchestrator`) still deferred — required before cloudStorage sync ships.

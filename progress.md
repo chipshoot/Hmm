@@ -124,12 +124,37 @@
   Phase 11.5, required before cloudStorage sync can ship.
 
 ### In Progress
-- Phase 12 (Flutter — surface read-through `primaryImage` /
-  `images` on the `Automobile` entity; the local automobile repo
-  writes them to the owning note's `attachments` column on save).
-- Phase 13 (`image_picker` integration, vault-only).
-- Phase 14 (VaultResolver + image picker / viewer widget on the
-  vehicle screen).
+- *(all bullets above moved to Completed below — same session.)*
+
+### Completed continued — 2026-05-13 (same session)
+- [x] **Phase 12**: `Automobile` carries read-through `primaryImage`
+      + `images`; `LocalAutomobileRepository` reads from the note's
+      `attachments` column on deserialize and writes via
+      `HmmNoteCreate/Update.attachments`. JSON content payload
+      unchanged. 6 tests pass. Commit `f5b0f1b`.
+- [x] **Phase 13**: `image_picker ^1.1.2` added;
+      `VaultImageAttachmentPicker` opens the platform picker, copies
+      bytes into the vault under
+      `attachments/note-{id}/{uuid}.{ext}`, returns a `VaultRef`.
+      Pure `persistToVault(...)` helper for headless callers. MIME
+      allow-list + 8 MB cap enforced client-side. 8 tests pass.
+      Commit `4135091`.
+- [x] **Phase 14 (data layer)**: `VaultResolver` +
+      `CompositeAttachmentResolver` + `AttachmentImage` widget +
+      `attachment_providers.dart` (mode-aware Riverpod providers
+      for vault root, store, resolver, picker — `cloudApi` throws
+      until Phase 15 lands `ApiVaultStore`). Switched widget tests
+      to a fake resolver (driving the real `LocalVaultStore` was
+      flaky because `pumpAndSettle` only waits for frames, not
+      real-time I/O). 9 tests pass; full suite 402 clean.
+      Commit `2fc9d50`.
+
+### Paused — screen integration
+- **Phase 14 screen integration** awaits a UX discussion (where
+  the Photo card sits in `AutomobileEditScreen`, what its editor
+  looks like, whether camera is a v1 option). All underlying
+  infrastructure is ready and tested; the only remaining work is
+  the edit-screen surgery.
 
 ### Decisions snapshot
 - Tagged-union references (`vault` / `phasset` / `cloudFile`) on
