@@ -82,8 +82,11 @@
 - Flutter repo state checked: `hmm_console` on `main`, clean tree,
   HEAD `9fc1e86` "Local-mode records, editable info cards, dashboard
   intro".
-- Hmm (.NET) `main` is still 5 commits ahead of `origin/main`;
-  unpushed.
+- Hmm (.NET) `main` is 7 commits ahead of `origin/main`; unpushed.
+- **Branch `feature/note-attachments` created off `main` in BOTH
+  repos** (`Hmm` and `hmm_console`) — all attachments work lands
+  there from now on. Hmm's branch carries the unpushed design +
+  planning commits; hmm_console's branch is at `9fc1e86`.
 
 ### Decisions snapshot
 - Tagged-union references (`vault` / `phasset` / `cloudFile`) on
