@@ -31,7 +31,9 @@ OneDrive / iCloud Drive.
 
 A tagged union. Stored as siblings of the existing fields in the
 note's JSON content. Two slots: a singular `primaryImage` plus a
-list `images`.
+list `images`. The two slots are **disjoint** — a photo lives in
+exactly one of them, never both; promoting a gallery image to
+primary moves it out of `images`.
 
 ```jsonc
 {
@@ -72,7 +74,10 @@ list `images`.
 
 `originalName`, `contentType`, and `byteSize` are common to all
 kinds (best-effort — `byteSize` may be `null` for `phasset`/`cloudFile`
-when the OS doesn't expose it cheaply).
+when the OS doesn't expose it cheaply). **Only `vault` refs are
+guaranteed to carry `byteSize`**, so the JSON Schema for any note
+type that gains these fields (e.g. `AutomobileInfo.schema.json`)
+must declare `byteSize` nullable.
 
 The reference shape generalises to other note types — receipts on
 service records, policy PDFs on insurance policies — by adding the
@@ -303,8 +308,11 @@ before files are placed.
 ## .NET implementation
 
 ### Stack
-- `IVaultBlobStore` abstraction in `Hmm.Core` (or a new
-  `Hmm.Core.Vault` project if the area grows).
+- `IVaultBlobStore` abstraction in a **new `Hmm.Core.Vault`
+  project** (created up front — the interface, the filesystem impl,
+  the `VaultRef` value object, and their tests already justify a
+  project, and splitting it out later means relocating public types
+  across packages).
 - `FilesystemVaultBlobStore` reads/writes
   `${AttachmentSettings.RootDir}/{authorId}/{relativePath}`.
 - `AttachmentSettings` — `RootDir`, `MaxBytes`,
@@ -316,11 +324,20 @@ before files are placed.
 
 ### `VaultRef` value object
 The .NET side only knows about `VaultRef` (`{Path, OriginalName,
-ContentType, ByteSize}`). It never sees `phasset` / `cloudFile`
-references — those are client-side concepts that get rewritten to
-`vault` during the migration upload. The serializer should reject
-non-`vault` kinds at the API boundary with a `400` (defensive — the
-client should already have rewritten them).
+ContentType, ByteSize}`) and lives in the `Hmm.Core.Vault` project.
+It never sees `phasset` / `cloudFile` references — those are
+client-side concepts that get rewritten to `vault` during the
+migration upload.
+
+The API DTOs (`ApiAutomobile`, `ApiAutomobileForCreate`,
+`ApiAutomobileForUpdate`, …) carry `VaultRef` **directly** — not a
+polymorphic `AttachmentRef` with a `kind` discriminator. There is no
+non-vault shape on the wire to .NET, so a `phasset` / `cloudFile`
+payload deserializes to a `VaultRef` with a null `Path` and is
+rejected by schema validation — it can never become a valid
+server-side object. (Belt-and-braces: the serializer also rejects an
+explicit `kind` that isn't `vault` with a `400`, in case a
+hand-crafted payload sets `path` *and* `kind: phasset`.)
 
 ### Server-side image processing
 - Use `SkiaSharp` (cross-platform, no native deps on Linux Docker)
@@ -354,7 +371,8 @@ Each step ships independently.
    POSIX-style joins, sanitisation rules.
 2. **Spec the `AttachmentRef` JSON schema** (the tagged union)
    shared between client and server.
-3. **.NET: `IVaultBlobStore` + `FilesystemVaultBlobStore` + tests.**
+3. **.NET: new `Hmm.Core.Vault` project — `IVaultBlobStore` +
+   `FilesystemVaultBlobStore` + `VaultRef` + tests.**
 4. **.NET: `VaultController` + `AttachmentSettings` + DI wiring.**
 5. **.NET: server-side image downsize on upload.**
 6. **.NET: extend `/v1/migration/{upload,export,replace}` for

@@ -31,15 +31,43 @@
       tagged-union).
 
 ### In Progress
-- [ ] **Design-doc gate**: awaiting user review of
-      `docs/attachments-design.md` before starting Phase 3 (shared
-      specs) and onward.
+- *(nothing actively in progress — see next session below)*
 
 ### Blocked
 - All implementation work blocked behind the gate above.
 
 ### Errors
 *(none yet)*
+
+## Session: 2026-05-11 — design-doc review + gate cleared
+
+### Completed
+- [x] Walked the user through `docs/attachments-design.md` section
+      by section. Raised 7 follow-ups (4 code-shaping, 3 Phase-13+);
+      recorded in `task_plan.md` under "Design-doc follow-ups".
+- [x] Confirmed scope clarification with user: "image on HmmNote" =
+      attachment ref *inside the note's JSON content* (i.e.
+      `AutomobileInfo.primaryImage` / `.images`). **No `HmmNote`
+      entity / `Notes` table / EF migration change.** .NET work lands
+      in `Hmm.Automobile` (serializer + schema + DTOs).
+- [x] **Gate cleared.** User chose the Flutter local-mode vertical
+      slice as the first coding work.
+- [x] Decision: `primaryImage` / `images` are disjoint slots.
+
+### In Progress
+- [ ] Flutter local-mode slice — see `task_plan.md` "Active work".
+
+### Blocked
+- **Cannot start**: `~/Projects/hmm_console` is not in the working
+  directories. User needs `/add-dir ~/Projects/hmm_console` (or to
+  restart the session from that repo) before any Dart edits.
+
+### Notes
+- Flutter repo state checked: `hmm_console` on `main`, clean tree,
+  HEAD `9fc1e86` "Local-mode records, editable info cards, dashboard
+  intro".
+- Hmm (.NET) `main` is still 5 commits ahead of `origin/main`;
+  unpushed.
 
 ### Decisions snapshot
 - Tagged-union references (`vault` / `phasset` / `cloudFile`) on

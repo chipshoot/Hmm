@@ -46,7 +46,33 @@ The vault must work in **all three data modes** (`local`,
 - [x] Document iOS file-visibility flags
 - [x] Document backup integration
 - [x] Write `docs/attachments-design.md`
-- [ ] **GATE**: review with user before any code
+- [x] **GATE**: reviewed with user 2026-05-11 — 7 doc follow-ups
+      raised (see "Design-doc follow-ups" below); user chose the
+      **Flutter local-mode vertical slice** as the first work.
+
+## Design-doc follow-ups (from 2026-05-11 review)
+
+Code-shaping decisions — all now written into
+`docs/attachments-design.md` (2026-05-11); implement in the phase
+noted:
+- [x] `Hmm.Core.Vault` as its own project from day one (not
+      `IVaultBlobStore` inside `Hmm.Core`) → land in Phase 4
+- [x] `primaryImage` and `images` are **disjoint** — a photo lives
+      in one slot, never both → enforce in the Phase 9 codec & Phase
+      10 model
+- [x] Note schema declares `byteSize` **nullable** (only `vault`
+      refs guarantee it) → apply in Phase 8 (`AutomobileInfo.schema.json`)
+- [x] .NET API DTOs typed `VaultRef`, not polymorphic
+      `AttachmentRef` → apply in Phase 8 DTOs
+
+Later-phase (Phase 13+ concerns, parked):
+- [ ] HEIC on Android `cloudApi` viewers — document "view natively"
+      vs. server-side transcode to JPEG
+- [ ] `image_picker` vs `photo_manager` — verify which package
+      actually yields a `PHAsset.localIdentifier` before Phase 13
+- [ ] Spell out the step-17-before-13/14 gate — feature-flag the
+      picker by tier so non-vault refs only get created in `local`/
+      `cloudStorage` modes
 
 ### Phase 3: Path utility (shared spec)
 - [ ] Spec the relative-path rules (POSIX separators, no `..`, no
@@ -149,5 +175,20 @@ The vault must work in **all three data modes** (`local`,
 | Implement `primaryImage` + `images[]` data shape, wire only `primaryImage` UI in v1 | Cheap to land; future gallery doesn't need a schema bump | 2026-05-09 |
 | Defer EXIF strip, virus scan, server-side thumbnails | Personal-use scale; revisit when the cap stings | 2026-05-09 |
 | Drop the Drift `Attachments` table | Files-on-disk-by-relative-path is the source of truth; the table was building toward a different model | 2026-05-09 |
+| Design-doc gate cleared; first work = Flutter local-mode vertical slice (Phases 3 → 9 → 10 → 12, `vault` kind only) | Shortest path to a visible feature (photo on a car in local mode); de-risks the data shape; no .NET dependency | 2026-05-11 |
+| `primaryImage` / `images` are disjoint slots | Cheaper to reason about; avoids "is the primary also in the gallery?" ambiguity in the codec | 2026-05-11 |
 
-## Status: PHASE 2 COMPLETE — design-doc gate (review by user) is the next blocker before any code.
+## Active work: Flutter local-mode vertical slice
+
+Order (design-doc steps 1, 8–10, 15–16): path utility (Dart side +
+shared spec) → `AttachmentRef`/`VaultRef` sealed class + JSON codec
+(`vault` kind only) → `LocalVaultStore` (`path_provider` + `dart:io`)
+→ extend `Automobile` domain entity + `LocalAutomobileRepository`
+serialize round-trip → `image_picker` (vault-only) + viewer widget on
+the vehicle screen. Done when: pick a photo on the iOS sim → save →
+reopen → still there.
+
+**Blocker**: `~/Projects/hmm_console` must be added as a working
+directory before any Dart edits.
+
+## Status: PHASE 2 COMPLETE, gate cleared (2026-05-11). Next: Flutter local-mode slice — blocked on adding the `hmm_console` working directory.
