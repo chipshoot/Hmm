@@ -191,17 +191,30 @@ Later-phase (Phase 16+ concerns, parked):
       `image/*`).
 - [x] 8 tests pass.
 
-### Phase 14: Flutter — viewer + vehicle screen UI — IN PROGRESS
+### Phase 14: Flutter — viewer + vehicle screen UI — DONE 2026-05-16
 - [x] **Data layer (2026-05-13)**: `VaultResolver` +
       `CompositeAttachmentResolver` + `AttachmentImage` widget +
       `attachment_providers.dart` (mode-aware vault root, vault
-      store, resolver, picker). 9 tests pass; full suite 402 clean.
-- [ ] **Screen integration (deferred)**: add a Photo
-      `EditableInfoCard` to `AutomobileEditScreen` with pending-
-      photo state, picker invocation, Replace + Remove buttons,
-      and a save path through the existing `_cloneWith` + `_persist`
-      pattern with `primaryImage` added. UX details to decide with
-      user.
+      store, resolver, picker). 9 tests pass.
+- [x] **Screen integration (2026-05-16)**: Photo `EditableInfoCard`
+      added above the identity card on `AutomobileEditScreen`.
+      Display mode = 96×96 thumbnail (tap → fullscreen
+      `InteractiveViewer` dialog) or "No photo" italics. Editor mode
+      = 120×120 pending preview + "Choose photo / Replace / Remove"
+      buttons + busy spinner during picker async. Pending state on
+      the screen; `_cloneWith` gained a sentinel-guarded
+      `primaryImage` so a real null (Remove) round-trips. Save uses
+      the existing `_persist` path.
+- [x] `ios/Runner/Info.plist`:
+      `NSPhotoLibraryUsageDescription` added so `image_picker`
+      doesn't hard-abort the first time it's invoked on iOS.
+- [ ] **Known limitation (deferred)**: picker writes bytes to the
+      vault on every successful pick, so cancel-after-pick or
+      replace-after-pick leaves orphaned vault files. A GC sweep
+      (compare every `Notes.attachments` ref against the on-disk
+      vault listing, delete stragglers) will reclaim them in a
+      future phase.
+- [x] flutter analyze clean; full suite 402 tests pass.
 
 ### Phase 15: Flutter — API vault store + mode-aware provider
 - [ ] `ApiVaultStore` (Dio-backed `/v1/vault/{path}`)
@@ -300,4 +313,4 @@ The Docker stack (`hmm-deploy.sh --start --rebuild` ran 2026-05-15)
 is the existing baseline — no redeploy needed for attachment work
 during this phase.
 
-## Status: Phases 3, 9, 10, 11, 12, 13 complete (2026-05-13) + Phase 14 data layer (resolver/widget/DI providers). Tests: 402 pass; analyze clean. Remaining in local/cloudStorage scope: Phase 14 screen integration (Photo card on `AutomobileEditScreen`) — paused for review + UX discussion. Phase 11.5 + .NET-side phases (4–8) explicitly deferred per the active scope note above.
+## Status: Phases 3, 9–14 complete (2026-05-16). Local-mode vertical slice is feature-complete: pick a photo on the vehicle screen → save → reopen → photo persists. Tests: 402 pass; analyze clean; iOS Info.plist permission added. Vault-orphan GC deferred. Phase 11.5 + .NET-side phases (4–8) still deferred per the active scope note above; revisit when user signals the local/cloudStorage test cycle is complete.

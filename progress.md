@@ -176,6 +176,42 @@
   "Active scope" section and in project memory
   (`attachments-scope-local-only.md`).
 
+## Session: 2026-05-16 — Phase 14 (screen integration) complete
+
+### Completed
+- [x] `ios/Runner/Info.plist`: added
+      `NSPhotoLibraryUsageDescription` so `image_picker`'s
+      `PHPhotoLibrary` call doesn't hard-abort on iOS.
+- [x] **`AutomobileEditScreen` Photo card**: new
+      `EditableInfoCard` placed above the identity card.
+      - Display = 96×96 thumbnail with tap → fullscreen
+        `InteractiveViewer` dialog, or "No photo" italics.
+      - Editor = 120×120 pending preview + Choose/Replace + Remove
+        buttons + busy spinner.
+      - Pending state lives on the screen (`_pendingPrimaryImage`,
+        `_photoBusy`); `_cloneWith` gained a sentinel-guarded
+        `primaryImage` so a real null (Remove) round-trips through
+        the existing `_persist` path.
+      - Picker errors surface as snackbars; cancel/replace can
+        leave orphaned vault bytes (vault GC pass deferred).
+- [x] `flutter analyze` clean; 402 tests pass on
+      `feature/note-attachments`. Commit `1a4cc3f`.
+
+### Ready to test in iOS simulator
+The local-mode vertical slice is feature-complete. To exercise:
+
+1. `cd ~/projects/hmm_console && flutter run` (pick an iOS sim
+   target). Run mode: Local is the default; `cloudStorage` mode
+   uses the same on-disk vault under the sim sandbox.
+2. Open any vehicle → see the new "Photo" card at the top.
+3. Tap the pencil → "Choose photo" → simulator's Photos app picker.
+4. Save → reopen the vehicle → photo should persist.
+5. Kill the app → relaunch → photo should still be there (proves
+   the `Notes.attachments` JSON column round-trip end-to-end).
+6. Inspect vault on disk:
+   `find ~/Library/Developer/CoreSimulator -name "attachments"
+    -type d -path "*Documents/vault/*"`
+
 ### Decisions snapshot
 - Tagged-union references (`vault` / `phasset` / `cloudFile`) on
   top of an Obsidian-style file vault. Vault is universal; the
