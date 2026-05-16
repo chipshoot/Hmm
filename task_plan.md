@@ -275,4 +275,29 @@ the photo's still there.
 **Blocker**: `~/Projects/hmm_console` must be added as a working
 directory before any Dart edits.
 
-## Status: Phases 3, 9, 10, 11, 12, 13 complete (2026-05-13) + Phase 14 data layer (resolver/widget/DI providers). Tests: 402 pass; analyze clean. Remaining: Phase 14 screen integration (Photo card on `AutomobileEditScreen`) — paused for review + UX discussion. Phase 11.5 (drop old `Attachments` table after rewiring `SyncOrchestrator`) still deferred — required before cloudStorage sync ships.
+## Active scope (user, 2026-05-15)
+
+**Current phase exercises the local + cloudStorage tiers only. Do
+NOT touch `Hmm.ServiceApi` (or any .NET-side attachment plumbing)
+until the local/cloudStorage test cycle is complete and the user
+explicitly switches to the API tier.**
+
+Out of scope for current turns (revisit when user signals):
+- Phase 4 (.NET `Hmm.Core.Vault`)
+- Phase 5 (.NET `VaultController` + downsize)
+- Phase 6 (.NET `Notes.attachments` column wiring + `ApiNote*` DTOs)
+- Phase 7 (.NET migration endpoints integration)
+- Phase 8 (.NET deploy + backup)
+- Phase 11.5 (rewire `SyncOrchestrator` + drop old Drift
+  `Attachments` table — same API-side boundary)
+- Phase 15 (Flutter `ApiVaultStore` + cloudApi mode-aware provider)
+
+In scope: Phase 14 screen integration on `AutomobileEditScreen`,
+Phases 16–17 / 19 if the smart-reference or iOS-visibility paths
+come up, plus any local/cloudStorage testing or fixes.
+
+The Docker stack (`hmm-deploy.sh --start --rebuild` ran 2026-05-15)
+is the existing baseline — no redeploy needed for attachment work
+during this phase.
+
+## Status: Phases 3, 9, 10, 11, 12, 13 complete (2026-05-13) + Phase 14 data layer (resolver/widget/DI providers). Tests: 402 pass; analyze clean. Remaining in local/cloudStorage scope: Phase 14 screen integration (Photo card on `AutomobileEditScreen`) — paused for review + UX discussion. Phase 11.5 + .NET-side phases (4–8) explicitly deferred per the active scope note above.

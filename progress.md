@@ -156,6 +156,26 @@
   infrastructure is ready and tested; the only remaining work is
   the edit-screen surgery.
 
+## Session: 2026-05-15 — backend redeploy + scope boundary set
+
+### Completed
+- [x] Rebuilt and redeployed the backend Docker stack from
+      `feature/note-attachments` (`hmm-deploy.sh --start --rebuild`).
+      Four containers up + healthy: `hmm-api` (5010), `hmm-idp`
+      (5001), `hmm-seq` (8081), `hmm-mailpit` (8025). Swagger and
+      `/.well-known/openid-configuration` both return 200. The
+      branch's only .NET delta vs main is the new
+      `NoteAttachments.schema.json` embedded resource — no runtime
+      code path reads it yet, so behaviour matches main.
+
+### Scope boundary set by user
+- **Local + cloudStorage tiers only for the current phase.** Do
+  NOT touch `Hmm.ServiceApi` (or any .NET-side attachment plumbing)
+  until the local/cloudStorage test cycle is complete and the user
+  explicitly switches to the API tier. Recorded in `task_plan.md`
+  "Active scope" section and in project memory
+  (`attachments-scope-local-only.md`).
+
 ### Decisions snapshot
 - Tagged-union references (`vault` / `phasset` / `cloudFile`) on
   top of an Obsidian-style file vault. Vault is universal; the
