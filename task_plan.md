@@ -288,6 +288,36 @@ the photo's still there.
 **Blocker**: `~/Projects/hmm_console` must be added as a working
 directory before any Dart edits.
 
+## Backlog (deferred feature work)
+
+These are user-requested enhancements outside the current
+attachments scope. Pick up after the attachments feature is
+finished on both tiers (local/cloudStorage AND cloudApi).
+
+### Registration card expansion (logged 2026-05-17)
+The `AutomobileEditScreen` Registration card currently captures
+only `registrationExpiryDate` (one field for renewal reminders).
+Insurance has provider + policy number + expiry; Registration is
+asymmetrically thin. Expand to capture a real vehicle registration
+document.
+
+Field menu (MVP = first two):
+- `registrationNumber` — document/permit ID (proof of ownership).
+- `registrationJurisdiction` — state / province / country.
+- `registrationIssuedDate` — pair with expiry to compute renewal
+  cycle.
+- `registrationLastRenewalFee` — Money type; budget tracking.
+- (later) `registrationOwnerName`, `registrationClass`.
+
+Implementation also requires .NET-side changes
+(`AutomobileInfo.schema.json` + DTOs + AutoMapper) when that scope
+re-opens. While we're there, consider expanding Insurance similarly
+(coverage limits, deductible, insurance-card photo via the
+attachments facility) so the two cards stay symmetric.
+
+Details in project memory:
+`~/.claude/projects/.../memory/registration-card-expansion.md`.
+
 ## Active scope (user, 2026-05-15)
 
 **Current phase exercises the local + cloudStorage tiers only. Do
