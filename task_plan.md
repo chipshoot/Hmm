@@ -343,4 +343,29 @@ The Docker stack (`hmm-deploy.sh --start --rebuild` ran 2026-05-15)
 is the existing baseline — no redeploy needed for attachment work
 during this phase.
 
-## Status: Phases 3, 9–14 complete (2026-05-16). Local-mode vertical slice is feature-complete: pick a photo on the vehicle screen → save → reopen → photo persists. Tests: 402 pass; analyze clean; iOS Info.plist permission added. Vault-orphan GC deferred. Phase 11.5 + .NET-side phases (4–8) still deferred per the active scope note above; revisit when user signals the local/cloudStorage test cycle is complete.
+## Status: Phases 3, 9–14, **11.5** complete (2026-05-17). Local-mode slice is feature-complete; cloudStorage tier is wired (vault root configurable to user's OneDrive folder; OS sync client moves the bytes; SyncOrchestrator handles note JSON only). Tests: 427 pass; analyze clean. .NET-side phases (4–8) and Flutter Phase 15 (ApiVaultStore) still deferred per the active scope note above; revisit when user signals the local/cloudStorage test cycle is complete.
+
+### Phase 11.5 — DONE 2026-05-17
+- [x] SyncOrchestrator stops touching attachment bytes; pull/push is
+      notes-only. Attachment refs ride inside `note.content` /
+      `note.attachments` and travel with the note body. Old
+      attachment manifest entries are tolerated on read (parsed but
+      ignored); new manifests always write `attachments: []`.
+- [x] Schema v4 → v5 migration drops the legacy `Attachments` Drift
+      table. Older migrations rewritten to raw SQL so the migrator
+      no longer needs the typed `Attachments` reference; the class
+      itself is gone. `database.g.dart` regenerated.
+- [x] `CloudSyncProvider.pullAttachmentBytes` /
+      `pushAttachmentBytes` removed from the interface + both impls
+      (ApiSyncProvider stub, OneDriveSyncProvider). `OneDriveGraphClient`
+      attachment helpers (getAttachment/putAttachment/deleteAttachment)
+      removed. `AttachmentBlob` removed from `sync_models.dart`.
+- [x] **Cloud-root detection** (in scope with 11.5): user-configurable
+      vault folder via Settings (FilePicker → SharedPreferences key
+      `cloud_storage_vault_path`); `vaultRootDirectoryProvider`
+      honors the configured path in `cloudStorage` mode on non-iOS;
+      iOS falls back to `<app docs>/vault/` per the user decision.
+      Settings UI shows the current path + Choose Folder / Reset
+      buttons under cloudStorage mode (hidden on iOS).
+- [x] 5 new unit tests for the persistence helpers; 422→427 in the
+      full suite.
