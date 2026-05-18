@@ -24,8 +24,11 @@
     <Folder Include="NoteSerializer\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Schemas\*.schema.json" />
-  </ItemGroup>
+  <!--
+    NoteAttachments.schema.json moved to Hmm.Core.Vault/Schemas in
+    Phase 6a: the codec that validates against it lives in
+    Hmm.Core.Vault, and pulling the schema across the project
+    boundary would form a Hmm.Core ↔ Hmm.Core.Vault cycle.
+  -->
 
 </Project>

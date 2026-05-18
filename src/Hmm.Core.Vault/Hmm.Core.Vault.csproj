@@ -16,13 +16,17 @@
 
   <ItemGroup>
     <!--
-      The vault layer is intentionally lean: pure abstractions plus
-      a filesystem implementation. No EF / AutoMapper / FluentValidation
-      dependencies — anything heavier belongs in the layers that
-      consume IVaultBlobStore. Options is the one cross-cutting
-      concern (IOptions<AttachmentSettings>).
+      The vault layer is intentionally lean. Options is the one
+      cross-cutting concern (IOptions<AttachmentSettings>); NJsonSchema
+      arrived in Phase 6a to power NoteAttachmentsCodec.Validate against
+      the embedded schema below.
     -->
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.2" />
+    <PackageReference Include="NJsonSchema" Version="11.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\*.schema.json" />
   </ItemGroup>
 
 </Project>
