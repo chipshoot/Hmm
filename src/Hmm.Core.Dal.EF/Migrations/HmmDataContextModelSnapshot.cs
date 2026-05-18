@@ -117,6 +117,10 @@ namespace Hmm.Core.Dal.EF.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Attachments")
+                        .HasColumnType("text")
+                        .HasColumnName("attachments");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text")

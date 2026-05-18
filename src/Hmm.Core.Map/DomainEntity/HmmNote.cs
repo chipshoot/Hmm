@@ -1,4 +1,5 @@
-﻿using Hmm.Utility.Dal.DataEntity;
+﻿using Hmm.Core.Vault;
+using Hmm.Utility.Dal.DataEntity;
 
 namespace Hmm.Core.Map.DomainEntity
 {
@@ -23,5 +24,19 @@ namespace Hmm.Core.Map.DomainEntity
         public string? CreatedBy { get; set; }
 
         public string? LastModifiedBy { get; set; }
+
+        /// <summary>
+        /// Headline image, or <c>null</c> when none is set. Read /
+        /// written through the <c>Notes.attachments</c> JSON column
+        /// via <c>NoteAttachmentsCodec</c>; AutoMapper handles the
+        /// projection (see <c>HmmMappingProfile</c>).
+        /// </summary>
+        public VaultRef? PrimaryImage { get; set; }
+
+        /// <summary>
+        /// Gallery — zero or more additional refs. Disjoint with
+        /// <see cref="PrimaryImage"/>.
+        /// </summary>
+        public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
     }
 }

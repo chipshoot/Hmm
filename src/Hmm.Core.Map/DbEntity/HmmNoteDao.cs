@@ -38,6 +38,17 @@ namespace Hmm.Core.Map.DbEntity
         [MaxLength(256)]
         public string? LastModifiedBy { get; set; }
 
+        /// <summary>
+        /// Per-note attachments — JSON value matching
+        /// <c>Hmm.Core.Vault/Schemas/NoteAttachments.schema.json</c>.
+        /// NULL = no attachments. AutoMapper projects this column
+        /// into <c>HmmNote.PrimaryImage</c> + <c>HmmNote.Images</c>
+        /// via <c>NoteAttachmentsCodec</c>; the schema validation
+        /// happens at the manager layer before persistence.
+        /// </summary>
+        [Column("attachments")]
+        public string? Attachments { get; set; }
+
         public IList<NoteTagRefDao> Tags { get; set; } = new List<NoteTagRefDao>();
     }
 }

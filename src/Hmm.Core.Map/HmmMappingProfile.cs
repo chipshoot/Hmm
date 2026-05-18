@@ -2,6 +2,7 @@
 using AutoMapper;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Core.Vault;
 using Hmm.Utility.Dal.Query;
 
 namespace Hmm.Core.Map;
@@ -74,11 +75,33 @@ public class HmmMappingProfile : Profile
             .ForMember(dest => dest.Notes, opt => opt.Ignore());
 
         CreateMap<HmmNoteDao, HmmNote>()
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(ntr => ntr.Tag)));
+            .ForMember(dest => dest.Tags,
+                opt => opt.MapFrom(src => src.Tags.Select(ntr => ntr.Tag)))
+            // Decode the per-note JSON column into typed refs.
+            // NoteAttachmentsCodec throws FormatException on a
+            // malformed / non-vault-kind payload — that's a hard
+            // failure path (the manager validates on write so this
+            // is "shouldn't happen at read time," but if it does
+            // there's no graceful recovery).
+            .ForMember(dest => dest.PrimaryImage,
+                opt => opt.MapFrom(src =>
+                    NoteAttachmentsCodec.Decode(src.Attachments).PrimaryImage))
+            .ForMember(dest => dest.Images,
+                opt => opt.MapFrom(src =>
+                    NoteAttachmentsCodec.Decode(src.Attachments).Images.ToList()));
         CreateMap<HmmNote, HmmNoteDao>()
             .ForMember(dest => dest.Tags,
                 opt => opt.MapFrom(src =>
-                    src.Tags.Select(tag => new NoteTagRefDao { TagId = tag.Id, NoteId = src.Id })));
+                    src.Tags.Select(tag => new NoteTagRefDao { TagId = tag.Id, NoteId = src.Id })))
+            // Encode the two domain fields back into the JSON
+            // column. An empty payload encodes to null so the
+            // column stores SQL NULL rather than "{}".
+            .ForMember(dest => dest.Attachments,
+                opt => opt.MapFrom(src =>
+                    NoteAttachmentsCodec.Encode(
+                        new NoteAttachments(
+                            src.PrimaryImage,
+                            src.Images))));
     }
 
     private static ContactInfo? ContactDaoConvert(string contactString)
