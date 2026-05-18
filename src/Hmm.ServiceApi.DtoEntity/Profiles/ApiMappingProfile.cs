@@ -61,6 +61,12 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ConvertUsing(new PageListConverter<Tag, ApiTag>());
 
             // Note
+            //
+            // PrimaryImage + Images are auto-mapped — same property
+            // names and same VaultRef type on both ends. AutoMapper
+            // copies the IList<VaultRef> by reference, which is fine:
+            // VaultRef is an immutable record and the caller doesn't
+            // hand the same list back to us.
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNote>()
                 .ForMember(n => n.AuthorId, opt => opt.MapFrom(s => s.Author.Id))
                 .ForMember(n => n.CatalogId, opt => opt.MapFrom(s => s.Catalog.Id));

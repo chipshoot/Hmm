@@ -1,4 +1,6 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
+using Hmm.Core.Vault;
 
 namespace Hmm.ServiceApi.DtoEntity.HmmNote
 {
@@ -26,5 +28,19 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         public string CreatedBy { get; set; }
 
         public string LastModifiedBy { get; set; }
+
+        /// <summary>
+        /// Headline image for the note, or <c>null</c> when none is set.
+        /// Server-side only <c>vault</c>-kind refs are accepted; the
+        /// client rewrites phasset / cloudFile into vault refs before
+        /// upload (Phase 18 migration).
+        /// </summary>
+        public VaultRef? PrimaryImage { get; set; }
+
+        /// <summary>
+        /// Gallery — zero or more refs. Disjoint with
+        /// <see cref="PrimaryImage"/>.
+        /// </summary>
+        public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
     }
 }
