@@ -11,11 +11,11 @@ The Hmm system uses a two-service architecture:
 ┌─────────────┐         JWT          ┌──────────────────┐
 │     IDP     │ ──────────────────── │   Service API    │
 │             │                      │                  │
-│ Application │   Claims:           │ Author           │
-│ User        │   - sub             │  - AccountName   │
-│  - Email    │   - name            │  - ContactInfo   │
-│  - Name     │   - email           │  - Role          │
-│  - Picture  │   - picture         │  - Bio           │
+│ Application │   Claims:            │ Author           │
+│ User        │   - sub              │  - AccountName   │
+│  - Email    │   - name             │  - ContactInfo   │
+│  - Name     │   - email            │  - Role          │
+│  - Picture  │   - picture          │  - Bio           │
 │             │                      │  - AvatarUrl     │
 │             │                      │  - TimeZone      │
 └─────────────┘                      └──────────────────┘

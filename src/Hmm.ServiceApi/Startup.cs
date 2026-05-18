@@ -171,6 +171,13 @@ namespace Hmm.ServiceApi
                 .AddTransient<IHmmValidator<Contact>, ContactValidator>()
                 .AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
+                // Vault: holds attachment bytes for the cloudApi tier.
+                // Filesystem-backed in v1; future BYOS work plugs alternate
+                // ICloudStorageProvider impls behind the same interface.
+                .Configure<Hmm.Core.Vault.AttachmentSettings>(
+                    Configuration.GetSection("AttachmentSettings"))
+                .AddSingleton<Hmm.Core.Vault.IVaultBlobStore,
+                              Hmm.Core.Vault.FilesystemVaultBlobStore>()
                 .AddAutoMapper(cfg =>
                 {
                     cfg.AddProfile<ApiMappingProfile>();

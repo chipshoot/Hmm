@@ -15,6 +15,8 @@ namespace Hmm.ServiceApi.Models
         private const string NotFoundType = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
         private const string ConflictType = "https://tools.ietf.org/html/rfc7231#section-6.5.8";
         private const string InternalServerErrorType = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
+        private const string PayloadTooLargeType = "https://tools.ietf.org/html/rfc7231#section-6.5.11";
+        private const string UnsupportedMediaTypeType = "https://tools.ietf.org/html/rfc7231#section-6.5.13";
 
         /// <summary>
         /// Creates a 400 Bad Request ProblemDetails response.
@@ -64,6 +66,32 @@ namespace Hmm.ServiceApi.Models
                 StatusCodes.Status500InternalServerError,
                 "Internal Server Error",
                 InternalServerErrorType,
+                detail,
+                httpContext);
+        }
+
+        /// <summary>
+        /// Creates a 413 Payload Too Large ProblemDetails response.
+        /// </summary>
+        public static ProblemDetails PayloadTooLarge(string detail, HttpContext httpContext)
+        {
+            return CreateProblemDetails(
+                StatusCodes.Status413PayloadTooLarge,
+                "Payload Too Large",
+                PayloadTooLargeType,
+                detail,
+                httpContext);
+        }
+
+        /// <summary>
+        /// Creates a 415 Unsupported Media Type ProblemDetails response.
+        /// </summary>
+        public static ProblemDetails UnsupportedMediaType(string detail, HttpContext httpContext)
+        {
+            return CreateProblemDetails(
+                StatusCodes.Status415UnsupportedMediaType,
+                "Unsupported Media Type",
+                UnsupportedMediaTypeType,
                 detail,
                 httpContext);
         }
