@@ -157,23 +157,51 @@ This is the same UI in every reason-it-failed case.
 
 ## API surface (`Hmm.ServiceApi`, `cloudApi` only)
 
-Auth: bearer JWT. Server prefixes every path with `/{authorId}/` so
-the JWT subject scopes the vault namespace; clients never see the
-prefix.
+Auth: bearer JWT. Per-note routes are gated by the existing
+"does the JWT subject own this note?" check that the rest of the
+note endpoints already use, so the authorId scope is implicit in
+the note ownership — no separate prefix dance needed.
+
+### Per-note vault endpoints (the normal case)
+
+Vault files belong to a specific note, so the routes nest under
+`/v1/notes/{noteId}/vault/`. `{filename}` is the within-note file
+name (e.g. `9c8a3f12-7d6e-4a8b-90d1-2b4e5a6f7c01.jpg`) — declared
+catchall so future subfoldering within a note (thumbnails,
+variants) doesn't require a new route shape.
 
 | Verb | Path | Purpose |
 | --- | --- | --- |
-| `POST` | `/v1/vault/{*relativePath}` | Upload bytes. Body: file. Headers: `Content-Type`, `Content-Length`. Returns `{path, contentType, byteSize}` echoing the now-canonical metadata. Idempotent on path collision (overwrite). |
-| `GET` | `/v1/vault/{*relativePath}` | Stream bytes. Sets `Content-Type` from server-stored value. |
-| `HEAD` | `/v1/vault/{*relativePath}` | Existence + size check. |
-| `DELETE` | `/v1/vault/{*relativePath}` | Delete a single file. Returns `204`. |
-| `GET` | `/v1/vault?prefix={prefix}` | List metadata under a prefix. Used by migration / GC. |
+| `POST` | `/v1/notes/{noteId}/vault/{*filename}` | Upload bytes. Body: file. Headers: `Content-Type`, `Content-Length`. Returns `{path, contentType, byteSize}` echoing the now-canonical metadata; `path` is the full vault relative path (`attachments/note-{noteId}/{filename}`). Idempotent on path collision (overwrite). |
+| `GET` | `/v1/notes/{noteId}/vault/{*filename}` | Stream bytes. Sets `Content-Type` from server-stored value. |
+| `HEAD` | `/v1/notes/{noteId}/vault/{*filename}` | Existence + size check. |
+| `DELETE` | `/v1/notes/{noteId}/vault/{*filename}` | Delete a single file. Returns `204`. |
+| `GET` | `/v1/notes/{noteId}/vault` | List every vault file for one note. Used by per-note GC and the Replace flow. |
+
+`VaultRef.path` in `Notes.attachments` stays the full POSIX vault
+path (`attachments/note-{noteId}/{filename}`) — self-contained, no
+data-model migration needed. The Flutter `ApiVaultStore` (Phase 15)
+parses the path to extract `noteId` + `filename` when building URLs.
+
+### Cross-note bulk endpoints (migration only)
+
+Migration is the only place that needs a view across all of a
+user's notes. These stay at the flat `/v1/migration/` prefix
+because nesting them under a single note doesn't fit:
+
+| Verb | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/v1/migration/upload` | Bulk push notes + vault bytes from a local-mode user (Free → Paid). |
+| `GET` | `/v1/migration/export` | Stream the vault as a zip alongside the record JSON. Available in `Lapsed` state too. |
+| `POST` | `/v1/migration/replace` | Wipe the user's vault on the server before re-upload. |
+| `GET` | `/v1/migration/manifest` | List every vault file across the user's notes. Used by server-side GC + audit. |
 
 Subscription gating per `docs/multi-device-cloud-sync.md`:
-- `Active` — full read/write.
-- `Grace` — read + delete only (write returns `402`).
-- `Lapsed` / `Cancelled` — read only via `GET /v1/migration/export`,
-  not via the bare vault endpoints.
+- `Active` — full read/write on the per-note endpoints.
+- `Grace` — read + delete only on per-note endpoints (write
+  returns `402`).
+- `Lapsed` / `Cancelled` — read only via
+  `GET /v1/migration/export`, not via the per-note endpoints.
 
 The migration endpoints (`/v1/migration/upload`,
 `/v1/migration/export`, `/v1/migration/replace` — defined in the
@@ -209,8 +237,9 @@ non-vault kinds **before** the switch flips:
    `attachments` column with the new `vault` reference.
 2. For each `cloudFile` ref → load bytes via the OS / Graph SDK,
    same swap.
-3. Then upload all `vault` files via `POST /v1/vault/{path}`
-   alongside the JSON push.
+3. Then upload all `vault` files via
+   `POST /v1/notes/{noteId}/vault/{filename}` alongside the JSON
+   push (or bulk via `POST /v1/migration/upload`).
 4. Counts surfaced in the consent dialog:
    "This will copy 8 photos from your camera roll and 3 from
     OneDrive into Hmm's cloud (14 MB). Continue?"
@@ -288,7 +317,10 @@ before files are placed.
   - `OneDriveVaultStore` — picks up the OneDrive folder root once
     OneDrive integration lands; otherwise alias for
     `LocalVaultStore` and rely on the OS-level OneDrive client.
-  - `ApiVaultStore` — Dio-backed `/v1/vault/{path}` calls.
+  - `ApiVaultStore` — Dio-backed; parses `VaultRef.path`
+    (`attachments/note-{id}/{filename}`) to extract `noteId` + the
+    within-note filename, then calls
+    `/v1/notes/{noteId}/vault/{filename}`.
 - Mode-aware provider in `repository_providers.dart` returns the
   right vault store based on `dataModeProvider`.
 
@@ -345,7 +377,10 @@ before files are placed.
 - `AttachmentSettings` — `RootDir`, `MaxBytes`,
   `AllowedContentTypes`, `MaxLongEdgePixels`, bound from
   `appsettings`.
-- `VaultController` exposes the endpoints listed above.
+- `NoteVaultController` (route `[ApiVersion("1.0")]
+  [Route("v{version:apiVersion}/notes/{noteId:int}/vault")]`)
+  exposes the per-note endpoints listed above. Migration-tier
+  bulk endpoints live on a separate `MigrationController`.
 - `RequireActiveSubscriptionAttribute` (defined in the sync doc)
   decorates the write endpoints.
 
@@ -420,7 +455,8 @@ Each step ships independently.
    (`{ primaryImage, images }`).
 3. **.NET: new `Hmm.Core.Vault` project — `IVaultBlobStore` +
    `FilesystemVaultBlobStore` + `VaultRef` + tests.**
-4. **.NET: `VaultController` + `AttachmentSettings` + DI wiring.**
+4. **.NET: `NoteVaultController` (routes nested under
+   `/v1/notes/{noteId}/vault`) + `AttachmentSettings` + DI wiring.**
 5. **.NET: server-side image downsize on upload.**
 6. **.NET: `Notes.attachments` column — `HmmNoteDao` column + EF
    migration + `HmmNote.PrimaryImage`/`Images` + AutoMapper
