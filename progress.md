@@ -197,6 +197,33 @@
 - [x] `flutter analyze` clean; 402 tests pass on
       `feature/note-attachments`. Commit `1a4cc3f`.
 
+## Session: 2026-05-18 — scope flip; starting API-side work
+
+User signed off on local + cloudStorage tier completeness; lifted
+the "do not touch Hmm.ServiceApi" boundary. Active scope is now
+Phases 4 → 5 → 6 → 7 → 8 → 15 (.NET side first, Flutter follows
+once endpoints exist).
+
+### Loose ends on local/cloudStorage (deferred, can land in parallel)
+- Vault orphan GC — Replace / Remove leave bytes on disk.
+- Phase 19 — iOS `UIFileSharingEnabled` plist flags so the vault
+  appears in the iOS Files app.
+- Real-world cloudStorage multi-device validation (user-action,
+  not code).
+
+### Starting Phase 4
+- New `src/Hmm.Core.Vault/` project.
+- `IVaultBlobStore` interface, `VaultRef` value object,
+  `VaultEntry`, `AttachmentSettings`.
+- `VaultPathUtil` — port of the Dart `vault_path.dart` (same
+  test vectors via the shared spec at
+  `docs/attachments-path-spec.md`).
+- `FilesystemVaultBlobStore` implementation, atomic
+  put-then-rename writes (mirrors the Dart `LocalVaultStore`).
+- xUnit tests.
+- DI registration in `Hmm.ServiceApi`; `AttachmentSettings` bound
+  from `appsettings.json`.
+
 ### Ready to test in iOS simulator
 The local-mode vertical slice is feature-complete. To exercise:
 

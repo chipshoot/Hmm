@@ -318,32 +318,35 @@ attachments facility) so the two cards stay symmetric.
 Details in project memory:
 `~/.claude/projects/.../memory/registration-card-expansion.md`.
 
-## Active scope (user, 2026-05-15)
+## Active scope (user, 2026-05-18 — superseded the 2026-05-15 boundary)
 
-**Current phase exercises the local + cloudStorage tiers only. Do
-NOT touch `Hmm.ServiceApi` (or any .NET-side attachment plumbing)
-until the local/cloudStorage test cycle is complete and the user
-explicitly switches to the API tier.**
+**Local + cloudStorage tier work is complete; user signed off
+2026-05-18. The `Hmm.ServiceApi`-side work is now the active
+scope.** Phases 4 → 5 → 6 → 7 → 8 → 15 in order. Phase 11.5
+(SyncOrchestrator rewire + dropped old `Attachments` Drift table)
+already landed 2026-05-17.
 
-Out of scope for current turns (revisit when user signals):
-- Phase 4 (.NET `Hmm.Core.Vault`)
-- Phase 5 (.NET `VaultController` + downsize)
-- Phase 6 (.NET `Notes.attachments` column wiring + `ApiNote*` DTOs)
-- Phase 7 (.NET migration endpoints integration)
+In scope:
+- Phase 4 (.NET `Hmm.Core.Vault`) — **starting now**
+- Phase 5 (.NET `VaultController` + image downsize)
+- Phase 6 (.NET `Notes.attachments` column + DTOs)
+- Phase 7 (.NET migration endpoints)
 - Phase 8 (.NET deploy + backup)
-- Phase 11.5 (rewire `SyncOrchestrator` + drop old Drift
-  `Attachments` table — same API-side boundary)
-- Phase 15 (Flutter `ApiVaultStore` + cloudApi mode-aware provider)
+- Phase 15 (Flutter `ApiVaultStore` + real `ApiSyncProvider`)
 
-In scope: Phase 14 screen integration on `AutomobileEditScreen`,
-Phases 16–17 / 19 if the smart-reference or iOS-visibility paths
-come up, plus any local/cloudStorage testing or fixes.
+Loose ends on the local/cloudStorage tier — not blocking, can
+land alongside or after:
+- Vault orphan GC (Replace / Remove leave bytes on disk)
+- Phase 19 — iOS `UIFileSharingEnabled` plist flags
+- Real-world cloudStorage multi-device validation by the user
+  (two macOS machines + shared OneDrive folder)
 
-The Docker stack (`hmm-deploy.sh --start --rebuild` ran 2026-05-15)
-is the existing baseline — no redeploy needed for attachment work
-during this phase.
+Still parked (not part of cloudApi tier):
+- Phase 16 — `PhAssetResolver` (iOS smart refs)
+- Phase 17 — `CloudFileResolver` (desktop smart refs)
+- Phase 18 — Free → Paid migration extension
 
-## Status: Phases 3, 9–14, **11.5** complete (2026-05-17). Local-mode slice is feature-complete; cloudStorage tier is wired (vault root configurable to user's OneDrive folder; OS sync client moves the bytes; SyncOrchestrator handles note JSON only). Tests: 427 pass; analyze clean. .NET-side phases (4–8) and Flutter Phase 15 (ApiVaultStore) still deferred per the active scope note above; revisit when user signals the local/cloudStorage test cycle is complete.
+## Status: local + cloudStorage tiers complete (2026-05-18, user signed off). Tests: 431 pass on Flutter 3.41.9. **Now starting the API-side work — Phase 4 (`Hmm.Core.Vault` project).**
 
 ### Phase 11.5 — DONE 2026-05-17
 - [x] SyncOrchestrator stops touching attachment bytes; pull/push is
