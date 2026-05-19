@@ -2,7 +2,9 @@
 
 using AutoMapper;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Core.Map.Migration;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.DtoEntity.Migration;
 using Hmm.Utility.Dal.Query;
 using System;
 
@@ -82,6 +84,14 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNoteForUpdate>();
             CreateMap<PageList<Core.Map.DomainEntity.HmmNote>, PageList<ApiNote>>()
                 .ConvertUsing(new PageListConverter<Core.Map.DomainEntity.HmmNote, ApiNote>());
+
+            // Migration (Phase 7)
+            CreateMap<ApiMigrationNoteRecord, MigrationNoteRecord>();
+            CreateMap<ApiMigrationEnvelope, MigrationEnvelope>();
+            CreateMap<MigrationRecordError, ApiMigrationRecordError>();
+            CreateMap<MigrationUploadResult, ApiMigrationUploadResult>();
+            CreateMap<MigrationLog, ApiMigrationLog>()
+                .ForMember(d => d.Kind, opt => opt.MapFrom(s => s.Kind.ToString()));
         }
     }
 }

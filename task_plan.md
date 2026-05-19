@@ -124,15 +124,33 @@ Later-phase (Phase 16+ concerns, parked):
       filters pass them through
 - [ ] Tests: column round-trip, schema rejection, DTO mapping
 
-### Phase 7: .NET migration endpoints integration
-- [ ] Extend `POST /v1/migration/upload` to accept vault bytes
-- [ ] Extend `GET /v1/migration/export` to stream the vault as a
-      zip alongside the record JSON (incl. the `attachments` column)
-- [ ] Extend `POST /v1/migration/replace` to wipe the vault on the
-      server before re-upload
-- [ ] Update `MigrationLog.RecordCounts` → `vaultFiles`,
-      `vaultBytes`, `resolvedPhAssets`, `resolvedCloudFiles`,
-      `unresolvedRefs`
+### Phase 7: .NET migration endpoints integration — DONE 2026-05-18
+- [x] `POST /v1/migration/upload` (built greenfield — accepts vault
+      bytes via multipart/form-data: one `manifest` JSON field +
+      one `IFormFile` per blob; form-field name = vault relative
+      path)
+- [x] `GET /v1/migration/export` streams a zip — `records.json` at
+      the root + every vault file at its full
+      `attachments/note-N/...` path
+- [x] `POST /v1/migration/replace` wipes vault + hard-deletes the
+      author's notes (FK cascade clears NoteTagRefs), then runs
+      the upload flow with `Kind=CloudReplaced`
+- [x] `MigrationLog.RecordCounts` carries `{ notes, notesFailed,
+      vaultFiles, vaultBytes, ...clientCounts }`. Client-supplied
+      counters (`resolvedPhAssets`, `resolvedCloudFiles`,
+      `unresolvedRefs`) are preserved verbatim; server-computed
+      keys win on collision.
+- [x] `GET /v1/migration/log?take=N` for audit replay
+- [x] Subscription gating deferred (same place as
+      `NoteVaultController` — picks up the future
+      `RequireActiveSubscriptionAttribute`)
+- [x] Devices entity not yet built; `MigrationLog.DeviceIdentifier`
+      is a string column (max 80 chars). When `Devices` lands as
+      part of cloud-sync work, widen into a FK + backfill.
+- [x] 18 new tests: 9 manager (upload happy + 4 per-record/blob
+      error paths + log row + Replace wipe + Export zip + GetLog),
+      9 controller (auth, manifest parsing, dispatch, zip return,
+      DTO mapping)
 
 ### Phase 8: .NET deploy + backup integration
 - [ ] Add `/var/lib/hmm-vault` Docker volume to `compose.api.yml`

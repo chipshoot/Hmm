@@ -182,6 +182,44 @@ namespace Hmm.Core.Dal.EF.Migrations
                     b.ToTable("notes", (string)null);
                 });
 
+            modelBuilder.Entity("Hmm.Core.Map.DbEntity.MigrationLogDao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("authorid");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("at");
+
+                    b.Property<string>("DeviceIdentifier")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("device");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("RecordCounts")
+                        .HasColumnType("text")
+                        .HasColumnName("recordcounts");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId")
+                        .HasDatabaseName("ix_migrationlogs_authorid");
+
+                    b.ToTable("migrationlogs", (string)null);
+                });
+
             modelBuilder.Entity("Hmm.Core.Map.DbEntity.NoteCatalogDao", b =>
                 {
                     b.Property<int>("Id")
@@ -313,6 +351,16 @@ namespace Hmm.Core.Dal.EF.Migrations
                     b.Navigation("Author");
 
                     b.Navigation("Catalog");
+                });
+
+            modelBuilder.Entity("Hmm.Core.Map.DbEntity.MigrationLogDao", b =>
+                {
+                    b.HasOne("Hmm.Core.Map.DbEntity.AuthorDao", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("fk_migrationlogs_authors");
                 });
 
             modelBuilder.Entity("Hmm.Core.Map.DbEntity.NoteTagRefDao", b =>

@@ -462,8 +462,13 @@ Each step ships independently.
    migration + `HmmNote.PrimaryImage`/`Images` + AutoMapper
    converter + `NoteAttachments.schema.json` validation + `ApiNote*`
    DTOs + result-filter pass-through + tests.**
-7. **.NET: extend `/v1/migration/{upload,export,replace}` for
-   vault contents (now reads/writes the `attachments` column).**
+7. **.NET: `/v1/migration/{upload,replace}` (multipart) +
+   `/v1/migration/export` (zip) + `/v1/migration/log`; new
+   `MigrationLog` table, `IMigrationManager`,
+   `MigrationController`. Vault bytes ride alongside the manifest
+   on upload/replace, and the export zip contains `records.json`
+   at its root + every vault file at its full
+   `attachments/note-N/...` path.**
 8. **.NET: extend `hmm-deploy.sh --backup` to tar the vault dir +
    add `/var/lib/hmm-vault` Docker volume.**
 9. **Flutter: `AttachmentRef` sealed class + JSON codec + the
