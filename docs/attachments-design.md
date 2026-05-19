@@ -469,8 +469,10 @@ Each step ships independently.
    on upload/replace, and the export zip contains `records.json`
    at its root + every vault file at its full
    `attachments/note-N/...` path.**
-8. **.NET: extend `hmm-deploy.sh --backup` to tar the vault dir +
-   add `/var/lib/hmm-vault` Docker volume.**
+8. **.NET: `api-vault-data` Docker volume on `hmm-api` mounted at
+   `/var/lib/hmm-vault`; `hmm-deploy.sh --backup` produces
+   `hmm-vault-<ts>.tar.gz` alongside the pg dumps, and `--help`
+   documents the restore order (Postgres first, vault second).**
 9. **Flutter: `AttachmentRef` sealed class + JSON codec + the
    `NoteAttachments` wrapper codec.**
 10. **Flutter: `IVaultStore` interface + `LocalVaultStore`.**

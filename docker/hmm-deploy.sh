@@ -77,7 +77,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --stop              Stop and remove containers"
             echo "  --status            Show container status and health"
             echo "  --logs [service]    Follow logs (optional: hmm-api, hmm-idp, hmm-seq)"
-            echo "  --backup            Backup API + IDP PostgreSQL databases (pg_dump)"
+            echo "  --backup            Backup API + IDP PostgreSQL + attachment vault"
             echo ""
             echo "Options:"
             echo "  --build, -b         Build images before starting"
@@ -85,6 +85,16 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Environment variables:"
             echo "  HMM_BACKUP_DIR      Backup directory (default: ~/hmm-backups)"
+            echo ""
+            echo "Restore order (when manually restoring from a backup set):"
+            echo "  1. Restore HmmIdp + HmmNotes PostgreSQL dumps FIRST"
+            echo "     (e.g. psql -h 127.0.0.1 -U postgres HmmNotes < HmmNotes-<ts>.sql)"
+            echo "  2. THEN extract the vault tarball into the api-vault-data"
+            echo "     volume — Postgres holds the Notes.attachments JSON that"
+            echo "     references vault paths, so DB must be in place before the"
+            echo "     bytes show up. Recovering bytes without DB rows leaves"
+            echo "     them as orphans; recovering DB without bytes leaves the"
+            echo "     UI rendering placeholders until the vault arrives."
             exit 0
             ;;
         *)
@@ -258,10 +268,39 @@ case $ACTION in
         else
             echo "  hmm-idp container not running, skipping."
         fi
+        echo ""
+
+        # Backup attachment vault (api-vault-data volume mounted at
+        # /var/lib/hmm-vault inside hmm-api). Tar from the container
+        # side so the host platform doesn't matter — works whether
+        # the volume sits on macOS or Linux, and skips any host bind
+        # gymnastics. Empty vault is still archived (an empty tar
+        # decompresses cleanly), so restores stay symmetric.
+        echo "Backing up attachment vault..."
+        if docker ps --format '{{.Names}}' | grep -q hmm-api; then
+            VAULT_TAR="$BACKUP_DIR/hmm-vault-$TIMESTAMP.tar.gz"
+            # -C into the vault root so paths inside the tarball
+            # are relative ("authors/N/..." rather than
+            # "/var/lib/hmm-vault/authors/N/..."), making restores
+            # portable to a different mount point if needed.
+            if docker exec hmm-api tar -C /var/lib/hmm-vault -czf - . > "$VAULT_TAR" 2>/dev/null; then
+                VAULT_SIZE=$(du -h "$VAULT_TAR" | cut -f1)
+                echo "  Saved: $VAULT_TAR ($VAULT_SIZE)"
+            else
+                echo "  Vault backup failed (vault dir may not exist yet)"
+                # Don't leave a half-written file behind.
+                rm -f "$VAULT_TAR"
+            fi
+        else
+            echo "  hmm-api container not running, skipping."
+        fi
 
         echo ""
         echo "Backups saved to: $BACKUP_DIR"
         ls -lh "$BACKUP_DIR"/*$TIMESTAMP* 2>/dev/null || true
+        echo ""
+        echo "Restore order: Postgres dumps FIRST, then the vault tarball."
+        echo "(See ./hmm-deploy.sh --help for the full restore note.)"
         echo "============================================================"
         ;;
 esac

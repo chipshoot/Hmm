@@ -152,11 +152,19 @@ Later-phase (Phase 16+ concerns, parked):
       9 controller (auth, manifest parsing, dispatch, zip return,
       DTO mapping)
 
-### Phase 8: .NET deploy + backup integration
-- [ ] Add `/var/lib/hmm-vault` Docker volume to `compose.api.yml`
-- [ ] Extend `docker/hmm-deploy.sh --backup` to tar the vault
-- [ ] Document restore order (pg first, then vault) in the script's
-      help
+### Phase 8: .NET deploy + backup integration — DONE 2026-05-18
+- [x] `api-vault-data` named volume in `compose.api.yml`, mounted
+      at `/var/lib/hmm-vault` on `hmm-api`. Matches
+      `AttachmentSettings.RootDir` in `appsettings.Docker.json`.
+- [x] `hmm-deploy.sh --backup` adds a `hmm-vault-<ts>.tar.gz` next
+      to the two pg dumps. The tar runs inside the container
+      (`docker exec hmm-api tar -C /var/lib/hmm-vault -czf -`) so
+      paths inside the archive are relative + the host platform
+      doesn't matter.
+- [x] `--help` text spells out the restore order — Postgres dumps
+      first, then the vault tarball. DB rows in `Notes.attachments`
+      reference vault paths, so byte-recovery without DB rows is
+      orphan bytes; DB without bytes is placeholder UI.
 
 ### Phase 9: Flutter — `AttachmentRef` + codec — DONE 2026-05-13
 - [x] `AttachmentRef` sealed class in `lib/core/data/attachments/`
