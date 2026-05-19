@@ -27,6 +27,15 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 
         public int CatalogId { get; set; }
 
+        /// <summary>
+        /// Resolved catalog name. Read-only projection — present so
+        /// sync clients can match a note to its catalog by the
+        /// stable name (catalog names are unique across the table;
+        /// ids aren't stable cross-device). Server-derived from
+        /// <c>Note.Catalog.Name</c>; ignored on writes.
+        /// </summary>
+        public string? CatalogName { get; set; }
+
         public string Description { get; set; }
 
         public DateTime CreateDate { get; set; }

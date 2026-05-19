@@ -71,7 +71,9 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             // hand the same list back to us.
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNote>()
                 .ForMember(n => n.AuthorId, opt => opt.MapFrom(s => s.Author.Id))
-                .ForMember(n => n.CatalogId, opt => opt.MapFrom(s => s.Catalog.Id));
+                .ForMember(n => n.CatalogId, opt => opt.MapFrom(s => s.Catalog.Id))
+                .ForMember(n => n.CatalogName,
+                    opt => opt.MapFrom(s => s.Catalog != null ? s.Catalog.Name : null));
 
             CreateMap<ApiNoteForCreate, Core.Map.DomainEntity.HmmNote>()
                 .ForMember(n => n.Author, opt => opt.MapFrom(s => new Author { Id = s.AuthorId }))
