@@ -242,10 +242,32 @@ Later-phase (Phase 16+ concerns, parked):
       future phase.
 - [x] flutter analyze clean; full suite 402 tests pass.
 
-### Phase 15: Flutter — API vault store + mode-aware provider
-- [ ] `ApiVaultStore` (Dio-backed `/v1/vault/{path}`)
-- [ ] Mode-aware `vaultStoreProvider` in `repository_providers.dart`
-      keyed off `dataModeProvider`
+### Phase 15: Flutter — API vault store + mode-aware provider — DONE 2026-05-18
+- [x] **15a — vault**: `ApiVaultStore` (Dio-backed against the
+      nested `/v1/notes/{noteId}/vault/{filename}` route the .NET
+      side actually ships); `vaultStoreProvider` branches on
+      `dataModeProvider` so cloudApi swaps the on-disk root for
+      direct HTTP. Single-file `list(prefix)` falls back to HEAD;
+      empty-prefix throws UnimplementedError until the cross-note
+      `/v1/migration/manifest` endpoint lands.
+- [x] **15b — sync provider**: real `ApiSyncProvider` replacing
+      the Phase 11.5 stub.
+  - Server-side prerequisites: `HmmNoteDao.Uuid` (string?, unique
+    index, EF migration); auto-assigned by the manager on
+    Create/Update; new `GET /v1/notes/by-uuid/{uuid}`; `?includeDeleted`
+    on the collection endpoint so tombstones propagate;
+    `ApiNote.CatalogName` exposed for catalog matching by name.
+  - Flutter provider: paginated `pullManifest` (reads
+    `X-Pagination`); `pullNoteBody` via by-uuid translates ApiNote
+    → orchestrator body; `pushNoteBody` does an existence probe
+    then POST / PUT / DELETE (deletedAt → DELETE; tombstone for a
+    server-side-missing note is a no-op); `pushManifest` is an
+    intentional no-op (server-side rows ARE the manifest);
+    `signIn`/`signOut` defer to the app's IdP login flow.
+- [x] Tests: 18 ApiSyncProvider cases (auth, paginated pull,
+      pull body translation, push CRUD branches, catalog-name
+      lookup error). Server side: +11 (Uuid manager + by-uuid
+      controller + includeDeleted).
 
 ### Phase 16: Flutter — `PhAssetResolver` (iOS)
 - [ ] `PhAssetResolver` via `photo_manager`; iOS-only, null
