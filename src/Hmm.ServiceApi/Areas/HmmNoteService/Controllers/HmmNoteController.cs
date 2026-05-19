@@ -57,9 +57,15 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
         [ProducesResponseType(typeof(ApiEntityCollection<ApiNote>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Get([FromQuery] ResourceCollectionParameters resourceCollectionParameters)
+        public async Task<IActionResult> Get(
+            [FromQuery] ResourceCollectionParameters resourceCollectionParameters,
+            [FromQuery] bool includeDeleted = false)
         {
-            var noteListResult = await _noteManager.GetNotesAsync(null, false, resourceCollectionParameters);
+            // includeDeleted lets the cloudApi sync provider see
+            // tombstones so they can be propagated to other devices.
+            // Normal callers leave the default — soft-deleted notes
+            // stay hidden.
+            var noteListResult = await _noteManager.GetNotesAsync(null, includeDeleted, resourceCollectionParameters);
             if (!noteListResult.Success)
             {
                 _logger.LogError("Failed to retrieve notes. Error: {ErrorMessage}, TraceId: {TraceId}",
@@ -70,6 +76,46 @@ namespace Hmm.ServiceApi.Areas.HmmNoteService.Controllers
 
             // Return 200 OK with empty array when no results (REST best practice)
             return Ok(noteListResult.Value ?? new PageList<HmmNote>());
+        }
+
+        /// <summary>
+        /// Retrieves a single note by its cross-device-stable
+        /// <see cref="ApiNote.Uuid"/>. Used by the cloudApi sync
+        /// provider — the wire identity is the Uuid, not the local
+        /// int Id.
+        /// </summary>
+        [HttpGet("by-uuid/{uuid}", Name = "GetNoteByUuid")]
+        [TypeFilter(typeof(NoteResultFilter))]
+        [ProducesResponseType(typeof(ApiNote), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetByUuid(
+            string uuid,
+            [FromQuery] bool includeDeleted = false)
+        {
+            if (string.IsNullOrWhiteSpace(uuid))
+            {
+                return BadRequest(ProblemDetailsHelper.BadRequest(
+                    "Uuid is required.", HttpContext));
+            }
+            var noteResult = await _noteManager.GetNoteByUuidAsync(uuid, includeDeleted);
+            if (!noteResult.Success)
+            {
+                if (noteResult.IsNotFound)
+                {
+                    return NotFound(ProblemDetailsHelper.NotFound(
+                        $"Note with uuid {uuid} not found.", HttpContext));
+                }
+                _logger.LogError(
+                    "Failed to retrieve note by uuid {Uuid}. Error: {ErrorMessage}, TraceId: {TraceId}",
+                    uuid, noteResult.ErrorMessage, HttpContext.TraceIdentifier);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    ProblemDetailsHelper.InternalServerError(
+                        "An error occurred while retrieving the note.", HttpContext));
+            }
+            return Ok(noteResult.Value);
         }
 
         /// <summary>

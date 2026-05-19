@@ -5,6 +5,15 @@ namespace Hmm.Core.Map.DomainEntity
 {
     public class HmmNote : VersionedEntity, IAuditable
     {
+        /// <summary>
+        /// Cross-device-stable identity. Independent of <see cref="VersionedEntity.Id"/>,
+        /// which stays an internal int FK target. The Uuid is the wire-level
+        /// id sync clients use (Phase 15b). Null on legacy rows
+        /// pre-dating the Uuid migration; the manager auto-assigns
+        /// on next Create/Update.
+        /// </summary>
+        public string? Uuid { get; set; }
+
         public string Subject { get; set; }
 
         public string Content { get; set; }

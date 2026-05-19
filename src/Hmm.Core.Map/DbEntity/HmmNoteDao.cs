@@ -24,6 +24,26 @@ namespace Hmm.Core.Map.DbEntity
         [Column("isdeleted")]
         public bool IsDeleted { get; set; } = false;
 
+        /// <summary>
+        /// Cross-device-stable identity for the note. Independent
+        /// of <see cref="AbstractEntity{TIdentity}.Id"/>, which
+        /// stays an internal FK target (cheap 4-byte joins on
+        /// NoteTagRef / MigrationLog). The Uuid is the wire-level
+        /// identity — clients pick it at create time so a note can
+        /// exist on a device before any server sees it, and the
+        /// same value follows the note across devices.
+        /// </summary>
+        /// <remarks>
+        /// Nullable + unique. Existing rows pre-dating the Phase
+        /// 15b migration stay null until their next manager call
+        /// (Create/Update auto-assign). The unique index uses
+        /// PG/SQLite's "multiple nulls allowed" semantics so the
+        /// null rows don't block each other.
+        /// </remarks>
+        [Column("uuid")]
+        [StringLength(36)]
+        public string? Uuid { get; set; }
+
         [Column("createdate")]
         public DateTime CreateDate { get; set; }
 

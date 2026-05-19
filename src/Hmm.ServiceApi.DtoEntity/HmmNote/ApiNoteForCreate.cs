@@ -11,6 +11,14 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
     /// </summary>
     public class ApiNoteForCreate : ApiEntity
     {
+        /// <summary>
+        /// Optional client-supplied identity. Sync clients
+        /// generate this offline so a note can carry a stable id
+        /// before the server ever sees it. Server-side manager
+        /// assigns a fresh Guid when this is null/empty.
+        /// </summary>
+        public string? Uuid { get; set; }
+
         public string Subject { get; set; }
 
         public string Content { get; set; }

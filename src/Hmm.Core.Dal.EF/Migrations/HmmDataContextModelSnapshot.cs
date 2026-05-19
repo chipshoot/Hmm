@@ -159,6 +159,11 @@ namespace Hmm.Core.Dal.EF.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("subject");
 
+                    b.Property<string>("Uuid")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)")
+                        .HasColumnName("uuid");
+
                     b.Property<byte[]>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -178,6 +183,10 @@ namespace Hmm.Core.Dal.EF.Migrations
 
                     b.HasIndex("catalogid")
                         .HasDatabaseName("ix_notes_catalogid");
+
+                    b.HasIndex("Uuid")
+                        .IsUnique()
+                        .HasDatabaseName("uq_notes_uuid");
 
                     b.ToTable("notes", (string)null);
                 });

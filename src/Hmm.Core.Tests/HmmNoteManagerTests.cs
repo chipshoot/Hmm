@@ -226,6 +226,116 @@ namespace Hmm.Core.Tests
             Assert.False(result);
         }
 
+        // ============================================================
+        // Phase 15b: cross-device-stable Uuid identity
+        // ============================================================
+
+        [Fact]
+        public async Task CreateAsync_assigns_a_Uuid_when_caller_omits_one()
+        {
+            var note = new HmmNote
+            {
+                Author = _author,
+                Catalog = _catalog,
+                Subject = "no uuid supplied",
+                Content = "x",
+                // Uuid intentionally not set
+            };
+
+            var created = await _noteManager.CreateAsync(note);
+
+            Assert.True(created.Success);
+            Assert.False(string.IsNullOrWhiteSpace(created.Value!.Uuid));
+            // Format matches Guid (8-4-4-4-12) so Dart's `uuid`
+            // package on the client can parse it round-trip.
+            Assert.True(Guid.TryParse(created.Value.Uuid, out _));
+        }
+
+        [Fact]
+        public async Task CreateAsync_preserves_a_client_supplied_Uuid()
+        {
+            var clientUuid = Guid.NewGuid().ToString();
+            var note = new HmmNote
+            {
+                Author = _author,
+                Catalog = _catalog,
+                Subject = "client uuid",
+                Content = "x",
+                Uuid = clientUuid,
+            };
+
+            var created = await _noteManager.CreateAsync(note);
+
+            Assert.True(created.Success);
+            Assert.Equal(clientUuid, created.Value!.Uuid);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_back_fills_Uuid_on_a_legacy_row()
+        {
+            // Simulate a pre-Phase-15b row by inserting a note then
+            // clearing its Uuid before the update path runs.
+            var note = new HmmNote
+            {
+                Author = _author,
+                Catalog = _catalog,
+                Subject = "legacy",
+                Content = "x",
+            };
+            var created = await _noteManager.CreateAsync(note);
+            Assert.True(created.Success);
+            created.Value!.Uuid = null;
+
+            var updated = await _noteManager.UpdateAsync(created.Value);
+
+            Assert.True(updated.Success);
+            Assert.False(string.IsNullOrWhiteSpace(updated.Value!.Uuid));
+        }
+
+        [Fact]
+        public async Task GetNoteByUuidAsync_returns_the_note_when_present()
+        {
+            var clientUuid = Guid.NewGuid().ToString();
+            var note = new HmmNote
+            {
+                Author = _author,
+                Catalog = _catalog,
+                Subject = "lookup-target",
+                Content = "x",
+                Uuid = clientUuid,
+            };
+            var created = await _noteManager.CreateAsync(note);
+            Assert.True(created.Success);
+
+            var fetched = await _noteManager.GetNoteByUuidAsync(clientUuid);
+
+            Assert.True(fetched.Success);
+            Assert.Equal(created.Value!.Id, fetched.Value!.Id);
+            Assert.Equal("lookup-target", fetched.Value.Subject);
+        }
+
+        [Fact]
+        public async Task GetNoteByUuidAsync_returns_NotFound_for_unknown_uuid()
+        {
+            var result = await _noteManager.GetNoteByUuidAsync(
+                Guid.NewGuid().ToString());
+
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+        }
+
+        [Fact]
+        public async Task GetNoteByUuidAsync_rejects_empty_uuid()
+        {
+            var result = await _noteManager.GetNoteByUuidAsync(string.Empty);
+
+            Assert.False(result.Success);
+            // Empty Uuid is an Invalid input, not a NotFound — the
+            // client made a malformed request rather than asking for
+            // a row that doesn't exist.
+            Assert.False(result.IsNotFound);
+        }
+
         // NOTE: Tag-related tests have been moved to NoteTagAssociationManagerTests
         // The ApplyTag and RemoveTag methods are now part of INoteTagAssociationManager
 

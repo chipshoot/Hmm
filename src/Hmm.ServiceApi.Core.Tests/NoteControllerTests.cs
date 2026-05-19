@@ -573,5 +573,82 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         #endregion Delete note
+
+        #region Phase 15b: by-uuid lookup + includeDeleted
+
+        [Fact]
+        public async Task GetByUuid_ReturnsOk_WithNote_WhenUuidExists()
+        {
+            // Arrange — create a note via the manager so it gets a
+            // server-assigned Uuid we can fish back out.
+            var author = await GetTestAuthor();
+            var catalog = await GetTestCatalog();
+            var clientUuid = Guid.NewGuid().ToString();
+            var created = await _noteManager.CreateAsync(new HmmNote
+            {
+                Author = author,
+                Catalog = catalog,
+                Subject = "by-uuid target",
+                Content = "x",
+                Uuid = clientUuid,
+            });
+            Assert.True(created.Success);
+
+            // Act
+            var result = await _controller.GetByUuid(clientUuid);
+
+            // Assert
+            var ok = Assert.IsType<OkObjectResult>(result);
+            var note = Assert.IsType<HmmNote>(ok.Value);
+            Assert.Equal(clientUuid, note.Uuid);
+            Assert.Equal("by-uuid target", note.Subject);
+        }
+
+        [Fact]
+        public async Task GetByUuid_Returns404_ForUnknownUuid()
+        {
+            var result = await _controller.GetByUuid(Guid.NewGuid().ToString());
+
+            var nf = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.IsType<ProblemDetails>(nf.Value);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        public async Task GetByUuid_Returns400_ForEmptyOrBlankUuid(string uuid)
+        {
+            var result = await _controller.GetByUuid(uuid);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task Get_WithIncludeDeleted_ReturnsSoftDeletedNotes()
+        {
+            // Arrange — soft-delete one of the seeded notes so the
+            // default Get hides it but includeDeleted surfaces it.
+            var allBefore = await _noteManager.GetNotesAsync(includeDeleted: false);
+            var first = allBefore.Value!.First();
+            await _noteManager.DeleteAsync(first.Id);
+
+            // Act — default path
+            var hidden = await _controller.Get(new ResourceCollectionParameters());
+            var hiddenList = Assert.IsType<PageList<HmmNote>>(
+                Assert.IsType<OkObjectResult>(hidden).Value);
+
+            // Act — sync-style path
+            var visible = await _controller.Get(
+                new ResourceCollectionParameters(), includeDeleted: true);
+            var visibleList = Assert.IsType<PageList<HmmNote>>(
+                Assert.IsType<OkObjectResult>(visible).Value);
+
+            // Assert — soft-deleted note absent by default, present
+            // when explicitly asked for.
+            Assert.DoesNotContain(hiddenList, n => n.Id == first.Id);
+            Assert.Contains(visibleList, n => n.Id == first.Id && n.IsDeleted);
+        }
+
+        #endregion
     }
 }

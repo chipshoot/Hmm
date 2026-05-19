@@ -11,6 +11,14 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
     {
         public int Id { get; set; }
 
+        /// <summary>
+        /// Cross-device-stable identity. The wire identity sync
+        /// clients key on; <see cref="Id"/> remains the internal
+        /// FK target. Auto-assigned by the server when the
+        /// creating call doesn't supply one.
+        /// </summary>
+        public string? Uuid { get; set; }
+
         public string Subject { get; set; }
 
         public string Content { get; set; }

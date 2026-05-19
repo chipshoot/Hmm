@@ -38,6 +38,7 @@ namespace Hmm.Core.Dal.EF
         public const string UQ_Tags_Name = "uq_tags_name";
         public const string UQ_NoteCatalogs_Name = "uq_notecatalogs_name";
         public const string IX_MigrationLogs_AuthorId = "ix_migrationlogs_authorid";
+        public const string UQ_Notes_Uuid = "uq_notes_uuid";
     }
 
     public class HmmDataContext(DbContextOptions options) : DbContext(options), IHmmDataContext
@@ -171,6 +172,15 @@ namespace Hmm.Core.Dal.EF
                     versionProperty.HasColumnType("bytea");
                 }
             }
+
+            // Phase 15b: cross-device-stable identity for the
+            // cloudApi sync tier. Unique + nullable so existing
+            // rows (Uuid = null) stay valid until the manager
+            // back-fills on the next Create/Update.
+            modelBuilder.Entity<HmmNoteDao>()
+                .HasIndex(n => n.Uuid)
+                .IsUnique()
+                .HasDatabaseName(IndexNames.UQ_Notes_Uuid);
 
             // FK to Author with explicit constraint name and index (Issue #25 fix)
             modelBuilder.Entity<HmmNoteDao>()

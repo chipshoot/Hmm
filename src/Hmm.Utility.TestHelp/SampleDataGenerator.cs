@@ -478,6 +478,7 @@ public static class SampleDataGenerator
             var target = new HmmNoteDao
             {
                 Id = source.Id,
+                Uuid = source.Uuid,
                 Subject = source.Subject,
                 Content = source.Content,
                 Description = source.Description,
@@ -488,6 +489,7 @@ public static class SampleDataGenerator
                 LastModifiedDate = source.LastModifiedDate,
                 CreatedBy = source.CreatedBy,
                 LastModifiedBy = source.LastModifiedBy,
+                Attachments = source.Attachments,
                 Tags = tags,
                 Version = source.Version
             };
@@ -497,6 +499,7 @@ public static class SampleDataGenerator
         {
             var tags = source.Tags.Select(tag => tag.Clone()).ToList();
             targetNote.Id = source.Id;
+            targetNote.Uuid = source.Uuid;
             targetNote.Subject = source.Subject;
             targetNote.Content = source.Content;
             targetNote.Description = source.Description;
@@ -507,6 +510,7 @@ public static class SampleDataGenerator
             targetNote.LastModifiedDate = source.LastModifiedDate;
             targetNote.CreatedBy = source.CreatedBy;
             targetNote.LastModifiedBy = source.LastModifiedBy;
+            targetNote.Attachments = source.Attachments;
             targetNote.Tags = source.Tags.Select(tag => tag.Clone()).ToList();
             targetNote.Version = source.Version;
             targetNote.Tags = tags;
