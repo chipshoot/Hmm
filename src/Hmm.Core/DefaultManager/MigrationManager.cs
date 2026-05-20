@@ -16,6 +16,7 @@ using Hmm.Core.Vault;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
+using Microsoft.Extensions.Options;
 
 namespace Hmm.Core.DefaultManager
 {
@@ -57,7 +58,7 @@ namespace Hmm.Core.DefaultManager
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IDateTimeProvider dateProvider,
-            AttachmentSettings settings)
+            IOptions<AttachmentSettings> settings)
         {
             ArgumentNullException.ThrowIfNull(noteRepository);
             ArgumentNullException.ThrowIfNull(logRepository);
@@ -79,7 +80,10 @@ namespace Hmm.Core.DefaultManager
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _dateProvider = dateProvider;
-            _settings = settings;
+            // Startup registers AttachmentSettings via .Configure<T>
+            // which only binds IOptions<T>; constructor-injecting the
+            // bare type would 500 at first request.
+            _settings = settings.Value;
         }
 
         // ============================================================

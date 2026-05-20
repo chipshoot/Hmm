@@ -1,9 +1,13 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Hmm.Core.Dal.EF.Migrations
 {
+    [DbContext(typeof(HmmDataContext))]
+    [Migration("20260518234500_AddNoteUuidColumn")]
     /// <inheritdoc />
     public partial class AddNoteUuidColumn : Migration
     {

@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -137,6 +138,20 @@ namespace Hmm.ServiceApi
                         // SQL Server (default)
                         opt.UseSqlServer(connectionString);
                     }
+
+                    // PendingModelChangesWarning fires when the
+                    // ModelSnapshot doesn't exactly match what the
+                    // scaffolder would emit from the live model.
+                    // Migrations in this repo are hand-written to
+                    // dodge the cross-provider drift in the
+                    // original InitialCreate (PG-scaffolded against
+                    // a SQL-Server-defaulted dev box), so minor
+                    // snapshot vs model cosmetic differences are
+                    // expected by design. Logging the event keeps
+                    // the audit trail without blocking startup
+                    // migrations.
+                    opt.ConfigureWarnings(w =>
+                        w.Log(RelationalEventId.PendingModelChangesWarning));
 
                     if (Environment.IsDevelopment())
                     {

@@ -19,6 +19,7 @@ using Hmm.Utility.Misc;
 using Hmm.Utility.TestHelp;
 using Hmm.Utility.Validation;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -113,7 +114,7 @@ public class MigrationManagerTests : CoreTestFixtureBase, IAsyncLifetime
             UnitOfWork,
             Mapper,
             DateProvider,
-            _settings);
+            Options.Create(_settings));
     }
 
     public Task DisposeAsync() => Task.CompletedTask;

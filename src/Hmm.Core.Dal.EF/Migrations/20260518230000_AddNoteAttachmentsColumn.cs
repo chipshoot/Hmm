@@ -1,9 +1,21 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Hmm.Core.Dal.EF.Migrations
 {
+    // Both [DbContext] and [Migration] are required for EF Core to
+    // associate this migration with HmmDataContext and recognise its
+    // id. The scaffolder emits them on the .Designer.cs companion
+    // (paired with the model snapshot at that point), but since we
+    // hand-wrote this migration to dodge the cross-provider drift in
+    // InitialCreate, both attributes live here directly. Missing
+    // either makes Migrate() silently skip the file — see EF Core
+    // discovery in MigrationsAssembly.GetMigrationsAttributes.
+    [DbContext(typeof(HmmDataContext))]
+    [Migration("20260518230000_AddNoteAttachmentsColumn")]
     /// <inheritdoc />
     public partial class AddNoteAttachmentsColumn : Migration
     {
