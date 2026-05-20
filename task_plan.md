@@ -206,6 +206,57 @@ Later-phase (Phase 16+ concerns, parked):
       with no photos clears the column.
 - [x] 6 tests pass.
 
+### Phase 12.5: cloudApi-tier Automobile persistence — DONE 2026-05-19
+Surfaced when the cloudApi tier was exercised end-to-end on the
+sim and "fail to load vehicle" / "photo doesn't survive refresh"
+showed up. Phase 12 had only built the Flutter-local side of the
+read-through projection; the corresponding server-side plumbing
+plus a latent overlay bug stayed hidden as long as nobody ran the
+cloudApi tier.
+
+- [x] **Server-side Automobile attachment plumbing**
+      (`chipshoot/Hmm` 9dfadd3): `AutomobileInfo.PrimaryImage` /
+      `Images`; `ApiAutomobile` + `ApiAutomobileForCreate` +
+      `ApiAutomobileForUpdate` carry them; mapper handles
+      same-named members; `AutomobileJsonNoteSerialize.GetNote`
+      copies them onto the underlying `HmmNote`'s `PrimaryImage` /
+      `Images` (not into `note.content`, so the Phase 6b codec
+      stores them in the dedicated `attachments` JSON column with
+      no double-storage); `GetEntity` reads them back.
+- [x] **`AutomobileManager.UpdateAsync` overlay completeness fix**
+      (`chipshoot/Hmm` 9dfadd3): the old lambda copied 7 of 30+
+      fields, silently dropping Notes text, VIN, Trim, fuel info,
+      registration / insurance, service dates, and the new photo
+      refs on every cloudApi-tier save. Pre-existing, masked by
+      the Drift-row overlay on local-mode saves. Now copies every
+      user-mutable field; system fields (Id, AuthorId,
+      CreatedDate) still come from the persisted entity. Pinned
+      down by 4 new tests so the regression can't sneak back in.
+- [x] **VaultRef `kind` discriminator on the wire**
+      (`chipshoot/Hmm` 8f10872): the `.NET` `VaultRef` record had
+      no `Kind` property, so System.Text.Json's default output on
+      `ApiNote`/`ApiAutomobile`/`ApiMigration*` shipped JSON
+      without the `kind: "vault"` field that Flutter's
+      `AttachmentRefCodec.fromJson` requires to discriminate the
+      tagged union. Surfaced as a generic "fail to load vehicle"
+      toast because the deserialiser threw a `FormatException`.
+      Fix: get-only `Kind => "vault"` constant on the record.
+      Internal codec (`NoteAttachmentsCodec`) was already writing
+      it manually, so the change just brings the API-DTO wire path
+      into line.
+- [x] **Flutter wire model carries primaryImage / images**
+      (`chipshoot/hmm_console` 9215c61): `ApiAutomobile`,
+      `ApiAutomobileForCreate`, `ApiAutomobileForUpdate` plus the
+      `GasLogApiMapper` round-trip the refs over the wire. Update
+      DTO always emits both keys (null + empty) so the server
+      treats absence as "no attachments" rather than "leave
+      as-is" — matters for the remove-photo flow.
+- [x] **Tests + verified on iOS simulator** (2026-05-19): +7
+      server-side (3 serializer round-trip, 4 manager overlay
+      pinning), +5 Flutter (mapper + JSON round-trip). Full suite:
+      .NET 1,840 / Flutter 471. User confirmed end-to-end on the
+      iPhone 17 Pro sim — photo saves, persists after refresh.
+
 ### Phase 13: Flutter — picker plumbing (vault-only v1) — DONE 2026-05-13
 - [x] `image_picker ^1.1.2` added.
 - [x] `VaultImageAttachmentPicker` — `pickForNote(noteId, source)`
