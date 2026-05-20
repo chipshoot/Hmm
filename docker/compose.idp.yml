@@ -49,9 +49,22 @@ services:
       - "${IDP_PORT}:80"
     volumes:
       - idp-postgres-data:/var/lib/postgresql/data
+      # DataProtection key ring. The IDP encrypts the rows in
+      # Duende's automatic-key-management Keys table with the DP
+      # key; without a persistent location the key is ephemeral
+      # in-memory, so every container recreation silently rotates
+      # it and invalidates every encrypted signing-key row in
+      # postgres (effectively rotating the JWT signing key + the
+      # refresh tokens + the persisted-grants). HostingExtensions
+      # in the IDP code already checks Directory.Exists on this
+      # path and wires PersistKeysToFileSystem; the only missing
+      # piece was making the path persistent across container
+      # rebuilds.
+      - idp-dp-keys:/var/lib/hmm-idp/dp-keys
     networks:
       - hmm-network
     restart: unless-stopped
 
 volumes:
   idp-postgres-data:
+  idp-dp-keys:

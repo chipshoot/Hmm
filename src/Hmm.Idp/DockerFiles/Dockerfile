@@ -37,6 +37,15 @@ ENV PGDATA=/var/lib/postgresql/data
 # Create PostgreSQL data directory with correct ownership
 RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
 
+# DataProtection key directory. The compose file mounts a named
+# volume here so the DP keys survive container recreation;
+# creating the path at build time also makes Directory.Exists
+# return true when running without the volume (local dev / tests
+# without compose), so HostingExtensions wires
+# PersistKeysToFileSystem unconditionally rather than silently
+# falling back to the ephemeral in-memory repository.
+RUN mkdir -p /var/lib/hmm-idp/dp-keys
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:80/.well-known/openid-configuration || exit 1
