@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Hmm.Core.Vault;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
@@ -79,5 +81,11 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 
         [StringLength(1000)]
         public string Notes { get; set; }
+
+        // Attachments — optional on initial create; the picker
+        // typically uploads bytes via the per-note vault endpoint
+        // first, then includes the resulting VaultRef here.
+        public VaultRef PrimaryImage { get; set; }
+        public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
     }
 }

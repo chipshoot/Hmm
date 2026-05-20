@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using System;
+using System.Collections.Generic;
+using Hmm.Core.Vault;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
@@ -60,6 +62,13 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
         public string Notes { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime LastModifiedDate { get; set; }
+
+        // Attachments — backed by the underlying HmmNote's
+        // attachments JSON column (Phase 6b). Sync clients use the
+        // VaultRef.path to fetch bytes through
+        // /v1/notes/{noteId}/vault/{filename}.
+        public VaultRef PrimaryImage { get; set; }
+        public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
 
         public void CreateLinks(ResultExecutingContext context, LinkGenerator linkGen)
         {

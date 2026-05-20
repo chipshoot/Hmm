@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Hmm.Core.Vault;
 
 namespace Hmm.Automobile.DomainEntity
 {
@@ -104,6 +106,17 @@ namespace Hmm.Automobile.DomainEntity
         public DateTime CreatedDate { get; set; }
 
         public DateTime LastModifiedDate { get; set; }
+
+        // ===== Attachments =====
+        // Backed by the underlying HmmNote's `attachments` JSON
+        // column (Phase 6b). The serializer copies these to/from
+        // note.PrimaryImage / note.Images so the Phase 6b codec
+        // handles persistence — they never enter note.Content, so
+        // round-tripping the JSON content doesn't lose the image
+        // refs.
+        public VaultRef PrimaryImage { get; set; }
+
+        public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
     }
 
     // ===== Supporting Enums =====
