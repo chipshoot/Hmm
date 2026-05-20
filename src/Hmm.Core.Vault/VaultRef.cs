@@ -19,6 +19,23 @@ namespace Hmm.Core.Vault;
 public sealed record VaultRef
 {
     /// <summary>
+    /// Tagged-union discriminator. Always <c>"vault"</c> for this
+    /// record — present so JSON serialisation of this type carries
+    /// the same shape the Flutter <c>AttachmentRefCodec</c> expects
+    /// (it reads the <c>kind</c> field to dispatch between
+    /// <c>vault</c> / <c>phasset</c> / <c>cloudFile</c>; missing
+    /// <c>kind</c> throws a <c>FormatException</c>).
+    /// </summary>
+    /// <remarks>
+    /// Get-only with a constant value — System.Text.Json includes it
+    /// on every emitted VaultRef, the internal codec
+    /// (<c>NoteAttachmentsCodec</c>) was already writing
+    /// <c>kind = "vault"</c> manually so this is consistent across
+    /// the wire surfaces.
+    /// </remarks>
+    public string Kind => "vault";
+
+    /// <summary>
     /// Vault relative path, in POSIX form. Validated via
     /// <see cref="VaultPathUtil.Validate(string)"/>.
     /// </summary>
