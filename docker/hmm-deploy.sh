@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: ./hmm-deploy.sh <action> [options]"
             echo ""
             echo "Actions:"
-            echo "  --start             Start production containers"
+            echo "  --start             Start the local dev stack"
             echo "  --stop              Stop and remove containers"
             echo "  --status            Show container status and health"
             echo "  --logs [service]    Follow logs (optional: hmm-api, hmm-idp, hmm-seq)"
@@ -186,10 +186,10 @@ case $ACTION in
 
     stop)
         check_docker
-        echo "Stopping production containers..."
+        echo "Stopping local dev containers..."
         docker compose $COMPOSE_FILES down
         echo ""
-        echo "Production stack stopped."
+        echo "Local dev stack stopped."
         ;;
 
     status)
