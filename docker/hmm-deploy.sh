@@ -1,14 +1,22 @@
 #!/bin/bash
 # ============================================================
-# Production Deployment Script for Hmm (Cloudflare)
+# Local Dev Deployment Script for Hmm (Docker)
 # ============================================================
 #
-# Deploys API + IDP in Docker:
+# DEV ONLY. Not the production deployment path — that's bare-metal
+# systemd on an Oracle VPS, provisioned by
+# scripts/setup-{idp,api,backup}-vps.sh and pushed via
+# scripts/deploy-{idp,api}.sh. See docs/PRODUCTION_VPS_DEPLOY.md.
+#
+# This script runs the full stack inside Docker on a local
+# workstation (typically macOS) so you can iterate on the IDP +
+# API end-to-end without touching the VPS:
 #   - API uses PostgreSQL embedded in the hmm-api container
 #     (volume: api-postgres-data — see compose.api.yml).
 #   - IDP uses PostgreSQL embedded in the hmm-idp container
 #     (volume: idp-postgres-data — see compose.idp.yml).
-# Designed for macOS with Cloudflare Tunnel for public access.
+# Optional: Cloudflare Tunnel (cloudflared) for sharing the local
+# stack publicly during dev/demo. Production does not use this.
 #
 # Usage:
 #   ./hmm-deploy.sh --start [--build|--rebuild]
@@ -23,9 +31,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Compose file combination for production. compose.base-sqlite.yml hosts the
-# shared infra (Seq + Mailpit) without the legacy SQL Server container — the
-# API and IDP each embed their own Postgres instance.
+# Compose file combination for the local dev stack.
+# compose.base-sqlite.yml hosts the shared infra (Seq + Mailpit)
+# without the legacy SQL Server container — the API and IDP each
+# embed their own Postgres instance.
 COMPOSE_FILES="-f compose.base-sqlite.yml -f compose.idp.yml -f compose.api.yml"
 
 BACKUP_DIR="${HMM_BACKUP_DIR:-$HOME/hmm-backups}"
@@ -125,7 +134,7 @@ case $ACTION in
     start)
         check_docker
         echo "============================================================"
-        echo "Hmm Production Deployment (API + IDP: embedded PostgreSQL)"
+        echo "Hmm Local Dev Stack (Docker — embedded PostgreSQL per service)"
         echo "============================================================"
         echo ""
 
@@ -154,7 +163,7 @@ case $ACTION in
 
         echo ""
         echo "============================================================"
-        echo "Production Stack Running"
+        echo "Local Dev Stack Running"
         echo "============================================================"
         echo ""
         echo "Local endpoints:"
