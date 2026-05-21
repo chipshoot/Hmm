@@ -18,8 +18,10 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -51,6 +53,33 @@ namespace Hmm.ServiceApi
             var appSetting = configSection.Get<AppSettings>();
             services.Configure<ApiDeprecationOptions>(Configuration.GetSection("ApiDeprecation"));
             services.AddSingleton<ApiSunsetHeaderFilter>();
+
+            // Per-IP rate limiter — generous 240/min default to
+            // catch obvious abuse without getting in the way of
+            // normal Flutter sync traffic. No auth endpoints here
+            // (the API only consumes JWTs); credential-stuffing
+            // protection lives on the IDP side.
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.GlobalLimiter = System.Threading.RateLimiting
+                    .PartitionedRateLimiter.Create<HttpContext, string>(
+                    ctx =>
+                    {
+                        var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                        return System.Threading.RateLimiting
+                            .RateLimitPartition.GetFixedWindowLimiter(
+                                ip,
+                                _ => new System.Threading.RateLimiting
+                                    .FixedWindowRateLimiterOptions
+                                {
+                                    PermitLimit = 240,
+                                    Window = System.TimeSpan.FromMinutes(1),
+                                    QueueLimit = 0,
+                                });
+                    });
+            });
+
             services.AddControllers(setupAction =>
                         {
                             setupAction.ReturnHttpNotAcceptable = true;
@@ -257,6 +286,22 @@ namespace Hmm.ServiceApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            // Honor Cloudflare Tunnel's X-Forwarded-* headers so
+            // Request.Scheme is "https" and Request.RemoteIpAddress
+            // is the real client IP, not the loopback adapter. MUST
+            // run before any middleware that reads Request.Scheme
+            // (HttpsRedirection, IdentityServer discovery, OIDC
+            // callbacks) — see
+            // https://learn.microsoft.com/aspnet/core/host-and-deploy/proxy-load-balancer.
+            // Default ForwardedHeadersOptions trusts loopback only,
+            // which is exactly the cloudflared-on-the-same-host
+            // shape used in production.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                    | ForwardedHeaders.XForwardedProto,
+            });
+
             app.UseExceptionHandler(_ => { });
 
             // Note: SQLite EnsureCreated + WAL mode is handled in AutomobileAppStartupFilter
@@ -271,6 +316,10 @@ namespace Hmm.ServiceApi
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseCors();
+            // Throttle BEFORE auth so abusive traffic doesn't burn
+            // JWT validation cycles. Real client IPs come from the
+            // ForwardedHeaders middleware above.
+            app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>

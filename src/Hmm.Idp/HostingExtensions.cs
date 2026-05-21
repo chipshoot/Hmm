@@ -6,7 +6,10 @@ using Hmm.Idp.Data;
 using Hmm.Idp.Pages.Admin.User;
 using Hmm.Idp.Services;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -23,6 +26,58 @@ internal static class HostingExtensions
     {
         var configuration = builder.Configuration;
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        // Per-IP rate limiting. Stricter bucket for the credential
+        // endpoints (Razor login, OIDC token) so credential stuffing
+        // can't burn the box on bcrypt — account lockout (5 fails)
+        // protects an individual account, this protects per-IP
+        // CPU. Generous default everywhere else. Honoured by
+        // UseRateLimiter() in ConfigurePipeline.
+        // Tunables in code on purpose: anything in appsettings can
+        // be silently weakened by a config drift; auth-endpoint
+        // limits should require a code review to change.
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.GlobalLimiter = System.Threading.RateLimiting
+                .PartitionedRateLimiter.Create<HttpContext, string>(
+                ctx =>
+                {
+                    var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                    var path = ctx.Request.Path.Value ?? string.Empty;
+                    var isAuth = path.StartsWith("/Account/Login",
+                            System.StringComparison.OrdinalIgnoreCase)
+                        || path.StartsWith("/Account/Register",
+                            System.StringComparison.OrdinalIgnoreCase)
+                        || path.StartsWith("/Account/ForgotPassword",
+                            System.StringComparison.OrdinalIgnoreCase)
+                        || path.StartsWith("/connect/token",
+                            System.StringComparison.OrdinalIgnoreCase);
+                    if (isAuth)
+                    {
+                        return System.Threading.RateLimiting
+                            .RateLimitPartition.GetFixedWindowLimiter(
+                                $"auth:{ip}",
+                                _ => new System.Threading.RateLimiting
+                                    .FixedWindowRateLimiterOptions
+                                {
+                                    PermitLimit = 10,
+                                    Window = System.TimeSpan.FromMinutes(1),
+                                    QueueLimit = 0,
+                                });
+                    }
+                    return System.Threading.RateLimiting
+                        .RateLimitPartition.GetFixedWindowLimiter(
+                            $"default:{ip}",
+                            _ => new System.Threading.RateLimiting
+                                .FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = 120,
+                                Window = System.TimeSpan.FromMinutes(1),
+                                QueueLimit = 0,
+                            });
+                });
+        });
 
         builder.Services.AddRazorPages();
         builder.Services.AddControllers()
@@ -173,6 +228,26 @@ internal static class HostingExtensions
 
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
+        // Cloudflare Tunnel terminates TLS upstream and forwards to
+        // 127.0.0.1; without this middleware IdentityServer's
+        // discovery doc, OIDC redirects, and the JWKS URI all
+        // advertise http:// instead of https://, breaking RP
+        // callbacks that follow Strict-Transport / scheme rules.
+        // Must run before UseSerilogRequestLogging so request log
+        // entries show the real scheme + client IP. Default
+        // KnownNetworks/KnownProxies trust loopback only — exactly
+        // the cloudflared-on-the-same-host topology.
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                | ForwardedHeaders.XForwardedProto,
+        });
+
+        // Per-IP throttle (10/min on auth endpoints, 120/min
+        // elsewhere). Runs early so 429s don't reach Identity /
+        // IdentityServer pipelines unnecessarily.
+        app.UseRateLimiter();
+
         app.UseSerilogRequestLogging();
 
         if (app.Environment.IsDevelopment())

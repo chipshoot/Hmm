@@ -1,0 +1,32 @@
+# /etc/systemd/system/hmm-backup.timer
+#
+# Fires hmm-backup.service nightly at 02:30 local time. Persistent=true
+# means a missed run (laptop closed, VPS rebooted) catches up on next
+# boot rather than silently dropping that day's backup.
+#
+# Install:
+#   sudo cp hmm-backup.timer hmm-backup.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now hmm-backup.timer
+#
+# Inspect schedule:
+#   systemctl list-timers hmm-backup.timer
+#
+# Manual run (uses the same EnvironmentFile, hardening, user):
+#   sudo systemctl start hmm-backup.service
+#
+# Recent results:
+#   journalctl -u hmm-backup.service -e
+
+[Unit]
+Description=Daily Hmm production backup
+Documentation=file:/opt/hmm-backup/hmm-backup.sh
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=hmm-backup.service
+
+[Install]
+WantedBy=timers.target
