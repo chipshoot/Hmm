@@ -88,9 +88,11 @@ SQL
 fi
 
 # ----- 4. Directories -------------------------------------------
-log "Preparing $APP_DIR, $LOG_DIR, $DATA_DIR, $ENV_DIR"
-mkdir -p "$APP_DIR" "$LOG_DIR" "$DATA_DIR" "$ENV_DIR"
+VAULT_DIR="${VAULT_DIR:-${DATA_DIR}/vault}"   # Phase 6b attachment bytes
+log "Preparing $APP_DIR, $LOG_DIR, $DATA_DIR, $VAULT_DIR, $ENV_DIR"
+mkdir -p "$APP_DIR" "$LOG_DIR" "$DATA_DIR" "$VAULT_DIR" "$ENV_DIR"
 chown -R "$APP_USER:$APP_USER" "$APP_DIR" "$LOG_DIR" "$DATA_DIR"
+chmod 0750                     "$VAULT_DIR"
 chown root:"$APP_USER"          "$ENV_DIR"
 chmod 0750                      "$ENV_DIR"
 
@@ -113,6 +115,16 @@ AppSettings__ConnectionString=Host=localhost;Port=5432;Database=${PG_DB};Usernam
 
 # IDP integration
 AppSettings__IdpBaseUrl=${IDP_BASE_URL}
+
+# Phase 6b attachment vault root. Must sit inside the systemd
+# unit's ReadWritePaths= (the unit lists ${LOG_DIR} and
+# ${DATA_DIR}) so FilesystemVaultBlobStore can write attachment
+# bytes. The dev default in appsettings.json is ./hmm-vault-dev
+# which resolves under /opt/hmm-api — blocked by
+# ProtectSystem=strict, so every vault PUT would 500. Keep this
+# in sync with appsettings.Production.json (same value, defence
+# in depth).
+AttachmentSettings__RootDir=${VAULT_DIR}
 EOF
   chown root:"$APP_USER" "$ENV_FILE"
   chmod 0640            "$ENV_FILE"
