@@ -204,6 +204,87 @@ namespace Hmm.Automobile.Tests
             Assert.Equal(originalId, result.Value.Id);
         }
 
+        // ============================================================
+        // Phase 12.5 — the original UpdateAsync overlay only copied
+        // 7 fields, silently dropping every other user-edited field
+        // (Notes text, VIN, fuel info, registration / insurance,
+        // service dates, photo refs). These tests pin down the
+        // complete overlay so the regression can't sneak back in.
+        // ============================================================
+
+        [Fact]
+        public async Task UpdateAsync_persists_Notes_text()
+        {
+            var cars = await SetupEnvironmentAsync();
+            var car = cars.First();
+
+            car.Notes = "Replaced wipers 2026-05-19.";
+            var result = await _manager.UpdateAsync(car);
+
+            Assert.True(result.Success);
+            Assert.Equal("Replaced wipers 2026-05-19.", result.Value.Notes);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_persists_VIN_trim_and_fuel_settings()
+        {
+            var cars = await SetupEnvironmentAsync();
+            var car = cars.First();
+
+            car.VIN = "WAUZZZ8K9AA000000";
+            car.Trim = "Sport";
+            car.FuelType = FuelGrade.Premium;
+            car.CombinedMPG = 30.5m;
+            var result = await _manager.UpdateAsync(car);
+
+            Assert.True(result.Success);
+            Assert.Equal("WAUZZZ8K9AA000000", result.Value.VIN);
+            Assert.Equal("Sport", result.Value.Trim);
+            Assert.Equal(FuelGrade.Premium, result.Value.FuelType);
+            Assert.Equal(30.5m, result.Value.CombinedMPG);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_persists_registration_and_insurance_fields()
+        {
+            var cars = await SetupEnvironmentAsync();
+            var car = cars.First();
+            var regExpiry = new DateTime(2027, 3, 1, 0, 0, 0, DateTimeKind.Utc);
+            var insExpiry = new DateTime(2026, 9, 30, 0, 0, 0, DateTimeKind.Utc);
+
+            car.RegistrationExpiryDate = regExpiry;
+            car.InsuranceExpiryDate = insExpiry;
+            car.InsuranceProvider = "Acme Mutual";
+            car.InsurancePolicyNumber = "POL-12345";
+            var result = await _manager.UpdateAsync(car);
+
+            Assert.True(result.Success);
+            Assert.Equal(regExpiry, result.Value.RegistrationExpiryDate);
+            Assert.Equal(insExpiry, result.Value.InsuranceExpiryDate);
+            Assert.Equal("Acme Mutual", result.Value.InsuranceProvider);
+            Assert.Equal("POL-12345", result.Value.InsurancePolicyNumber);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_persists_PrimaryImage_via_attachments_column()
+        {
+            var cars = await SetupEnvironmentAsync();
+            var car = cars.First();
+
+            car.PrimaryImage = new Hmm.Core.Vault.VaultRef
+            {
+                Path = $"attachments/note-{car.Id}/main.jpg",
+                ContentType = "image/jpeg",
+                ByteSize = 1024,
+            };
+            var result = await _manager.UpdateAsync(car);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value.PrimaryImage);
+            Assert.Equal(car.PrimaryImage.Path, result.Value.PrimaryImage.Path);
+            Assert.Equal(1024, result.Value.PrimaryImage.ByteSize);
+        }
+
         #endregion
 
         #region Multiple Entities Tests

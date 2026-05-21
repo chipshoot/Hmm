@@ -18,6 +18,7 @@ namespace Hmm.Core.Dal.EF
         public const string FK_Notes_Catalogs = "fk_notes_catalogs";
         public const string FK_NoteTagRefs_Notes = "fk_notetagrefs_notes";
         public const string FK_NoteTagRefs_Tags = "fk_notetagrefs_tags";
+        public const string FK_MigrationLogs_Authors = "fk_migrationlogs_authors";
     }
 
     /// <summary>
@@ -36,6 +37,8 @@ namespace Hmm.Core.Dal.EF
         public const string UQ_Authors_AccountName = "uq_authors_accountname";
         public const string UQ_Tags_Name = "uq_tags_name";
         public const string UQ_NoteCatalogs_Name = "uq_notecatalogs_name";
+        public const string IX_MigrationLogs_AuthorId = "ix_migrationlogs_authorid";
+        public const string UQ_Notes_Uuid = "uq_notes_uuid";
     }
 
     public class HmmDataContext(DbContextOptions options) : DbContext(options), IHmmDataContext
@@ -51,6 +54,8 @@ namespace Hmm.Core.Dal.EF
         public DbSet<TagDao> Tags { get; set; }
 
         public DbSet<NoteTagRefDao> NoteTagRefs { get; set; }
+
+        public DbSet<MigrationLogDao> MigrationLogs { get; set; }
 
         /// <inheritdoc />
         public int Commit()
@@ -168,6 +173,15 @@ namespace Hmm.Core.Dal.EF
                 }
             }
 
+            // Phase 15b: cross-device-stable identity for the
+            // cloudApi sync tier. Unique + nullable so existing
+            // rows (Uuid = null) stay valid until the manager
+            // back-fills on the next Create/Update.
+            modelBuilder.Entity<HmmNoteDao>()
+                .HasIndex(n => n.Uuid)
+                .IsUnique()
+                .HasDatabaseName(IndexNames.UQ_Notes_Uuid);
+
             // FK to Author with explicit constraint name and index (Issue #25 fix)
             modelBuilder.Entity<HmmNoteDao>()
                 .HasOne(n => n.Author)
@@ -272,6 +286,29 @@ namespace Hmm.Core.Dal.EF
             modelBuilder.Entity<NoteTagRefDao>()
                 .HasIndex(nt => nt.TagId)
                 .HasDatabaseName(IndexNames.IX_NoteTagRefs_TagId);
+
+            // ============================================================
+            // MigrationLogDao Configuration (Phase 7)
+            // ============================================================
+            modelBuilder.Entity<MigrationLogDao>().ToTable("migrationlogs");
+            modelBuilder.Entity<MigrationLogDao>().HasKey(m => m.Id);
+
+            modelBuilder.Entity<MigrationLogDao>()
+                .HasOne<AuthorDao>()
+                .WithMany()
+                .HasForeignKey(m => m.AuthorId)
+                .HasConstraintName(ForeignKeyNames.FK_MigrationLogs_Authors)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<MigrationLogDao>()
+                .HasIndex(m => m.AuthorId)
+                .HasDatabaseName(IndexNames.IX_MigrationLogs_AuthorId);
+
+            // Kind is stored as int across providers — keeps the
+            // table portable without a per-provider enum.
+            modelBuilder.Entity<MigrationLogDao>()
+                .Property(m => m.Kind)
+                .HasConversion<int>();
         }
     }
 }

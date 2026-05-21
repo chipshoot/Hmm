@@ -23,6 +23,13 @@
 
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <!--
+      Phase: production-log hardening. CompactJsonFormatter turns
+      every log line into one structured JSON record, captured by
+      journald via the Console sink + archived via the File sink.
+    -->
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
   </ItemGroup>
 </Project>

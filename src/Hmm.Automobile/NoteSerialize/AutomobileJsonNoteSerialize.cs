@@ -1,9 +1,11 @@
 using Hmm.Automobile.DomainEntity;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Core.Vault;
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -25,6 +27,38 @@ namespace Hmm.Automobile.NoteSerialize
             ArgumentNullException.ThrowIfNull(catalogProvider);
 
             _catalogProvider = catalogProvider;
+        }
+
+        /// <summary>
+        /// Build the HmmNote payload from an AutomobileInfo. The
+        /// base class handles subject + content; we override here
+        /// to also project the automobile's attachment refs onto
+        /// <c>note.PrimaryImage</c> / <c>note.Images</c> so the
+        /// Phase 6b codec serialises them into the
+        /// <c>Notes.attachments</c> column on persist. Without this
+        /// override the photo refs round-trip through `content`,
+        /// which would mix bytes-metadata with the
+        /// automobile's business data and bypass the dedicated
+        /// attachments column entirely.
+        /// </summary>
+        public override Task<ProcessingResult<HmmNote>> GetNote(in AutomobileInfo entity)
+        {
+            // Capture the attachment refs locally — `in` params
+            // can't cross an await boundary, and the base impl is
+            // synchronously-completed-Task anyway.
+            var primary = entity?.PrimaryImage;
+            var images = entity?.Images != null
+                ? entity.Images.ToList()
+                : new List<VaultRef>();
+            return base.GetNote(entity).ContinueWith(t =>
+            {
+                var baseResult = t.Result;
+                if (!baseResult.Success || baseResult.Value == null) return baseResult;
+                var note = baseResult.Value;
+                note.PrimaryImage = primary;
+                note.Images = images;
+                return ProcessingResult<HmmNote>.Ok(note);
+            }, TaskContinuationOptions.ExecuteSynchronously);
         }
 
         public override Task<ProcessingResult<AutomobileInfo>> GetEntity(HmmNote note)
@@ -99,7 +133,16 @@ namespace Hmm.Automobile.NoteSerialize
                     // Metadata
                     Notes = GetStringProperty(autoJson, "notes"),
                     CreatedDate = GetDateTimeProperty(autoJson, "createdDate"),
-                    LastModifiedDate = GetDateTimeProperty(autoJson, "lastModifiedDate")
+                    LastModifiedDate = GetDateTimeProperty(autoJson, "lastModifiedDate"),
+
+                    // Attachments — sourced from the underlying
+                    // HmmNote's `attachments` JSON column (Phase 6b).
+                    // The codec already deserialised the column into
+                    // typed VaultRefs by the time we get here.
+                    PrimaryImage = note.PrimaryImage,
+                    Images = note.Images != null
+                        ? new List<VaultRef>(note.Images)
+                        : new List<VaultRef>(),
                 };
 
                 document.Dispose();

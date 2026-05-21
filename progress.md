@@ -82,8 +82,162 @@
 - Flutter repo state checked: `hmm_console` on `main`, clean tree,
   HEAD `9fc1e86` "Local-mode records, editable info cards, dashboard
   intro".
-- Hmm (.NET) `main` is still 5 commits ahead of `origin/main`;
-  unpushed.
+- Hmm (.NET) `main` is 7 commits ahead of `origin/main`; unpushed.
+- **Branch `feature/note-attachments` created off `main` in BOTH
+  repos** (`Hmm` and `hmm_console`) — all attachments work lands
+  there from now on. Hmm's branch carries the unpushed design +
+  planning commits; hmm_console's branch is at `9fc1e86`.
+
+## Session: 2026-05-13 — local-mode slice Phases 3, 9, 10, 11
+
+### Completed (`hmm_console`, `feature/note-attachments`)
+- [x] **Phase 3 .NET**: `docs/attachments-path-spec.md` (Hmm) +
+      `src/Hmm.Core/Schemas/NoteAttachments.schema.json` as an
+      embedded resource. Commit `16416bf` on Hmm.
+- [x] **Phase 3 Dart**: `lib/core/data/vault/vault_path.dart`
+      (`vaultRelativePathJoin` / `Validate` — pure functions);
+      36 tests pass. Commit `1f6bb5e`.
+- [x] **Phase 9**: `AttachmentRef` sealed class hierarchy + JSON
+      codec (vault/phasset/cloudFile) + `NoteAttachments` wrapper
+      with disjointness enforced at construction. 28 tests.
+      Commit `77f3908`.
+- [x] **Phase 10**: `IVaultStore` interface + `LocalVaultStore`
+      (atomic put-then-rename writes, defensive prefix listing).
+      17 tests. Commit `9f4340c`.
+- [x] **Phase 11**: Drift `Notes.attachments` column (v3 → v4
+      migration); `HmmNote.attachments` + `effectiveAttachments`;
+      `HmmNoteMapper` decodes; `HmmNoteCreate` / `HmmNoteUpdate`
+      gain patch-semantics attachments; `LocalHmmNoteRepository`
+      encode-on-write. Removed truly-unused
+      `IAttachmentRepository` / `LocalAttachmentRepository` /
+      `attachmentRepositoryProvider`. 7 round-trip tests; full
+      suite (379) pass. Commit `e78d897`.
+
+### Architecture decision logged
+- **Phase 11.5 (deferred)**: The Drift `Attachments` child table
+  was supposed to be dropped in Phase 11, but `SyncOrchestrator`
+  (cloudStorage tier's sync engine, wired into `settings_screen.dart`)
+  actively uses it with its own ad-hoc vault layout
+  (`attachments/{uuid}{ext}`, flat — no per-note subfolder). Dropping
+  the table now would break sync compilation. So Phase 11 added the
+  new column alongside the old table; the table + sync rewire is
+  Phase 11.5, required before cloudStorage sync can ship.
+
+### In Progress
+- *(all bullets above moved to Completed below — same session.)*
+
+### Completed continued — 2026-05-13 (same session)
+- [x] **Phase 12**: `Automobile` carries read-through `primaryImage`
+      + `images`; `LocalAutomobileRepository` reads from the note's
+      `attachments` column on deserialize and writes via
+      `HmmNoteCreate/Update.attachments`. JSON content payload
+      unchanged. 6 tests pass. Commit `f5b0f1b`.
+- [x] **Phase 13**: `image_picker ^1.1.2` added;
+      `VaultImageAttachmentPicker` opens the platform picker, copies
+      bytes into the vault under
+      `attachments/note-{id}/{uuid}.{ext}`, returns a `VaultRef`.
+      Pure `persistToVault(...)` helper for headless callers. MIME
+      allow-list + 8 MB cap enforced client-side. 8 tests pass.
+      Commit `4135091`.
+- [x] **Phase 14 (data layer)**: `VaultResolver` +
+      `CompositeAttachmentResolver` + `AttachmentImage` widget +
+      `attachment_providers.dart` (mode-aware Riverpod providers
+      for vault root, store, resolver, picker — `cloudApi` throws
+      until Phase 15 lands `ApiVaultStore`). Switched widget tests
+      to a fake resolver (driving the real `LocalVaultStore` was
+      flaky because `pumpAndSettle` only waits for frames, not
+      real-time I/O). 9 tests pass; full suite 402 clean.
+      Commit `2fc9d50`.
+
+### Paused — screen integration
+- **Phase 14 screen integration** awaits a UX discussion (where
+  the Photo card sits in `AutomobileEditScreen`, what its editor
+  looks like, whether camera is a v1 option). All underlying
+  infrastructure is ready and tested; the only remaining work is
+  the edit-screen surgery.
+
+## Session: 2026-05-15 — backend redeploy + scope boundary set
+
+### Completed
+- [x] Rebuilt and redeployed the backend Docker stack from
+      `feature/note-attachments` (`hmm-deploy.sh --start --rebuild`).
+      Four containers up + healthy: `hmm-api` (5010), `hmm-idp`
+      (5001), `hmm-seq` (8081), `hmm-mailpit` (8025). Swagger and
+      `/.well-known/openid-configuration` both return 200. The
+      branch's only .NET delta vs main is the new
+      `NoteAttachments.schema.json` embedded resource — no runtime
+      code path reads it yet, so behaviour matches main.
+
+### Scope boundary set by user
+- **Local + cloudStorage tiers only for the current phase.** Do
+  NOT touch `Hmm.ServiceApi` (or any .NET-side attachment plumbing)
+  until the local/cloudStorage test cycle is complete and the user
+  explicitly switches to the API tier. Recorded in `task_plan.md`
+  "Active scope" section and in project memory
+  (`attachments-scope-local-only.md`).
+
+## Session: 2026-05-16 — Phase 14 (screen integration) complete
+
+### Completed
+- [x] `ios/Runner/Info.plist`: added
+      `NSPhotoLibraryUsageDescription` so `image_picker`'s
+      `PHPhotoLibrary` call doesn't hard-abort on iOS.
+- [x] **`AutomobileEditScreen` Photo card**: new
+      `EditableInfoCard` placed above the identity card.
+      - Display = 96×96 thumbnail with tap → fullscreen
+        `InteractiveViewer` dialog, or "No photo" italics.
+      - Editor = 120×120 pending preview + Choose/Replace + Remove
+        buttons + busy spinner.
+      - Pending state lives on the screen (`_pendingPrimaryImage`,
+        `_photoBusy`); `_cloneWith` gained a sentinel-guarded
+        `primaryImage` so a real null (Remove) round-trips through
+        the existing `_persist` path.
+      - Picker errors surface as snackbars; cancel/replace can
+        leave orphaned vault bytes (vault GC pass deferred).
+- [x] `flutter analyze` clean; 402 tests pass on
+      `feature/note-attachments`. Commit `1a4cc3f`.
+
+## Session: 2026-05-18 — scope flip; starting API-side work
+
+User signed off on local + cloudStorage tier completeness; lifted
+the "do not touch Hmm.ServiceApi" boundary. Active scope is now
+Phases 4 → 5 → 6 → 7 → 8 → 15 (.NET side first, Flutter follows
+once endpoints exist).
+
+### Loose ends on local/cloudStorage (deferred, can land in parallel)
+- Vault orphan GC — Replace / Remove leave bytes on disk.
+- Phase 19 — iOS `UIFileSharingEnabled` plist flags so the vault
+  appears in the iOS Files app.
+- Real-world cloudStorage multi-device validation (user-action,
+  not code).
+
+### Starting Phase 4
+- New `src/Hmm.Core.Vault/` project.
+- `IVaultBlobStore` interface, `VaultRef` value object,
+  `VaultEntry`, `AttachmentSettings`.
+- `VaultPathUtil` — port of the Dart `vault_path.dart` (same
+  test vectors via the shared spec at
+  `docs/attachments-path-spec.md`).
+- `FilesystemVaultBlobStore` implementation, atomic
+  put-then-rename writes (mirrors the Dart `LocalVaultStore`).
+- xUnit tests.
+- DI registration in `Hmm.ServiceApi`; `AttachmentSettings` bound
+  from `appsettings.json`.
+
+### Ready to test in iOS simulator
+The local-mode vertical slice is feature-complete. To exercise:
+
+1. `cd ~/projects/hmm_console && flutter run` (pick an iOS sim
+   target). Run mode: Local is the default; `cloudStorage` mode
+   uses the same on-disk vault under the sim sandbox.
+2. Open any vehicle → see the new "Photo" card at the top.
+3. Tap the pencil → "Choose photo" → simulator's Photos app picker.
+4. Save → reopen the vehicle → photo should persist.
+5. Kill the app → relaunch → photo should still be there (proves
+   the `Notes.attachments` JSON column round-trip end-to-end).
+6. Inspect vault on disk:
+   `find ~/Library/Developer/CoreSimulator -name "attachments"
+    -type d -path "*Documents/vault/*"`
 
 ### Decisions snapshot
 - Tagged-union references (`vault` / `phasset` / `cloudFile`) on

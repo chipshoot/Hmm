@@ -20,7 +20,14 @@
     <PackageReference Include="Microsoft.OpenApi" Version="2.3.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <!--
+      Phase: production-log hardening. CompactJsonFormatter turns
+      every log line into one structured JSON record, captured by
+      journald via the Console sink + archived via the File sink.
+    -->
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
   </ItemGroup>
 
@@ -33,6 +40,7 @@
     <ProjectReference Include="..\Hmm.Utility.Services\Hmm.Utility.Services.csproj" />
     <ProjectReference Include="..\Hmm.Core.Dal.EF\Hmm.Core.Dal.EF.csproj" />
     <ProjectReference Include="..\Hmm.Core\Hmm.Core.csproj" />
+    <ProjectReference Include="..\Hmm.Core.Vault\Hmm.Core.Vault.csproj" />
     <ProjectReference Include="..\Hmm.ServiceApi.DtoEntity\Hmm.ServiceApi.DtoEntity.csproj" />
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
   </ItemGroup>

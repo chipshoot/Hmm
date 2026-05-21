@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Hmm.Core.Vault;
 
 namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 {
@@ -47,5 +49,11 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 
         [StringLength(1000)]
         public string Notes { get; set; }
+
+        // Attachments — see ApiAutomobile for the full design note.
+        // Null PrimaryImage on update means "clear the photo"; an
+        // empty Images list clears the gallery.
+        public VaultRef PrimaryImage { get; set; }
+        public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
     }
 }

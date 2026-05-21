@@ -12,6 +12,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hmm.Utility\Hmm.Utility.csproj" />
+    <!--
+      Phase 6b: HmmNote gained PrimaryImage / Images of type
+      VaultRef so the AutoMapper profile can project the per-note
+      attachments JSON column into typed refs.
+    -->
+    <ProjectReference Include="..\Hmm.Core.Vault\Hmm.Core.Vault.csproj" />
   </ItemGroup>
 
 </Project>

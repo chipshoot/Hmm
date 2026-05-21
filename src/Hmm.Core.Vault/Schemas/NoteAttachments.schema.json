@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://homemademessage.com/schemas/NoteAttachments.schema.json",
+  "title": "HmmNote Attachments",
+  "description": "Value of the Notes.attachments column. A note with no attachments stores SQL NULL; a note with at least one attachment stores this object. See docs/attachments-design.md for the design and docs/attachments-path-spec.md for path rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "primaryImage": {
+      "description": "The note's headline image, or null. Disjoint with `images` (enforced by the codec, not the schema).",
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/definitions/attachmentRef" }
+      ]
+    },
+    "images": {
+      "description": "Gallery (zero or more). Does not include the primaryImage if one is set.",
+      "type": "array",
+      "items": { "$ref": "#/definitions/attachmentRef" }
+    }
+  },
+  "definitions": {
+    "kind": {
+      "type": "string",
+      "enum": ["vault", "phasset", "cloudFile"]
+    },
+    "contentType": {
+      "type": "string",
+      "enum": [
+        "image/jpeg",
+        "image/png",
+        "image/heic",
+        "image/webp"
+      ],
+      "description": "v1 allow-list; matches the storage policy in attachments-design.md."
+    },
+    "originalName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "byteSizeNullable": {
+      "description": "Bytes, when known. NULL is allowed for phasset/cloudFile when the OS doesn't expose the size cheaply; vault refs guarantee an integer.",
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "byteSizeRequired": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "vaultRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "contentType", "byteSize"],
+      "properties": {
+        "kind": { "const": "vault" },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Vault relative path. Validated separately against docs/attachments-path-spec.md."
+        },
+        "originalName": { "$ref": "#/definitions/originalName" },
+        "contentType": { "$ref": "#/definitions/contentType" },
+        "byteSize": { "$ref": "#/definitions/byteSizeRequired" }
+      }
+    },
+    "phAssetRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "contentType"],
+      "properties": {
+        "kind": { "const": "phasset" },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "PHAsset.localIdentifier (Apple PhotoKit)."
+        },
+        "originalName": { "$ref": "#/definitions/originalName" },
+        "contentType": { "$ref": "#/definitions/contentType" },
+        "byteSize": { "$ref": "#/definitions/byteSizeNullable" }
+      }
+    },
+    "cloudFileRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "provider", "path", "contentType"],
+      "properties": {
+        "kind": { "const": "cloudFile" },
+        "provider": {
+          "type": "string",
+          "enum": ["oneDrive", "iCloudDrive"]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Relative path within the provider's local mount root."
+        },
+        "originalName": { "$ref": "#/definitions/originalName" },
+        "contentType": { "$ref": "#/definitions/contentType" },
+        "byteSize": { "$ref": "#/definitions/byteSizeNullable" }
+      }
+    },
+    "attachmentRef": {
+      "description": "Tagged-union reference to one attachment.",
+      "oneOf": [
+        { "$ref": "#/definitions/vaultRef" },
+        { "$ref": "#/definitions/phAssetRef" },
+        { "$ref": "#/definitions/cloudFileRef" }
+      ]
+    }
+  }
+}

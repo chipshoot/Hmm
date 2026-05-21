@@ -11,6 +11,16 @@ namespace Hmm.Core
     {
         Task<ProcessingResult<HmmNote>> GetNoteByIdAsync(int id, bool includeDelete = false);
 
+        /// <summary>
+        /// Look up a note by its cross-device-stable Uuid. Used by
+        /// the cloudApi sync provider — the wire identity is the
+        /// Uuid, not the local int Id. Returns
+        /// <see cref="ProcessingResult.NotFound"/> when no row
+        /// carries that Uuid; never silently returns a different
+        /// note.
+        /// </summary>
+        Task<ProcessingResult<HmmNote>> GetNoteByUuidAsync(string uuid, bool includeDeleted = false);
+
         Task<ProcessingResult<PageList<HmmNote>>> GetNotesAsync(Expression<Func<HmmNote, bool>> query = null, bool includeDeleted = false, ResourceCollectionParameters resourceCollectionParameters = null);
 
         /// <summary>

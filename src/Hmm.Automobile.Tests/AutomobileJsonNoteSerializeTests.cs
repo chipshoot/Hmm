@@ -715,6 +715,96 @@ namespace Hmm.Automobile.Tests
             Assert.False(result.Value.IsActive);
         }
 
+        // ============================================================
+        // Phase 12.5: attachment refs ride through the underlying
+        // HmmNote's attachments column (not note.content). GetNote
+        // copies them onto note.PrimaryImage / .Images; GetEntity
+        // copies them back. Together these close the cloudApi-tier
+        // vehicle photo persistence path.
+        // ============================================================
+
+        [Fact]
+        public async Task GetNote_writes_attachment_refs_to_note_PrimaryImage_and_Images()
+        {
+            var original = CreateValidAutomobile();
+            original.PrimaryImage = new Hmm.Core.Vault.VaultRef
+            {
+                Path = "attachments/note-1/p.jpg",
+                ContentType = "image/jpeg",
+                ByteSize = 100,
+            };
+            original.Images = new System.Collections.Generic.List<Hmm.Core.Vault.VaultRef>
+            {
+                new Hmm.Core.Vault.VaultRef
+                {
+                    Path = "attachments/note-1/a.jpg",
+                    ContentType = "image/jpeg",
+                    ByteSize = 50,
+                },
+            };
+
+            var result = await _serializer.GetNote(original);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value);
+            Assert.Equal(original.PrimaryImage, result.Value.PrimaryImage);
+            Assert.Single(result.Value.Images);
+            Assert.Equal(original.Images[0], result.Value.Images[0]);
+        }
+
+        [Fact]
+        public async Task GetEntity_reads_attachment_refs_from_HmmNote()
+        {
+            var original = CreateValidAutomobile();
+            var json = _serializer.GetNoteSerializationText(original);
+            var note = CreateNote(json);
+            // Simulate what AutoMapper does after decoding the
+            // Notes.attachments column.
+            note.PrimaryImage = new Hmm.Core.Vault.VaultRef
+            {
+                Path = "attachments/note-1/main.jpg",
+                ContentType = "image/png",
+                ByteSize = 200,
+            };
+            note.Images = new System.Collections.Generic.List<Hmm.Core.Vault.VaultRef>
+            {
+                new Hmm.Core.Vault.VaultRef
+                {
+                    Path = "attachments/note-1/x.jpg",
+                    ContentType = "image/webp",
+                    ByteSize = 10,
+                },
+            };
+
+            var result = await _serializer.GetEntity(note);
+
+            Assert.True(result.Success);
+            Assert.NotNull(result.Value.PrimaryImage);
+            Assert.Equal("attachments/note-1/main.jpg", result.Value.PrimaryImage.Path);
+            Assert.Single(result.Value.Images);
+            Assert.Equal("attachments/note-1/x.jpg", result.Value.Images[0].Path);
+        }
+
+        [Fact]
+        public async Task GetNoteSerializationText_does_not_embed_attachments_in_content()
+        {
+            // The wire shape uses the underlying note's attachments
+            // column for image refs — they must NOT also appear in
+            // note.content (avoids double-storage drift).
+            var original = CreateValidAutomobile();
+            original.PrimaryImage = new Hmm.Core.Vault.VaultRef
+            {
+                Path = "attachments/note-1/photo.jpg",
+                ContentType = "image/jpeg",
+                ByteSize = 100,
+            };
+
+            var json = _serializer.GetNoteSerializationText(original);
+
+            Assert.DoesNotContain("attachments/note-1/photo.jpg", json);
+            Assert.DoesNotContain("primaryImage", json);
+        }
+
         #endregion Round-Trip Tests
 
         #region Helper Methods

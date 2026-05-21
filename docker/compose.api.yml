@@ -28,6 +28,12 @@ services:
       - "${API_HTTP_PORT}:80"
     volumes:
       - api-postgres-data:/var/lib/postgresql/data
+      # Per-author attachment vault. The bind path matches
+      # AttachmentSettings.RootDir in appsettings.Docker.json so
+      # FilesystemVaultBlobStore writes here. Declared as a named
+      # volume rather than a host bind so hmm-deploy.sh can tar
+      # it from the container side regardless of host platform.
+      - api-vault-data:/var/lib/hmm-vault
     depends_on:
       seq:
         condition: service_started
@@ -39,3 +45,4 @@ services:
 
 volumes:
   api-postgres-data:
+  api-vault-data:

@@ -18,10 +18,13 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -50,6 +53,33 @@ namespace Hmm.ServiceApi
             var appSetting = configSection.Get<AppSettings>();
             services.Configure<ApiDeprecationOptions>(Configuration.GetSection("ApiDeprecation"));
             services.AddSingleton<ApiSunsetHeaderFilter>();
+
+            // Per-IP rate limiter — generous 240/min default to
+            // catch obvious abuse without getting in the way of
+            // normal Flutter sync traffic. No auth endpoints here
+            // (the API only consumes JWTs); credential-stuffing
+            // protection lives on the IDP side.
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.GlobalLimiter = System.Threading.RateLimiting
+                    .PartitionedRateLimiter.Create<HttpContext, string>(
+                    ctx =>
+                    {
+                        var ip = ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                        return System.Threading.RateLimiting
+                            .RateLimitPartition.GetFixedWindowLimiter(
+                                ip,
+                                _ => new System.Threading.RateLimiting
+                                    .FixedWindowRateLimiterOptions
+                                {
+                                    PermitLimit = 240,
+                                    Window = System.TimeSpan.FromMinutes(1),
+                                    QueueLimit = 0,
+                                });
+                    });
+            });
+
             services.AddControllers(setupAction =>
                         {
                             setupAction.ReturnHttpNotAcceptable = true;
@@ -138,6 +168,20 @@ namespace Hmm.ServiceApi
                         opt.UseSqlServer(connectionString);
                     }
 
+                    // PendingModelChangesWarning fires when the
+                    // ModelSnapshot doesn't exactly match what the
+                    // scaffolder would emit from the live model.
+                    // Migrations in this repo are hand-written to
+                    // dodge the cross-provider drift in the
+                    // original InitialCreate (PG-scaffolded against
+                    // a SQL-Server-defaulted dev box), so minor
+                    // snapshot vs model cosmetic differences are
+                    // expected by design. Logging the event keeps
+                    // the audit trail without blocking startup
+                    // migrations.
+                    opt.ConfigureWarnings(w =>
+                        w.Log(RelationalEventId.PendingModelChangesWarning));
+
                     if (Environment.IsDevelopment())
                     {
                         opt.EnableSensitiveDataLogging();
@@ -154,12 +198,14 @@ namespace Hmm.ServiceApi
                 .AddScoped<IRepository<AuthorDao>, AuthorEfRepository>()
                 .AddScoped<IRepository<ContactDao>, ContactEfRepository>()
                 .AddScoped<IRepository<NoteCatalogDao>, NoteCatalogEfRepository>()
+                .AddScoped<IRepository<MigrationLogDao>, MigrationLogEfRepository>()
                 .AddScoped<IAuthorManager, AuthorManager>()
                 .AddScoped<IContactManager, ContactManager>()
                 .AddScoped<IHmmNoteManager, HmmNoteManager>()
                 .AddScoped<INoteCatalogManager, NoteCatalogManager>()
                 .AddScoped<ITagManager, TagManager>()
                 .AddScoped<INoteTagAssociationManager, NoteTagAssociationManager>()
+                .AddScoped<IMigrationManager, MigrationManager>()
                 // Validators registered as Transient for thread-safety:
                 // - Each validation operation gets a fresh validator instance
                 // - Prevents any potential state leakage between concurrent validations
@@ -171,6 +217,13 @@ namespace Hmm.ServiceApi
                 .AddTransient<IHmmValidator<Contact>, ContactValidator>()
                 .AddTransient<IPropertyMappingService, PropertyMappingService>()
                 .AddTransient<IPropertyCheckService, PropertyCheckService>()
+                // Vault: holds attachment bytes for the cloudApi tier.
+                // Filesystem-backed in v1; future BYOS work plugs alternate
+                // ICloudStorageProvider impls behind the same interface.
+                .Configure<Hmm.Core.Vault.AttachmentSettings>(
+                    Configuration.GetSection("AttachmentSettings"))
+                .AddSingleton<Hmm.Core.Vault.IVaultBlobStore,
+                              Hmm.Core.Vault.FilesystemVaultBlobStore>()
                 .AddAutoMapper(cfg =>
                 {
                     cfg.AddProfile<ApiMappingProfile>();
@@ -233,6 +286,22 @@ namespace Hmm.ServiceApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            // Honor Cloudflare Tunnel's X-Forwarded-* headers so
+            // Request.Scheme is "https" and Request.RemoteIpAddress
+            // is the real client IP, not the loopback adapter. MUST
+            // run before any middleware that reads Request.Scheme
+            // (HttpsRedirection, IdentityServer discovery, OIDC
+            // callbacks) — see
+            // https://learn.microsoft.com/aspnet/core/host-and-deploy/proxy-load-balancer.
+            // Default ForwardedHeadersOptions trusts loopback only,
+            // which is exactly the cloudflared-on-the-same-host
+            // shape used in production.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                    | ForwardedHeaders.XForwardedProto,
+            });
+
             app.UseExceptionHandler(_ => { });
 
             // Note: SQLite EnsureCreated + WAL mode is handled in AutomobileAppStartupFilter
@@ -247,6 +316,10 @@ namespace Hmm.ServiceApi
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseCors();
+            // Throttle BEFORE auth so abusive traffic doesn't burn
+            // JWT validation cycles. Real client IPs come from the
+            // ForwardedHeaders middleware above.
+            app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>

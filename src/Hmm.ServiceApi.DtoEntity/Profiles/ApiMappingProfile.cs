@@ -2,7 +2,9 @@
 
 using AutoMapper;
 using Hmm.Core.Map.DomainEntity;
+using Hmm.Core.Map.Migration;
 using Hmm.ServiceApi.DtoEntity.HmmNote;
+using Hmm.ServiceApi.DtoEntity.Migration;
 using Hmm.Utility.Dal.Query;
 using System;
 
@@ -61,9 +63,17 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 .ConvertUsing(new PageListConverter<Tag, ApiTag>());
 
             // Note
+            //
+            // PrimaryImage + Images are auto-mapped — same property
+            // names and same VaultRef type on both ends. AutoMapper
+            // copies the IList<VaultRef> by reference, which is fine:
+            // VaultRef is an immutable record and the caller doesn't
+            // hand the same list back to us.
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNote>()
                 .ForMember(n => n.AuthorId, opt => opt.MapFrom(s => s.Author.Id))
-                .ForMember(n => n.CatalogId, opt => opt.MapFrom(s => s.Catalog.Id));
+                .ForMember(n => n.CatalogId, opt => opt.MapFrom(s => s.Catalog.Id))
+                .ForMember(n => n.CatalogName,
+                    opt => opt.MapFrom(s => s.Catalog != null ? s.Catalog.Name : null));
 
             CreateMap<ApiNoteForCreate, Core.Map.DomainEntity.HmmNote>()
                 .ForMember(n => n.Author, opt => opt.MapFrom(s => new Author { Id = s.AuthorId }))
@@ -76,6 +86,14 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNoteForUpdate>();
             CreateMap<PageList<Core.Map.DomainEntity.HmmNote>, PageList<ApiNote>>()
                 .ConvertUsing(new PageListConverter<Core.Map.DomainEntity.HmmNote, ApiNote>());
+
+            // Migration (Phase 7)
+            CreateMap<ApiMigrationNoteRecord, MigrationNoteRecord>();
+            CreateMap<ApiMigrationEnvelope, MigrationEnvelope>();
+            CreateMap<MigrationRecordError, ApiMigrationRecordError>();
+            CreateMap<MigrationUploadResult, ApiMigrationUploadResult>();
+            CreateMap<MigrationLog, ApiMigrationLog>()
+                .ForMember(d => d.Kind, opt => opt.MapFrom(s => s.Kind.ToString()));
         }
     }
 }

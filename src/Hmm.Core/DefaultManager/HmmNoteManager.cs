@@ -7,6 +7,7 @@ using Hmm.Utility.Dal.Repository;
 using Hmm.Utility.Misc;
 using Hmm.Utility.Validation;
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -74,6 +75,36 @@ namespace Hmm.Core.DefaultManager
             return ProcessingResult<PageList<HmmNote>>.Ok(notes);
         }
 
+        public async Task<ProcessingResult<HmmNote>> GetNoteByUuidAsync(string uuid, bool includeDeleted = false)
+        {
+            if (string.IsNullOrWhiteSpace(uuid))
+            {
+                return ProcessingResult<HmmNote>.Invalid("Uuid is required.");
+            }
+
+            // Reuse the generic lookup repository's PageList query
+            // shape — Uuid is indexed unique so this is a B-tree
+            // probe even though we're going through the repository.
+            var query = PredicateBuilder.True<HmmNoteDao>();
+            query = query.And(n => n.Uuid == uuid);
+            if (!includeDeleted) query = query.And(n => !n.IsDeleted);
+
+            var page = await _noteRepository.GetEntitiesAsync(query, new ResourceCollectionParameters
+            {
+                PageSize = 1,
+            });
+            if (!page.Success)
+            {
+                return ProcessingResult<HmmNote>.Fail(page.ErrorMessage, page.ErrorType);
+            }
+            var dao = page.Value?.FirstOrDefault();
+            if (dao == null)
+            {
+                return ProcessingResult<HmmNote>.NotFound($"Note with Uuid {uuid} not found");
+            }
+            return _mapper.MapWithNullCheck<HmmNoteDao, HmmNote>(dao);
+        }
+
         public async Task<ProcessingResult<HmmNote>> GetNoteByIdAsync(int id, bool includeDelete = false)
         {
             var noteDaoResult = await _lookup.GetEntityAsync<HmmNoteDao>(id);
@@ -100,6 +131,16 @@ namespace Hmm.Core.DefaultManager
                 if (!validationResult.Success)
                 {
                     return ProcessingResult<HmmNote>.Invalid(validationResult.GetWholeMessage());
+                }
+
+                // Phase 15b: ensure every row gets a cross-device-stable
+                // Uuid. Sync clients pass their own; legacy callers
+                // omit it and the server assigns. We use Guid format
+                // (8-4-4-4-12) verbatim — matches the Dart `uuid`
+                // package's default v4 output.
+                if (string.IsNullOrWhiteSpace(note.Uuid))
+                {
+                    note.Uuid = Guid.NewGuid().ToString();
                 }
 
                 note.CreateDate = _dateProvider.UtcNow;
@@ -140,6 +181,15 @@ namespace Hmm.Core.DefaultManager
                 if (!validationResult.Success)
                 {
                     return ProcessingResult<HmmNote>.Invalid(validationResult.GetWholeMessage());
+                }
+
+                // Backfill on the first update of a legacy
+                // (pre-Phase-15b) row so the Uuid eventually
+                // populates across the table without a separate
+                // migration pass.
+                if (string.IsNullOrWhiteSpace(note.Uuid))
+                {
+                    note.Uuid = Guid.NewGuid().ToString();
                 }
 
                 var noteDaoResult = _mapper.MapWithNullCheck<HmmNote, HmmNoteDao>(note, $"Cannot convert note {note.Subject} to NoteDao");

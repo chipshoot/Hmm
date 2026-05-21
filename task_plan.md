@@ -81,14 +81,16 @@ Later-phase (Phase 16+ concerns, parked):
       so non-vault refs only get created in `local`/`cloudStorage`
       modes (Phase 18 must land before Phases 16–17 reach paid users)
 
-### Phase 3: Shared specs
-- [ ] Spec the relative-path rules (POSIX separators, no `..`, no
-      leading `/`, allowed chars)
-- [ ] Spec the `AttachmentRef` tagged-union JSON schema + the
-      `NoteAttachments` wrapper schema (`{primaryImage, images}`,
-      `byteSize` nullable)
-- [ ] Path utility implemented as a pure function on each side with
-      unit tests
+### Phase 3: Shared specs — DONE 2026-05-13
+- [x] `docs/attachments-path-spec.md` — POSIX-only, no `..`, ASCII-
+      only allowed-char set, Windows-reserved names rejected,
+      verbatim test-vector tables; both sides implement to this.
+- [x] `src/Hmm.Core/Schemas/NoteAttachments.schema.json` — embedded
+      resource on `Hmm.Core`; covers the `{primaryImage, images}`
+      wrapper + the vault/phasset/cloudFile tagged-union refs;
+      `byteSize` nullable for non-vault kinds.
+- [x] Dart `vaultRelativePathJoin` / `vaultRelativePathValidate` in
+      `lib/core/data/vault/vault_path.dart`; 36 tests pass.
 
 ### Phase 4: .NET vault store (`Hmm.Core.Vault` — new project)
 - [ ] New `Hmm.Core.Vault` project; `IVaultBlobStore` interface
@@ -122,70 +124,201 @@ Later-phase (Phase 16+ concerns, parked):
       filters pass them through
 - [ ] Tests: column round-trip, schema rejection, DTO mapping
 
-### Phase 7: .NET migration endpoints integration
-- [ ] Extend `POST /v1/migration/upload` to accept vault bytes
-- [ ] Extend `GET /v1/migration/export` to stream the vault as a
-      zip alongside the record JSON (incl. the `attachments` column)
-- [ ] Extend `POST /v1/migration/replace` to wipe the vault on the
-      server before re-upload
-- [ ] Update `MigrationLog.RecordCounts` → `vaultFiles`,
-      `vaultBytes`, `resolvedPhAssets`, `resolvedCloudFiles`,
-      `unresolvedRefs`
+### Phase 7: .NET migration endpoints integration — DONE 2026-05-18
+- [x] `POST /v1/migration/upload` (built greenfield — accepts vault
+      bytes via multipart/form-data: one `manifest` JSON field +
+      one `IFormFile` per blob; form-field name = vault relative
+      path)
+- [x] `GET /v1/migration/export` streams a zip — `records.json` at
+      the root + every vault file at its full
+      `attachments/note-N/...` path
+- [x] `POST /v1/migration/replace` wipes vault + hard-deletes the
+      author's notes (FK cascade clears NoteTagRefs), then runs
+      the upload flow with `Kind=CloudReplaced`
+- [x] `MigrationLog.RecordCounts` carries `{ notes, notesFailed,
+      vaultFiles, vaultBytes, ...clientCounts }`. Client-supplied
+      counters (`resolvedPhAssets`, `resolvedCloudFiles`,
+      `unresolvedRefs`) are preserved verbatim; server-computed
+      keys win on collision.
+- [x] `GET /v1/migration/log?take=N` for audit replay
+- [x] Subscription gating deferred (same place as
+      `NoteVaultController` — picks up the future
+      `RequireActiveSubscriptionAttribute`)
+- [x] Devices entity not yet built; `MigrationLog.DeviceIdentifier`
+      is a string column (max 80 chars). When `Devices` lands as
+      part of cloud-sync work, widen into a FK + backfill.
+- [x] 18 new tests: 9 manager (upload happy + 4 per-record/blob
+      error paths + log row + Replace wipe + Export zip + GetLog),
+      9 controller (auth, manifest parsing, dispatch, zip return,
+      DTO mapping)
 
-### Phase 8: .NET deploy + backup integration
-- [ ] Add `/var/lib/hmm-vault` Docker volume to `compose.api.yml`
-- [ ] Extend `docker/hmm-deploy.sh --backup` to tar the vault
-- [ ] Document restore order (pg first, then vault) in the script's
-      help
+### Phase 8: .NET deploy + backup integration — DONE 2026-05-18
+- [x] `api-vault-data` named volume in `compose.api.yml`, mounted
+      at `/var/lib/hmm-vault` on `hmm-api`. Matches
+      `AttachmentSettings.RootDir` in `appsettings.Docker.json`.
+- [x] `hmm-deploy.sh --backup` adds a `hmm-vault-<ts>.tar.gz` next
+      to the two pg dumps. The tar runs inside the container
+      (`docker exec hmm-api tar -C /var/lib/hmm-vault -czf -`) so
+      paths inside the archive are relative + the host platform
+      doesn't matter.
+- [x] `--help` text spells out the restore order — Postgres dumps
+      first, then the vault tarball. DB rows in `Notes.attachments`
+      reference vault paths, so byte-recovery without DB rows is
+      orphan bytes; DB without bytes is placeholder UI.
 
-### Phase 9: Flutter — `AttachmentRef` + codec
-- [ ] `AttachmentRef` sealed class in `lib/core/data/attachments/`
+### Phase 9: Flutter — `AttachmentRef` + codec — DONE 2026-05-13
+- [x] `AttachmentRef` sealed class in `lib/core/data/attachments/`
       (`VaultRef` / `PhAssetRef` / `CloudFileRef`)
-- [ ] `AttachmentRef` JSON codec + the `NoteAttachments` wrapper
-      codec (`{primaryImage, images}`, disjoint slots)
-- [ ] Unit tests for the codec round-trip + rejection of bad input
+- [x] `AttachmentRefCodec` + `NoteAttachmentsCodec` (the
+      `{primaryImage, images}` wrapper, disjoint slots)
+- [x] 28 codec tests pass
 
-### Phase 10: Flutter — vault store
-- [ ] `IVaultStore` interface in `lib/core/data/vault/`
-- [ ] `LocalVaultStore` (path_provider + dart:io)
-- [ ] In-memory cache wrapper for repeat reads
-- [ ] Unit tests against a tmp-dir fake
+### Phase 10: Flutter — vault store — DONE 2026-05-13
+- [x] `IVaultStore` interface in `lib/core/data/vault/`
+- [x] `LocalVaultStore` (path_provider + dart:io); atomic
+      put-then-rename writes
+- [ ] In-memory cache wrapper for repeat reads — deferred to a
+      perf-needs-it phase
+- [x] 17 tests against a tmp-dir pass
 
-### Phase 11: Flutter — `Notes.attachments` column + `HmmNote` model
-- [ ] New nullable `attachments` text column on the Drift `Notes`
-      table + Drift migration
-- [ ] `HmmNote` model gains `AttachmentRef? primaryImage` +
-      `List<AttachmentRef> images`; `LocalNoteRepository`
+### Phase 11: Flutter — `Notes.attachments` column + `HmmNote` model — DONE 2026-05-13
+- [x] New nullable `attachments` text column on the Drift `Notes`
+      table + Drift migration (v3 → v4)
+- [x] `HmmNote` model gains nullable `NoteAttachments? attachments`
+      + `effectiveAttachments` getter; `LocalHmmNoteRepository`
       round-trips the column via the codec
-- [ ] Remove the old `Attachments` Drift table,
-      `IAttachmentRepository`, `local_attachment_repository.dart`,
-      `attachmentRepositoryProvider` (unused — column replaces them)
-- [ ] Tests: note round-trip with/without attachments
+- [x] Remove the truly-unused `IAttachmentRepository`,
+      `LocalAttachmentRepository`, `attachmentRepositoryProvider`
+- [ ] **Phase 11.5 (deferred)**: Drift `Attachments` child table
+      stays in place — `SyncOrchestrator` still uses it; once the
+      sync layer is rewired to the vault + the new `attachments`
+      column, drop the table.
+- [x] 7 repository round-trip tests pass; full suite (379) clean
 
-### Phase 12: Flutter — `Automobile` read-through projection
-- [ ] Surface read-through `primaryImage` / `images` on the
-      `Automobile` entity (projected from the owning note)
-- [ ] `LocalAutomobileRepository` writes them to the note's
-      `attachments` column on save (alongside serialized content)
-- [ ] Tests: edit a car → attachments persist on its note
+### Phase 12: Flutter — `Automobile` read-through projection — DONE 2026-05-13
+- [x] `Automobile` gains `AttachmentRef? primaryImage` +
+      `List<AttachmentRef> images` (default null / `[]`)
+- [x] `LocalAutomobileRepository._deserialize` reads them from the
+      owning note's `attachments` column; `_serialize` does NOT
+      include them in the JSON content payload.
+- [x] `createAutomobile` / `updateAutomobile` pass
+      `_attachmentsFor(auto)` through `HmmNoteCreate/Update`; a car
+      with no photos clears the column.
+- [x] 6 tests pass.
 
-### Phase 13: Flutter — picker plumbing (vault-only v1)
-- [ ] Add `image_picker` to `pubspec.yaml`
-- [ ] Picker → `AttachmentRef` decision logic; v1 emits `VaultRef`
-      only (bytes always copied into the vault for safety)
-- [ ] "Make a permanent copy" toggle stub (forces `VaultRef`)
+### Phase 12.5: cloudApi-tier Automobile persistence — DONE 2026-05-19
+Surfaced when the cloudApi tier was exercised end-to-end on the
+sim and "fail to load vehicle" / "photo doesn't survive refresh"
+showed up. Phase 12 had only built the Flutter-local side of the
+read-through projection; the corresponding server-side plumbing
+plus a latent overlay bug stayed hidden as long as nobody ran the
+cloudApi tier.
 
-### Phase 14: Flutter — viewer + vehicle screen UI ← first visible feature
-- [ ] `VaultResolver` (renders `VaultRef`)
-- [ ] `AttachmentImage` widget — shimmer while loading, placeholder
-      + Replace button on resolution failure
-- [ ] Image picker + viewer (thumbnail + tap-to-fullscreen) on the
-      `AutomobileEditScreen` as a new card above the identity card
+- [x] **Server-side Automobile attachment plumbing**
+      (`chipshoot/Hmm` 9dfadd3): `AutomobileInfo.PrimaryImage` /
+      `Images`; `ApiAutomobile` + `ApiAutomobileForCreate` +
+      `ApiAutomobileForUpdate` carry them; mapper handles
+      same-named members; `AutomobileJsonNoteSerialize.GetNote`
+      copies them onto the underlying `HmmNote`'s `PrimaryImage` /
+      `Images` (not into `note.content`, so the Phase 6b codec
+      stores them in the dedicated `attachments` JSON column with
+      no double-storage); `GetEntity` reads them back.
+- [x] **`AutomobileManager.UpdateAsync` overlay completeness fix**
+      (`chipshoot/Hmm` 9dfadd3): the old lambda copied 7 of 30+
+      fields, silently dropping Notes text, VIN, Trim, fuel info,
+      registration / insurance, service dates, and the new photo
+      refs on every cloudApi-tier save. Pre-existing, masked by
+      the Drift-row overlay on local-mode saves. Now copies every
+      user-mutable field; system fields (Id, AuthorId,
+      CreatedDate) still come from the persisted entity. Pinned
+      down by 4 new tests so the regression can't sneak back in.
+- [x] **VaultRef `kind` discriminator on the wire**
+      (`chipshoot/Hmm` 8f10872): the `.NET` `VaultRef` record had
+      no `Kind` property, so System.Text.Json's default output on
+      `ApiNote`/`ApiAutomobile`/`ApiMigration*` shipped JSON
+      without the `kind: "vault"` field that Flutter's
+      `AttachmentRefCodec.fromJson` requires to discriminate the
+      tagged union. Surfaced as a generic "fail to load vehicle"
+      toast because the deserialiser threw a `FormatException`.
+      Fix: get-only `Kind => "vault"` constant on the record.
+      Internal codec (`NoteAttachmentsCodec`) was already writing
+      it manually, so the change just brings the API-DTO wire path
+      into line.
+- [x] **Flutter wire model carries primaryImage / images**
+      (`chipshoot/hmm_console` 9215c61): `ApiAutomobile`,
+      `ApiAutomobileForCreate`, `ApiAutomobileForUpdate` plus the
+      `GasLogApiMapper` round-trip the refs over the wire. Update
+      DTO always emits both keys (null + empty) so the server
+      treats absence as "no attachments" rather than "leave
+      as-is" — matters for the remove-photo flow.
+- [x] **Tests + verified on iOS simulator** (2026-05-19): +7
+      server-side (3 serializer round-trip, 4 manager overlay
+      pinning), +5 Flutter (mapper + JSON round-trip). Full suite:
+      .NET 1,840 / Flutter 471. User confirmed end-to-end on the
+      iPhone 17 Pro sim — photo saves, persists after refresh.
 
-### Phase 15: Flutter — API vault store + mode-aware provider
-- [ ] `ApiVaultStore` (Dio-backed `/v1/vault/{path}`)
-- [ ] Mode-aware `vaultStoreProvider` in `repository_providers.dart`
-      keyed off `dataModeProvider`
+### Phase 13: Flutter — picker plumbing (vault-only v1) — DONE 2026-05-13
+- [x] `image_picker ^1.1.2` added.
+- [x] `VaultImageAttachmentPicker` — `pickForNote(noteId, source)`
+      returns a `VaultRef` after copying bytes into the vault; pure
+      `persistToVault(...)` helper for headless callers/tests.
+- [x] Validates MIME against allow-list (jpeg/png/heic/webp);
+      rejects empty / oversized files; resolves content-type from
+      hint or extension (hint loses for vague values like
+      `image/*`).
+- [x] 8 tests pass.
+
+### Phase 14: Flutter — viewer + vehicle screen UI — DONE 2026-05-16
+- [x] **Data layer (2026-05-13)**: `VaultResolver` +
+      `CompositeAttachmentResolver` + `AttachmentImage` widget +
+      `attachment_providers.dart` (mode-aware vault root, vault
+      store, resolver, picker). 9 tests pass.
+- [x] **Screen integration (2026-05-16)**: Photo `EditableInfoCard`
+      added above the identity card on `AutomobileEditScreen`.
+      Display mode = 96×96 thumbnail (tap → fullscreen
+      `InteractiveViewer` dialog) or "No photo" italics. Editor mode
+      = 120×120 pending preview + "Choose photo / Replace / Remove"
+      buttons + busy spinner during picker async. Pending state on
+      the screen; `_cloneWith` gained a sentinel-guarded
+      `primaryImage` so a real null (Remove) round-trips. Save uses
+      the existing `_persist` path.
+- [x] `ios/Runner/Info.plist`:
+      `NSPhotoLibraryUsageDescription` added so `image_picker`
+      doesn't hard-abort the first time it's invoked on iOS.
+- [ ] **Known limitation (deferred)**: picker writes bytes to the
+      vault on every successful pick, so cancel-after-pick or
+      replace-after-pick leaves orphaned vault files. A GC sweep
+      (compare every `Notes.attachments` ref against the on-disk
+      vault listing, delete stragglers) will reclaim them in a
+      future phase.
+- [x] flutter analyze clean; full suite 402 tests pass.
+
+### Phase 15: Flutter — API vault store + mode-aware provider — DONE 2026-05-18
+- [x] **15a — vault**: `ApiVaultStore` (Dio-backed against the
+      nested `/v1/notes/{noteId}/vault/{filename}` route the .NET
+      side actually ships); `vaultStoreProvider` branches on
+      `dataModeProvider` so cloudApi swaps the on-disk root for
+      direct HTTP. Single-file `list(prefix)` falls back to HEAD;
+      empty-prefix throws UnimplementedError until the cross-note
+      `/v1/migration/manifest` endpoint lands.
+- [x] **15b — sync provider**: real `ApiSyncProvider` replacing
+      the Phase 11.5 stub.
+  - Server-side prerequisites: `HmmNoteDao.Uuid` (string?, unique
+    index, EF migration); auto-assigned by the manager on
+    Create/Update; new `GET /v1/notes/by-uuid/{uuid}`; `?includeDeleted`
+    on the collection endpoint so tombstones propagate;
+    `ApiNote.CatalogName` exposed for catalog matching by name.
+  - Flutter provider: paginated `pullManifest` (reads
+    `X-Pagination`); `pullNoteBody` via by-uuid translates ApiNote
+    → orchestrator body; `pushNoteBody` does an existence probe
+    then POST / PUT / DELETE (deletedAt → DELETE; tombstone for a
+    server-side-missing note is a no-op); `pushManifest` is an
+    intentional no-op (server-side rows ARE the manifest);
+    `signIn`/`signOut` defer to the app's IdP login flow.
+- [x] Tests: 18 ApiSyncProvider cases (auth, paginated pull,
+      pull body translation, push CRUD branches, catalog-name
+      lookup error). Server side: +11 (Uuid manager + by-uuid
+      controller + includeDeleted).
 
 ### Phase 16: Flutter — `PhAssetResolver` (iOS)
 - [ ] `PhAssetResolver` via `photo_manager`; iOS-only, null
@@ -254,4 +387,87 @@ the photo's still there.
 **Blocker**: `~/Projects/hmm_console` must be added as a working
 directory before any Dart edits.
 
-## Status: PHASE 2 COMPLETE, gate cleared (2026-05-11); design doc revised for the attachments-on-`HmmNote` model. Next: Flutter local-mode slice (Phase 3 first) — blocked on adding the `hmm_console` working directory.
+## Backlog (deferred feature work)
+
+These are user-requested enhancements outside the current
+attachments scope. Pick up after the attachments feature is
+finished on both tiers (local/cloudStorage AND cloudApi).
+
+### Registration card expansion (logged 2026-05-17)
+The `AutomobileEditScreen` Registration card currently captures
+only `registrationExpiryDate` (one field for renewal reminders).
+Insurance has provider + policy number + expiry; Registration is
+asymmetrically thin. Expand to capture a real vehicle registration
+document.
+
+Field menu (MVP = first two):
+- `registrationNumber` — document/permit ID (proof of ownership).
+- `registrationJurisdiction` — state / province / country.
+- `registrationIssuedDate` — pair with expiry to compute renewal
+  cycle.
+- `registrationLastRenewalFee` — Money type; budget tracking.
+- (later) `registrationOwnerName`, `registrationClass`.
+
+Implementation also requires .NET-side changes
+(`AutomobileInfo.schema.json` + DTOs + AutoMapper) when that scope
+re-opens. While we're there, consider expanding Insurance similarly
+(coverage limits, deductible, insurance-card photo via the
+attachments facility) so the two cards stay symmetric.
+
+Details in project memory:
+`~/.claude/projects/.../memory/registration-card-expansion.md`.
+
+## Active scope (user, 2026-05-18 — superseded the 2026-05-15 boundary)
+
+**Local + cloudStorage tier work is complete; user signed off
+2026-05-18. The `Hmm.ServiceApi`-side work is now the active
+scope.** Phases 4 → 5 → 6 → 7 → 8 → 15 in order. Phase 11.5
+(SyncOrchestrator rewire + dropped old `Attachments` Drift table)
+already landed 2026-05-17.
+
+In scope:
+- Phase 4 (.NET `Hmm.Core.Vault`) — **starting now**
+- Phase 5 (.NET `VaultController` + image downsize)
+- Phase 6 (.NET `Notes.attachments` column + DTOs)
+- Phase 7 (.NET migration endpoints)
+- Phase 8 (.NET deploy + backup)
+- Phase 15 (Flutter `ApiVaultStore` + real `ApiSyncProvider`)
+
+Loose ends on the local/cloudStorage tier — not blocking, can
+land alongside or after:
+- Vault orphan GC (Replace / Remove leave bytes on disk)
+- Phase 19 — iOS `UIFileSharingEnabled` plist flags
+- Real-world cloudStorage multi-device validation by the user
+  (two macOS machines + shared OneDrive folder)
+
+Still parked (not part of cloudApi tier):
+- Phase 16 — `PhAssetResolver` (iOS smart refs)
+- Phase 17 — `CloudFileResolver` (desktop smart refs)
+- Phase 18 — Free → Paid migration extension
+
+## Status: local + cloudStorage tiers complete (2026-05-18, user signed off). Tests: 431 pass on Flutter 3.41.9. **Now starting the API-side work — Phase 4 (`Hmm.Core.Vault` project).**
+
+### Phase 11.5 — DONE 2026-05-17
+- [x] SyncOrchestrator stops touching attachment bytes; pull/push is
+      notes-only. Attachment refs ride inside `note.content` /
+      `note.attachments` and travel with the note body. Old
+      attachment manifest entries are tolerated on read (parsed but
+      ignored); new manifests always write `attachments: []`.
+- [x] Schema v4 → v5 migration drops the legacy `Attachments` Drift
+      table. Older migrations rewritten to raw SQL so the migrator
+      no longer needs the typed `Attachments` reference; the class
+      itself is gone. `database.g.dart` regenerated.
+- [x] `CloudSyncProvider.pullAttachmentBytes` /
+      `pushAttachmentBytes` removed from the interface + both impls
+      (ApiSyncProvider stub, OneDriveSyncProvider). `OneDriveGraphClient`
+      attachment helpers (getAttachment/putAttachment/deleteAttachment)
+      removed. `AttachmentBlob` removed from `sync_models.dart`.
+- [x] **Cloud-root detection** (in scope with 11.5): user-configurable
+      vault folder via Settings (FilePicker → SharedPreferences key
+      `cloud_storage_vault_path`); `vaultRootDirectoryProvider`
+      honors the configured path in `cloudStorage` mode on non-iOS;
+      iOS falls back to `<app docs>/vault/` per the user decision.
+      Settings UI shows the current path + Choose Folder / Reset
+      buttons under cloudStorage mode (hidden on iOS).
+- [x] 5 new unit tests for the persistence helpers; 422→427 in the
+      full suite.
