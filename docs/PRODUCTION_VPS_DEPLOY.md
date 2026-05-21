@@ -2,32 +2,29 @@
 
 Local-laptop Docker deploy (Cloudflare Tunnel + Docker compose) is
 covered by `DEPLOYMENT_GUIDE.md`. **This** doc covers the
-production target: a Linux VPS running each .NET service as a
-systemd unit, with system-package Postgres and Cloudflare Tunnel
-in front for TLS.
+production target: an Oracle Cloud Ubuntu VPS running each .NET
+service as a systemd unit, with system-package Postgres and Caddy
+as a TLS-terminating reverse proxy (auto Let's Encrypt).
 
 ## Architecture
 
 ```
 Flutter / browser
         |
-   HTTPS (TLS terminated at Cloudflare)
+   HTTPS (TLS terminated at Caddy via Let's Encrypt)
         |
-  Cloudflare Edge
-        |
-  Encrypted tunnel
-        |
-  cloudflared (systemd) on the VPS
+  Caddy (systemd, ports 80/443)
         |
   127.0.0.1:8080  hmm-idp.service        ─┐
-  127.0.0.1:5010  hmm-api.service        ─┤  Local-only listeners
-  127.0.0.1:5432  postgresql.service     ─┘  (cloudflared bridges them)
+  127.0.0.1:8081  hmm-api.service        ─┤  Loopback-only listeners
+  127.0.0.1:5432  postgresql.service     ─┘  (Caddy reverse-proxies)
         |
-  /opt/hmm-{idp,api}      app binaries
-  /var/log/hmm-{idp,api}  rolling logs
-  /var/lib/hmm-{idp,api}  DP keys, vault, SQLite fallback
-  /etc/hmm-{idp,api}      env files (mode 0640)
-  /var/backups/hmm        nightly archives
+  /opt/hmm-{idp,api}        app binaries
+  /var/log/hmm-{idp,api}    rolling JSON logs
+  /var/lib/hmm-idp/dp-keys  DataProtection keyring
+  /var/lib/hmm-api-data     SQLite fallback / staging
+  /etc/hmm-{idp,api}        env files (mode 0640)
+  /var/backups/hmm          nightly archives
 ```
 
 The Docker compose tree under `docker/` is dev-only and not used
@@ -85,20 +82,41 @@ Nothing in the codebase falls back to a public default credential
 — missing-env-var deploys fail loudly rather than silently
 opening a default admin.
 
-## Cloudflare Tunnel
+## Caddy (TLS + reverse proxy)
 
-cloudflared runs as its own systemd service (`cloudflared.service`,
-not provisioned by these scripts — see Cloudflare's own setup).
-Configure it to route:
+Installed and configured by `setup-idp-vps.sh` (the API script
+appends its own site block). The Caddyfile at
+`/etc/caddy/Caddyfile` looks like:
 
 ```
-hostname: idp.example.com   service: http://127.0.0.1:8080
-hostname: api.example.com   service: http://127.0.0.1:5010
+idp.homemademessage.com {
+    encode gzip zstd
+    reverse_proxy 127.0.0.1:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+    log { output file /var/log/caddy/idp-access.log { roll_size 10mb roll_keep 5 } }
+}
+
+api.homemademessage.com {
+    encode gzip zstd
+    reverse_proxy 127.0.0.1:8081 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+    log { output file /var/log/caddy/api-access.log { roll_size 10mb roll_keep 5 } }
+}
 ```
 
-The IDP and API listen on loopback only. `app.UseForwardedHeaders()`
-in both services trusts the loopback proxy (cloudflared) by
-default — see `Startup.cs` / `HostingExtensions.cs`.
+Caddy fetches a Let's Encrypt cert on first request for each
+hostname — DNS must already resolve to the VPS before the first
+443 hit, otherwise Let's Encrypt's HTTP-01 challenge fails.
+Caddy retries on subsequent requests if DNS isn't ready yet.
+
+The IDP and API listen on loopback only.
+`app.UseForwardedHeaders()` in both services trusts loopback by
+default — exactly the Caddy-on-the-same-host topology. See
+`Startup.cs` / `HostingExtensions.cs`.
 
 ## Day-2 operations
 
@@ -150,4 +168,4 @@ Phase: pre-production hardening (commit anchor `<TBD>`).
 - **`Devices` entity** — `MigrationLog.DeviceIdentifier` is a free-form string; multi-device audit is approximate
 - **CI/CD** — `git pull && systemctl restart` is fine for a one-box deploy; if/when you want a pipeline, see GitHub Actions
 - **Off-box log shipping** — local journald + 14-day file archive is enough for one VPS; Loki/Better Stack when you want dashboards or multi-host correlation
-- **HTTPS at the app** — Cloudflare Tunnel terminates TLS; the app sees plain HTTP from `127.0.0.1`. If you ever move off CF Tunnel, you'll need Kestrel HTTPS configured or a local reverse proxy (Caddy, nginx)
+- **HTTPS at the app** — Caddy terminates TLS; the app sees plain HTTP from `127.0.0.1`. If you ever move off Caddy (e.g. to Cloudflare Tunnel or nginx), make sure the replacement still trusts loopback as a proxy and forwards `X-Forwarded-Proto` / `-Host`, otherwise the IDP discovery doc will start advertising `http://` again.
