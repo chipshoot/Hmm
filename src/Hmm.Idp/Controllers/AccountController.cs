@@ -5,6 +5,7 @@ using Hmm.Idp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
 namespace Hmm.Idp.Controllers;
 
@@ -15,6 +16,7 @@ public class AccountController : ControllerBase
     private readonly IApplicationUserRepository _userRepository;
     private readonly PasswordPolicyService _passwordPolicyService;
     private readonly IEmailService _emailService;
+    private readonly EmailSettings _emailSettings;
     private readonly ILogger<AccountController> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -26,12 +28,40 @@ public class AccountController : ControllerBase
         IApplicationUserRepository userRepository,
         PasswordPolicyService passwordPolicyService,
         IEmailService emailService,
+        IOptions<EmailSettings> emailSettings,
         ILogger<AccountController> logger)
     {
         _userRepository = userRepository;
         _passwordPolicyService = passwordPolicyService;
         _emailService = emailService;
+        _emailSettings = emailSettings.Value;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Base URL (scheme + host[:port], no trailing slash) used for callback
+    /// links in outbound verification / reset emails.
+    /// <para>
+    /// Prefers <c>EmailSettings.ApplicationUrl</c> when it is configured
+    /// (set by <c>appsettings.Docker.json</c> in dev, by
+    /// <c>scripts/setup-idp-vps.sh</c> in production), and falls back to
+    /// the inbound request's scheme + host otherwise. The fallback exists
+    /// so a misconfigured deploy still produces a clickable link, but the
+    /// configured value wins because the inbound host can be unrelated to
+    /// what the email recipient will be able to reach — e.g. an Android
+    /// emulator POSTs from <c>10.0.2.2:5001</c> (a loopback-to-host alias
+    /// that only the emulator can resolve), so an email link baked from
+    /// that host is unclickable from anywhere else.
+    /// </para>
+    /// </summary>
+    private string GetCallbackBase()
+    {
+        var configured = _emailSettings.ApplicationUrl;
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.TrimEnd('/');
+        }
+        return $"{Request.Scheme}://{Request.Host}";
     }
 
     [AllowAnonymous]
@@ -115,23 +145,20 @@ public class AccountController : ControllerBase
 
             // Generate a real Identity-issued token, base64url-encode it so
             // '+'/'/'/'=' survive the URL round-trip, and build the callback
-            // off the current request scheme/host so dev (localhost), staging,
-            // and prod (idp.homemademessage.com) all work without keeping
-            // EmailSettings.ApplicationUrl in sync with IssuerUri.
+            // off the configured ApplicationUrl (see GetCallbackBase for
+            // why config wins over Request.Host).
             var rawToken = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(rawToken));
 
-            // Hand-build the verification link off the current request scheme +
-            // host so dev (localhost), staging, and prod all work without
-            // depending on EmailSettings.ApplicationUrl. We don't use
-            // Url.Page() here because that requires IUrlHelper plumbing that
-            // is awkward to mock in controller unit tests, and the path is
-            // fixed by Pages/Account/ConfirmEmail.cshtml's route convention.
+            // We don't use Url.Page() here because that requires IUrlHelper
+            // plumbing that is awkward to mock in controller unit tests, and
+            // the path is fixed by Pages/Account/ConfirmEmail.cshtml's route
+            // convention.
             //
             // source=mobile tells the ConfirmEmail page to suppress the
             // "Sign in" CTA — mobile users should switch back to the
             // installed app, not log into a web page.
-            var callbackUrl = $"{Request.Scheme}://{Request.Host}/Account/ConfirmEmail" +
+            var callbackUrl = $"{GetCallbackBase()}/Account/ConfirmEmail" +
                               $"?userId={Uri.EscapeDataString(user.Id)}" +
                               $"&token={Uri.EscapeDataString(encodedToken)}" +
                               "&source=mobile";
@@ -211,7 +238,7 @@ public class AccountController : ControllerBase
                     // This endpoint is hit by the Flutter app's "Resend email"
                     // SnackBarAction — preserve source=mobile so the
                     // ConfirmEmail page hides the web Sign In CTA.
-                    var callbackUrl = $"{Request.Scheme}://{Request.Host}/Account/ConfirmEmail" +
+                    var callbackUrl = $"{GetCallbackBase()}/Account/ConfirmEmail" +
                                       $"?userId={Uri.EscapeDataString(user.Id)}" +
                                       $"&token={Uri.EscapeDataString(encodedToken)}" +
                                       "&source=mobile";

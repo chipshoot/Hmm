@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Hmm.Idp.Tests;
@@ -34,12 +35,20 @@ public class AccountControllerTests
         });
     }
 
-    private AccountController CreateController(string? jsonBody = null)
+    private AccountController CreateController(
+        string? jsonBody = null,
+        EmailSettings? emailSettings = null)
     {
+        // Default to no ApplicationUrl so existing tests exercise the
+        // Request.Scheme://Request.Host fallback branch (which is what
+        // they were originally asserting against). Tests that want to
+        // verify the configured-URL path pass their own EmailSettings.
+        var settings = emailSettings ?? new EmailSettings();
         var controller = new AccountController(
             _mockUserRepository.Object,
             _passwordPolicyService,
             _mockEmailService.Object,
+            Options.Create(settings),
             _mockLogger.Object);
 
         var httpContext = new DefaultHttpContext();
