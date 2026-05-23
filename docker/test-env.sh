@@ -18,11 +18,21 @@
 #   - bob                  / Bob@123456789#      (User)
 #
 # Usage:
-#   ./test-env.sh              Start environment + smoke tests
-#   ./test-env.sh --down       Stop and remove containers
-#   ./test-env.sh --rebuild    Force rebuild images (no cache)
-#   ./test-env.sh --skip-tests Start without running smoke tests
-#   ./test-env.sh --reset-db   Delete databases and restart fresh
+#   ./test-env.sh                  Start environment + smoke tests
+#   ./test-env.sh --down           Stop and remove containers
+#   ./test-env.sh --rebuild        Force rebuild images (no cache)
+#   ./test-env.sh --skip-tests     Start without running smoke tests
+#   ./test-env.sh --reset-db       Hard reset — delete the Postgres volumes
+#                                   entirely (also wipes DataProtection keys,
+#                                   vault attachments, Seq logs)
+#   ./test-env.sh --refresh-test-db Soft reset — TRUNCATE all data tables in
+#                                   HmmIdp + HmmNotes and restart hmm-idp /
+#                                   hmm-api so their seed services re-insert
+#                                   the seed users (admin, testuser, alice,
+#                                   bob, serviceapi). Preserves Seq, Mailpit,
+#                                   DataProtection keys, vault attachments,
+#                                   and EF migration history. Containers
+#                                   must already be up.
 
 set -euo pipefail
 
@@ -56,20 +66,24 @@ ACTION="up"
 REBUILD=false
 SKIP_TESTS=false
 RESET_DB=false
+REFRESH_TEST_DB=false
+
+USAGE="Usage: $0 [--down] [--rebuild] [--skip-tests] [--reset-db] [--refresh-test-db]"
 
 for arg in "$@"; do
     case "$arg" in
-        --down|-d)       ACTION="down" ;;
-        --rebuild|-r)    REBUILD=true ;;
-        --skip-tests|-s) SKIP_TESTS=true ;;
-        --reset-db)      RESET_DB=true ;;
+        --down|-d)            ACTION="down" ;;
+        --rebuild|-r)         REBUILD=true ;;
+        --skip-tests|-s)      SKIP_TESTS=true ;;
+        --reset-db)           RESET_DB=true ;;
+        --refresh-test-db)    REFRESH_TEST_DB=true ;;
         --help|-h)
-            echo "Usage: $0 [--down] [--rebuild] [--skip-tests] [--reset-db]"
+            echo "$USAGE"
             exit 0
             ;;
         *)
             echo "Unknown option: $arg"
-            echo "Usage: $0 [--down] [--rebuild] [--skip-tests] [--reset-db]"
+            echo "$USAGE"
             exit 1
             ;;
     esac
@@ -122,6 +136,111 @@ if [ "$ACTION" = "down" ]; then
     if [ -d "$DATA_DIR" ]; then
         info "Legacy host data dir still exists at $DATA_DIR — safe to delete."
     fi
+    exit 0
+fi
+
+# ── Handle --refresh-test-db ──────────────────────────────────────────
+# Soft reset: TRUNCATE all data tables inside the running hmm-idp +
+# hmm-api Postgres instances, then restart those two containers so their
+# seed services (SeedDataService in the IDP, EF migrations in the API)
+# re-create the seed users + reference data. Faster than --reset-db and
+# scoped: Seq, Mailpit, DataProtection keys, vault attachments, and any
+# other named volume are left untouched.
+#
+# The DO-block iterates over every table in the public schema except EF
+# migration tracking, so new tables added later are picked up
+# automatically — no need to update this script when the schema grows.
+if [ "$REFRESH_TEST_DB" = true ]; then
+    banner "Refresh test database"
+
+    # Both containers must be running — we operate via docker exec on the
+    # live Postgres processes. If they're down, point the user at the
+    # right command instead of silently doing nothing.
+    for c in hmm-idp hmm-api; do
+        if ! docker ps --format '{{.Names}}' | grep -q "^${c}$"; then
+            fail "$c is not running — start the stack first ('./test-env.sh')"
+            info "If you want a hard reset that drops volumes too, use --reset-db."
+            exit 1
+        fi
+    done
+
+    # Single SQL fragment used against both DBs. quote_ident() handles the
+    # PascalCase table names (AspNetUsers, etc.) that need double-quoting
+    # in Postgres. RESTART IDENTITY resets any SERIAL/IDENTITY sequences
+    # so freshly seeded rows start from 1. CASCADE drops dependent FKs.
+    TRUNCATE_SQL=$(cat <<'SQL'
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT tablename FROM pg_tables
+        WHERE schemaname = 'public'
+          AND tablename NOT IN ('__EFMigrationsHistory', 'migrationlogs')
+    LOOP
+        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename)
+             || ' RESTART IDENTITY CASCADE';
+    END LOOP;
+END $$;
+SQL
+)
+
+    step "Truncating HmmIdp tables (hmm-idp container)..."
+    docker exec -i hmm-idp su postgres -c "psql -d HmmIdp -v ON_ERROR_STOP=1" <<<"$TRUNCATE_SQL" \
+        >/dev/null 2>&1 && ok "HmmIdp tables truncated" \
+        || { fail "Failed to truncate HmmIdp"; exit 1; }
+
+    step "Truncating HmmNotes tables (hmm-api container)..."
+    docker exec -i hmm-api su postgres -c "psql -d HmmNotes -v ON_ERROR_STOP=1" <<<"$TRUNCATE_SQL" \
+        >/dev/null 2>&1 && ok "HmmNotes tables truncated" \
+        || { fail "Failed to truncate HmmNotes"; exit 1; }
+
+    # Restart hmm-idp first — its SeedDataService re-inserts the admin /
+    # testuser / alice / bob / serviceapi rows plus IdentityServer Clients
+    # and Resources. Then hmm-api so its EF migrations re-validate the
+    # (now empty but still-structured) schema.
+    step "Restarting hmm-idp + hmm-api to re-run seed logic..."
+    docker restart hmm-idp hmm-api >/dev/null
+    ok "Containers restarted"
+
+    # Wait for both back to healthy. Reuse the discovery / swagger probes
+    # from the main start flow.
+    step "Waiting for IDP readiness..."
+    elapsed=0
+    until curl -sf --max-time 3 -o /dev/null "$IDP_BASE_URL/.well-known/openid-configuration"; do
+        sleep 2
+        elapsed=$((elapsed + 2))
+        if [ $elapsed -ge $MAX_WAIT_SECS ]; then
+            fail "IDP did not become ready within ${MAX_WAIT_SECS}s"
+            exit 1
+        fi
+        echo -n "."
+    done
+    echo ""
+    ok "IDP ready (${elapsed}s)"
+
+    step "Waiting for API readiness..."
+    elapsed=0
+    until curl -sf --max-time 3 -o /dev/null "$API_BASE_URL/swagger/index.html"; do
+        sleep 2
+        elapsed=$((elapsed + 2))
+        if [ $elapsed -ge $MAX_WAIT_SECS ]; then
+            fail "API did not become ready within ${MAX_WAIT_SECS}s"
+            exit 1
+        fi
+        echo -n "."
+    done
+    echo ""
+    ok "API ready (${elapsed}s)"
+
+    echo ""
+    info "Seed users restored:"
+    info "  admin@hmm.local      / Admin@12345678#"
+    info "  testuser@hmm.local   / TestPassword123#"
+    info "  alice                / Alice@12345678#"
+    info "  bob                  / Bob@123456789#"
+    info ""
+    info "Preserved: Seq, Mailpit, DataProtection keys, vault attachments."
     exit 0
 fi
 
@@ -372,10 +491,11 @@ echo -e "    Client ID:       ${WHITE}hmm.functest${NC}"
 echo -e "    Client Secret:   ${WHITE}FuncTestSecret123#${NC}"
 echo ""
 echo -e "  ${CYAN}Commands:${NC}"
-echo -e "    ${GRAY}Stop:      ./test-env.sh --down${NC}"
-echo -e "    ${GRAY}Rebuild:   ./test-env.sh --rebuild${NC}"
-echo -e "    ${GRAY}Reset DB:  ./test-env.sh --reset-db${NC}"
-echo -e "    ${GRAY}Logs:      docker compose ${COMPOSE_FILES[*]} logs -f${NC}"
+echo -e "    ${GRAY}Stop:        ./test-env.sh --down${NC}"
+echo -e "    ${GRAY}Rebuild:     ./test-env.sh --rebuild${NC}"
+echo -e "    ${GRAY}Reset DB:    ./test-env.sh --reset-db          (hard — drops all volumes)${NC}"
+echo -e "    ${GRAY}Refresh DB:  ./test-env.sh --refresh-test-db   (soft — truncate + re-seed)${NC}"
+echo -e "    ${GRAY}Logs:        docker compose ${COMPOSE_FILES[*]} logs -f${NC}"
 echo -e "    ${GRAY}IDP logs:  docker compose ${COMPOSE_FILES[*]} logs -f hmm-idp${NC}"
 echo -e "    ${GRAY}API logs:  docker compose ${COMPOSE_FILES[*]} logs -f hmm-api${NC}"
 echo ""

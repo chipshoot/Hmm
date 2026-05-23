@@ -32,7 +32,17 @@
     Skip the smoke tests after starting services
 
 .PARAMETER ResetDb
-    Delete databases and restart fresh (API SQLite files + IDP PostgreSQL volume)
+    Hard reset — delete the IDP + API Postgres volumes entirely. Also wipes
+    DataProtection keys, vault attachments, Seq logs (anything in a named
+    volume in the compose set).
+
+.PARAMETER RefreshTestDb
+    Soft reset — TRUNCATE all data tables inside the running hmm-idp and
+    hmm-api Postgres instances, then restart those two containers so their
+    seed services re-insert the seed users (admin, testuser, alice, bob,
+    serviceapi) and IdentityServer reference data. Preserves Seq, Mailpit,
+    DataProtection keys, vault attachments, and EF migration history.
+    Containers must already be up.
 
 .EXAMPLE
     .\test-env.ps1
@@ -48,7 +58,12 @@
 
 .EXAMPLE
     .\test-env.ps1 -ResetDb
-    Delete databases and restart fresh
+    Hard reset — delete the IDP + API Postgres volumes entirely
+
+.EXAMPLE
+    .\test-env.ps1 -RefreshTestDb
+    Soft reset — truncate user data and re-run seed logic without dropping
+    volumes (preserves vault attachments, DataProtection keys, etc.)
 #>
 
 param(
@@ -56,7 +71,8 @@ param(
     [switch]$Down,
     [switch]$Rebuild,
     [switch]$SkipTests,
-    [switch]$ResetDb
+    [switch]$ResetDb,
+    [switch]$RefreshTestDb
 )
 
 # ── Configuration ──────────────────────────────────────────────────────
@@ -148,6 +164,127 @@ if ($Down) {
     Write-Info "Host data directory preserved at: $DataDir"
     Write-Info "To remove API database files: Remove-Item -Recurse $DataDir"
     Write-Info "IDP PostgreSQL data was in Docker volume (removed with --volumes)"
+    exit 0
+}
+
+# ── Handle -RefreshTestDb ─────────────────────────────────────────────
+# Soft reset: TRUNCATE all data tables inside the running hmm-idp +
+# hmm-api Postgres instances, then restart those two containers so their
+# seed services (SeedDataService in the IDP, EF migrations in the API)
+# re-create the seed users + reference data. Faster than -ResetDb and
+# scoped — Seq, Mailpit, DataProtection keys, vault attachments, and any
+# other named volume are left untouched.
+#
+# The DO-block iterates over every table in the public schema except EF
+# migration tracking, so new tables added later are picked up
+# automatically — no need to update this script when the schema grows.
+if ($RefreshTestDb) {
+    Write-Banner "Refresh test database"
+
+    # Both containers must be running — we operate via docker exec on the
+    # live Postgres processes. If they're down, point the user at the
+    # right command instead of silently doing nothing.
+    foreach ($c in @("hmm-idp", "hmm-api")) {
+        $running = & docker ps --format '{{.Names}}' 2>$null | Where-Object { $_ -eq $c }
+        if (-not $running) {
+            Write-Fail "$c is not running — start the stack first ('.\test-env.ps1')"
+            Write-Info "If you want a hard reset that drops volumes too, use -ResetDb."
+            exit 1
+        }
+    }
+
+    # Single SQL fragment used against both DBs. quote_ident() handles the
+    # PascalCase table names (AspNetUsers, etc.) that need double-quoting
+    # in Postgres. RESTART IDENTITY resets any SERIAL/IDENTITY sequences
+    # so freshly seeded rows start from 1. CASCADE drops dependent FKs.
+    $TruncateSql = @'
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT tablename FROM pg_tables
+        WHERE schemaname = 'public'
+          AND tablename NOT IN ('__EFMigrationsHistory', 'migrationlogs')
+    LOOP
+        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename)
+             || ' RESTART IDENTITY CASCADE';
+    END LOOP;
+END $$;
+'@
+
+    Write-Step "Truncating HmmIdp tables (hmm-idp container)..."
+    $TruncateSql | docker exec -i hmm-idp su postgres -c "psql -d HmmIdp -v ON_ERROR_STOP=1" *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "Failed to truncate HmmIdp"
+        exit 1
+    }
+    Write-Ok "HmmIdp tables truncated"
+
+    Write-Step "Truncating HmmNotes tables (hmm-api container)..."
+    $TruncateSql | docker exec -i hmm-api su postgres -c "psql -d HmmNotes -v ON_ERROR_STOP=1" *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "Failed to truncate HmmNotes"
+        exit 1
+    }
+    Write-Ok "HmmNotes tables truncated"
+
+    # Restart hmm-idp first — its SeedDataService re-inserts the admin /
+    # testuser / alice / bob / serviceapi rows plus IdentityServer Clients
+    # and Resources. Then hmm-api so its EF migrations re-validate the
+    # (now empty but still-structured) schema.
+    Write-Step "Restarting hmm-idp + hmm-api to re-run seed logic..."
+    docker restart hmm-idp hmm-api *> $null
+    Write-Ok "Containers restarted"
+
+    # Wait for both back to healthy. Reuse the discovery / swagger probes
+    # from the main start flow.
+    Write-Step "Waiting for IDP readiness..."
+    $elapsed = 0
+    $ready = $false
+    while ($elapsed -lt $MaxWaitSecs) {
+        try {
+            $r = Invoke-WebRequest -Uri "$IdpBaseUrl/.well-known/openid-configuration" -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
+            if ($r.StatusCode -eq 200) { $ready = $true; break }
+        } catch { }
+        Start-Sleep -Seconds 2
+        $elapsed += 2
+        Write-Host "." -NoNewline -ForegroundColor DarkGray
+    }
+    Write-Host ""
+    if (-not $ready) {
+        Write-Fail "IDP did not become ready within ${MaxWaitSecs}s"
+        exit 1
+    }
+    Write-Ok "IDP ready (${elapsed}s)"
+
+    Write-Step "Waiting for API readiness..."
+    $elapsed = 0
+    $ready = $false
+    while ($elapsed -lt $MaxWaitSecs) {
+        try {
+            $r = Invoke-WebRequest -Uri "$ApiBaseUrl/swagger/index.html" -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
+            if ($r.StatusCode -eq 200) { $ready = $true; break }
+        } catch { }
+        Start-Sleep -Seconds 2
+        $elapsed += 2
+        Write-Host "." -NoNewline -ForegroundColor DarkGray
+    }
+    Write-Host ""
+    if (-not $ready) {
+        Write-Fail "API did not become ready within ${MaxWaitSecs}s"
+        exit 1
+    }
+    Write-Ok "API ready (${elapsed}s)"
+
+    Write-Host ""
+    Write-Info "Seed users restored:"
+    Write-Info "  admin@hmm.local      / Admin@12345678#"
+    Write-Info "  testuser@hmm.local   / TestPassword123#"
+    Write-Info "  alice                / Alice@12345678#"
+    Write-Info "  bob                  / Bob@123456789#"
+    Write-Info ""
+    Write-Info "Preserved: Seq, Mailpit, DataProtection keys, vault attachments."
     exit 0
 }
 
@@ -438,9 +575,10 @@ Write-Host "    Client ID:       hmm.functest" -ForegroundColor White
 Write-Host "    Client Secret:   FuncTestSecret123#" -ForegroundColor White
 Write-Host ""
 Write-Host "  Commands:" -ForegroundColor Cyan
-Write-Host "    Stop:      .\test-env.ps1 -Down" -ForegroundColor DarkGray
-Write-Host "    Rebuild:   .\test-env.ps1 -Rebuild" -ForegroundColor DarkGray
-Write-Host "    Reset DB:  .\test-env.ps1 -ResetDb" -ForegroundColor DarkGray
+Write-Host "    Stop:        .\test-env.ps1 -Down" -ForegroundColor DarkGray
+Write-Host "    Rebuild:     .\test-env.ps1 -Rebuild" -ForegroundColor DarkGray
+Write-Host "    Reset DB:    .\test-env.ps1 -ResetDb         (hard - drops all volumes)" -ForegroundColor DarkGray
+Write-Host "    Refresh DB:  .\test-env.ps1 -RefreshTestDb   (soft - truncate + re-seed)" -ForegroundColor DarkGray
 Write-Host "    Logs:      docker compose $($ComposeFiles -join ' ') logs -f" -ForegroundColor DarkGray
 Write-Host "    IDP logs:  docker compose $($ComposeFiles -join ' ') logs -f hmm-idp" -ForegroundColor DarkGray
 Write-Host "    API logs:  docker compose $($ComposeFiles -join ' ') logs -f hmm-api" -ForegroundColor DarkGray
