@@ -253,6 +253,37 @@ The same MIME / size limits apply at pick-time on the client for
 all kinds — even `phasset` and `cloudFile` references must point at
 acceptable types so the eventual upgrade upload doesn't fail.
 
+### Link vs. copy, and downsize-on-copy (decided 2026-05-30)
+
+A picked image is always **copied** into the vault — we do **not**
+offer a "link to the photo in your library instead of copying" toggle
+for the `vault` kind. Copy is the default and only v1 behaviour
+because it gives a hard guarantee: *your car photo survives whatever
+you do in Photos* (delete it, toggle iCloud "Optimize Storage",
+revoke permission). A link (`phasset`) trades that guarantee for disk
+space and creates a debt that must be paid — and can fail — at the
+Free → Paid boundary (every non-vault ref has to be resolved to bytes
+and uploaded; if the source is gone, it's unresolvable). For a
+vehicle-records app (a few photos per car), the storage saved by
+linking doesn't justify the fragility + support cost.
+
+The legitimate "don't waste storage" concern is instead handled by
+**downsize-on-copy**: before writing to the vault the client shrinks
+the image to a long-edge cap (default **2048 px**, **JPEG q85**) via
+native codecs (`flutter_image_compress` → `ImageDownsizer`). This
+keeps the copy guarantee while cutting a 2–5 MB phone photo to a few
+hundred KB, and transcodes HEIC → JPEG as a side benefit (so HEIC
+never reaches an Android `cloudApi` viewer). Implemented in
+`VaultImageAttachmentPicker.persistToVault`; the `VaultRef`'s
+`byteSize` / `contentType` reflect the stored (downsized) bytes. The
+downsizer is injected, defaulting to a no-op for headless/test
+construction; production wires `NativeImageDownsizer`.
+
+The `phasset` / `cloudFile` smart-reference *kinds* remain in the
+model (Phases 16/17, parked) for a possible future large-gallery use
+case — but only ever as an explicit, warned, Phase-18-gated option,
+never the default.
+
 ## Migration alignment (the critical bit)
 
 Per `docs/multi-device-cloud-sync.md`:
