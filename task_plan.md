@@ -365,6 +365,7 @@ cloudApi tier.
 | **Attachments are a `HmmNote`-level facility, stored in a new sidecar `attachments` JSON column on `Notes`** (replaces the earlier "siblings in note content" decision) | `Content` is a raw string for plain-text/HTML notes, so it can't carry structured siblings; a column makes attachments note-universal, leaves every domain serializer untouched, costs one EF migration + one Drift migration, and adds no new repo/manager/controller. A relational `NoteAttachment` child table was the alternative — rejected because we don't need attachments SQL-queryable yet (revisit for orphan-GC/dedup later). | 2026-05-11 |
 | `Hmm.Core.Vault` as its own project from day one | Interface + filesystem impl + `VaultRef` + tests already justify it; splitting later relocates public types across packages | 2026-05-11 |
 | The `attachments` column + `ApiNote*` DTOs carry `VaultRef` directly, no `kind` discriminator on the wire to .NET | A `phasset`/`cloudFile` payload deserializes to a `VaultRef` with null `Path` → dies in schema validation; can never become a valid server-side object | 2026-05-11 |
+| **cloudStorage attachment-byte sync stays desktop-only; full mobile photo sync is a `cloudApi` (paid) feature** — we do NOT add Graph byte upload to the free tier | On iOS/Android the vault is sandboxed (no OS-mounted OneDrive folder), so only the note JSON + `vault` ref sync; bytes need a desktop vault-in-OneDrive folder. Pushing bytes via Graph would re-add a byte manifest/diff + resumable uploads (4–8 MB photos exceed Graph's 4 MB simple PUT) + remote orphan deletes to the free tier — complexity the paid tier already absorbs. Mobile-only users see the render-time placeholder; this is intentional. Documented in `docs/attachments-design.md` §"cloudStorage byte sync is desktop-only". | 2026-05-30 |
 
 ## Active work: Flutter local-mode vertical slice
 
@@ -489,7 +490,10 @@ land alongside or after:
 - Vault orphan GC (Replace / Remove leave bytes on disk)
 - Phase 19 — iOS `UIFileSharingEnabled` plist flags
 - Real-world cloudStorage multi-device validation by the user
-  (two macOS machines + shared OneDrive folder)
+  (two **macOS** machines + shared OneDrive folder). NOTE: byte sync
+  is desktop-only by design (decision 2026-05-30) — mobile-only
+  cloudStorage shows a placeholder on the 2nd device; that is NOT a
+  bug to fix. Full mobile photo sync = cloudApi tier.
 
 Still parked (not part of cloudApi tier):
 - Phase 16 — `PhAssetResolver` (iOS smart refs)

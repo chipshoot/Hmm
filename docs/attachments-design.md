@@ -143,10 +143,39 @@ tier is **vault-only**, by construction, because the .NET server
 can't read into the user's photo library or arbitrary cloud folder
 on a device far away.
 
+### cloudStorage byte sync is desktop-only (deliberate — 2026-05-30)
+
+The `cloudStorage` `vault` root is `<OneDrive>/Hmm/vault/` **on
+desktop only**. iOS/Android have no OS-mounted OneDrive folder, so
+the vault falls back to `<app docs>/vault/` and the **bytes are not
+replicated** — only the note JSON + the `vault` reference sync (via
+the Graph AppFolder, Phase 11.5). Consequence:
+
+- **Desktop → any device**: a desktop device's vault sits inside the
+  synced OneDrive folder, so the OS OneDrive client uploads the
+  bytes; other devices read them. Photos sync.
+- **Mobile-only (e.g. two iPhones on the free tier)**: bytes never
+  leave the originating phone. The second device pulls the note +
+  ref and shows the render-time placeholder below.
+
+**This is intentional, not a bug.** Full cross-device photo sync —
+including mobile-to-mobile — is a **`cloudApi` (paid) feature**,
+where every device uploads/reads bytes through the API vault. We
+deliberately do **not** push `cloudStorage` bytes through the Graph
+API: that would re-introduce a parallel byte-sync layer into the
+free tier (a byte manifest + diff, resumable upload sessions for the
+4–8 MB photos that exceed Graph's 4 MB simple-PUT limit, and remote
+orphan deletes) — complexity the paid tier already absorbs. The free
+tier's promise is therefore: **notes everywhere; photos everywhere
+on desktop, on the originating device on mobile.**
+
 ## Render-time fallback
 
 When a viewing device can't resolve a reference (wrong OS, photo
-deleted from source, permission revoked, cloud folder not mounted):
+deleted from source, permission revoked, cloud folder not mounted,
+or — on the free `cloudStorage` tier — the `vault` bytes haven't
+reached this device because the origin was mobile; see "cloudStorage
+byte sync is desktop-only" above):
 - Render a placeholder thumbnail with an icon.
 - Show a one-line reason ("This photo lives in iCloud Photos and
   isn't accessible on this device").
