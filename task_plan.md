@@ -92,37 +92,36 @@ Later-phase (Phase 16+ concerns, parked):
 - [x] Dart `vaultRelativePathJoin` / `vaultRelativePathValidate` in
       `lib/core/data/vault/vault_path.dart`; 36 tests pass.
 
-### Phase 4: .NET vault store (`Hmm.Core.Vault` — new project)
-- [ ] New `Hmm.Core.Vault` project; `IVaultBlobStore` interface
-- [ ] `FilesystemVaultBlobStore`, root from `AttachmentSettings`
-- [ ] `VaultRef` value object (`{Path, OriginalName, ContentType,
+### Phase 4: .NET vault store (`Hmm.Core.Vault` — new project) — DONE
+- [x] New `Hmm.Core.Vault` project; `IVaultBlobStore` interface
+- [x] `FilesystemVaultBlobStore`, root from `AttachmentSettings`
+- [x] `VaultRef` value object (`{Path, OriginalName, ContentType,
       ByteSize}`)
-- [ ] xUnit tests covering put / get / delete / list / sanitisation
-- [ ] DI registration in `Hmm.ServiceApi`; `AttachmentSettings`
+- [x] xUnit tests covering put / get / delete / list / sanitisation
+      (`Hmm.Core.Vault.Tests`: `FilesystemVaultBlobStoreTests`,
+      `VaultPathUtilTests`, `NoteAttachmentsCodecTests`)
+- [x] DI registration in `Hmm.ServiceApi`; `AttachmentSettings`
       bound from `appsettings.json`
 
-### Phase 5: .NET vault HTTP surface
-- [ ] `VaultController` with the five endpoints
-      (`POST/GET/HEAD/DELETE` per-file + list)
-- [ ] `RequireActiveSubscriptionAttribute` (from sync doc) on writes
-- [ ] Validation: MIME allow-list, max bytes, max long-edge pixels
-- [ ] Server-side image downsize via `SkiaSharp`
-- [ ] xUnit tests for controller + integration tests for upload
-      round-trip
+### Phase 5: .NET vault HTTP surface — DONE
+- [x] `NoteVaultController` (nested `/v1/notes/{noteId}/vault/...`
+      route) with the per-file endpoints + tests
+      (`NoteVaultControllerTests`)
+- [x] Validation: MIME allow-list, max bytes, max long-edge pixels
+- [x] Server-side image downsize
+- [~] `RequireActiveSubscriptionAttribute` deferred (same parking
+      spot as the migration controller — picks up the future
+      subscription attribute)
 
-### Phase 6: .NET `Notes.attachments` column wiring
-- [ ] Add nullable `string? Attachments` column to `HmmNoteDao` →
-      EF migration (`Attachments NVARCHAR(MAX) NULL` + SQLite /
-      PostgreSQL equivalents)
-- [ ] Add `VaultRef? PrimaryImage` + `IList<VaultRef> Images` to the
-      `HmmNote` domain entity
-- [ ] AutoMapper value converter: JSON column ↔ the two domain props
-- [ ] `NoteAttachments.schema.json` validation on write →
-      `ProcessingResult` failure on invalid
-- [ ] `ApiNote`, `ApiNoteForCreate`, `ApiNoteForUpdate` surface
-      `primaryImage` + `images`; `ApiMappingProfile` + note result
-      filters pass them through
-- [ ] Tests: column round-trip, schema rejection, DTO mapping
+### Phase 6: .NET `Notes.attachments` column wiring — DONE
+- [x] Nullable `Attachments` column on `HmmNoteDao` → EF migration
+      `20260518230000_AddNoteAttachmentsColumn` (+ snapshot)
+- [x] `VaultRef? PrimaryImage` + `Images` on the domain entity
+- [x] JSON column ↔ domain props conversion + schema validation
+      on write
+- [x] `ApiNote` / `ApiNoteForCreate` / `ApiNoteForUpdate` surface
+      `primaryImage` + `images`; mapping + result filters pass through
+- [x] Tests: column round-trip, schema rejection, DTO mapping
 
 ### Phase 7: .NET migration endpoints integration — DONE 2026-05-18
 - [x] `POST /v1/migration/upload` (built greenfield — accepts vault
@@ -445,7 +444,34 @@ Still parked (not part of cloudApi tier):
 - Phase 17 — `CloudFileResolver` (desktop smart refs)
 - Phase 18 — Free → Paid migration extension
 
-## Status: local + cloudStorage tiers complete (2026-05-18, user signed off). Tests: 431 pass on Flutter 3.41.9. **Now starting the API-side work — Phase 4 (`Hmm.Core.Vault` project).**
+## Status: ALL in-scope phases complete + merged to `main`.
+The full attachments feature (Phases 4 → 8 + 15, the cloudApi-tier
+12.5 follow-up, plus prod hardening) landed via the
+`feature/note-attachments` merge `6d159d8` and is on `main`; tree is
+clean and even with `origin/main`. Subsequent unrelated work
+(refresh-test-db `e04f626`, IdP email-link fix `68a15a8`, prod vault
+path `ec0c5d1`) is also merged. The parallel `hmm_console` cloud-sync
++ onboarding effort (Phases A–E) is likewise complete + merged on that
+repo's `main`.
+
+**Remaining = only deferred / parked items + manual smoke gates
+(below). No active coding phase in flight.**
+
+Parked / deferred (not blocking, pick up when scope re-opens):
+- Vault orphan GC (Replace / Remove leave bytes on disk)
+- Phase 16 — `PhAssetResolver` (iOS smart refs)
+- Phase 17 — `CloudFileResolver` (desktop smart refs)
+- Phase 18 — Free → Paid migration extension
+- Phase 19 — iOS `UIFileSharingEnabled` plist flags
+- Registration-card expansion (backlog, see below)
+- `RequireActiveSubscriptionAttribute` on vault + migration writes
+
+Manual smoke gates awaiting sims + a OneDrive account (deferred by
+user): A.8 two-user isolation, B.9 lifecycle/periodic auto-sync,
+C.10 cellular WiFi-only dialog, D.1.6 cloud-blob-deletion reappear,
+D.2.5 cross-device unit flip, E.6 fresh-install onboarding.
+
+### Prior status (historical): local + cloudStorage tiers complete (2026-05-18, user signed off). Tests: 431 pass on Flutter 3.41.9. Then started the API-side work — Phase 4 (`Hmm.Core.Vault` project).
 
 ### Phase 11.5 — DONE 2026-05-17
 - [x] SyncOrchestrator stops touching attachment bytes; pull/push is

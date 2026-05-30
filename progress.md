@@ -261,3 +261,29 @@ The local-mode vertical slice is feature-complete. To exercise:
   Files app.
 - The Flutter Drift `Attachments` table + `IAttachmentRepository`
   are deprecated; removal after one release window.
+
+## Session: 2026-05-29 — planning-file reconciliation (no new code)
+
+Resumed via `/planning-with-files`. The session-catchup script
+surfaced a STALE report (referenced commit `e126e38` + an "unpushed,
+5 ahead" state that no longer exists). Verified against the live
+repo instead:
+
+- `git status` clean; `main` even with `origin/main` (0/0).
+- The whole API-side attachments scope (Phases 4 → 8 + 15), the
+  cloudApi-tier 12.5 follow-up, and prod hardening are MERGED on
+  `main` via `6d159d8 Merge feature/note-attachments`. Confirmed the
+  code exists on disk: `src/Hmm.Core.Vault/` project (IVaultBlobStore,
+  FilesystemVaultBlobStore, VaultRef, VaultPathUtil, AttachmentSettings,
+  NoteAttachments[+Codec]) + `Hmm.Core.Vault.Tests`; `NoteVaultController`
+  + tests; `Notes.attachments` column migration
+  `20260518230000_AddNoteAttachmentsColumn`; `MigrationController` + tests.
+- task_plan.md was stale: Phases 4/5/6 checkboxes were never ticked
+  even though the work shipped (7/8/12.5/15 already carried DONE
+  dates). Ticked them; rewrote the Status section to reflect
+  "all in-scope phases complete + merged"; the only outstanding items
+  are the parked phases (16/17/18/19, orphan GC, subscription gating,
+  registration-card backlog) and the manual smoke gates.
+
+No code changed this session — documentation reconciliation only.
+Awaiting the next task from the user.
