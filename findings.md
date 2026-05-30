@@ -169,3 +169,30 @@ scenarios. Attachments slot in:
 - **Cloud-folder root detection on Android** — Android's cloud-app
   ecosystem is messier than iOS / macOS / Windows. v1 detects on
   iOS / macOS / Windows only; Android falls back to vault.
+
+## 2026-05-29 — User profile / settings sync gap (cloudApi tier)
+
+Design: `docs/user-profile-settings-sync.md` (addendum to
+`multi-device-cloud-sync.md`).
+
+Gap analysis — the Flutter settings-sync pipeline is ALREADY complete;
+only the cloudApi transport is missing:
+- `hmm_console` `SyncableSettings` = whole-bundle LWW, stamped
+  `lastModified`, `_v:1`; deliberately excludes DataMode / CloudProvider
+  / vault path / tokens (device-local + operational state).
+- Orchestrator step 0b (`sync_orchestrator.dart` `_syncSettings`)
+  already does the full LWW dance: null pull → seed local; newer remote
+  → `apply` + `SettingsBus` tick; newer local → push.
+- `cloudStorage` tier implements it via OneDrive `settings.json`
+  (`OneDriveGraphClient.getSettings`/`putSettings`).
+- **cloudApi tier is stubbed**: `api_sync_provider.dart:394`
+  `pullSettings() => null`, `:397` `pushSettings()` no-op, with a
+  comment "the API has no `/v1/settings` endpoint."
+
+Fix shape: server is an OPAQUE LWW store — new `AuthorSettings` table
+(one row per Author, like `Subscription`), `GET`/`PUT
+/v1/profile/settings` (204 when absent, PUT monotonicity guard on the
+envelope `lastModified`), and swap the two Dart stubs for real
+GET/PUT. No orchestrator change. App config goes in ServiceApi, NEVER
+the IdP. Closes the D.2.5 smoke gate. Plan = Phases P1–P4 in
+`task_plan.md`.

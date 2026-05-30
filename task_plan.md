@@ -416,6 +416,58 @@ attachments facility) so the two cards stay symmetric.
 Details in project memory:
 `~/.claude/projects/.../memory/registration-card-expansion.md`.
 
+## New feature: User profile & settings sync (cloudApi tier) — PLANNED 2026-05-29
+
+Design doc: [`docs/user-profile-settings-sync.md`](docs/user-profile-settings-sync.md)
+(addendum to `docs/multi-device-cloud-sync.md`).
+
+**Problem**: paid (`cloudApi`) users get their *notes* on a second
+device for free (the API is canonical) but **not their settings** —
+`ApiSyncProvider.pullSettings` returns null and `pushSettings` is a
+documented no-op because the API has no settings endpoint. The whole
+Flutter pipeline (`SyncableSettings` LWW bundle + orchestrator step
+0b) already exists; only the cloudApi transport is missing. Blocks the
+D.2.5 cross-device unit-flip smoke gate.
+
+**Scope guardrail**: server-side settings ONLY in the cloudApi tier.
+Free tiers keep their data-ownership promise (OneDrive file /
+device-local). App preferences live in `Hmm.ServiceApi`, NEVER in
+`Hmm.Idp`. Server stores the bundle opaque (reads only envelope
+`lastModified`) so client schema bumps need zero server migrations.
+
+### Phase P1: .NET — `AuthorSettings` entity + persistence
+- [ ] `AuthorSettings` domain + DAO in `Hmm.Core.Map` (one row per
+      `Author`: `AuthorId` PK/FK, `SettingsJson` text, `LastModified`
+      UTC, `UpdatedAt` UTC, `Version` byte[]) — mirrors `Subscription`
+- [ ] AutoMapper profile; repository (or fold into `IAuthorManager`)
+- [ ] EF migration across all three providers (SqlServer / PostgreSQL
+      / SQLite)
+- [ ] Tests: round-trip, absent-row read returns null
+
+### Phase P2: .NET — `/v1/profile/settings` endpoint
+- [ ] `ProfileSettingsController`: `GET` (200 bundle / 204 absent),
+      `PUT` (upsert + monotonicity guard: stale `lastModified` is a
+      no-op returning stored bundle)
+- [ ] Self-scoped to token author; no `{authorId}` in path
+- [ ] `RequireActiveSubscriptionAttribute` on `PUT` (no-op until the
+      parent-doc gate ships); `GET` readable in Grace/Lapsed
+- [ ] Endpoint accepts/returns the raw bundle body (no parallel DTO
+      schema); server lifts `lastModified` out of it
+- [ ] Tests: seed, overwrite-newer, reject-stale, 204-when-absent,
+      auth scoping
+
+### Phase P3: Flutter — wire `ApiSyncProvider` settings transport
+- [ ] Replace the `pullSettings` / `pushSettings` no-ops with GET/PUT
+      `/v1/profile/settings` (204 → null, 200 → map, push PUTs body)
+- [ ] Orchestrator step 0b unchanged — already drives the LWW compare
+- [ ] Tests: 204→null, 200→map, push-PUTs-body (http_mock_adapter,
+      same pattern as `api_sync_provider_test.dart`)
+
+### Phase P4: Verification — closes D.2.5
+- [ ] `dotnet test Hmm.sln` + `flutter test` green
+- [ ] Smoke (cloudApi): flip default unit on client A → sync → client
+      B pulls the flip without manual setup
+
 ## Active scope (user, 2026-05-18 — superseded the 2026-05-15 boundary)
 
 **Local + cloudStorage tier work is complete; user signed off
