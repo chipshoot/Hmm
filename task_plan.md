@@ -507,7 +507,33 @@ path `ec0c5d1`) is also merged. The parallel `hmm_console` cloud-sync
 repo's `main`.
 
 **Remaining = only deferred / parked items + manual smoke gates
-(below). No active coding phase in flight.**
+(below).**
+
+### Attachment close-out — DONE 2026-05-29 (user chose "pragmatic close-out")
+Finished the attachment feature to production-done on all 3 tiers
+before starting the settings-sync feature (P1–P4).
+- [x] **Vault orphan GC** (hmm_console): `lib/core/data/vault/vault_gc.dart`
+      — `VaultGarbageCollector.sweep` (pure, dryRun-capable) +
+      `collectReferencedVaultPaths(db)` (all notes incl. soft-deleted;
+      vault-kind refs only). Settings → "Clean up unused photos"
+      button (filesystem tiers only, hidden in cloudApi); dry-run
+      preview → confirm dialog → delete → result snackbar. 10 new
+      tests.
+- [x] **Phase 19** — `ios/Runner/Info.plist`: `UIFileSharingEnabled`
+      + `LSSupportsOpeningDocumentsInPlace` so the vault shows in the
+      iOS Files app. (On-device verification still a manual gate.)
+- [x] **Phase 20** — `flutter analyze` clean; full Flutter suite
+      **563 pass** (+10 GC); `dotnet build Hmm.sln` clean (0/0). The
+      3 sim-based attachment smoke runs remain a deferred manual gate
+      (same bucket as the sync smoke gates).
+
+Dropped from this close-out (user decision): Phases 16/17/18 (the
+smart-reference bundle — no new capability, only avoids byte-copies)
+and subscription gating (deferred until billing ships). The app
+stays vault-only, which is fully functional on every tier.
+
+**Attachments feature is now production-done on all 3 tiers. Next up:
+the user profile & settings sync feature (Phases P1–P4).**
 
 Parked / deferred (not blocking, pick up when scope re-opens):
 - Vault orphan GC (Replace / Remove leave bytes on disk)
