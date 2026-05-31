@@ -79,6 +79,9 @@ public class HmmMappingProfile : Profile
         CreateMap<PageList<MigrationLogDao>, PageList<MigrationLog>>()
             .ConvertUsing(new PageListConverter<MigrationLogDao, MigrationLog>());
 
+        CreateMap<AuthorSettingsDao, AuthorSettings>();
+        CreateMap<AuthorSettings, AuthorSettingsDao>();
+
         CreateMap<HmmNoteDao, HmmNote>()
             .ForMember(dest => dest.Tags,
                 opt => opt.MapFrom(src => src.Tags.Select(ntr => ntr.Tag)))

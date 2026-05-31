@@ -438,14 +438,27 @@ device-local). App preferences live in `Hmm.ServiceApi`, NEVER in
 `Hmm.Idp`. Server stores the bundle opaque (reads only envelope
 `lastModified`) so client schema bumps need zero server migrations.
 
-### Phase P1: .NET — `AuthorSettings` entity + persistence
-- [ ] `AuthorSettings` domain + DAO in `Hmm.Core.Map` (one row per
-      `Author`: `AuthorId` PK/FK, `SettingsJson` text, `LastModified`
-      UTC, `UpdatedAt` UTC, `Version` byte[]) — mirrors `Subscription`
-- [ ] AutoMapper profile; repository (or fold into `IAuthorManager`)
-- [ ] EF migration across all three providers (SqlServer / PostgreSQL
-      / SQLite)
-- [ ] Tests: round-trip, absent-row read returns null
+### Phase P1: .NET — `AuthorSettings` entity + persistence — DONE 2026-05-30
+- [x] `AuthorSettings` domain (`Hmm.Core.Map/DomainEntity`) + DAO
+      (`Hmm.Core.Map/DbEntity`). One row per `Author`: own `Id` PK +
+      **unique** `authorid` FK (instead of shared PK — fits the
+      `Entity` base every DAO uses), `SettingsJson` text, `LastModified`
+      UTC, `UpdatedAt` UTC. **No `Version` token** — conflict
+      resolution is the `LastModified` monotonicity guard, not
+      row-version 409s (avoids a second, fighting mechanism).
+- [x] AutoMapper map (`HmmMappingProfile`); `AuthorSettingsEfRepository`
+      (`IRepository<AuthorSettingsDao>`, queries the `Set<>` directly —
+      `EfEntityLookup` has a hardcoded type switch that doesn't know new
+      entities); `IUserSettingsManager` + `UserSettingsManager`
+      (Get + Upsert with the monotonicity guard); DI in `Startup.cs`.
+- [x] EF migration `20260530000000_AddAuthorSettingsTable` (PG, mirrors
+      `AddMigrationLogTable`; includes the `description` column the
+      `Entity` base needs). PG/SQL Server run `Migrate()`; SQLite builds
+      from the model via `EnsureCreated()`.
+- [x] Tests: 6 end-to-end (real `UserSettingsManager` + real EF
+      context) — round-trip, absent→success+null, insert/update
+      (one row per author), stale + equal `LastModified` no-ops,
+      invalid author id. Full .NET suite green (1,346, +6).
 
 ### Phase P2: .NET — `/v1/profile/settings` endpoint
 - [ ] `ProfileSettingsController`: `GET` (200 bundle / 204 absent),

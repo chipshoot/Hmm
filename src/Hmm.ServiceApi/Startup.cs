@@ -199,6 +199,7 @@ namespace Hmm.ServiceApi
                 .AddScoped<IRepository<ContactDao>, ContactEfRepository>()
                 .AddScoped<IRepository<NoteCatalogDao>, NoteCatalogEfRepository>()
                 .AddScoped<IRepository<MigrationLogDao>, MigrationLogEfRepository>()
+                .AddScoped<IRepository<AuthorSettingsDao>, AuthorSettingsEfRepository>()
                 .AddScoped<IAuthorManager, AuthorManager>()
                 .AddScoped<IContactManager, ContactManager>()
                 .AddScoped<IHmmNoteManager, HmmNoteManager>()
@@ -206,6 +207,7 @@ namespace Hmm.ServiceApi
                 .AddScoped<ITagManager, TagManager>()
                 .AddScoped<INoteTagAssociationManager, NoteTagAssociationManager>()
                 .AddScoped<IMigrationManager, MigrationManager>()
+                .AddScoped<IUserSettingsManager, UserSettingsManager>()
                 // Validators registered as Transient for thread-safety:
                 // - Each validation operation gets a fresh validator instance
                 // - Prevents any potential state leakage between concurrent validations

@@ -19,6 +19,7 @@ namespace Hmm.Core.Dal.EF
         public const string FK_NoteTagRefs_Notes = "fk_notetagrefs_notes";
         public const string FK_NoteTagRefs_Tags = "fk_notetagrefs_tags";
         public const string FK_MigrationLogs_Authors = "fk_migrationlogs_authors";
+        public const string FK_AuthorSettings_Authors = "fk_authorsettings_authors";
     }
 
     /// <summary>
@@ -39,6 +40,7 @@ namespace Hmm.Core.Dal.EF
         public const string UQ_NoteCatalogs_Name = "uq_notecatalogs_name";
         public const string IX_MigrationLogs_AuthorId = "ix_migrationlogs_authorid";
         public const string UQ_Notes_Uuid = "uq_notes_uuid";
+        public const string UQ_AuthorSettings_AuthorId = "uq_authorsettings_authorid";
     }
 
     public class HmmDataContext(DbContextOptions options) : DbContext(options), IHmmDataContext
@@ -56,6 +58,8 @@ namespace Hmm.Core.Dal.EF
         public DbSet<NoteTagRefDao> NoteTagRefs { get; set; }
 
         public DbSet<MigrationLogDao> MigrationLogs { get; set; }
+
+        public DbSet<AuthorSettingsDao> AuthorSettings { get; set; }
 
         /// <inheritdoc />
         public int Commit()
@@ -309,6 +313,26 @@ namespace Hmm.Core.Dal.EF
             modelBuilder.Entity<MigrationLogDao>()
                 .Property(m => m.Kind)
                 .HasConversion<int>();
+
+            // ============================================================
+            // AuthorSettingsDao Configuration (settings-sync Phase P1)
+            // ============================================================
+            modelBuilder.Entity<AuthorSettingsDao>().ToTable("authorsettings");
+            modelBuilder.Entity<AuthorSettingsDao>().HasKey(s => s.Id);
+
+            modelBuilder.Entity<AuthorSettingsDao>()
+                .HasOne<AuthorDao>()
+                .WithMany()
+                .HasForeignKey(s => s.AuthorId)
+                .HasConstraintName(ForeignKeyNames.FK_AuthorSettings_Authors)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // One settings row per author — the invariant behind the
+            // upsert-by-author manager logic.
+            modelBuilder.Entity<AuthorSettingsDao>()
+                .HasIndex(s => s.AuthorId)
+                .IsUnique()
+                .HasDatabaseName(IndexNames.UQ_AuthorSettings_AuthorId);
         }
     }
 }
