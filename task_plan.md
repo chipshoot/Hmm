@@ -460,17 +460,23 @@ device-local). App preferences live in `Hmm.ServiceApi`, NEVER in
       (one row per author), stale + equal `LastModified` no-ops,
       invalid author id. Full .NET suite green (1,346, +6).
 
-### Phase P2: .NET — `/v1/profile/settings` endpoint
-- [ ] `ProfileSettingsController`: `GET` (200 bundle / 204 absent),
-      `PUT` (upsert + monotonicity guard: stale `lastModified` is a
-      no-op returning stored bundle)
-- [ ] Self-scoped to token author; no `{authorId}` in path
-- [ ] `RequireActiveSubscriptionAttribute` on `PUT` (no-op until the
-      parent-doc gate ships); `GET` readable in Grace/Lapsed
-- [ ] Endpoint accepts/returns the raw bundle body (no parallel DTO
-      schema); server lifts `lastModified` out of it
-- [ ] Tests: seed, overwrite-newer, reject-stale, 204-when-absent,
-      auth scoping
+### Phase P2: .NET — `/v1/profile/settings` endpoint — DONE 2026-05-30
+- [x] `ProfileSettingsController` (`Areas/ProfileService/Controllers`):
+      `GET` (200 bundle / 204 absent), `PUT` (upsert; the monotonicity
+      guard lives in the P1 manager — controller relays the stored
+      bundle, which on a stale write is the newer one)
+- [x] Self-scoped via `ICurrentUserAuthorProvider` (token subject →
+      author); no `{authorId}` in the route; unauth → 401
+- [~] `RequireActiveSubscriptionAttribute` deferred (same parking spot
+      as `NoteVaultController` / `MigrationController`); today every
+      authenticated author can read+write
+- [x] Accepts/returns the **raw bundle** body verbatim (`Content(...,
+      application/json)`); server lifts only the envelope
+      `lastModified` (absent/unparseable → Unix epoch); no parallel DTO
+- [x] Tests: 10 — 204-absent, 200 verbatim round-trip, GET 401, PUT
+      author-scoping + stamp extraction + verbatim store, missing-stamp
+      → epoch, stale relay, empty/invalid/non-object body → 400, PUT
+      401. Full .NET suite green (1,356, +10).
 
 ### Phase P3: Flutter — wire `ApiSyncProvider` settings transport
 - [ ] Replace the `pullSettings` / `pushSettings` no-ops with GET/PUT
