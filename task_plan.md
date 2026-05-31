@@ -419,7 +419,13 @@ attachments facility) so the two cards stay symmetric.
 Details in project memory:
 `~/.claude/projects/.../memory/registration-card-expansion.md`.
 
-## New feature: User profile & settings sync (cloudApi tier) — PLANNED 2026-05-29
+## New feature: User profile & settings sync (cloudApi tier) — DONE 2026-05-30 (P1–P4)
+**Complete + verified on live PostgreSQL.** Server (P1 entity/persistence,
+P2 `/v1/profile/settings` controller) + client (P3 `ApiSyncProvider`
+wiring) all merged-ready; P4 verification passed end-to-end (migration
+applies additively, GET/PUT round-trip, LWW monotonicity guard, one
+row per author). Only the 2-client sim smoke is deferred. Closes the
+cloudApi settings gap behind the old D.2.5 manual gate.
 
 Design doc: [`docs/user-profile-settings-sync.md`](docs/user-profile-settings-sync.md)
 (addendum to `docs/multi-device-cloud-sync.md`).
@@ -487,10 +493,23 @@ device-local). App preferences live in `Hmm.ServiceApi`, NEVER in
       http_mock_adapter. `flutter analyze` clean; full suite **571**
       (+4). (hmm_console)
 
-### Phase P4: Verification — closes D.2.5
-- [ ] `dotnet test Hmm.sln` + `flutter test` green
-- [ ] Smoke (cloudApi): flip default unit on client A → sync → client
-      B pulls the flip without manual setup
+### Phase P4: Verification — DONE 2026-05-30 (server-side; 2-client smoke deferred)
+- [x] `dotnet test Hmm.sln` (1,356) + `flutter test` (571) green.
+- [x] **Live PostgreSQL verification** (rebuilt `hmm-api`, recreated
+      container keeping the PG volume → real *additive* `Migrate()`
+      path): migration applied cleanly (`PostgreSQL migrations
+      applied`), `authorsettings` table created with the intended
+      schema (PK, unique `authorid`, FK cascade, timestamptz cols,
+      `description`), recorded in `__EFMigrationsHistory`.
+- [x] **Live endpoint round-trip** (token → curl): GET → 204 (absent);
+      PUT bundle → 200 verbatim; GET → 200 verbatim (persisted); PUT a
+      stale `lastModified` → 200 returning the **newer stored** bundle
+      (monotonicity guard rejected it). DB shows **exactly one row**
+      per author with the newer value — the LWW guard + unique
+      invariant both hold end-to-end.
+- [ ] **Deferred manual gate**: the full 2-client cloudApi smoke (flip
+      a unit on sim A → sync → sim B pulls it) — needs two cloudApi
+      sims; the server behaviour it depends on is already proven above.
 
 ## Active scope (user, 2026-05-18 — superseded the 2026-05-15 boundary)
 
