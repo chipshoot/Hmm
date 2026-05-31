@@ -478,12 +478,14 @@ device-local). App preferences live in `Hmm.ServiceApi`, NEVER in
       → epoch, stale relay, empty/invalid/non-object body → 400, PUT
       401. Full .NET suite green (1,356, +10).
 
-### Phase P3: Flutter — wire `ApiSyncProvider` settings transport
-- [ ] Replace the `pullSettings` / `pushSettings` no-ops with GET/PUT
-      `/v1/profile/settings` (204 → null, 200 → map, push PUTs body)
-- [ ] Orchestrator step 0b unchanged — already drives the LWW compare
-- [ ] Tests: 204→null, 200→map, push-PUTs-body (http_mock_adapter,
-      same pattern as `api_sync_provider_test.dart`)
+### Phase P3: Flutter — wire `ApiSyncProvider` settings transport — DONE 2026-05-30
+- [x] Replaced the `pullSettings` / `pushSettings` no-ops with GET/PUT
+      `/profile/settings` (paths are `/v1`-relative). GET: 204 → null,
+      200 → map, 404 → null defensively. PUT: sends the bundle body.
+- [x] Orchestrator step 0b unchanged — already drives the LWW compare.
+- [x] Tests: 4 (200→map, 204→null, 404→null, push-PUTs-body) via
+      http_mock_adapter. `flutter analyze` clean; full suite **571**
+      (+4). (hmm_console)
 
 ### Phase P4: Verification — closes D.2.5
 - [ ] `dotnet test Hmm.sln` + `flutter test` green
