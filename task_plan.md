@@ -427,6 +427,41 @@ applies additively, GET/PUT round-trip, LWW monotonicity guard, one
 row per author). Only the 2-client sim smoke is deferred. Closes the
 cloudApi settings gap behind the old D.2.5 manual gate.
 
+### On-device verification session (2026-06-01) — outcomes
+Drove the feature on the iOS sim against the live Docker backend.
+Two real bugs found + fixed (both in `hmm_console`):
+- **Auto-sync died after a DataMode switch** (`73499d9`): the
+  `SyncController` is recreated when the orchestrator rebuilds (mode
+  switch) but was never re-`start()`ed → lifecycle + periodic auto-sync
+  silently stopped until app restart. Fixed via `ref.listen` in
+  `MainApp.build`; regression test included. **Verified fixed on-device**
+  (syncs fire after a mode switch).
+- **Settings deserialization crash** (`7d30197`): a partial/malformed
+  remote settings bundle threw `Null is not a subtype of String`
+  (`GasLogSettings.fromJson` unguarded casts). Fixed: default missing
+  fields + orchestrator treats a bad bundle as a non-fatal sync error.
+  +3 tests.
+- **IdP signing-credential check** (in response to a deploy-readiness
+  concern): Duende auto key management; signing keys in the operational
+  store DB, encrypted with ASP.NET Data Protection keys persisted to
+  `/var/lib/hmm-idp/dp-keys`. **Verified the DP key persists** (survives
+  restart) → **deploys won't log users out; VPS-ready**. The on-sim 401
+  was purely `--refresh-test-db` truncating the IdP `Keys` table (a
+  test-reset artifact), not a deploy issue.
+
+### Deferred / follow-ups from this session (not blocking VPS deploy)
+- **Sync churn** (cloudApi): the orchestrator appears to pull→push the
+  same notes every cycle without converging (LWW not settling). Seen in
+  logs; not yet diagnosed. Worth a look — robustness, not correctness.
+- **Per-note transient timeout escalates to whole-sync failure**:
+  a single 15s `receiveTimeout` on one note marks the whole sync failed
+  → alarming "Sync failing — last 5" banner. Consider making per-note
+  transport errors non-fatal (retry/skip).
+- **IdP DP-key encrypted at rest** (security hardening, optional): the
+  DP key is stored UNENCRYPTED on disk (`No XML encryptor configured`),
+  protected only by file perms (600, service-account-owned). Harden
+  with `ProtectKeysWithCertificate(...)` for defense-in-depth.
+
 Design doc: [`docs/user-profile-settings-sync.md`](docs/user-profile-settings-sync.md)
 (addendum to `docs/multi-device-cloud-sync.md`).
 
