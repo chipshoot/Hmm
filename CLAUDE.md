@@ -83,13 +83,15 @@ Infrastructure (Hmm.Utility)
 - API routes use `/v{version}/` prefix for versioning (served from the `api.` subdomain — no `/api/` namespace needed)
 - JWT Bearer authentication validated against Hmm.Idp
 - Swagger/OpenAPI documentation at `/swagger`
-- Controllers organized by domain areas (HmmNoteService, AutomobileInfoService)
+- Controllers organized by domain areas (HmmNoteService, AutomobileInfoService, ProfileService, UtilityService)
 - Uses result filters for consistent DTO projection
 
 **Hmm.Core** - Business logic layer with Manager pattern
 - `IHmmNoteManager` / `HmmNoteManager` - Core note operations
 - `IAuthorManager` / `AuthorManager` - Author management
 - `ITagManager` / `TagManager` - Tag operations
+- `IContactManager`, `INoteCatalogManager`, `INoteContentManager`, `INoteTagAssociationManager`, `IMigrationManager`
+- `IUserSettingsManager` - User profile/settings (replaces the former Hmm.Infrastructure IDP provider)
 - All operations return `ProcessingResult` for error handling
 - Expression-based querying with domain/DAO model mapping
 
@@ -112,10 +114,12 @@ Infrastructure (Hmm.Utility)
 - `ApiMappingProfile` maps between domain entities and DTOs
 - Property mapping services for dynamic sorting/filtering via query strings
 
-**Hmm.Automobile** - Domain module for vehicle expense tracking
-- `AutomobileInfo`, `GasLog`, `GasDiscount` entities
+**Hmm.Automobile** - Domain module for vehicle tracking
+- Entities: `AutomobileInfo`, `GasLog`, `GasDiscount`, `GasStation`, `AutoInsurancePolicy` (with `CoverageItem`), `AutoScheduledService`, and service records
+- Each entity has a Manager + Validator + JSON note serializer (`*JsonNoteSerialize`); `EntityManagerBase` / `EntityValidatorBase` / `EntityJsonNoteSerializeBase` provide the shared base
 - Stores complex objects as serialized note content using JSON
 - Subject pattern: `GasLog,AutomobileId:{id}` for searchability
+- Includes seeding (`AutomobileSeedingService`) and snapshot maintenance (`AutomobileSnapshotUpdater`)
 
 **Hmm.BigCalendar** - Domain module for calendar/appointment management
 - `Appointment` entity with Guid-based primary keys
@@ -137,8 +141,17 @@ Infrastructure (Hmm.Utility)
 - Value types: `Money`, `Dimension`, `Volume`
 - Guard clauses via .NET built-in `ArgumentNullException.ThrowIfNull` / `ArgumentException.ThrowIfNullOrWhiteSpace`
 
-**Hmm.Infrastructure** - IDP integration
-- `IdpUserProfileProvider` fetches user profile from IDP using access tokens
+**Hmm.Core.Vault** - Note attachment / blob storage
+- `IVaultBlobStore` with `FilesystemVaultBlobStore` implementation (registered as a singleton in `Startup.cs`)
+- Operations: `PutBytesAsync`, `GetBytesAsync`, `ExistsAsync`, `DeleteAsync`, `ListAsync`
+- `NoteAttachments` / `NoteAttachmentsCodec` model note-scoped attachments; `VaultRef`, `VaultEntry`, `VaultPathUtil` handle vault addressing
+- See `docs/attachments-design.md` and `docs/attachments-path-spec.md`
+
+**Hmm.Utility.Services** - External service integrations
+- `IGeocodingService` with `NominatimGeocodingService` (OpenStreetMap Nominatim)
+- `GeoAddress` result model, configured via `GeocodingSettings`
+
+**Hmm.Contract** - Shared contract project (currently a placeholder; no source files yet)
 
 ## Important Architectural Patterns
 
@@ -255,7 +268,7 @@ All test projects use:
 1. Client authenticates with **Hmm.Idp** (IdentityServer) to get JWT access token
 2. Client includes token in API requests to **Hmm.ServiceApi** as Bearer token
 3. ServiceApi validates token against Idp authority
-4. ServiceApi can use `IdpUserProfileProvider` to fetch user claims from Idp
+4. User profile/settings are managed via `IUserSettingsManager` (`Hmm.Core/DefaultManager/UserSettingsManager.cs`), exposed through the `/v1/profile/settings` endpoint — see `docs/user-profile-settings-sync.md`
 
 ## Key Domain Entities
 
@@ -303,16 +316,27 @@ Current API version is v1.0. The API is served at `api.homemademessage.com` and 
 
 **HmmNoteService endpoints:**
 - `/v1/notes` - Note CRUD operations
+- `/v1/notes/{noteId}/vault/{*filename}` - Note attachment upload/download/delete (GET on the collection lists entries); backed by `Hmm.Core.Vault`
 - `/v1/authors` - Author management
 - `/v1/contacts` - Contact information
 - `/v1/tags` - Tag operations (GET by name: `/v1/tags/by-name/{name}`)
 - `/v1/notecatalogs` - Note catalog/template management
 
+**ProfileService endpoints:**
+- `/v1/profile/settings` - User profile/settings (GET/PUT), backed by `IUserSettingsManager`
+
 **AutomobileInfoService endpoints:**
 - `/v1/automobiles` - Automobile management
 - `/v1/automobiles/{autoId}/gaslogs` - Gas log entries for specific automobile
+- `/v1/automobiles/{autoId}/insurance-policies` - Auto insurance policies
+- `/v1/automobiles/{autoId}/scheduled-services` - Scheduled maintenance services
+- `/v1/automobiles/{autoId}/services` - Service records
 - `/v1/automobiles/gaslogs/discounts` - Discount program management
 - `/v1/automobiles/gasstations` - Gas station management
+
+**UtilityService endpoints:**
+- `/v1/geocoding` - Address geocoding via `IGeocodingService` (Nominatim)
+- `/v1/currency` - Currency utilities
 
 ### Result Filters
 Controllers use result filters to automatically map entities to DTOs:
