@@ -40,6 +40,12 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 
         public DateTime CreateDate { get; set; }
 
+        /// <summary>
+        /// User-editable note date. Distinct from <see cref="CreateDate"/>
+        /// (immutable created-at audit).
+        /// </summary>
+        public DateTime NoteDate { get; set; }
+
         public DateTime LastModifiedDate { get; set; }
 
         public string CreatedBy { get; set; }

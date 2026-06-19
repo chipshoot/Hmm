@@ -28,6 +28,14 @@ namespace Hmm.Core.Map.DomainEntity
 
         public DateTime CreateDate { get; set; }
 
+        /// <summary>
+        /// User-editable note date (OneNote-style). Defaults to creation
+        /// time but the user can change it; syncs across devices. Distinct
+        /// from <see cref="CreateDate"/>, which is the immutable created-at
+        /// audit stamp.
+        /// </summary>
+        public DateTime NoteDate { get; set; }
+
         public DateTime LastModifiedDate { get; set; }
 
         public string? CreatedBy { get; set; }
