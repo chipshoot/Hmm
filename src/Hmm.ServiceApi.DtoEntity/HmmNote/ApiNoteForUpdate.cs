@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Hmm.Core.Vault;
@@ -17,6 +18,12 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
 
         [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
         public string Description { get; set; }
+
+        /// <summary>
+        /// Replacement note date. Null ⇒ preserve the stored value
+        /// (see the null-preserve condition in ApiMappingProfile).
+        /// </summary>
+        public DateTime? NoteDate { get; set; }
 
         /// <summary>
         /// Carried through on update so a sync push can refresh a

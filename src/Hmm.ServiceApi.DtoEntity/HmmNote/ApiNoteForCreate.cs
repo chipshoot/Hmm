@@ -30,6 +30,11 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         public string Description { get; set; }
 
         /// <summary>
+        /// Optional user-chosen note date. Null ⇒ server defaults to now.
+        /// </summary>
+        public DateTime? NoteDate { get; set; }
+
+        /// <summary>
         /// Optional headline image for the note. Must be a
         /// <c>vault</c>-kind ref by the time it reaches the API
         /// (client rewrites other kinds during upload).

@@ -47,6 +47,9 @@ namespace Hmm.Core.Map.DbEntity
         [Column("createdate")]
         public DateTime CreateDate { get; set; }
 
+        [Column("notedate")]
+        public DateTime NoteDate { get; set; }
+
         [Column("lastmodifieddate")]
         public DateTime LastModifiedDate { get; set; }
 

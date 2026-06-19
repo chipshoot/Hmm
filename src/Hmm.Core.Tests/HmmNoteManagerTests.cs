@@ -54,6 +54,51 @@ namespace Hmm.Core.Tests
         }
 
         [Fact]
+        public async Task CreateAsync_defaults_NoteDate_to_now_when_unset()
+        {
+            // Arrange — NoteDate left unset.
+            var note = new HmmNote
+            {
+                Author = _author,
+                Subject = "subject",
+                Content = "content",
+                Catalog = _catalog
+            };
+
+            // Act
+            CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
+            var created = await _noteManager.CreateAsync(note);
+
+            // Assert — NoteDate defaulted to the provider's current time.
+            Assert.True(created.Success);
+            Assert.Equal(CurrentTime, created.Value.NoteDate);
+        }
+
+        [Fact]
+        public async Task CreateAsync_preserves_a_client_supplied_NoteDate()
+        {
+            // Arrange — a deliberately-past note date.
+            var chosen = new DateTime(2020, 1, 2, 3, 4, 5);
+            var note = new HmmNote
+            {
+                Author = _author,
+                Subject = "subject",
+                Content = "content",
+                Catalog = _catalog,
+                NoteDate = chosen
+            };
+
+            // Act
+            CurrentTime = new DateTime(2021, 4, 4, 8, 15, 0);
+            var created = await _noteManager.CreateAsync(note);
+
+            // Assert — chosen note date kept; CreateDate is still the audit stamp.
+            Assert.True(created.Success);
+            Assert.Equal(chosen, created.Value.NoteDate);
+            Assert.Equal(CurrentTime, created.Value.CreateDate);
+        }
+
+        [Fact]
         public async Task Can_Update_Note()
         {
             // Arrange - note with null content
