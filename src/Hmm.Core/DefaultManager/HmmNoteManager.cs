@@ -144,6 +144,7 @@ namespace Hmm.Core.DefaultManager
                 }
 
                 note.CreateDate = _dateProvider.UtcNow;
+                note.NoteDate = note.NoteDate == default ? _dateProvider.UtcNow : note.NoteDate;
                 note.LastModifiedDate = _dateProvider.UtcNow;
                 note.CreatedBy = note.Author?.AccountName;
                 note.LastModifiedBy = note.Author?.AccountName;

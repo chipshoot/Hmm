@@ -78,7 +78,11 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
             CreateMap<ApiNoteForCreate, Core.Map.DomainEntity.HmmNote>()
                 .ForMember(n => n.Author, opt => opt.MapFrom(s => new Author { Id = s.AuthorId }))
                 .ForMember(n => n.Catalog, opt => opt.MapFrom(s => new NoteCatalog { Id = s.CatalogId }));
-            CreateMap<ApiNoteForUpdate, Core.Map.DomainEntity.HmmNote>();
+            CreateMap<ApiNoteForUpdate, Core.Map.DomainEntity.HmmNote>()
+                // Null NoteDate ⇒ keep the destination's existing value
+                // (Put maps the DTO onto the loaded note).
+                .ForMember(d => d.NoteDate,
+                    opt => opt.Condition(s => s.NoteDate.HasValue));
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNoteForCreate>()
                 .ForMember(n => n.AuthorId, opt => opt.MapFrom(s => s.Author.Id))
                 .ForMember(n => n.CatalogId, opt => opt.MapFrom(s => s.Catalog.Id));
