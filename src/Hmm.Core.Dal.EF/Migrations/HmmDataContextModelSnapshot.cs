@@ -153,6 +153,10 @@ namespace Hmm.Core.Dal.EF.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("lastmodifieddate");
 
+                    b.Property<DateTime>("NoteDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("notedate");
+
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(1000)
