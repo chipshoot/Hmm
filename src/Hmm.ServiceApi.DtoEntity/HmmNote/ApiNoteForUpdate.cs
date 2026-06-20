@@ -26,6 +26,17 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         public DateTime? NoteDate { get; set; }
 
         /// <summary>
+        /// Replacement location fields. Null ⇒ preserve the stored value
+        /// (null-preserve condition in ApiMappingProfile). Note: the API
+        /// cannot currently *clear* a location by sending nulls — see the
+        /// Phase 2b spec; clearing is client-local until the cloudApi note
+        /// repo lands.
+        /// </summary>
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? LocationLabel { get; set; }
+
+        /// <summary>
         /// Carried through on update so a sync push can refresh a
         /// note without losing its identity. Server preserves an
         /// existing value when null/empty; otherwise the supplied

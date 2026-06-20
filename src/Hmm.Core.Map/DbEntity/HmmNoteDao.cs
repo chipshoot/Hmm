@@ -50,6 +50,16 @@ namespace Hmm.Core.Map.DbEntity
         [Column("notedate")]
         public DateTime NoteDate { get; set; }
 
+        [Column("latitude")]
+        public double? Latitude { get; set; }
+
+        [Column("longitude")]
+        public double? Longitude { get; set; }
+
+        [Column("locationlabel")]
+        [MaxLength(500)]
+        public string? LocationLabel { get; set; }
+
         [Column("lastmodifieddate")]
         public DateTime LastModifiedDate { get; set; }
 

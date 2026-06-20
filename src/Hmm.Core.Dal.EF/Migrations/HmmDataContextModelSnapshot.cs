@@ -153,6 +153,19 @@ namespace Hmm.Core.Dal.EF.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("lastmodifieddate");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<string>("LocationLabel")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("locationlabel");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
                     b.Property<DateTime>("NoteDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("notedate");

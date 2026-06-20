@@ -34,6 +34,10 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         /// </summary>
         public DateTime? NoteDate { get; set; }
 
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? LocationLabel { get; set; }
+
         /// <summary>
         /// Optional headline image for the note. Must be a
         /// <c>vault</c>-kind ref by the time it reaches the API
