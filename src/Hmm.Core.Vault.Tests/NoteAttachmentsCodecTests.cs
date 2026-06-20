@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace Hmm.Core.Vault.Tests;
@@ -32,6 +33,36 @@ public class NoteAttachmentsCodecTests
         {
             Assert.True(NoteAttachmentsCodec.Decode(null).IsEmpty);
             Assert.True(NoteAttachmentsCodec.Decode("").IsEmpty);
+        }
+
+        [Fact]
+        public void Files_round_trip()
+        {
+            var pdf = new VaultRef
+            {
+                Path = "attachments/note-1/report.pdf",
+                ContentType = "application/pdf",
+                ByteSize = 240,
+                OriginalName = "report.pdf",
+            };
+            var value = new NoteAttachments(files: new List<VaultRef> { pdf });
+
+            var json = NoteAttachmentsCodec.Encode(value);
+            Assert.NotNull(json);
+            var back = NoteAttachmentsCodec.Decode(json!);
+
+            Assert.Single(back.Files);
+            Assert.Equal("attachments/note-1/report.pdf", back.Files[0].Path);
+            Assert.Equal("application/pdf", back.Files[0].ContentType);
+        }
+
+        [Fact]
+        public void Images_only_payload_omits_files_key()
+        {
+            var encoded = NoteAttachmentsCodec.Encode(
+                new NoteAttachments(images: new List<VaultRef> { SampleRef() }));
+            Assert.NotNull(encoded);
+            Assert.DoesNotContain("files", encoded!);
         }
 
         [Fact]

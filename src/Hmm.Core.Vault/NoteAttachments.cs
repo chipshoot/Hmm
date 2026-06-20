@@ -35,11 +35,19 @@ public sealed class NoteAttachments
     /// </summary>
     public IReadOnlyList<VaultRef> Images { get; }
 
+    /// <summary>
+    /// Non-image attachments (PDF now, audio later). Rendered by content
+    /// type. Independent of <see cref="Images"/>.
+    /// </summary>
+    public IReadOnlyList<VaultRef> Files { get; }
+
     public NoteAttachments(
         VaultRef? primaryImage = null,
-        IList<VaultRef>? images = null)
+        IList<VaultRef>? images = null,
+        IList<VaultRef>? files = null)
     {
         images ??= Array.Empty<VaultRef>();
+        files ??= Array.Empty<VaultRef>();
         if (primaryImage != null)
         {
             foreach (var img in images)
@@ -54,13 +62,15 @@ public sealed class NoteAttachments
         }
         PrimaryImage = primaryImage;
         Images = images.ToList().AsReadOnly();
+        Files = files.ToList().AsReadOnly();
     }
 
     /// <summary>
-    /// True when both slots are empty — same shape SQL NULL would
+    /// True when all slots are empty — same shape SQL NULL would
     /// produce.
     /// </summary>
-    public bool IsEmpty => PrimaryImage == null && Images.Count == 0;
+    public bool IsEmpty =>
+        PrimaryImage == null && Images.Count == 0 && Files.Count == 0;
 
     public bool IsNotEmpty => !IsEmpty;
 
@@ -73,6 +83,11 @@ public sealed class NoteAttachments
         {
             if (!Equals(Images[i], other.Images[i])) return false;
         }
+        if (Files.Count != other.Files.Count) return false;
+        for (int i = 0; i < Files.Count; i++)
+        {
+            if (!Equals(Files[i], other.Files[i])) return false;
+        }
         return true;
     }
 
@@ -80,6 +95,7 @@ public sealed class NoteAttachments
     {
         var hash = HashCode.Combine(PrimaryImage);
         foreach (var img in Images) hash = HashCode.Combine(hash, img);
+        foreach (var f in Files) hash = HashCode.Combine(hash, f);
         return hash;
     }
 }

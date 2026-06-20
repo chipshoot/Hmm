@@ -17,6 +17,11 @@
       "description": "Gallery (zero or more). Does not include the primaryImage if one is set.",
       "type": "array",
       "items": { "$ref": "#/definitions/attachmentRef" }
+    },
+    "files": {
+      "description": "Non-image attachments (PDF now, audio later). Zero or more.",
+      "type": "array",
+      "items": { "$ref": "#/definitions/attachmentRef" }
     }
   },
   "definitions": {
@@ -30,9 +35,10 @@
         "image/jpeg",
         "image/png",
         "image/heic",
-        "image/webp"
+        "image/webp",
+        "application/pdf"
       ],
-      "description": "v1 allow-list; matches the storage policy in attachments-design.md."
+      "description": "v1 allow-list; matches the storage policy in attachments-design.md. application/pdf added in Phase 3a (file attachments)."
     },
     "originalName": {
       "type": "string",
