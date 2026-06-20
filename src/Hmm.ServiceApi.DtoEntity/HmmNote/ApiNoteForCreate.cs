@@ -50,5 +50,8 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         /// <see cref="PrimaryImage"/>.
         /// </summary>
         public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
+
+        /// <summary>Non-image attachments (PDF now, audio later).</summary>
+        public IList<VaultRef> Files { get; set; } = new List<VaultRef>();
     }
 }
