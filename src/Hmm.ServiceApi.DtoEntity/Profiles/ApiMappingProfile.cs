@@ -82,7 +82,14 @@ namespace Hmm.ServiceApi.DtoEntity.Profiles
                 // Null NoteDate ⇒ keep the destination's existing value
                 // (Put maps the DTO onto the loaded note).
                 .ForMember(d => d.NoteDate,
-                    opt => opt.Condition(s => s.NoteDate.HasValue));
+                    opt => opt.Condition(s => s.NoteDate.HasValue))
+                // Phase 2b: omitted location fields preserve stored values.
+                .ForMember(d => d.Latitude,
+                    opt => opt.Condition(s => s.Latitude.HasValue))
+                .ForMember(d => d.Longitude,
+                    opt => opt.Condition(s => s.Longitude.HasValue))
+                .ForMember(d => d.LocationLabel,
+                    opt => opt.Condition(s => s.LocationLabel != null));
             CreateMap<Core.Map.DomainEntity.HmmNote, ApiNoteForCreate>()
                 .ForMember(n => n.AuthorId, opt => opt.MapFrom(s => s.Author.Id))
                 .ForMember(n => n.CatalogId, opt => opt.MapFrom(s => s.Catalog.Id));
