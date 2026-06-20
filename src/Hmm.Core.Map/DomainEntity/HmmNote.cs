@@ -36,6 +36,11 @@ namespace Hmm.Core.Map.DomainEntity
         /// </summary>
         public DateTime NoteDate { get; set; }
 
+        /// <summary>Optional note location (Phase 2b). All-null = no location.</summary>
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? LocationLabel { get; set; }
+
         public DateTime LastModifiedDate { get; set; }
 
         public string? CreatedBy { get; set; }

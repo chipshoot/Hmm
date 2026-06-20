@@ -46,6 +46,10 @@ namespace Hmm.ServiceApi.DtoEntity.HmmNote
         /// </summary>
         public DateTime NoteDate { get; set; }
 
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? LocationLabel { get; set; }
+
         public DateTime LastModifiedDate { get; set; }
 
         public string CreatedBy { get; set; }
