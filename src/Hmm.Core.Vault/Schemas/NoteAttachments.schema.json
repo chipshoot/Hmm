@@ -36,9 +36,10 @@
         "image/png",
         "image/heic",
         "image/webp",
-        "application/pdf"
+        "application/pdf",
+        "audio/mp4"
       ],
-      "description": "v1 allow-list; matches the storage policy in attachments-design.md. application/pdf added in Phase 3a (file attachments)."
+      "description": "v1 allow-list; matches the storage policy in attachments-design.md. application/pdf added in Phase 3a (file attachments); audio/mp4 added in Phase 3b (voice notes)."
     },
     "originalName": {
       "type": "string",
