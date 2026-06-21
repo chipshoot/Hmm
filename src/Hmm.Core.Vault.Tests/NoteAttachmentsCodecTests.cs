@@ -57,6 +57,26 @@ public class NoteAttachmentsCodecTests
         }
 
         [Fact]
+        public void Audio_file_round_trips()
+        {
+            var audio = new VaultRef
+            {
+                Path = "attachments/note-1/rec.m4a",
+                ContentType = "audio/mp4",
+                ByteSize = 1024,
+                OriginalName = "recording-1.m4a",
+            };
+            var value = new NoteAttachments(files: new List<VaultRef> { audio });
+
+            var json = NoteAttachmentsCodec.Encode(value);
+            Assert.NotNull(json);
+            var back = NoteAttachmentsCodec.Decode(json!);
+
+            Assert.Single(back.Files);
+            Assert.Equal("audio/mp4", back.Files[0].ContentType);
+        }
+
+        [Fact]
         public void Images_only_payload_omits_files_key()
         {
             var encoded = NoteAttachmentsCodec.Encode(
