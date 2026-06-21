@@ -60,5 +60,11 @@ namespace Hmm.Core.Map.DomainEntity
         /// <see cref="PrimaryImage"/>.
         /// </summary>
         public IList<VaultRef> Images { get; set; } = new List<VaultRef>();
+
+        /// <summary>
+        /// Non-image attachments (PDF now, audio later). Rides the same
+        /// <c>attachments</c> JSON column as PrimaryImage / Images.
+        /// </summary>
+        public IList<VaultRef> Files { get; set; } = new List<VaultRef>();
     }
 }

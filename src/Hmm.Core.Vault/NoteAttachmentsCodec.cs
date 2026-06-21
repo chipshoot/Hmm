@@ -78,9 +78,20 @@ public static class NoteAttachmentsCodec
             }
         }
 
+        var files = new List<VaultRef>();
+        if (root.TryGetProperty("files", out var filesElement)
+            && filesElement.ValueKind == JsonValueKind.Array)
+        {
+            int i = 0;
+            foreach (var item in filesElement.EnumerateArray())
+            {
+                files.Add(DecodeVaultRef(item, $"files[{i++}]"));
+            }
+        }
+
         try
         {
-            return new NoteAttachments(primary, images);
+            return new NoteAttachments(primary, images, files);
         }
         catch (ArgumentException ex)
         {
@@ -105,15 +116,20 @@ public static class NoteAttachmentsCodec
         var images = value.Images
             .Select(VaultRefToJson)
             .ToList();
+        var files = value.Files
+            .Select(VaultRefToJson)
+            .ToList();
 
-        // Build with an anonymous object so JSON property order is
-        // stable across runs (System.Text.Json preserves the order
-        // a dictionary's keys were inserted in).
-        return JsonSerializer.Serialize(new
+        // Order-preserving dictionary (System.Text.Json keeps insertion
+        // order). `files` is omitted when empty so existing images-only
+        // payloads encode byte-identically to before Phase 3a.
+        var dict = new Dictionary<string, object?>
         {
-            primaryImage = primary,
-            images,
-        }, JsonOptions);
+            ["primaryImage"] = primary,
+            ["images"] = images,
+        };
+        if (files.Count > 0) dict["files"] = files;
+        return JsonSerializer.Serialize(dict, JsonOptions);
     }
 
     /// <summary>

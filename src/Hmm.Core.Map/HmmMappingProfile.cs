@@ -96,7 +96,10 @@ public class HmmMappingProfile : Profile
                     NoteAttachmentsCodec.Decode(src.Attachments).PrimaryImage))
             .ForMember(dest => dest.Images,
                 opt => opt.MapFrom(src =>
-                    NoteAttachmentsCodec.Decode(src.Attachments).Images.ToList()));
+                    NoteAttachmentsCodec.Decode(src.Attachments).Images.ToList()))
+            .ForMember(dest => dest.Files,
+                opt => opt.MapFrom(src =>
+                    NoteAttachmentsCodec.Decode(src.Attachments).Files.ToList()));
         CreateMap<HmmNote, HmmNoteDao>()
             .ForMember(dest => dest.Tags,
                 opt => opt.MapFrom(src =>
@@ -109,7 +112,8 @@ public class HmmMappingProfile : Profile
                     NoteAttachmentsCodec.Encode(
                         new NoteAttachments(
                             src.PrimaryImage,
-                            src.Images))));
+                            src.Images,
+                            src.Files))));
     }
 
     private static ContactInfo? ContactDaoConvert(string contactString)

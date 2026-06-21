@@ -67,6 +67,38 @@ public class HmmNoteAttachmentsMappingTests
     }
 
     [Fact]
+    public void Files_in_the_column_map_to_domain_Files()
+    {
+        const string json =
+            "{\"images\":[],\"files\":[{\"kind\":\"vault\",\"path\":\"attachments/n/r.pdf\",\"contentType\":\"application/pdf\",\"byteSize\":3}]}";
+        var dao = MinimalDao(attachments: json);
+
+        var note = _mapper.Map<HmmNote>(dao);
+
+        Assert.Single(note.Files);
+        Assert.Equal("application/pdf", note.Files[0].ContentType);
+        Assert.Equal("attachments/n/r.pdf", note.Files[0].Path);
+    }
+
+    [Fact]
+    public void Domain_Files_encode_back_into_the_column()
+    {
+        var pdf = new VaultRef
+        {
+            Path = "attachments/n/r.pdf",
+            ContentType = "application/pdf",
+            ByteSize = 3,
+        };
+        var note = MinimalNote();
+        note.Files = new List<VaultRef> { pdf };
+
+        var dao = _mapper.Map<HmmNoteDao>(note);
+
+        Assert.NotNull(dao.Attachments);
+        Assert.Contains("r.pdf", dao.Attachments!);
+    }
+
+    [Fact]
     public void Empty_string_attachments_maps_to_no_primary_image_and_empty_images()
     {
         var dao = MinimalDao(attachments: string.Empty);
