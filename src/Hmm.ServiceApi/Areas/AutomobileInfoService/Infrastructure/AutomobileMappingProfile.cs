@@ -231,9 +231,12 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
             // PartItem mappings (value object inside ServiceRecord)
             CreateMap<PartItem, ApiPartItem>()
+                .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
                 .ForMember(d => d.UnitCost, opt => opt.MapFrom(s => s.UnitCost != null ? (decimal?)s.UnitCost.Amount : null))
                 .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.UnitCost != null ? s.UnitCost.Currency.ToString() : null));
             CreateMap<ApiPartItem, PartItem>()
+                .ForMember(d => d.Type, opt => opt.MapFrom(s =>
+                    string.IsNullOrEmpty(s.Type) ? LineItemType.Part : Enum.Parse<LineItemType>(s.Type, true)))
                 .ForMember(d => d.UnitCost, opt =>
                 {
                     opt.PreCondition(s => s.UnitCost.HasValue);
@@ -244,6 +247,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
             CreateMap<ServiceRecord, ApiServiceRecord>()
                 .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
                 .ForMember(d => d.Cost, opt => opt.MapFrom(s => s.Cost != null ? (decimal?)s.Cost.Amount : null))
+                .ForMember(d => d.Tax, opt => opt.MapFrom(s => s.Tax != null ? (decimal?)s.Tax.Amount : null))
                 .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Cost != null ? s.Cost.Currency.ToString() : null));
 
             CreateMap<ApiServiceRecordForCreate, ServiceRecord>()
@@ -254,6 +258,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                 {
                     opt.PreCondition(s => s.Cost.HasValue);
                     opt.MapFrom(s => new Money(s.Cost.Value, ParseCurrency(s.Currency)));
+                })
+                .ForMember(d => d.Tax, opt =>
+                {
+                    opt.PreCondition(s => s.Tax.HasValue);
+                    opt.MapFrom(s => new Money(s.Tax.Value, ParseCurrency(s.Currency)));
                 })
                 .ForMember(d => d.CreatedDate, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
@@ -268,11 +277,17 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                     opt.PreCondition(s => s.Cost.HasValue);
                     opt.MapFrom(s => new Money(s.Cost.Value, ParseCurrency(s.Currency)));
                 })
+                .ForMember(d => d.Tax, opt =>
+                {
+                    opt.PreCondition(s => s.Tax.HasValue);
+                    opt.MapFrom(s => new Money(s.Tax.Value, ParseCurrency(s.Currency)));
+                })
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<ServiceRecord, ApiServiceRecordForUpdate>()
                 .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
                 .ForMember(d => d.Cost, opt => opt.MapFrom(s => s.Cost != null ? (decimal?)s.Cost.Amount : null))
+                .ForMember(d => d.Tax, opt => opt.MapFrom(s => s.Tax != null ? (decimal?)s.Tax.Amount : null))
                 .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Cost != null ? s.Cost.Currency.ToString() : null));
 
             CreateMap<PageList<ServiceRecord>, PageList<ApiServiceRecord>>()

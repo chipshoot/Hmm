@@ -21,6 +21,8 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 
         public decimal? Cost { get; set; }
 
+        public decimal? Tax { get; set; }
+
         public string Currency { get; set; }
 
         public string ShopName { get; set; }

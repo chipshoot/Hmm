@@ -17,12 +17,15 @@ namespace Hmm.Automobile.Validator
             RuleFor(r => r.Mileage).GreaterThanOrEqualTo(0).WithMessage("Mileage cannot be negative");
             RuleFor(r => r.Description).MaximumLength(1000);
             RuleFor(r => r.Cost).Must(c => c == null || HasValidMoney(c)).WithMessage("Cost must be a non-negative money amount");
+            RuleFor(r => r.Tax).Must(c => c == null || HasValidMoney(c)).WithMessage("Tax must be a non-negative money amount");
             RuleFor(r => r.ShopName).MaximumLength(100);
             RuleForEach(r => r.Parts)
                 .ChildRules(item =>
                 {
                     item.RuleFor(p => p.Name).NotEmpty().MaximumLength(100);
                     item.RuleFor(p => p.Quantity).GreaterThan(0);
+                    item.RuleFor(p => p.UnitCost).Must(c => c == null || HasValidMoney(c))
+                        .WithMessage("Unit cost must be a non-negative money amount");
                 });
         }
     }

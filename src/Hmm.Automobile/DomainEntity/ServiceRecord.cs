@@ -2,6 +2,7 @@ using Hmm.Utility.Currency;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace Hmm.Automobile.DomainEntity
 {
@@ -33,6 +34,19 @@ namespace Hmm.Automobile.DomainEntity
         public string ShopName { get; set; }
 
         public List<PartItem> Parts { get; set; } = new();
+
+        /// <summary>Manual tax amount (e.g. HST) entered from the receipt.</summary>
+        public Money Tax { get; set; }
+
+        private decimal TotalFor(LineItemType t) => Parts
+            .Where(p => p.Type == t)
+            .Sum(p => (p.UnitCost?.Amount ?? 0m) * p.Quantity);
+
+        public decimal LabourTotal => TotalFor(LineItemType.Labour);
+        public decimal PartsTotal => TotalFor(LineItemType.Part);
+        public decimal FeesTotal => TotalFor(LineItemType.Fee);
+        public decimal Subtotal => LabourTotal + PartsTotal + FeesTotal;
+        public decimal GrandTotal => Subtotal + (Tax?.Amount ?? 0m);
 
         [StringLength(1000)]
         public string Notes { get; set; }

@@ -59,6 +59,45 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
+        public async Task RoundTrip_ItemType_And_Tax_AndLegacyDefaults()
+        {
+            var original = CreateValidRecord();
+            original.Tax = new Money(5m, CurrencyCodeType.Cad);
+            original.Parts = new List<PartItem>
+            {
+                new() { Type = LineItemType.Labour, Name = "Service A", Quantity = 1,
+                        UnitCost = new Money(61.50m, CurrencyCodeType.Cad) },
+            };
+
+            var json = _serializer.GetNoteSerializationText(original);
+            var note = CreateNote(json);
+            var result = await _serializer.GetEntity(note);
+
+            Assert.True(result.Success);
+            Assert.Equal(LineItemType.Labour, result.Value.Parts[0].Type);
+            Assert.NotNull(result.Value.Tax);
+            Assert.Equal((double)5m, result.Value.Tax.InternalAmount);
+        }
+
+        [Fact]
+        public async Task Deserialize_LegacyPayload_DefaultsTypeToPart_AndTaxNull()
+        {
+            // A pre-feature payload: item has no "type", record has no "tax".
+            var legacy =
+                "{\"note\":{\"content\":{\"" + AutomobileConstant.ServiceRecordSubject +
+                "\":{\"automobileId\":1,\"date\":\"2026-01-01T00:00:00Z\",\"mileage\":100," +
+                "\"type\":\"OilChange\",\"description\":\"x\",\"shopName\":\"s\"," +
+                "\"parts\":[{\"name\":\"Oil\",\"quantity\":1}],\"notes\":\"\"," +
+                "\"createdDate\":\"2026-01-01T00:00:00Z\"}}}}";
+
+            var result = await _serializer.GetEntity(CreateNote(legacy));
+
+            Assert.True(result.Success);
+            Assert.Equal(LineItemType.Part, result.Value.Parts[0].Type);
+            Assert.Null(result.Value.Tax);
+        }
+
+        [Fact]
         public async Task RoundTrip_PartsList_PreservesAllItems()
         {
             var original = CreateValidRecord();
