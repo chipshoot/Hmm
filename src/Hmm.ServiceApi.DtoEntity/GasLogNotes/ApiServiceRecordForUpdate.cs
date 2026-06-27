@@ -19,6 +19,8 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
         [Range(0, double.MaxValue)]
         public decimal? Cost { get; set; }
 
+        public decimal? Tax { get; set; }
+
         public string Currency { get; set; }
 
         [StringLength(100)]
