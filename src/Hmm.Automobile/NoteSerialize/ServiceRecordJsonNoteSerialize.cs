@@ -48,6 +48,13 @@ namespace Hmm.Automobile.NoteSerialize
                     cost = JsonSerializer.Deserialize<Money>(costElement.GetRawText(), JsonOptions);
                 }
 
+                Money tax = null;
+                if (recordJson.TryGetProperty("tax", out var taxElement) &&
+                    taxElement.ValueKind != JsonValueKind.Null)
+                {
+                    tax = JsonSerializer.Deserialize<Money>(taxElement.GetRawText(), JsonOptions);
+                }
+
                 Enum.TryParse<ServiceType>(GetStringProperty(recordJson, "type"), true, out var type);
 
                 var parts = new List<PartItem>();
@@ -62,8 +69,15 @@ namespace Hmm.Automobile.NoteSerialize
                         {
                             unit = JsonSerializer.Deserialize<Money>(unitElement.GetRawText(), JsonOptions);
                         }
+                        LineItemType itemType = LineItemType.Part;
+                        if (part.TryGetProperty("type", out var typeEl) &&
+                            typeEl.ValueKind == JsonValueKind.String)
+                        {
+                            Enum.TryParse(typeEl.GetString(), true, out itemType);
+                        }
                         parts.Add(new PartItem
                         {
+                            Type = itemType,
                             Name = GetStringProperty(part, "name", string.Empty),
                             Quantity = GetIntProperty(part, "quantity", 1),
                             UnitCost = unit
@@ -81,6 +95,7 @@ namespace Hmm.Automobile.NoteSerialize
                     Type = type,
                     Description = GetStringProperty(recordJson, "description", string.Empty),
                     Cost = cost,
+                    Tax = tax,
                     ShopName = GetStringProperty(recordJson, "shopName", string.Empty),
                     Parts = parts,
                     Notes = GetStringProperty(recordJson, "notes", string.Empty),
@@ -114,6 +129,7 @@ namespace Hmm.Automobile.NoteSerialize
                     {
                         partsList.Add(new
                         {
+                            type = p.Type.ToString(),
                             name = p.Name ?? string.Empty,
                             quantity = p.Quantity,
                             unitCost = p.UnitCost
@@ -129,6 +145,7 @@ namespace Hmm.Automobile.NoteSerialize
                     ["type"] = entity.Type.ToString(),
                     ["description"] = entity.Description ?? string.Empty,
                     ["cost"] = entity.Cost,
+                    ["tax"] = entity.Tax,
                     ["shopName"] = entity.ShopName ?? string.Empty,
                     ["parts"] = partsList,
                     ["notes"] = entity.Notes ?? string.Empty,
