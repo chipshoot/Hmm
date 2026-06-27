@@ -8,6 +8,8 @@ namespace Hmm.Automobile.DomainEntity
     /// </summary>
     public class PartItem
     {
+        public LineItemType Type { get; set; } = LineItemType.Part;
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
