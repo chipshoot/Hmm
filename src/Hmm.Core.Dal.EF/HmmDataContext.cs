@@ -297,6 +297,15 @@ namespace Hmm.Core.Dal.EF
             modelBuilder.Entity<MigrationLogDao>().ToTable("migrationlogs");
             modelBuilder.Entity<MigrationLogDao>().HasKey(m => m.Id);
 
+            // migrationlogs is an append-only audit table and does not use
+            // the `description` column inherited from Entity. The original
+            // AddMigrationLogTable migration deliberately omitted it, so the
+            // PostgreSQL (Migrate) schema has no such column — mapping it
+            // would make EF emit SQL against a non-existent column and also
+            // leaves the model out of sync with the snapshot. Ignore it so
+            // model, snapshot, and DB agree on every provider.
+            modelBuilder.Entity<MigrationLogDao>().Ignore(m => m.Description);
+
             modelBuilder.Entity<MigrationLogDao>()
                 .HasOne<AuthorDao>()
                 .WithMany()
