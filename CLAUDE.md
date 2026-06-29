@@ -59,6 +59,18 @@ dotnet ef database update
 dotnet ef migrations script
 ```
 
+### Production Deployment (Oracle VPS)
+`Hmm.ServiceApi` and `Hmm.Idp` run as native `systemd` services on an Oracle VPS, fronted by a Cloudflare Tunnel (`api.` / `idp.homemademessage.com`). Deploy with the scripts in `scripts/`:
+```bash
+./scripts/deploy-api.sh --deploy     # dotnet publish -c Release → rsync → restart hmm-api
+./scripts/deploy-idp.sh --deploy     # same for hmm-idp
+./scripts/deploy-api.sh --status     # remote systemctl status
+./scripts/deploy-api.sh --logs       # follow remote journalctl
+```
+- Each `--deploy` publishes Release locally, rsyncs to the VPS, atomic-swaps into `/opt/hmm-{api,idp}`, and restarts the service. Host/user/SSH-key/paths are overridable via the `API_*` / `IDP_*` env vars documented at the top of each script. One-time bootstrap lives in `scripts/setup-{api,idp}-vps.sh`.
+- The VPS database provider is **PostgreSQL**, so the `Migrate()` schema path applies on every boot — see *Working with Migrations* before shipping any model change.
+- Known IdP gotcha: the `hmm-idp` unit can crash-loop if the unit file ships `Type=notify` (the app doesn't call `UseSystemd()`); the fix on the box is `Type=exec`. After an IdP deploy, check `--logs` for "start operation timed out" while the app log still shows `Now listening on:`.
+
 ## Architecture Overview
 
 This is a multi-layered .NET 10.0 application following Domain-Driven Design (DDD) principles with clear separation of concerns.
@@ -115,7 +127,7 @@ Infrastructure (Hmm.Utility)
 - Property mapping services for dynamic sorting/filtering via query strings
 
 **Hmm.Automobile** - Domain module for vehicle tracking
-- Entities: `AutomobileInfo`, `GasLog`, `GasDiscount`, `GasStation`, `AutoInsurancePolicy` (with `CoverageItem`), `AutoScheduledService`, and service records
+- Entities: `AutomobileInfo`, `GasLog`, `GasDiscount`, `GasStation`, `AutoInsurancePolicy` (with `CoverageItem`), `AutoScheduledService`, and `ServiceRecord` (multi-line-item: a list of typed `PartItem`s — `LineItemType` labour/part/fee — plus a record-level `Tax` and computed `Subtotal`/`*Total`/`GrandTotal`; legacy flat `Cost` kept as a fallback)
 - Each entity has a Manager + Validator + JSON note serializer (`*JsonNoteSerialize`); `EntityManagerBase` / `EntityValidatorBase` / `EntityJsonNoteSerializeBase` provide the shared base
 - Stores complex objects as serialized note content using JSON
 - Subject pattern: `GasLog,AutomobileId:{id}` for searchability
@@ -305,11 +317,21 @@ All test projects use:
 7. Create controller in appropriate ServiceApi area
 
 ### Working with Migrations
-Migrations are managed in `Hmm.Core.Dal.EF` project. When adding new entities:
-1. Update DbContext to include new DbSet
-2. Run `dotnet ef migrations add MigrationName` from Hmm.Core.Dal.EF directory
-3. Review generated migration for correctness
-4. Apply with `dotnet ef database update`
+Migrations live in `Hmm.Core.Dal.EF`. When adding/changing entities:
+1. Update `HmmDataContext` (the `DbSet` plus any Fluent config in `OnModelCreating`).
+2. From `src/Hmm.Core.Dal.EF`, run `dotnet ef migrations add MigrationName` — this also **regenerates `HmmDataContextModelSnapshot.cs`; commit it alongside the migration.**
+3. Review the generated migration, then apply with `dotnet ef database update`.
+
+This repo keeps migrations hand-tuned, so two things bite if you're not careful:
+
+- **Keep the ModelSnapshot in sync.** Hand-editing or adding a migration without letting EF regenerate `HmmDataContextModelSnapshot.cs` lets the model and snapshot drift. Startup then logs a `PendingModelChangesWarning` — its default severity is *Error*, but it's deliberately **downgraded to log-not-throw** via `ConfigureWarnings(...)` in `Startup.cs`, so it doesn't block boot (it's a real signal, not noise — don't ignore it). Verify you're clean with:
+  ```bash
+  dotnet ef migrations has-pending-model-changes \
+    --project src/Hmm.Core.Dal.EF --startup-project src/Hmm.ServiceApi --context HmmDataContext
+  ```
+  Caveat: don't pass `--no-build` unless you just built the **Debug** config — the EF tools load the Debug assembly by default and will silently diff against a *stale* model otherwise.
+- **The two schema-init paths diverge (the real trap).** `AutomobileAppStartupFilter` initializes the schema per provider: **SQLite/dev → `EnsureCreated()`** (builds the *full current model*, so a column you added to an entity but forgot to put in a migration still shows up locally and tests pass), while **PostgreSQL/prod → `Migrate()`** (applies migration DDL only, so that same column is genuinely **absent** on prod and EF throws when it references it). Always validate model changes against the migrations, not just a local SQLite run.
+- **Reconciling snapshot drift without DDL:** when the snapshot is behind but every database is already correct (a table/column exists everywhere via an earlier migration), add a migration with **empty `Up`/`Down`** purely to advance the snapshot. Precedent: `ReconcileModelSnapshot` (2026-06), which also paired with a Fluent `.Ignore(...)` for a property that was never a real column.
 
 ### API Versioning
 Current API version is v1.0. The API is served at `api.homemademessage.com` and routes use a `/v{version}/` path prefix for version negotiation:
