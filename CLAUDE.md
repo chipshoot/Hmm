@@ -359,6 +359,7 @@ Current API version is v1.0. The API is served at `api.homemademessage.com` and 
 **UtilityService endpoints:**
 - `/v1/geocoding` - Address geocoding via `IGeocodingService` (Nominatim)
 - `/v1/currency` - Currency utilities
+- `/v1/receipts/extract` - **PLANNED (Phase B — not yet implemented)** receipt image/PDF → structured-JSON extraction (shop, date, odometer, classified line items, tax) via Claude vision (default Haiku 4.5, structured outputs) for the client's `receipt_scan` feature. Would follow the `IGeocodingService` precedent: `AnthropicSettings` + `IReceiptExtractionService` / `ClaudeReceiptExtractionService` (`Hmm.Utility.Services`, official `Anthropic` C# SDK) + a `ReceiptExtractionController` in the UtilityService area; API key via env/secret on the VPS. Design + task plan live in the **hmm_console** repo: `docs/superpowers/specs/2026-07-01-receipt-scan-autofill-design.md` and `docs/superpowers/plans/2026-07-01-receipt-scan-autofill.md` (Tasks 9–13). The client ships an on-device-only Phase A today.
 
 ### Result Filters
 Controllers use result filters to automatically map entities to DTOs:
