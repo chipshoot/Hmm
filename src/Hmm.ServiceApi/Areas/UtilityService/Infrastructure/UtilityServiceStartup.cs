@@ -22,6 +22,12 @@ namespace Hmm.ServiceApi.Areas.UtilityService.Infrastructure
 
             _services
                 .AddHttpClient<IGeocodingService, NominatimGeocodingService>();
+
+            _services.Configure<AnthropicSettings>(
+                _configuration.GetSection(AnthropicSettings.SectionName));
+
+            _services
+                .AddHttpClient<IReceiptExtractionService, ClaudeReceiptExtractionService>();
         }
     }
 }
