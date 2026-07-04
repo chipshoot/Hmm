@@ -1,32 +1,29 @@
 using Hmm.Utility.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using System.Net;
 
 namespace Hmm.ServiceApi.Core.Tests
 {
-    public class ClaudeReceiptExtractionServiceTests
+    public class AnthropicReceiptExtractionProviderTests
     {
         private static readonly byte[] Bytes = { 1, 2, 3 };
 
-        private readonly Mock<ILogger<ClaudeReceiptExtractionService>> _logger = new();
+        private readonly Mock<ILogger<AnthropicReceiptExtractionProvider>> _logger = new();
 
-        private static AnthropicSettings Settings() => new()
+        private static AiEngineDescriptor Engine() => new()
         {
+            Name = "claude",
+            Provider = AiProvider.Anthropic,
             ApiKey = "test-key",
             Model = "claude-haiku-4-5",
             BaseUrl = "https://api.anthropic.com",
+            SupportsVision = true,
             MaxTokens = 2048
         };
 
-        private ClaudeReceiptExtractionService CreateService(
-            MockHttpMessageHandler handler, AnthropicSettings settings = null)
-        {
-            var client = new HttpClient(handler);
-            return new ClaudeReceiptExtractionService(
-                client, Options.Create(settings ?? Settings()), _logger.Object);
-        }
+        private AnthropicReceiptExtractionProvider CreateProvider(MockHttpMessageHandler handler)
+            => new(new HttpClient(handler), _logger.Object);
 
         [Fact]
         public async Task ExtractAsync_MapsToolUseInputToResult()
@@ -46,9 +43,9 @@ namespace Hmm.ServiceApi.Core.Tests
               ]
             }
             """;
-            var service = CreateService(new MockHttpMessageHandler(json));
+            var provider = CreateProvider(new MockHttpMessageHandler(json));
 
-            var result = await service.ExtractAsync(Bytes, "image/jpeg");
+            var result = await provider.ExtractAsync(Engine(), Bytes, "image/jpeg");
 
             Assert.True(result.Success);
             Assert.Equal("Bob Auto", result.Value.ShopName);
@@ -64,10 +61,10 @@ namespace Hmm.ServiceApi.Core.Tests
         [Fact]
         public async Task ExtractAsync_WithHttpError_ReturnsFail()
         {
-            var service = CreateService(
+            var provider = CreateProvider(
                 new MockHttpMessageHandler("error", HttpStatusCode.InternalServerError));
 
-            var result = await service.ExtractAsync(Bytes, "image/jpeg");
+            var result = await provider.ExtractAsync(Engine(), Bytes, "image/jpeg");
 
             Assert.False(result.Success);
             Assert.Contains("unavailable", result.ErrorMessage);
@@ -76,10 +73,10 @@ namespace Hmm.ServiceApi.Core.Tests
         [Fact]
         public async Task ExtractAsync_WithRefusal_ReturnsFail()
         {
-            var service = CreateService(
+            var provider = CreateProvider(
                 new MockHttpMessageHandler("""{"stop_reason":"refusal","content":[]}"""));
 
-            var result = await service.ExtractAsync(Bytes, "image/jpeg");
+            var result = await provider.ExtractAsync(Engine(), Bytes, "image/jpeg");
 
             Assert.False(result.Success);
         }
@@ -87,10 +84,10 @@ namespace Hmm.ServiceApi.Core.Tests
         [Fact]
         public async Task ExtractAsync_WithNoToolUseBlock_ReturnsFail()
         {
-            var service = CreateService(new MockHttpMessageHandler(
+            var provider = CreateProvider(new MockHttpMessageHandler(
                 """{"stop_reason":"end_turn","content":[{"type":"text","text":"sorry"}]}"""));
 
-            var result = await service.ExtractAsync(Bytes, "image/jpeg");
+            var result = await provider.ExtractAsync(Engine(), Bytes, "image/jpeg");
 
             Assert.False(result.Success);
         }
@@ -98,11 +95,11 @@ namespace Hmm.ServiceApi.Core.Tests
         [Fact]
         public async Task ExtractAsync_WithoutApiKey_ReturnsFail()
         {
-            var settings = Settings();
-            settings.ApiKey = "";
-            var service = CreateService(new MockHttpMessageHandler("{}"), settings);
+            var engine = Engine();
+            engine.ApiKey = "";
+            var provider = CreateProvider(new MockHttpMessageHandler("{}"));
 
-            var result = await service.ExtractAsync(Bytes, "image/jpeg");
+            var result = await provider.ExtractAsync(engine, Bytes, "image/jpeg");
 
             Assert.False(result.Success);
         }
@@ -110,9 +107,9 @@ namespace Hmm.ServiceApi.Core.Tests
         [Fact]
         public async Task ExtractAsync_WithEmptyBytes_ReturnsInvalid()
         {
-            var service = CreateService(new MockHttpMessageHandler("{}"));
+            var provider = CreateProvider(new MockHttpMessageHandler("{}"));
 
-            var result = await service.ExtractAsync(System.Array.Empty<byte>(), "image/jpeg");
+            var result = await provider.ExtractAsync(Engine(), System.Array.Empty<byte>(), "image/jpeg");
 
             Assert.False(result.Success);
         }
