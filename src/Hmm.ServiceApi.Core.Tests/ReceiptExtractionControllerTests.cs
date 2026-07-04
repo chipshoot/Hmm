@@ -64,7 +64,7 @@ namespace Hmm.ServiceApi.Core.Tests
         [Fact]
         public async Task Extract_WhenServiceFails_ReturnsBadRequest()
         {
-            _service.Setup(s => s.ExtractAsync(It.IsAny<byte[]>(), It.IsAny<string>()))
+            _service.Setup(s => s.ExtractAsync(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(ProcessingResult<ReceiptExtractionResult>.Fail("boom"));
 
             var result = await _controller.Extract(FakeFile("image/jpeg", 3, new byte[] { 1, 2, 3 }));
@@ -72,6 +72,23 @@ namespace Hmm.ServiceApi.Core.Tests
             var bad = Assert.IsType<BadRequestObjectResult>(result);
             var response = Assert.IsType<ApiBadRequestResponse>(bad.Value);
             Assert.Contains("boom", response.Errors);
+        }
+
+        [Fact]
+        public async Task Extract_PassesEngineAndPurposeToService()
+        {
+            string capturedEngine = null, capturedPurpose = null;
+            _service.Setup(s => s.ExtractAsync(
+                    It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<byte[], string, string, string>(
+                    (b, c, e, p) => { capturedEngine = e; capturedPurpose = p; })
+                .ReturnsAsync(ProcessingResult<ReceiptExtractionResult>.Ok(new ReceiptExtractionResult()));
+
+            await _controller.Extract(
+                FakeFile("image/jpeg", 3, new byte[] { 1, 2, 3 }), "local", "personal");
+
+            Assert.Equal("local", capturedEngine);
+            Assert.Equal("personal", capturedPurpose);
         }
 
         [Fact]
@@ -90,7 +107,7 @@ namespace Hmm.ServiceApi.Core.Tests
                     }
                 }
             };
-            _service.Setup(s => s.ExtractAsync(It.IsAny<byte[]>(), It.IsAny<string>()))
+            _service.Setup(s => s.ExtractAsync(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(ProcessingResult<ReceiptExtractionResult>.Ok(extraction));
 
             var result = await _controller.Extract(FakeFile("image/jpeg", 3, new byte[] { 1, 2, 3 }));

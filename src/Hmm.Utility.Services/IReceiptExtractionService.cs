@@ -4,12 +4,14 @@ using System.Threading.Tasks;
 namespace Hmm.Utility.Services
 {
     /// <summary>
-    /// Extracts structured data from a receipt image or PDF via an LLM.
+    /// Extracts structured data from a receipt image or PDF via the selected AI
+    /// engine. The engine is resolved from config (default) unless overridden
+    /// per request by <paramref name="engine"/> (explicit name) or
+    /// <paramref name="purpose"/> (a configured route, e.g. "personal").
     /// </summary>
     public interface IReceiptExtractionService
     {
-        /// <param name="bytes">The receipt file contents.</param>
-        /// <param name="contentType">MIME type (image/* or application/pdf).</param>
-        Task<ProcessingResult<ReceiptExtractionResult>> ExtractAsync(byte[] bytes, string contentType);
+        Task<ProcessingResult<ReceiptExtractionResult>> ExtractAsync(
+            byte[] bytes, string contentType, string engine = null, string purpose = null);
     }
 }

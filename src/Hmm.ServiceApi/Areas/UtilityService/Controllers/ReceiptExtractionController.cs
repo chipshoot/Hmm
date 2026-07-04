@@ -51,7 +51,10 @@ namespace Hmm.ServiceApi.Areas.UtilityService.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status413PayloadTooLarge)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status415UnsupportedMediaType)]
-        public async Task<IActionResult> Extract(IFormFile file)
+        public async Task<IActionResult> Extract(
+            IFormFile file,
+            [FromQuery] string engine = null,
+            [FromQuery] string purpose = null)
         {
             if (file == null || file.Length == 0)
             {
@@ -75,7 +78,7 @@ namespace Hmm.ServiceApi.Areas.UtilityService.Controllers
                 bytes = ms.ToArray();
             }
 
-            var result = await _service.ExtractAsync(bytes, file.ContentType);
+            var result = await _service.ExtractAsync(bytes, file.ContentType, engine, purpose);
             if (!result.Success)
             {
                 _logger.LogWarning("Receipt extraction failed: {Error}", result.ErrorMessage);
