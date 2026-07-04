@@ -1,6 +1,5 @@
 using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using System.Text;
@@ -10,55 +9,58 @@ using System.Threading.Tasks;
 namespace Hmm.Utility.Services
 {
     /// <summary>
-    /// Receipt extraction backed by the Anthropic Messages API (Claude vision).
+    /// Receipt extraction via the Anthropic Messages API (Claude vision).
     /// Sends the receipt as an image/PDF content block and forces structured
     /// output via a single tool the model must call; the tool's input is the
     /// extracted <see cref="ReceiptExtractionResult"/>.
     ///
-    /// Uses <see cref="HttpClient"/> against the documented REST API (mirroring
-    /// <c>NominatimGeocodingService</c>) rather than an SDK — the wire format is
-    /// stable and this keeps the service unit-testable with a fake handler.
+    /// Stateless — all per-engine config (model, endpoint, key, max tokens)
+    /// comes from the <see cref="AiEngineDescriptor"/>, so one instance serves
+    /// every Anthropic engine. Uses <see cref="HttpClient"/> against the
+    /// documented REST API (no SDK), keeping it unit-testable with a fake
+    /// handler.
     /// </summary>
-    public class ClaudeReceiptExtractionService : IReceiptExtractionService
+    public class AnthropicReceiptExtractionProvider : IReceiptExtractionProvider
     {
         private const string ToolName = "record_service_receipt";
         private const string AnthropicVersion = "2023-06-01";
 
         private readonly HttpClient _httpClient;
-        private readonly AnthropicSettings _settings;
-        private readonly ILogger<ClaudeReceiptExtractionService> _logger;
+        private readonly ILogger<AnthropicReceiptExtractionProvider> _logger;
 
-        public ClaudeReceiptExtractionService(
+        public AnthropicReceiptExtractionProvider(
             HttpClient httpClient,
-            IOptions<AnthropicSettings> settings,
-            ILogger<ClaudeReceiptExtractionService> logger)
+            ILogger<AnthropicReceiptExtractionProvider> logger)
         {
             ArgumentNullException.ThrowIfNull(httpClient);
-            ArgumentNullException.ThrowIfNull(settings);
             ArgumentNullException.ThrowIfNull(logger);
 
             _httpClient = httpClient;
-            _settings = settings.Value;
             _logger = logger;
         }
 
-        public async Task<ProcessingResult<ReceiptExtractionResult>> ExtractAsync(byte[] bytes, string contentType)
+        public AiProvider Provider => AiProvider.Anthropic;
+
+        public async Task<ProcessingResult<ReceiptExtractionResult>> ExtractAsync(
+            AiEngineDescriptor engine, byte[] bytes, string contentType)
         {
+            ArgumentNullException.ThrowIfNull(engine);
+
             if (bytes == null || bytes.Length == 0)
             {
                 return ProcessingResult<ReceiptExtractionResult>.Invalid("A receipt file is required.");
             }
-            if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+            if (string.IsNullOrWhiteSpace(engine.ApiKey))
             {
                 return ProcessingResult<ReceiptExtractionResult>.Fail("Receipt extraction is not configured.");
             }
 
             try
             {
-                var requestJson = BuildRequestJson(bytes, contentType);
+                var requestJson = BuildRequestJson(engine, bytes, contentType);
 
-                using var request = new HttpRequestMessage(HttpMethod.Post, $"{_settings.BaseUrl}/v1/messages");
-                request.Headers.Add("x-api-key", _settings.ApiKey);
+                using var request = new HttpRequestMessage(HttpMethod.Post, $"{engine.BaseUrl}/v1/messages");
+                request.Headers.Add("x-api-key", engine.ApiKey);
                 request.Headers.Add("anthropic-version", AnthropicVersion);
                 request.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
@@ -89,7 +91,7 @@ namespace Hmm.Utility.Services
             }
         }
 
-        private string BuildRequestJson(byte[] bytes, string contentType)
+        private static string BuildRequestJson(AiEngineDescriptor engine, byte[] bytes, string contentType)
         {
             var base64 = Convert.ToBase64String(bytes);
             var isPdf = string.Equals(contentType, "application/pdf", StringComparison.OrdinalIgnoreCase);
@@ -108,8 +110,8 @@ namespace Hmm.Utility.Services
 
             var payload = new
             {
-                model = _settings.Model,
-                max_tokens = _settings.MaxTokens,
+                model = engine.Model,
+                max_tokens = engine.MaxTokens,
                 tools = new object[]
                 {
                     new

@@ -23,11 +23,20 @@ namespace Hmm.ServiceApi.Areas.UtilityService.Infrastructure
             _services
                 .AddHttpClient<IGeocodingService, NominatimGeocodingService>();
 
-            _services.Configure<AnthropicSettings>(
-                _configuration.GetSection(AnthropicSettings.SectionName));
+            // Swappable AI engine: named engines in config, selected per request
+            // (default / purpose route / explicit override), each provider a
+            // drop-in. Add a new provider by registering its typed HttpClient +
+            // surfacing it as IReceiptExtractionProvider, plus an AiEngines entry.
+            _services.Configure<AiEngineOptions>(
+                _configuration.GetSection(AiEngineOptions.SectionName));
 
-            _services
-                .AddHttpClient<IReceiptExtractionService, ClaudeReceiptExtractionService>();
+            _services.AddHttpClient<AnthropicReceiptExtractionProvider>();
+            _services.AddScoped<IReceiptExtractionProvider>(
+                sp => sp.GetRequiredService<AnthropicReceiptExtractionProvider>());
+
+            _services.AddScoped<IReceiptExtractionProviderRegistry, ReceiptExtractionProviderRegistry>();
+            _services.AddScoped<IAiEngineSelector, AiEngineSelector>();
+            _services.AddScoped<IReceiptExtractionService, ReceiptExtractionService>();
         }
     }
 }
