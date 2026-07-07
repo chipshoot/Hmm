@@ -72,6 +72,7 @@ ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=HmmIdp;Us
 # /etc/hmm-api/api.env
 ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=HmmNotes;Username=hmm_api;Password=<generated>
 AppSettings__IdpBaseUrl=https://idp.example.com
+AiEngines__Engines__0__ApiKey=<optional — Anthropic key; enables Cloud-AI receipt OCR. See "Receipt-scan Cloud AI OCR" below>
 
 # /etc/hmm-backup.env
 PGPASSWORD=<the postgres superuser password>
@@ -81,6 +82,42 @@ systemd's `EnvironmentFile=` honours these on every restart.
 Nothing in the codebase falls back to a public default credential
 — missing-env-var deploys fail loudly rather than silently
 opening a default admin.
+
+## Receipt-scan Cloud AI OCR (optional)
+
+The service-record **receipt scan** feature's *Cloud AI* extractor calls
+Anthropic via `POST /v1/receipts/extract`. It stays off until an API key
+is configured: the extractor **fails closed**, returning
+`Receipt extraction is not configured.` when the key is blank, so the
+app's on-device OCR path keeps working regardless.
+
+The AI engine is config-driven (`AiEngines` section in
+`src/Hmm.ServiceApi/appsettings.json`): one engine named `claude`,
+provider `Anthropic`, model `claude-haiku-4-5`, `SupportsVision: true`.
+Only the **API key** is a secret — injected via the env file, never
+committed (`appsettings.json` deliberately has no `ApiKey` field):
+
+```ini
+# /etc/hmm-api/api.env
+AiEngines__Engines__0__ApiKey=sk-ant-...
+```
+
+`__Engines__0__` binds to `AiEngines:Engines[0]` (the `claude` engine).
+It's an `EnvironmentFile` value, so **no redeploy is needed** — just add
+the line and restart:
+
+```bash
+sudo systemctl restart hmm-api
+sudo systemctl status hmm-api --no-pager      # expect active (running)
+journalctl -u hmm-api -n 50 --no-pager        # Anthropic errors (bad key,
+                                              # no credit, model access) land here
+```
+
+Prerequisites: an Anthropic key (console.anthropic.com) on an account
+with credit and access to `claude-haiku-4-5`. To switch model/provider
+later, edit the `AiEngines` engine in `appsettings.json` (redeploy) or
+route per-request with `?engine=` / `?purpose=`; the provider
+abstraction is drop-in for a future self-hosted engine.
 
 ## Caddy (TLS + reverse proxy)
 
