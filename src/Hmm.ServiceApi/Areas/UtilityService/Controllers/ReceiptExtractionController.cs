@@ -101,7 +101,8 @@ namespace Hmm.ServiceApi.Areas.UtilityService.Controllers
                 Type = li.Type,
                 Name = li.Name,
                 Quantity = li.Quantity,
-                UnitCost = li.UnitCost
+                UnitCost = li.UnitCost,
+                Amount = li.Amount
             }).ToList()
         };
     }

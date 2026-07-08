@@ -50,5 +50,8 @@ namespace Hmm.ServiceApi.DtoEntity.Utility
 
         [JsonProperty("unitCost")]
         public double? UnitCost { get; set; }
+
+        [JsonProperty("amount")]
+        public double? Amount { get; set; }
     }
 }

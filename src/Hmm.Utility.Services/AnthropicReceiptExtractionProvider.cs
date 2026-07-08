@@ -160,7 +160,8 @@ namespace Hmm.Utility.Services
                                     + "amount: quantity multiplied by unitCost should equal the line's "
                                     + "total amount, so when an amount is a whole multiple of the unit "
                                     + "price, use that multiple as the quantity. Use 1 only when no "
-                                    + "quantity is shown and the amount equals the unit price."
+                                    + "quantity is shown and the amount equals the unit price. Also set "
+                                    + "amount to the line's printed total for that item."
                             }
                         }
                     }
@@ -198,7 +199,8 @@ namespace Hmm.Utility.Services
                                 type = new { type = "string", @enum = new[] { "Labour", "Part", "Fee" } },
                                 name = new { type = "string" },
                                 quantity = new { type = "integer", description = "Per-item count from the quantity column (may be headed Qty, Shp, Ship or Shipped); equals line amount / unit price. 1 if none shown" },
-                                unitCost = new { type = nullableNumber, description = "Per-unit price (not the line total)" }
+                                unitCost = new { type = nullableNumber, description = "Per-unit price (not the line total)" },
+                                amount = new { type = nullableNumber, description = "Line total for this item (unit price x quantity)" }
                             },
                             required = new[] { "type", "name", "quantity" }
                         }
@@ -260,7 +262,8 @@ namespace Hmm.Utility.Services
                         Type = GetString(item, "type") ?? "Part",
                         Name = GetString(item, "name") ?? string.Empty,
                         Quantity = GetInt(item, "quantity") ?? 1,
-                        UnitCost = GetDouble(item, "unitCost")
+                        UnitCost = GetDouble(item, "unitCost"),
+                        Amount = GetDouble(item, "amount")
                     });
                 }
             }
