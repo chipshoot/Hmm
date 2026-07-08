@@ -59,6 +59,33 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
+        public async Task ExtractAsync_ParsesFloatFormattedQuantities()
+        {
+            // Models sometimes emit an integer-typed field as a float ("3.0").
+            // TryGetInt32 rejects that, which used to silently degrade the
+            // quantity to the default of 1.
+            var json = """
+            {
+              "stop_reason": "tool_use",
+              "content": [
+                {"type":"tool_use","name":"record_service_receipt","input":{
+                  "lineItems":[
+                    {"type":"Part","name":"Spark plug","quantity":4.0,"unitCost":8},
+                    {"type":"Part","name":"Wiper","quantity":2,"unitCost":12}
+                  ]}}
+              ]
+            }
+            """;
+            var provider = CreateProvider(new MockHttpMessageHandler(json));
+
+            var result = await provider.ExtractAsync(Engine(), Bytes, "image/jpeg");
+
+            Assert.True(result.Success);
+            Assert.Equal(4, result.Value.LineItems[0].Quantity);
+            Assert.Equal(2, result.Value.LineItems[1].Quantity);
+        }
+
+        [Fact]
         public async Task ExtractAsync_WithHttpError_ReturnsFail()
         {
             var provider = CreateProvider(
