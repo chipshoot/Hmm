@@ -59,6 +59,28 @@ namespace Hmm.ServiceApi.Core.Tests
         }
 
         [Fact]
+        public async Task ExtractAsync_MapsLineItemAmount()
+        {
+            var json = """
+            {
+              "stop_reason": "tool_use",
+              "content": [
+                {"type":"tool_use","name":"record_service_receipt","input":{
+                  "lineItems":[
+                    {"type":"Part","name":"Oil","quantity":7,"unitCost":17.95,"amount":125.65}
+                  ]}}
+              ]
+            }
+            """;
+            var provider = CreateProvider(new MockHttpMessageHandler(json));
+
+            var result = await provider.ExtractAsync(Engine(), Bytes, "image/jpeg");
+
+            Assert.True(result.Success);
+            Assert.Equal(125.65, result.Value.LineItems[0].Amount.Value);
+        }
+
+        [Fact]
         public async Task ExtractAsync_ParsesFloatFormattedQuantities()
         {
             // Models sometimes emit an integer-typed field as a float ("3.0").

@@ -33,7 +33,8 @@ namespace Hmm.ServiceApi.Core.Tests
                         Type = "Part",
                         Name = "Filter",
                         Quantity = 1,
-                        UnitCost = 10.0
+                        UnitCost = 10.0,
+                        Amount = 10.0
                     }
                 }
             };
@@ -46,6 +47,7 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.Contains("\"lineItems\"", json);
             Assert.Contains("\"name\"", json);
             Assert.Contains("\"unitCost\"", json);
+            Assert.Contains("\"amount\"", json);
             Assert.Contains("\"odometer\"", json);
 
             Assert.DoesNotContain("\"ShopName\"", json);

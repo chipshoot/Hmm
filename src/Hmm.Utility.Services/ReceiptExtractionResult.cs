@@ -38,5 +38,9 @@ namespace Hmm.Utility.Services
         public int Quantity { get; set; } = 1;
 
         public double? UnitCost { get; set; }
+
+        /// <summary>Printed line total for this item (unit price x quantity);
+        /// the client uses it to reconcile quantity / unit price.</summary>
+        public double? Amount { get; set; }
     }
 }
