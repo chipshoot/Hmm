@@ -76,17 +76,18 @@ namespace Hmm.Utility.Services
                 }
 
                 var parsed = ParseResponse(body);
-                if (parsed.Success)
+                if (parsed.Success && _logger.IsEnabled(LogLevel.Debug))
                 {
                     // Diagnostic (numbers only, no receipt content): confirms
                     // whether varied line-item quantities survive extraction.
+                    // Debug-level — silent in prod, flip the level to inspect.
                     var qtys = new StringBuilder();
                     foreach (var li in parsed.Value.LineItems)
                     {
                         if (qtys.Length > 0) qtys.Append(',');
                         qtys.Append(li.Quantity);
                     }
-                    _logger.LogInformation(
+                    _logger.LogDebug(
                         "Receipt extraction OK: {Count} line items, quantities [{Quantities}]",
                         parsed.Value.LineItems.Count, qtys.ToString());
                 }
