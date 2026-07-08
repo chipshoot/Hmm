@@ -151,7 +151,11 @@ namespace Hmm.Utility.Services
                                 text = "Extract this vehicle service receipt using the tool. Fill only "
                                     + "fields present on the receipt; leave anything absent null. Classify "
                                     + "each line item's type as \"Labour\", \"Part\", or \"Fee\". Use ISO "
-                                    + "yyyy-MM-dd for the date."
+                                    + "yyyy-MM-dd for the date. For every line item, read its quantity from "
+                                    + "the receipt's quantity column (often labelled QTY, Qty, or shown as "
+                                    + "\"x2\") and set quantity to that count; use 1 only when the receipt "
+                                    + "shows no quantity for that item. When a line shows a quantity and a "
+                                    + "unit price, set unitCost to the per-unit price, not the line total."
                             }
                         }
                     }
@@ -188,8 +192,8 @@ namespace Hmm.Utility.Services
                             {
                                 type = new { type = "string", @enum = new[] { "Labour", "Part", "Fee" } },
                                 name = new { type = "string" },
-                                quantity = new { type = "integer" },
-                                unitCost = new { type = nullableNumber }
+                                quantity = new { type = "integer", description = "Count for this line item from the receipt's quantity column; 1 if none shown" },
+                                unitCost = new { type = nullableNumber, description = "Per-unit price (not the line total)" }
                             },
                             required = new[] { "type", "name", "quantity" }
                         }
