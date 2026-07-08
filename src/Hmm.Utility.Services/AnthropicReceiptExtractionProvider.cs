@@ -75,7 +75,22 @@ namespace Hmm.Utility.Services
                         "Receipt extraction service is unavailable.");
                 }
 
-                return ParseResponse(body);
+                var parsed = ParseResponse(body);
+                if (parsed.Success)
+                {
+                    // Diagnostic (numbers only, no receipt content): confirms
+                    // whether varied line-item quantities survive extraction.
+                    var qtys = new StringBuilder();
+                    foreach (var li in parsed.Value.LineItems)
+                    {
+                        if (qtys.Length > 0) qtys.Append(',');
+                        qtys.Append(li.Quantity);
+                    }
+                    _logger.LogInformation(
+                        "Receipt extraction OK: {Count} line items, quantities [{Quantities}]",
+                        parsed.Value.LineItems.Count, qtys.ToString());
+                }
+                return parsed;
             }
             catch (HttpRequestException ex)
             {
@@ -247,10 +262,16 @@ namespace Hmm.Utility.Services
         private static string GetString(JsonElement o, string name) =>
             o.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
 
-        private static int? GetInt(JsonElement o, string name) =>
-            o.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out var i)
-                ? i
-                : (int?)null;
+        private static int? GetInt(JsonElement o, string name)
+        {
+            if (!o.TryGetProperty(name, out var v) || v.ValueKind != JsonValueKind.Number)
+                return null;
+            // Some models emit integer-typed fields as floats ("2.0"), which
+            // TryGetInt32 rejects — fall back to rounding the double so a
+            // quantity of 2 doesn't silently degrade to the default of 1.
+            if (v.TryGetInt32(out var i)) return i;
+            return v.TryGetDouble(out var d) ? (int)System.Math.Round(d) : (int?)null;
+        }
 
         private static double? GetDouble(JsonElement o, string name) =>
             o.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetDouble(out var d)
