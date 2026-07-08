@@ -152,10 +152,14 @@ namespace Hmm.Utility.Services
                                     + "fields present on the receipt; leave anything absent null. Classify "
                                     + "each line item's type as \"Labour\", \"Part\", or \"Fee\". Use ISO "
                                     + "yyyy-MM-dd for the date. For every line item, read its quantity from "
-                                    + "the receipt's quantity column (often labelled QTY, Qty, or shown as "
-                                    + "\"x2\") and set quantity to that count; use 1 only when the receipt "
-                                    + "shows no quantity for that item. When a line shows a quantity and a "
-                                    + "unit price, set unitCost to the per-unit price, not the line total."
+                                    + "the receipt's quantity column. That column is not always headed "
+                                    + "\"Qty\" — it may be labelled Shp, Ship, or Shipped (or shown as "
+                                    + "\"x2\"); use whichever column holds the per-item count. Set unitCost "
+                                    + "to the per-unit price, not the line total. Cross-check with the line "
+                                    + "amount: quantity multiplied by unitCost should equal the line's "
+                                    + "total amount, so when an amount is a whole multiple of the unit "
+                                    + "price, use that multiple as the quantity. Use 1 only when no "
+                                    + "quantity is shown and the amount equals the unit price."
                             }
                         }
                     }
@@ -192,7 +196,7 @@ namespace Hmm.Utility.Services
                             {
                                 type = new { type = "string", @enum = new[] { "Labour", "Part", "Fee" } },
                                 name = new { type = "string" },
-                                quantity = new { type = "integer", description = "Count for this line item from the receipt's quantity column; 1 if none shown" },
+                                quantity = new { type = "integer", description = "Per-item count from the quantity column (may be headed Qty, Shp, Ship or Shipped); equals line amount / unit price. 1 if none shown" },
                                 unitCost = new { type = nullableNumber, description = "Per-unit price (not the line total)" }
                             },
                             required = new[] { "type", "name", "quantity" }
