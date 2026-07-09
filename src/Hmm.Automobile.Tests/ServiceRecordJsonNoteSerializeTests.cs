@@ -44,6 +44,22 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
+        public async Task RoundTrip_NameAndReferenceNumber_PreservesData()
+        {
+            var original = CreateValidRecord();
+            original.Name = "Service A";
+            original.ReferenceNumber = "SO#952333";
+
+            var json = _serializer.GetNoteSerializationText(original);
+            var note = CreateNote(json);
+            var result = await _serializer.GetEntity(note);
+
+            Assert.True(result.Success);
+            Assert.Equal("Service A", result.Value.Name);
+            Assert.Equal("SO#952333", result.Value.ReferenceNumber);
+        }
+
+        [Fact]
         public async Task RoundTrip_CostMoney_PreservesData()
         {
             var original = CreateValidRecord();
