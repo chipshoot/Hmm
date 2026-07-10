@@ -5,6 +5,7 @@ using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -55,7 +56,25 @@ namespace Hmm.Automobile.NoteSerialize
                     tax = JsonSerializer.Deserialize<Money>(taxElement.GetRawText(), JsonOptions);
                 }
 
-                Enum.TryParse<ServiceType>(GetStringProperty(recordJson, "type"), true, out var type);
+                var types = new List<ServiceType>();
+                if (recordJson.TryGetProperty("types", out var typesElement) &&
+                    typesElement.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var t in typesElement.EnumerateArray())
+                    {
+                        if (t.ValueKind == JsonValueKind.String &&
+                            Enum.TryParse<ServiceType>(t.GetString(), true, out var parsed))
+                        {
+                            types.Add(parsed);
+                        }
+                    }
+                }
+                if (types.Count == 0)
+                {
+                    // Legacy payload: a single scalar "type".
+                    Enum.TryParse<ServiceType>(GetStringProperty(recordJson, "type"), true, out var legacyType);
+                    types.Add(legacyType);
+                }
 
                 var parts = new List<PartItem>();
                 if (recordJson.TryGetProperty("parts", out var partsElement) &&
@@ -92,7 +111,7 @@ namespace Hmm.Automobile.NoteSerialize
                     AutomobileId = GetIntProperty(recordJson, "automobileId"),
                     Date = GetDateTimeProperty(recordJson, "date"),
                     Mileage = GetIntProperty(recordJson, "mileage"),
-                    Type = type,
+                    Types = types,
                     Name = GetStringProperty(recordJson, "name", string.Empty),
                     ReferenceNumber = GetStringProperty(recordJson, "referenceNumber", string.Empty),
                     Description = GetStringProperty(recordJson, "description", string.Empty),
@@ -144,7 +163,7 @@ namespace Hmm.Automobile.NoteSerialize
                     ["automobileId"] = entity.AutomobileId,
                     ["date"] = entity.Date.ToString("o"),
                     ["mileage"] = entity.Mileage,
-                    ["type"] = entity.Type.ToString(),
+                    ["types"] = entity.Types.Select(t => t.ToString()).ToList(),
                     ["name"] = entity.Name ?? string.Empty,
                     ["referenceNumber"] = entity.ReferenceNumber ?? string.Empty,
                     ["description"] = entity.Description ?? string.Empty,

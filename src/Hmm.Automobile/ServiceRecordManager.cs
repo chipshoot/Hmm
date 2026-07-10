@@ -56,7 +56,7 @@ namespace Hmm.Automobile
                 {
                     existing.Date = updated.Date;
                     existing.Mileage = updated.Mileage;
-                    existing.Type = updated.Type;
+                    existing.Types = updated.Types;
                     existing.Description = updated.Description;
                     existing.Cost = updated.Cost;
                     existing.ShopName = updated.ShopName;

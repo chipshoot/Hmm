@@ -15,7 +15,10 @@ namespace Hmm.ServiceApi.DtoEntity.GasLogNotes
 
         public int Mileage { get; set; }
 
+        // Legacy primary category, kept for one release for older clients.
         public string Type { get; set; }
+
+        public List<string> Types { get; set; } = new();
 
         public string Name { get; set; }
 

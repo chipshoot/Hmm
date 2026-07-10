@@ -23,7 +23,13 @@ namespace Hmm.Automobile.DomainEntity
         public int Mileage { get; set; }
 
         [Required]
-        public ServiceType Type { get; set; }
+        public List<ServiceType> Types { get; set; } = new();
+
+        /// <summary>
+        /// The primary (first) service category. Read-only projection kept for
+        /// consumers that need a single scalar; write via <see cref="Types"/>.
+        /// </summary>
+        public ServiceType Type => Types.Count > 0 ? Types[0] : ServiceType.Other;
 
         [StringLength(200)]
         public string Name { get; set; }

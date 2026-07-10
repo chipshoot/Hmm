@@ -212,7 +212,7 @@ namespace Hmm.Automobile.Tests
                 AutomobileId = 5,
                 Date = date,
                 Mileage = mileage,
-                Type = ServiceType.OilChange
+                Types = new List<ServiceType> { ServiceType.OilChange }
             };
 
         private static AutoScheduledService Schedule(string name, DateTime due, int mileage, bool active = true)

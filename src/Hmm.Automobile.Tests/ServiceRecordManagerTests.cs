@@ -6,6 +6,7 @@ using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -86,7 +87,7 @@ namespace Hmm.Automobile.Tests
             AutomobileId = autoId,
             Date = date ?? DateTime.UtcNow,
             Mileage = mileage,
-            Type = ServiceType.OilChange,
+            Types = new List<ServiceType> { ServiceType.OilChange },
             Description = "Oil change",
             Cost = new Money(89m, CurrencyCodeType.Cad),
             ShopName = "Mr. Lube"
