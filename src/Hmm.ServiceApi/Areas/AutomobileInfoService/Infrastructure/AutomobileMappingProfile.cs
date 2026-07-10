@@ -54,16 +54,21 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
         // Other) so pre-migration clients still map to a valid one-element list.
         private static List<ServiceType> ParseServiceTypes(List<string> types, string legacyType)
         {
-            if (types != null && types.Count > 0)
+            // Prefer the multi-select array. Parse leniently (skip unknown/blank
+            // values rather than 500) and only accept it when it yields >= 1.
+            if (types != null)
             {
-                return types
-                    .Where(t => !string.IsNullOrEmpty(t))
+                var parsed = types
+                    .Where(t => Enum.TryParse<ServiceType>(t, true, out _))
                     .Select(t => Enum.Parse<ServiceType>(t, true))
                     .ToList();
+                if (parsed.Count > 0)
+                    return parsed;
             }
 
-            if (!string.IsNullOrEmpty(legacyType))
-                return new List<ServiceType> { Enum.Parse<ServiceType>(legacyType, true) };
+            // Legacy scalar fallback, then Other — the list is never empty.
+            if (Enum.TryParse<ServiceType>(legacyType, true, out var legacy))
+                return new List<ServiceType> { legacy };
 
             return new List<ServiceType> { ServiceType.Other };
         }

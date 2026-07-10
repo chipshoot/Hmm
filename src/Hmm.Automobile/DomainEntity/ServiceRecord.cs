@@ -29,7 +29,7 @@ namespace Hmm.Automobile.DomainEntity
         /// The primary (first) service category. Read-only projection kept for
         /// consumers that need a single scalar; write via <see cref="Types"/>.
         /// </summary>
-        public ServiceType Type => Types.Count > 0 ? Types[0] : ServiceType.Other;
+        public ServiceType Type => Types is { Count: > 0 } ? Types[0] : ServiceType.Other;
 
         [StringLength(200)]
         public string Name { get; set; }
