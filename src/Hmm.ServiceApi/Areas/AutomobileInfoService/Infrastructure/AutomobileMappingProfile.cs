@@ -6,6 +6,8 @@ using Hmm.Utility.Currency;
 using Hmm.Utility.Dal.Query;
 using Hmm.Utility.MeasureUnit;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 {
@@ -45,6 +47,30 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
             return Enum.TryParse<CurrencyCodeType>(currency, true, out var parsed)
                 ? parsed
                 : CurrencyCodeType.Cad;
+        }
+
+        // Resolve the service-category list, preferring the multi-select
+        // `types` array and falling back to the legacy scalar `type` (then
+        // Other) so pre-migration clients still map to a valid one-element list.
+        private static List<ServiceType> ParseServiceTypes(List<string> types, string legacyType)
+        {
+            // Prefer the multi-select array. Parse leniently (skip unknown/blank
+            // values rather than 500) and only accept it when it yields >= 1.
+            if (types != null)
+            {
+                var parsed = types
+                    .Where(t => Enum.TryParse<ServiceType>(t, true, out _))
+                    .Select(t => Enum.Parse<ServiceType>(t, true))
+                    .ToList();
+                if (parsed.Count > 0)
+                    return parsed;
+            }
+
+            // Legacy scalar fallback, then Other — the list is never empty.
+            if (Enum.TryParse<ServiceType>(legacyType, true, out var legacy))
+                return new List<ServiceType> { legacy };
+
+            return new List<ServiceType> { ServiceType.Other };
         }
 
         public AutomobileMappingProfile()
@@ -246,14 +272,14 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
             // ServiceRecord mappings
             CreateMap<ServiceRecord, ApiServiceRecord>()
                 .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
+                .ForMember(d => d.Types, opt => opt.MapFrom(s => s.Types.Select(t => t.ToString()).ToList()))
                 .ForMember(d => d.Cost, opt => opt.MapFrom(s => s.Cost != null ? (decimal?)s.Cost.Amount : null))
                 .ForMember(d => d.Tax, opt => opt.MapFrom(s => s.Tax != null ? (decimal?)s.Tax.Amount : null))
                 .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Cost != null ? s.Cost.Currency.ToString() : null));
 
             CreateMap<ApiServiceRecordForCreate, ServiceRecord>()
                 .ForMember(d => d.AutomobileId, opt => opt.Ignore())
-                .ForMember(d => d.Type, opt => opt.MapFrom(s =>
-                    string.IsNullOrEmpty(s.Type) ? ServiceType.Other : Enum.Parse<ServiceType>(s.Type, true)))
+                .ForMember(d => d.Types, opt => opt.MapFrom(s => ParseServiceTypes(s.Types, s.Type)))
                 .ForMember(d => d.Cost, opt =>
                 {
                     opt.PreCondition(s => s.Cost.HasValue);
@@ -267,10 +293,11 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
                 .ForMember(d => d.CreatedDate, opt => opt.MapFrom(_ => DateTime.UtcNow));
 
             CreateMap<ApiServiceRecordForUpdate, ServiceRecord>()
-                .ForMember(d => d.Type, opt =>
+                .ForMember(d => d.Types, opt =>
                 {
-                    opt.PreCondition(s => !string.IsNullOrEmpty(s.Type));
-                    opt.MapFrom(s => Enum.Parse<ServiceType>(s.Type, true));
+                    opt.PreCondition(s =>
+                        (s.Types != null && s.Types.Count > 0) || !string.IsNullOrEmpty(s.Type));
+                    opt.MapFrom(s => ParseServiceTypes(s.Types, s.Type));
                 })
                 .ForMember(d => d.Cost, opt =>
                 {
@@ -286,6 +313,7 @@ namespace Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure
 
             CreateMap<ServiceRecord, ApiServiceRecordForUpdate>()
                 .ForMember(d => d.Type, opt => opt.MapFrom(s => s.Type.ToString()))
+                .ForMember(d => d.Types, opt => opt.MapFrom(s => s.Types.Select(t => t.ToString()).ToList()))
                 .ForMember(d => d.Cost, opt => opt.MapFrom(s => s.Cost != null ? (decimal?)s.Cost.Amount : null))
                 .ForMember(d => d.Tax, opt => opt.MapFrom(s => s.Tax != null ? (decimal?)s.Tax.Amount : null))
                 .ForMember(d => d.Currency, opt => opt.MapFrom(s => s.Cost != null ? s.Cost.Currency.ToString() : null));

@@ -44,6 +44,56 @@ namespace Hmm.Automobile.Tests
         }
 
         [Fact]
+        public async Task RoundTrip_TypesList_PreservesAllTypes()
+        {
+            var original = CreateValidRecord();
+            original.Types = new List<ServiceType>
+                { ServiceType.OilChange, ServiceType.Inspection };
+
+            var json = _serializer.GetNoteSerializationText(original);
+            var note = CreateNote(json);
+            var result = await _serializer.GetEntity(note);
+
+            Assert.True(result.Success);
+            Assert.Equal(new[] { ServiceType.OilChange, ServiceType.Inspection },
+                result.Value.Types);
+            Assert.Equal(ServiceType.OilChange, result.Value.Type);
+        }
+
+        [Fact]
+        public async Task Deserialize_LegacySingleType_YieldsOneElementTypesList()
+        {
+            // A pre-migration payload: content carries a single "type", no "types".
+            var legacy =
+                "{\"note\":{\"content\":{\"" + AutomobileConstant.ServiceRecordSubject +
+                "\":{\"automobileId\":1,\"date\":\"2026-01-01T00:00:00Z\",\"mileage\":100," +
+                "\"type\":\"Brake\",\"description\":\"x\",\"shopName\":\"s\"," +
+                "\"parts\":[],\"notes\":\"\"," +
+                "\"createdDate\":\"2026-01-01T00:00:00Z\"}}}}";
+
+            var result = await _serializer.GetEntity(CreateNote(legacy));
+
+            Assert.True(result.Success);
+            Assert.Equal(new[] { ServiceType.Brake }, result.Value.Types);
+        }
+
+        [Fact]
+        public async Task RoundTrip_NameAndReferenceNumber_PreservesData()
+        {
+            var original = CreateValidRecord();
+            original.Name = "Service A";
+            original.ReferenceNumber = "SO#952333";
+
+            var json = _serializer.GetNoteSerializationText(original);
+            var note = CreateNote(json);
+            var result = await _serializer.GetEntity(note);
+
+            Assert.True(result.Success);
+            Assert.Equal("Service A", result.Value.Name);
+            Assert.Equal("SO#952333", result.Value.ReferenceNumber);
+        }
+
+        [Fact]
         public async Task RoundTrip_CostMoney_PreservesData()
         {
             var original = CreateValidRecord();
@@ -126,7 +176,7 @@ namespace Hmm.Automobile.Tests
             foreach (ServiceType type in Enum.GetValues<ServiceType>())
             {
                 var original = CreateValidRecord();
-                original.Type = type;
+                original.Types = new List<ServiceType> { type };
                 var json = _serializer.GetNoteSerializationText(original);
                 var note = CreateNote(json);
                 var result = await _serializer.GetEntity(note);
@@ -167,7 +217,7 @@ namespace Hmm.Automobile.Tests
             AutomobileId = 5,
             Date = new DateTime(2025, 6, 15, 0, 0, 0, DateTimeKind.Utc),
             Mileage = 45000,
-            Type = ServiceType.OilChange,
+            Types = new List<ServiceType> { ServiceType.OilChange },
             Description = "5,000 km service",
             Cost = new Money(89m, CurrencyCodeType.Cad),
             ShopName = "Mr. Lube",

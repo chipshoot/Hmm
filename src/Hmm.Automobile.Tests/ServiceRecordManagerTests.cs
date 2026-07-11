@@ -6,6 +6,7 @@ using Hmm.Utility.Misc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -81,12 +82,37 @@ namespace Hmm.Automobile.Tests
             _snapshotMock.Verify(s => s.RecomputeServiceSnapshotAsync(5), Times.Exactly(2));
         }
 
+        [Fact]
+        public async Task UpdateAsync_PersistsHeaderFieldsAndTax()
+        {
+            var created = await _manager.CreateAsync(NewRecord());
+            var record = created.Value;
+            record.Name = "Service A";
+            record.ReferenceNumber = "SO#952333";
+            record.Tax = new Money(7.25m, CurrencyCodeType.Cad);
+            record.Types = new List<ServiceType>
+                { ServiceType.OilChange, ServiceType.Inspection };
+
+            var result = await _manager.UpdateAsync(record);
+            Assert.True(result.Success);
+
+            var reloaded = await _manager.GetEntityByIdAsync(record.Id);
+            Assert.True(reloaded.Success);
+            Assert.Equal("Service A", reloaded.Value.Name);
+            Assert.Equal("SO#952333", reloaded.Value.ReferenceNumber);
+            Assert.NotNull(reloaded.Value.Tax);
+            Assert.Equal((double)7.25m, reloaded.Value.Tax.InternalAmount);
+            Assert.Equal(
+                new[] { ServiceType.OilChange, ServiceType.Inspection },
+                reloaded.Value.Types);
+        }
+
         private ServiceRecord NewRecord(int autoId = 5, DateTime? date = null, int mileage = 45000) => new()
         {
             AutomobileId = autoId,
             Date = date ?? DateTime.UtcNow,
             Mileage = mileage,
-            Type = ServiceType.OilChange,
+            Types = new List<ServiceType> { ServiceType.OilChange },
             Description = "Oil change",
             Cost = new Money(89m, CurrencyCodeType.Cad),
             ShopName = "Mr. Lube"
