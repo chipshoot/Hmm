@@ -387,3 +387,4 @@ docker/vps/
 # IdentityServer signing keys
 src/**/keys/
 *.lscache
+.DS_Store
