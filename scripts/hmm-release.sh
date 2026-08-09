@@ -87,7 +87,6 @@ SSH_KEY="${API_SSH_KEY:-$HOME/.ssh/20220830-2236.key}"
 SSH_OPTS=(-i "$SSH_KEY" -o StrictHostKeyChecking=accept-new)
 
 IOS_BUNDLE_ID="${IOS_BUNDLE_ID:-com.pivotpointsol.hmmConsole}"
-ANDROID_APP_ID="${ANDROID_APP_ID:-com.pivotpointsol.hmm_console}"
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 
@@ -101,21 +100,42 @@ ALLOW_NO_DATA_BACKUP=0
 ASSUME_YES=0
 DRY_RUN=0
 
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+# A flag that takes a value must reject a missing value AND a following
+# flag. Without this, `--target` as the last token consumed itself, left
+# $# at 0, and the loop's trailing `shift` failed — killing the script
+# under `set -e` with exit 1 and no message at all.
+need_value() {
+  local flag="$1" val="${2:-}"
+  [[ -n "$val" ]] || die "$flag requires a value"
+  [[ "$val" != --* ]] || die "$flag requires a value (got the flag '$val')"
+  printf '%s' "$val"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --target)   TARGET="${2:-}"; shift ;;
+    --target)   TARGET="$(need_value --target "${2:-}")" || exit 1; shift ;;
     --deploy)   ACTION="deploy" ;;
     --backup)   ACTION="backup" ;;
     --rollback) ACTION="rollback"
-                [[ "${2:-}" =~ ^[0-9]{8}T ]] && { ROLLBACK_ID="$2"; shift; } ;;
+                # Fully anchored to the exact format $TS generates. The old
+                # pattern (^[0-9]{8}T, unanchored) let arbitrary text through
+                # into a single-quoted slot inside an unquoted remote heredoc,
+                # where a lone `'` escapes into a root-capable shell.
+                [[ "${2:-}" =~ ^[0-9]{8}T[0-9]{6}Z$ ]] && { ROLLBACK_ID="$2"; shift; } ;;
     --list)     ACTION="list" ;;
     --status)   ACTION="status" ;;
     --backup-first) BACKUP_FIRST=1 ;;
-    --service)  VPS_SERVICE="${2:-}"; shift ;;
+    --service)  VPS_SERVICE="$(need_value --service "${2:-}")" || exit 1; shift ;;
     --allow-no-data-backup) ALLOW_NO_DATA_BACKUP=1 ;;
     --yes|-y)   ASSUME_YES=1 ;;
     --dry-run)  DRY_RUN=1 ;;
-    --help|-h)  sed -n '2,70p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    # Range ends at the header's closing rule, derived rather than hardcoded:
+    # a stale literal (2,70p) previously cut off mid-sentence and dropped the
+    # flutter-install warning this script exists to carry.
+    --help|-h)  sed -n "2,$(grep -n '^# =\{20,\}' "${BASH_SOURCE[0]}" | sed -n 2p | cut -d: -f1)p" \
+                  "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Unknown option: $1 (use --help)" >&2; exit 1 ;;
   esac
   shift
@@ -123,7 +143,7 @@ done
 
 # ----- Helpers ---------------------------------------------------
 banner() { echo "============================================================"; echo "$1"; echo "============================================================"; }
-die()    { echo "ERROR: $*" >&2; exit 1; }
+# die() is defined above the arg loop — it is needed during parsing.
 note()   { echo "  $*"; }
 
 run() {
@@ -206,26 +226,47 @@ vps_backup() {
 vps_snapshot() {
   require_ssh
   banner "Snapshotting current release(s) for rollback"
+  local captured=0 skipped=0
   for unit in $(vps_units); do
     local dir="/opt/$unit"
     local out="$VPS_RELEASE_DIR/$unit-$TS.tar.gz"
     if [[ "$DRY_RUN" -eq 1 ]]; then echo "  [dry-run] snapshot $dir → $out"; continue; fi
-    ssh "${SSH_OPTS[@]}" "$VPS_USER@$VPS_HOST" bash <<EOF || die "snapshot of $dir failed"
+    # The heredoc prints a marker so the caller can tell a real snapshot
+    # from a skipped one. Previously "snapshot: <path>" printed either way,
+    # advertising a tarball that was never written.
+    local result
+    result="$(ssh "${SSH_OPTS[@]}" "$VPS_USER@$VPS_HOST" bash <<EOF
 set -euo pipefail
 sudo mkdir -p '$VPS_RELEASE_DIR'
-if [ ! -d '$dir' ] || [ -z "\$(sudo ls -A '$dir' 2>/dev/null)" ]; then
-  echo "  $dir empty or missing — nothing to snapshot (first deploy?)"
-  exit 0
-fi
+# Capture status and output separately: '2>/dev/null' on the listing made a
+# permission error indistinguishable from an empty directory, so a populated
+# release dir could be silently skipped as "first deploy?".
+if [ ! -d '$dir' ]; then echo "SKIPPED-ABSENT"; exit 0; fi
+listing="\$(sudo ls -A '$dir')" || { echo "LIST-FAILED"; exit 1; }
+if [ -z "\$listing" ]; then echo "SKIPPED-EMPTY"; exit 0; fi
 sudo tar -C '$dir' -czf '$out' .
-sudo ls -lh '$out'
+echo "CAPTURED"
 EOF
-    note "snapshot: $out"
+)" || die "snapshot of $dir failed (could not read or archive it)"
+
+    case "$result" in
+      *CAPTURED*)       note "snapshot: $out"; captured=$((captured + 1)) ;;
+      *SKIPPED-ABSENT*) note "$dir does not exist — nothing to snapshot (first deploy?)"; skipped=$((skipped + 1)) ;;
+      *SKIPPED-EMPTY*)  note "$dir is empty — nothing to snapshot (first deploy?)"; skipped=$((skipped + 1)) ;;
+      *) die "unexpected snapshot result for $dir: $result" ;;
+    esac
   done
-  # Keep the local ledger so --list works without SSH round-trips.
-  mkdir -p "$(store_dir "vps")/$TS"
-  printf 'services=%s\nhost=%s\nremote_dir=%s\n' \
-    "$VPS_SERVICE" "$VPS_HOST" "$VPS_RELEASE_DIR" > "$(store_dir "vps")/$TS/manifest"
+
+  # Only record a restore point when something was actually captured for
+  # EVERY requested unit. A partial capture must not read as a safety net.
+  if [[ "$DRY_RUN" -eq 0 && "$captured" -gt 0 && "$skipped" -eq 0 ]]; then
+    mkdir -p "$(store_dir "vps")/$TS"
+    printf 'services=%s\nhost=%s\nremote_dir=%s\ncaptured=%s\n' \
+      "$VPS_SERVICE" "$VPS_HOST" "$VPS_RELEASE_DIR" "$captured" \
+      > "$(store_dir "vps")/$TS/manifest"
+  elif [[ "$DRY_RUN" -eq 0 && "$skipped" -gt 0 ]]; then
+    note "NOT recording a restore point: $skipped unit(s) had nothing to snapshot."
+  fi
 }
 
 vps_deploy() {
@@ -253,22 +294,52 @@ set -euo pipefail
 # Guard: only ever touch /opt/hmm-* — never a path typo'd into root.
 case '$dir' in /opt/hmm-*) ;; *) echo "refusing to clear '$dir'"; exit 1 ;; esac
 [ -f '$snap' ] || { echo "snapshot not found: $snap"; exit 1; }
+# Validate BEFORE destroying anything. '-f' only proves the file exists;
+# a truncated or corrupt archive used to wipe the release directory and
+# then fail mid-extract, leaving the service down with nothing to serve.
+sudo tar -tzf '$snap' >/dev/null || { echo "snapshot is not a readable archive: $snap"; exit 1; }
+
+# Extract to a sibling staging dir, then swap. An extraction that fails
+# now leaves the live directory untouched.
+stage='$dir.rollback-$id'
+sudo rm -rf "\$stage"
+sudo mkdir -p "\$stage"
+sudo tar -C "\$stage" -xzf '$snap'
+sudo chown -R $unit:$unit "\$stage"
+
 sudo systemctl stop $unit || true
-sudo find '$dir' -mindepth 1 -delete
-sudo tar -C '$dir' -xzf '$snap'
-sudo chown -R $unit:$unit '$dir'
+sudo rm -rf '$dir.previous'
+sudo mv '$dir' '$dir.previous'
+sudo mv "\$stage" '$dir'
 sudo systemctl start $unit
 sleep 2
 sudo systemctl is-active $unit
+# Only discard the displaced release once the service is confirmed up.
+sudo rm -rf '$dir.previous'
 EOF
     note "$unit rolled back to $id"
   done
   echo ""
-  note "Verify: $SCRIPT_DIR/deploy-${VPS_SERVICE}.sh --logs"
+  # Per-unit, like vps_deploy: there is no deploy-both.sh.
+  for unit in $(vps_units); do
+    note "Verify: $SCRIPT_DIR/deploy-${unit#hmm-}.sh --logs"
+  done
 }
 
 vps_list() {
   require_ssh
+  # Show the LOCAL ledger first: a bare `--rollback` resolves its default id
+  # from here, so listing only the remote dir hid what would actually be
+  # picked.
+  banner "Local ledger — a bare --rollback picks the newest of these"
+  if [[ -d "$(store_dir vps)" ]]; then
+    ls -1 "$(store_dir vps)" 2>/dev/null || echo "  (none yet)"
+    local newest; newest="$(latest_id vps)"
+    [[ -n "$newest" ]] && echo "  → --rollback would use: $newest"
+  else
+    echo "  (none yet)"
+  fi
+  echo ""
   banner "VPS restore points ($VPS_RELEASE_DIR)"
   ssh "${SSH_OPTS[@]}" "$VPS_USER@$VPS_HOST" \
     "sudo ls -lh $VPS_RELEASE_DIR 2>/dev/null || echo '  (none yet)'"
@@ -299,8 +370,15 @@ docker_backup() {
   if [[ "$DRY_RUN" -eq 1 ]]; then echo "  [dry-run] HMM_BACKUP_DIR=$dest $script --backup"; return 0; fi
   mkdir -p "$dest"
   HMM_BACKUP_DIR="$dest" "$script" --backup || die "docker backup FAILED — not proceeding."
-  # A backup dir with no dumps in it is a failed backup wearing a hat.
-  compgen -G "$dest/*.sql" >/dev/null || die "docker backup produced no SQL dumps (is the stack running?)"
+  # hmm-deploy.sh --backup exits 0 even when a container is down, printing
+  # "skipping" — so checking for *any* .sql let a half-backup pass the gate
+  # with one database missing. Require BOTH by name.
+  compgen -G "$dest/HmmNotes-*.sql" >/dev/null \
+    || die "docker backup produced no HmmNotes dump (is hmm-api running?)"
+  compgen -G "$dest/HmmIdp-*.sql" >/dev/null \
+    || die "docker backup produced no HmmIdp dump (is hmm-idp running?)"
+  compgen -G "$dest/hmm-vault-*.tar.gz" >/dev/null \
+    || note "WARNING: no vault archive in this restore point (empty vault, or hmm-api down)"
   note "restore point: $dest"
 }
 
@@ -330,13 +408,45 @@ docker_rollback() {
   idp="$(ls -1 "$src"/HmmIdp-*.sql 2>/dev/null | tail -1 || true)"
   vault="$(ls -1 "$src"/hmm-vault-*.tar.gz 2>/dev/null | tail -1 || true)"
 
-  # 1. Postgres FIRST.
-  [[ -n "$notes" ]] && { note "restoring HmmNotes"; docker exec -i hmm-api su postgres -c "psql -h 127.0.0.1 HmmNotes" < "$notes" >/dev/null || die "HmmNotes restore failed"; }
-  [[ -n "$idp"   ]] && { note "restoring HmmIdp";   docker exec -i hmm-idp su postgres -c "psql -h 127.0.0.1 HmmIdp"   < "$idp"   >/dev/null || die "HmmIdp restore failed"; }
-  # 2. Vault SECOND.
-  [[ -n "$vault" ]] && { note "restoring vault";    docker exec -i hmm-api tar -C /var/lib/hmm-vault -xzf - < "$vault" || die "vault restore failed"; }
+  # Track each leg. Previously a missing dump made its branch a silent
+  # no-op while the closing line still said "restored" — so an absent IdP
+  # dump or vault archive went unnoticed until the data looked wrong.
+  local done_legs=() skipped_legs=()
 
-  note "restored. Restart the stack so EF picks up the schema: $HMM_DIR/docker/hmm-deploy.sh --start"
+  # 1. Postgres FIRST.
+  if [[ -n "$notes" ]]; then
+    note "restoring HmmNotes"
+    docker exec -i hmm-api su postgres -c "psql -h 127.0.0.1 HmmNotes" < "$notes" >/dev/null \
+      || die "HmmNotes restore failed"
+    done_legs+=("HmmNotes")
+  else
+    skipped_legs+=("HmmNotes (no dump in restore point)")
+  fi
+  if [[ -n "$idp" ]]; then
+    note "restoring HmmIdp"
+    docker exec -i hmm-idp su postgres -c "psql -h 127.0.0.1 HmmIdp" < "$idp" >/dev/null \
+      || die "HmmIdp restore failed"
+    done_legs+=("HmmIdp")
+  else
+    skipped_legs+=("HmmIdp (no dump in restore point)")
+  fi
+  # 2. Vault SECOND.
+  if [[ -n "$vault" ]]; then
+    note "restoring vault"
+    docker exec -i hmm-api tar -C /var/lib/hmm-vault -xzf - < "$vault" \
+      || die "vault restore failed"
+    done_legs+=("vault")
+  else
+    skipped_legs+=("vault (no archive in restore point)")
+  fi
+
+  echo ""
+  note "restored: ${done_legs[*]:-none}"
+  if [[ ${#skipped_legs[@]} -gt 0 ]]; then
+    note "SKIPPED:  ${skipped_legs[*]}"
+    note "This restore was PARTIAL — the skipped data is unchanged, not rolled back."
+  fi
+  note "Restart the stack so EF picks up the schema: $HMM_DIR/docker/hmm-deploy.sh --start"
 }
 
 docker_list()   { banner "Docker restore points"; ls -1 "$(store_dir docker)" 2>/dev/null || echo "  (none yet)"; }
@@ -422,9 +532,18 @@ ios_deploy() {
   local keep; keep="$(store_dir "${TARGET}")/$TS"
   if [[ "$DRY_RUN" -eq 0 && -d "$CONSOLE_DIR/build/ios/iphoneos/Runner.app" ]]; then
     mkdir -p "$keep"
-    cp -R "$CONSOLE_DIR/build/ios/iphoneos/Runner.app" "$keep/" 2>/dev/null || true
-    ( cd "$CONSOLE_DIR" && git rev-parse HEAD 2>/dev/null > "$keep/commit" ) || true
-    note "archived build → $keep"
+    # No '|| true': a swallowed cp failure used to still print "archived
+    # build", and because mkdir had already created $keep the closing banner
+    # then advertised a rollback id with no app behind it.
+    if cp -R "$CONSOLE_DIR/build/ios/iphoneos/Runner.app" "$keep/" \
+       && [[ -f "$keep/Runner.app/Info.plist" ]]; then
+      ( cd "$CONSOLE_DIR" && git rev-parse HEAD 2>/dev/null > "$keep/commit" ) || true
+      note "archived build → $keep"
+    else
+      # Leave nothing half-written that a later --rollback would trust.
+      rm -rf "$keep"
+      note "WARNING: could not archive the build — this deploy has NO rollback point."
+    fi
   fi
 }
 
