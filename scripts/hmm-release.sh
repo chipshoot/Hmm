@@ -490,24 +490,52 @@ sys.exit(1)
 
 ios_backup() {
   local want_type="$1" device; device="$(ios_device_id "$want_type")"
-  banner "Pulling app data container off $want_type ($device)"
+  banner "Pulling app data off $want_type ($device)"
   local dest; dest="$(store_dir "${TARGET}")/$TS/appdata"
   if [[ "$DRY_RUN" -eq 1 ]]; then echo "  [dry-run] devicectl copy appDataContainer → $dest"; return 0; fi
   mkdir -p "$dest"
-  # Reaches the sandbox because the app is development-signed. Fails on
-  # a distribution-signed build — which is exactly when you want to know.
-  xcrun devicectl device copy from \
-      --device "$device" \
-      --domain-type appDataContainer \
-      --domain-identifier "$IOS_BUNDLE_ID" \
-      --source . \
-      --destination "$dest" 2>&1 \
-    || die "could not pull app data from the $want_type.
-       The app must be development-signed and installed for this to work.
-       Your notes also live in OneDrive — but do not treat that as verified
-       unless you have actually seen them there. Re-run with
-       --allow-no-data-backup only if you accept losing local-only changes."
-  note "app data → $dest"
+
+  # --source used to be '.', which devicectl resolves to a container path
+  # ending in '/.' and rejects outright ("File paths cannot contain '..'",
+  # CoreDeviceError 7000/11007). It never worked. Named subpaths are also
+  # more honest about what we are capturing: the Drift database and the
+  # attachment vault both live under Documents.
+  local pulled=0 tried=()
+  for sub in Documents Library/Application\ Support; do
+    tried+=("$sub")
+    if xcrun devicectl device copy from \
+        --device "$device" \
+        --domain-type appDataContainer \
+        --domain-identifier "$IOS_BUNDLE_ID" \
+        --source "$sub" \
+        --destination "$dest" >/dev/null 2>&1; then
+      note "pulled $sub"
+      pulled=$((pulled + 1))
+    fi
+  done
+
+  # "The command exited 0" is not "the data is there" — require real bytes.
+  local files=0
+  [[ -d "$dest" ]] && files="$(find "$dest" -type f | wc -l | tr -d ' ')"
+  if [[ "$pulled" -eq 0 || "$files" -eq 0 ]]; then
+    # Leave nothing that looks like a restore point but is not one.
+    rm -rf "$(store_dir "${TARGET}")/$TS"
+    echo "  Tried: ${tried[*]}"
+    if [[ "$ALLOW_NO_DATA_BACKUP" -eq 1 ]]; then
+      note "WARNING: no app data was captured, and --allow-no-data-backup was"
+      note "given. Proceeding with NOTHING backed up. Local-only changes on"
+      note "the device are unprotected by this run."
+      return 0
+    fi
+    die "could not pull app data off the $want_type — 0 files captured.
+       This is a backup failure, not a deploy failure: the install itself
+       replaces the binary in place and does not touch your data.
+       Your notes also live in OneDrive, but do not treat that as verified
+       unless you have actually seen them there. To deploy anyway, knowing
+       nothing local is backed up, re-run with --allow-no-data-backup."
+  fi
+
+  note "app data → $dest ($files files)"
   du -sh "$dest" 2>/dev/null || true
 }
 
