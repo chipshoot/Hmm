@@ -281,7 +281,7 @@ vps_deploy() {
 
 vps_rollback() {
   require_ssh
-  local id="${ROLLBACK_ID:-$(latest_id vps)}"
+  local id; id="${ROLLBACK_ID:-$(latest_id vps)}"
   [[ -n "$id" ]] || die "no restore point found. Run --list, or check $VPS_RELEASE_DIR on the box."
   banner "Rolling back VPS ($VPS_SERVICE) to $id"
   confirm "This REPLACES the running binaries in /opt with the $id snapshot. Continue?"
@@ -393,7 +393,7 @@ docker_deploy() {
 # source. Order is load-bearing: Postgres first (it holds the
 # attachments JSON that references vault paths), vault second.
 docker_rollback() {
-  local id="${ROLLBACK_ID:-$(latest_id docker)}"
+  local id; id="${ROLLBACK_ID:-$(latest_id docker)}"
   [[ -n "$id" ]] || die "no docker restore point. Run --target docker --backup first."
   local src; src="$(store_dir docker)/$id"
   [[ -d "$src" ]] || die "restore point not found: $src"
@@ -463,22 +463,27 @@ docker_status() { "$HMM_DIR/docker/hmm-deploy.sh" --status; }
 ios_device_id() {
   local want_type="$1"   # iPhone | iPad
   local json; json="$(mktemp /tmp/devicectl-XXXXXX.json)"
+  # Clean up even if a later step dies. RETURN fires on function exit.
+  trap 'rm -f "$json"' RETURN
   xcrun devicectl list devices --json-output "$json" >/dev/null 2>&1 || true
   local id
-  id="$(python3 -c "
+  # Values go in via argv, never interpolated into the Python source. Neither
+  # is attacker-controlled today ($want_type is one of two literals), but
+  # building code by string-splicing is how the --rollback hole happened.
+  id="$(python3 -c '
 import json,sys
+path, want = sys.argv[1], sys.argv[2]
 try:
-    d=json.load(open('$json'))
+    d = json.load(open(path))
 except Exception:
     sys.exit(1)
-for dev in d.get('result',{}).get('devices',[]):
-    c=dev.get('connectionProperties',{}) or {}
-    h=dev.get('hardwareProperties',{}) or {}
-    if c.get('pairingState')=='paired' and h.get('deviceType')=='$want_type':
-        print(dev['identifier']); sys.exit(0)
+for dev in d.get("result", {}).get("devices", []):
+    c = dev.get("connectionProperties", {}) or {}
+    h = dev.get("hardwareProperties", {}) or {}
+    if c.get("pairingState") == "paired" and h.get("deviceType") == want:
+        print(dev["identifier"]); sys.exit(0)
 sys.exit(1)
-" 2>/dev/null || true)"
-  rm -f "$json"
+' "$json" "$want_type" 2>/dev/null || true)"
   [[ -n "$id" ]] || die "no paired $want_type found. Cable in, device unlocked, 'Trust' accepted? Try: xcrun devicectl list devices"
   echo "$id"
 }
@@ -549,7 +554,7 @@ ios_deploy() {
 
 ios_rollback() {
   local want_type="$1"
-  local id="${ROLLBACK_ID:-$(latest_id "$TARGET")}"
+  local id; id="${ROLLBACK_ID:-$(latest_id "$TARGET")}"
   [[ -n "$id" ]] || die "no archived $TARGET build to roll back to."
   local app; app="$(store_dir "$TARGET")/$id/Runner.app"
   [[ -d "$app" ]] || die "no Runner.app archived under $id (that restore point may be data-only)"
@@ -614,7 +619,7 @@ android_deploy() {
 }
 
 android_rollback() {
-  local id="${ROLLBACK_ID:-$(latest_id android)}"
+  local id; id="${ROLLBACK_ID:-$(latest_id android)}"
   [[ -n "$id" ]] || die "no archived APK to roll back to."
   local apk; apk="$(store_dir android)/$id/app-release.apk"
   [[ -f "$apk" ]] || die "no APK archived under $id"
