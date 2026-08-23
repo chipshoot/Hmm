@@ -691,7 +691,7 @@ Deserialises note content into a `CheatsheetCard`, consuming a property into a t
 - Consumes: `CheatsheetCard`/`CheatsheetRow`/`CheatsheetSource`/`CheatsheetConstant` (Task 1); `ICheatsheetCatalogProvider` (Task 2); `Hmm.Core.NoteSerializer.DefaultJsonNoteSerializer<T>(ILogger<T> logger)` with `protected ILogger Logger`, `protected JsonSerializerOptions JsonOptions`, `protected NoteCatalog Catalog`, `protected virtual Task<NoteCatalog> GetCatalogAsync()`, `public override Task<ProcessingResult<T>> GetEntity(HmmNote note)`, `public override Task<ProcessingResult<HmmNote>> GetNote(in T entity)`, `public virtual string GetNoteSerializationText(T entity)`.
 - Produces: `Hmm.Cheatsheet.NoteSerialize.CheatsheetJsonNoteSerialize(ICheatsheetCatalogProvider catalogProvider, ILogger<CheatsheetCard> logger)` implementing `INoteSerializer<CheatsheetCard>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetJsonNoteSerializeReadTests.cs`:
 
@@ -954,13 +954,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeReadTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetJsonNoteSerialize' could not be found`.
 
-- [ ] **Step 3: Write the serializer read path**
+- [x] **Step 3: Write the serializer read path**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/NoteSerialize/CheatsheetJsonNoteSerialize.cs`:
 
@@ -1301,13 +1301,13 @@ namespace Hmm.Cheatsheet.NoteSerialize
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeReadTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 15`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
