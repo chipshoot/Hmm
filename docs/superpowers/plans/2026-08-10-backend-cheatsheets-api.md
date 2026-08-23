@@ -83,7 +83,7 @@
 - Consumes: nothing.
 - Produces: `Hmm.Cheatsheet.CheatsheetConstant` (const strings/ints listed below); `Hmm.Cheatsheet.DomainEntity.CheatsheetCard` with `int NoteId`, `int AuthorId`, `int SchemaVersion`, `string Id`, `string Title`, `string WalletGroup`, `IList<string> Tags`, `string TemplateId`, `bool Protected`, `IList<CheatsheetRow> Rows`, `IDictionary<string, JsonElement> ExtraFields`, `static string GetNoteSubject(string cardId)`; `CheatsheetRow` with `string Label`, `string ValueAction`, `bool OpenSource`, `CheatsheetSource Source`, `IDictionary<string, JsonElement> ExtraFields`, `JsonElement? RawJson`, `bool IsUnreadable`; `CheatsheetSource` with `string NoteUuid`, `string Kind`, `string Locator`, `IDictionary<string, JsonElement> ExtraFields`.
 
-- [ ] **Step 1: Create the two project files and add them to the solution**
+- [x] **Step 1: Create the two project files and add them to the solution**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/Hmm.Cheatsheet.csproj`:
 
@@ -147,7 +147,7 @@ dotnet sln Hmm.sln add src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj
 
 Expected: `Project 'src/Hmm.Cheatsheet/Hmm.Cheatsheet.csproj' added to the solution.` and the same for the test project.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetCardTests.cs`:
 
@@ -227,13 +227,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCardTests"`
 
 Expected: FAIL — build errors `CS0246: The type or namespace name 'CheatsheetCard' could not be found` and `CS0103`/`CS0246` for `CheatsheetConstant`.
 
-- [ ] **Step 4: Write the constants**
+- [x] **Step 4: Write the constants**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetConstant.cs`:
 
@@ -282,7 +282,7 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 5: Write the domain entities**
+- [x] **Step 5: Write the domain entities**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/DomainEntity/CheatsheetSource.cs`:
 
@@ -429,13 +429,13 @@ namespace Hmm.Cheatsheet.DomainEntity
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `cd /Users/fchy/Projects/Hmm && dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCardTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 5`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
