@@ -500,6 +500,23 @@ ios_backup() {
   # CoreDeviceError 7000/11007). It never worked. Named subpaths are also
   # more honest about what we are capturing: the Drift database and the
   # attachment vault both live under Documents.
+  # On 2026-08-23 this captured ONLY Library/Application Support — a 4 KB
+  # Firebase heartbeat file — missed Documents entirely, and still reported
+  # success. The copy of Documents failed and the failure was swallowed,
+  # because the call sits inside an `if`.
+  #
+  # The cause is NOT this `--user mobile` flag: removing it again still pulls
+  # Documents fine (checked). Most likely the phone was locked at that moment
+  # and iOS data protection made Documents unreadable while the heartbeat file,
+  # in a weaker protection class, came through. Unconfirmed — every attempt
+  # since, with the phone unlocked, has worked either way. The flag is kept
+  # because it is explicit and harmless.
+  #
+  # Whatever the trigger, the guard below is the actual protection: it does not
+  # care why the copy came back short.
+  #
+  # (Flag trivia, since it costs an hour to rediscover: it is `--user` on
+  # `copy from` but `--username` on `device info files`.)
   local pulled=0 tried=()
   for sub in Documents Library/Application\ Support; do
     tried+=("$sub")
@@ -507,6 +524,7 @@ ios_backup() {
         --device "$device" \
         --domain-type appDataContainer \
         --domain-identifier "$IOS_BUNDLE_ID" \
+        --user mobile \
         --source "$sub" \
         --destination "$dest" >/dev/null 2>&1; then
       note "pulled $sub"
@@ -515,9 +533,17 @@ ios_backup() {
   done
 
   # "The command exited 0" is not "the data is there" — require real bytes.
+  #
+  # And "some bytes" is not enough either: the old check passed on ANY file, so
+  # the run that captured a heartbeat file and missed Documents entirely looked
+  # like a good backup. The database is the thing worth protecting, so require
+  # it by name. Someone with an empty vault still has hmm.db; a backup without
+  # it is not a restore point, whatever else it contains.
   local files=0
   [[ -d "$dest" ]] && files="$(find "$dest" -type f | wc -l | tr -d ' ')"
-  if [[ "$pulled" -eq 0 || "$files" -eq 0 ]]; then
+  local has_db=0
+  [[ -d "$dest" ]] && [[ -n "$(find "$dest" -name 'hmm.db' -print -quit)" ]] && has_db=1
+  if [[ "$pulled" -eq 0 || "$files" -eq 0 || "$has_db" -eq 0 ]]; then
     # Leave nothing that looks like a restore point but is not one.
     rm -rf "$(store_dir "${TARGET}")/$TS"
     echo "  Tried: ${tried[*]}"
@@ -527,7 +553,7 @@ ios_backup() {
       note "the device are unprotected by this run."
       return 0
     fi
-    die "could not pull app data off the $want_type — 0 files captured.
+    die "could not pull a usable backup off the $want_type ($files file(s), hmm.db present: $has_db).
        This is a backup failure, not a deploy failure: the install itself
        replaces the binary in place and does not touch your data.
        Your notes also live in OneDrive, but do not treat that as verified
