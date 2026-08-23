@@ -456,7 +456,7 @@ git commit -m "feat(cheatsheet): scaffold Hmm.Cheatsheet module and domain model
 - Consumes: `CheatsheetConstant.CheatsheetCatalogName` (Task 1); `Hmm.Utility.Dal.Query.IEntityLookup.GetEntitiesAsync<T>(Expression<Func<T,bool>> query = null, ResourceCollectionParameters parameters = null)` returning `Task<ProcessingResult<PageList<T>>>`.
 - Produces: `Hmm.Cheatsheet.ICheatsheetCatalogProvider` with `Task<NoteCatalog> GetCatalogAsync()`; `Hmm.Cheatsheet.CheatsheetCatalogProvider(IEntityLookup lookupRepo, ILogger<CheatsheetCatalogProvider> logger = null)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetCatalogProviderTests.cs`:
 
@@ -563,13 +563,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCatalogProviderTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetCatalogProvider' could not be found`.
 
-- [ ] **Step 3: Write the interface**
+- [x] **Step 3: Write the interface**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetCatalogProvider.cs`:
 
@@ -594,7 +594,7 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 4: Write the implementation**
+- [x] **Step 4: Write the implementation**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetCatalogProvider.cs`:
 
@@ -663,13 +663,13 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd /Users/fchy/Projects/Hmm && dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCatalogProviderTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 5`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
