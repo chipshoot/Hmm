@@ -4,22 +4,30 @@
 # ============================================================
 #
 # Creates:
-#   - User/group: hmm-backup
+#   - User/group: hmm-backup (added to hmm-api, for vault read access)
+#   - Postgres role: hmm_backup (read-only; see step 1c for why it must exist)
 #   - /opt/hmm-backup/hmm-backup.sh   (the script)
 #   - /etc/hmm-backup.env             (PGPASSWORD + tunables, mode 0640)
 #   - /var/backups/hmm                (output dir, owned by hmm-backup)
 #   - /etc/systemd/system/hmm-backup.{service,timer}
 #
-# Idempotent: re-running updates the script + units, leaves
-# existing backups + env file untouched. Run as root.
+# Idempotent: re-running updates the script + units, leaves an existing
+# Postgres role, env file and backups untouched. Run as root.
 #
 # Reads (with defaults):
-#   PG_USER          Default postgres
-#   PG_PASSWORD      No default — set in the env or this fails closed
+#   PG_USER          Default hmm_backup — the read-only role created here.
+#                    Override only if you have your own; `postgres` will NOT
+#                    work (peer auth, no TCP password).
 #   IDP_PG_DB        Default HmmIdp
 #   API_PG_DB        Default HmmNotes
-#   VAULT_DIR        Default /var/lib/hmm-api/vault
+#   VAULT_DIR        Read from AttachmentSettings__RootDir in
+#                    /etc/hmm-api/api.env; falls back to
+#                    /var/lib/hmm-api-data/vault
 #   RETAIN_DAYS      Default 14
+#
+# Verify a backup by its CONTENTS, never its exit code — and confirm it
+# RESTORES. Verified 2026-08-23 by restoring HmmIdp into a scratch database:
+# 3/3 users, 35/35 tables, matching ids AND password hashes.
 #
 # ============================================================
 
@@ -55,6 +63,13 @@ UNIT_DIR="/etc/systemd/system"
 
 log() { printf '[setup-backup] %s\n' "$*"; }
 
+# `sudo -u postgres` inherits the caller's working directory, and postgres
+# cannot enter /home/ubuntu — so every invocation emitted
+#   could not change directory to "/home/ubuntu": Permission denied
+# on stderr. Harmless, but it buried the output that mattered and made a
+# successful run look like a failing one. Run from somewhere postgres can read.
+psql_as_postgres() { (cd /tmp && sudo -u postgres psql "$@"); }
+
 # 1. User + group
 if ! id hmm-backup &>/dev/null; then
     log "Creating service user hmm-backup"
@@ -84,7 +99,7 @@ fi
 # databases or roles. Its password is generated here and written only into
 # ${ENV_FILE} — it is never echoed.
 if [[ "${PG_USER}" == "hmm_backup" ]]; then
-    if sudo -u postgres psql -tAc \
+    if psql_as_postgres -tAc \
          "SELECT 1 FROM pg_roles WHERE rolname='hmm_backup'" 2>/dev/null | grep -q 1; then
         log "Postgres role hmm_backup already exists — leaving its password alone."
         BACKUP_ROLE_PW=""
@@ -94,7 +109,7 @@ if [[ "${PG_USER}" == "hmm_backup" ]]; then
         # characters, so 24 bytes cannot reliably yield 32 usable ones.
         BACKUP_ROLE_PW="$(openssl rand -base64 64 | tr -dc 'A-Za-z0-9' | head -c 32)"
         [[ ${#BACKUP_ROLE_PW} -eq 32 ]] || { echo "ERROR: password generation failed" >&2; exit 1; }
-        sudo -u postgres psql -v ON_ERROR_STOP=1 -q <<SQL
+        psql_as_postgres -v ON_ERROR_STOP=1 -q <<SQL
 CREATE ROLE hmm_backup LOGIN PASSWORD '${BACKUP_ROLE_PW}';
 GRANT pg_read_all_data TO hmm_backup;
 GRANT CONNECT ON DATABASE "${IDP_PG_DB}" TO hmm_backup;
