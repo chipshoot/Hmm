@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Hmm.Cheatsheet.DomainEntity;
@@ -109,6 +110,146 @@ namespace Hmm.Cheatsheet.NoteSerialize
                 return Task.FromResult(ProcessingResult<CheatsheetCard>.FromException(ex));
             }
         }
+        public override Task<ProcessingResult<HmmNote>> GetNote(in CheatsheetCard entity)
+        {
+            if (entity == null)
+            {
+                return Task.FromResult(ProcessingResult<HmmNote>.Fail(
+                    "Null entity found when trying to serialize cheatsheet card to note",
+                    ErrorCategory.NotFound));
+            }
+
+            if (string.IsNullOrWhiteSpace(entity.Id))
+            {
+                return Task.FromResult(ProcessingResult<HmmNote>.Fail(
+                    "Cheatsheet card id is required to build the note subject",
+                    ErrorCategory.MappingError));
+            }
+
+            var content = GetNoteSerializationText(entity);
+            if (string.IsNullOrEmpty(content))
+            {
+                return Task.FromResult(ProcessingResult<HmmNote>.Fail(
+                    "Failed to serialize cheatsheet card content to JSON",
+                    ErrorCategory.MappingError));
+            }
+
+            var note = new HmmNote
+            {
+                Id = entity.NoteId,
+                Subject = CheatsheetCard.GetNoteSubject(entity.Id),
+                Content = content,
+                Catalog = Catalog
+            };
+
+            return Task.FromResult(ProcessingResult<HmmNote>.Ok(note));
+        }
+
+        public override string GetNoteSerializationText(CheatsheetCard entity)
+        {
+            if (entity == null)
+            {
+                Logger?.LogWarning("Null cheatsheet card provided for serialization");
+                return string.Empty;
+            }
+
+            try
+            {
+                // Insertion order is the wire order; extras are copied last so a
+                // preserved original always wins over a fabricated default.
+                var cardData = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    [KeySchemaVersion] = entity.SchemaVersion,
+                    [KeyId] = entity.Id ?? string.Empty,
+                    [KeyTitle] = entity.Title ?? string.Empty,
+                    [KeyWalletGroup] = entity.WalletGroup ?? CheatsheetConstant.DefaultWalletGroup,
+                    [KeyTags] = entity.Tags ?? new List<string>(),
+                    [KeyTemplateId] = entity.TemplateId ?? CheatsheetConstant.DefaultTemplateId,
+                    [KeyProtected] = entity.Protected,
+                    [KeyRows] = (entity.Rows ?? new List<CheatsheetRow>()).Select(WriteRow).ToList()
+                };
+
+                CopyExtras(entity.ExtraFields, cardData);
+
+                var noteStructure = new
+                {
+                    note = new
+                    {
+                        content = new Dictionary<string, object>(StringComparer.Ordinal)
+                        {
+                            [CheatsheetConstant.CheatsheetContentKey] = cardData
+                        }
+                    }
+                };
+
+                return JsonSerializer.Serialize(noteStructure, JsonOptions);
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError(ex, "Error serializing cheatsheet card to JSON");
+                return string.Empty;
+            }
+        }
+
+        private static object WriteRow(CheatsheetRow row)
+        {
+            if (row == null)
+            {
+                return new Dictionary<string, object>(StringComparer.Ordinal);
+            }
+
+            // A row this version could not model is re-emitted byte-for-byte,
+            // in its original position.
+            if (row.RawJson.HasValue)
+            {
+                return row.RawJson.Value;
+            }
+
+            var rowData = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                [KeyLabel] = row.Label ?? string.Empty,
+                [KeyValueAction] = row.ValueAction ?? CheatsheetConstant.ValueActionNone,
+                [KeyOpenSource] = row.OpenSource
+            };
+
+            if (row.Source != null)
+            {
+                var sourceData = new Dictionary<string, object>(StringComparer.Ordinal)
+                {
+                    [KeyNoteUuid] = row.Source.NoteUuid ?? string.Empty,
+                    [KeyKind] = row.Source.Kind ?? CheatsheetConstant.SourceKindWhole
+                };
+
+                // JsonSerializer's WhenWritingNull only applies to POCO members,
+                // not dictionary entries, so omit the key explicitly.
+                if (row.Source.Locator != null)
+                {
+                    sourceData[KeyLocator] = row.Source.Locator;
+                }
+
+                CopyExtras(row.Source.ExtraFields, sourceData);
+                rowData[KeySource] = sourceData;
+            }
+
+            CopyExtras(row.ExtraFields, rowData);
+            return rowData;
+        }
+
+        private static void CopyExtras(
+            IDictionary<string, JsonElement> extras,
+            IDictionary<string, object> target)
+        {
+            if (extras == null)
+            {
+                return;
+            }
+
+            foreach (var extra in extras)
+            {
+                target[extra.Key] = extra.Value;
+            }
+        }
+
 
         private static string SubjectToCardId(string subject)
         {

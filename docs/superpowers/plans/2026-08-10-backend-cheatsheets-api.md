@@ -1327,7 +1327,7 @@ git commit -m "feat(cheatsheet): lossless note-content read path for cheatsheet 
 - Consumes: everything from Task 3.
 - Produces: `public override string GetNoteSerializationText(CheatsheetCard entity)`; `public override Task<ProcessingResult<HmmNote>> GetNote(in CheatsheetCard entity)` — returns an `HmmNote` with `Id = entity.NoteId`, `Subject = CheatsheetCard.GetNoteSubject(entity.Id)`, `Content` = the serialized text, `Catalog` = the provider's catalog.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetJsonNoteSerializeWriteTests.cs`:
 
@@ -1549,13 +1549,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeWriteTests"`
 
 Expected: FAIL — several assertions fail because the inherited base implementations return `string.Empty` / a `Fail` result, e.g. `Assert.Equal() Failure` on the envelope test and `Assert.True(result.Success)` failing with "GetNote must be overridden to serialize CheatsheetCard to JSON".
 
-- [ ] **Step 3: Add the write members**
+- [x] **Step 3: Add the write members**
 
 Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/NoteSerialize/CheatsheetJsonNoteSerialize.cs`, immediately after the `GetEntity` method and before `SubjectToCardId`. Also add `using System.Linq;` to the file's using block.
 
@@ -1701,19 +1701,19 @@ Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/NoteSerialize/
         }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeWriteTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 11`.
 
-- [ ] **Step 5: Run the whole module's tests to confirm the read path still passes**
+- [x] **Step 5: Run the whole module's tests to confirm the read path still passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 36`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
