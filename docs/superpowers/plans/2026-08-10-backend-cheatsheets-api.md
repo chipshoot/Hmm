@@ -83,7 +83,7 @@
 - Consumes: nothing.
 - Produces: `Hmm.Cheatsheet.CheatsheetConstant` (const strings/ints listed below); `Hmm.Cheatsheet.DomainEntity.CheatsheetCard` with `int NoteId`, `int AuthorId`, `int SchemaVersion`, `string Id`, `string Title`, `string WalletGroup`, `IList<string> Tags`, `string TemplateId`, `bool Protected`, `IList<CheatsheetRow> Rows`, `IDictionary<string, JsonElement> ExtraFields`, `static string GetNoteSubject(string cardId)`; `CheatsheetRow` with `string Label`, `string ValueAction`, `bool OpenSource`, `CheatsheetSource Source`, `IDictionary<string, JsonElement> ExtraFields`, `JsonElement? RawJson`, `bool IsUnreadable`; `CheatsheetSource` with `string NoteUuid`, `string Kind`, `string Locator`, `IDictionary<string, JsonElement> ExtraFields`.
 
-- [ ] **Step 1: Create the two project files and add them to the solution**
+- [x] **Step 1: Create the two project files and add them to the solution**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/Hmm.Cheatsheet.csproj`:
 
@@ -147,7 +147,7 @@ dotnet sln Hmm.sln add src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj
 
 Expected: `Project 'src/Hmm.Cheatsheet/Hmm.Cheatsheet.csproj' added to the solution.` and the same for the test project.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetCardTests.cs`:
 
@@ -227,13 +227,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCardTests"`
 
 Expected: FAIL — build errors `CS0246: The type or namespace name 'CheatsheetCard' could not be found` and `CS0103`/`CS0246` for `CheatsheetConstant`.
 
-- [ ] **Step 4: Write the constants**
+- [x] **Step 4: Write the constants**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetConstant.cs`:
 
@@ -282,7 +282,7 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 5: Write the domain entities**
+- [x] **Step 5: Write the domain entities**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/DomainEntity/CheatsheetSource.cs`:
 
@@ -429,13 +429,13 @@ namespace Hmm.Cheatsheet.DomainEntity
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `cd /Users/fchy/Projects/Hmm && dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCardTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 5`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -456,7 +456,7 @@ git commit -m "feat(cheatsheet): scaffold Hmm.Cheatsheet module and domain model
 - Consumes: `CheatsheetConstant.CheatsheetCatalogName` (Task 1); `Hmm.Utility.Dal.Query.IEntityLookup.GetEntitiesAsync<T>(Expression<Func<T,bool>> query = null, ResourceCollectionParameters parameters = null)` returning `Task<ProcessingResult<PageList<T>>>`.
 - Produces: `Hmm.Cheatsheet.ICheatsheetCatalogProvider` with `Task<NoteCatalog> GetCatalogAsync()`; `Hmm.Cheatsheet.CheatsheetCatalogProvider(IEntityLookup lookupRepo, ILogger<CheatsheetCatalogProvider> logger = null)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetCatalogProviderTests.cs`:
 
@@ -563,13 +563,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCatalogProviderTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetCatalogProvider' could not be found`.
 
-- [ ] **Step 3: Write the interface**
+- [x] **Step 3: Write the interface**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetCatalogProvider.cs`:
 
@@ -594,7 +594,7 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 4: Write the implementation**
+- [x] **Step 4: Write the implementation**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetCatalogProvider.cs`:
 
@@ -663,13 +663,13 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd /Users/fchy/Projects/Hmm && dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetCatalogProviderTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 5`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -691,7 +691,7 @@ Deserialises note content into a `CheatsheetCard`, consuming a property into a t
 - Consumes: `CheatsheetCard`/`CheatsheetRow`/`CheatsheetSource`/`CheatsheetConstant` (Task 1); `ICheatsheetCatalogProvider` (Task 2); `Hmm.Core.NoteSerializer.DefaultJsonNoteSerializer<T>(ILogger<T> logger)` with `protected ILogger Logger`, `protected JsonSerializerOptions JsonOptions`, `protected NoteCatalog Catalog`, `protected virtual Task<NoteCatalog> GetCatalogAsync()`, `public override Task<ProcessingResult<T>> GetEntity(HmmNote note)`, `public override Task<ProcessingResult<HmmNote>> GetNote(in T entity)`, `public virtual string GetNoteSerializationText(T entity)`.
 - Produces: `Hmm.Cheatsheet.NoteSerialize.CheatsheetJsonNoteSerialize(ICheatsheetCatalogProvider catalogProvider, ILogger<CheatsheetCard> logger)` implementing `INoteSerializer<CheatsheetCard>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetJsonNoteSerializeReadTests.cs`:
 
@@ -954,13 +954,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeReadTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetJsonNoteSerialize' could not be found`.
 
-- [ ] **Step 3: Write the serializer read path**
+- [x] **Step 3: Write the serializer read path**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/NoteSerialize/CheatsheetJsonNoteSerialize.cs`:
 
@@ -1301,13 +1301,13 @@ namespace Hmm.Cheatsheet.NoteSerialize
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeReadTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 15`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -1327,7 +1327,7 @@ git commit -m "feat(cheatsheet): lossless note-content read path for cheatsheet 
 - Consumes: everything from Task 3.
 - Produces: `public override string GetNoteSerializationText(CheatsheetCard entity)`; `public override Task<ProcessingResult<HmmNote>> GetNote(in CheatsheetCard entity)` — returns an `HmmNote` with `Id = entity.NoteId`, `Subject = CheatsheetCard.GetNoteSubject(entity.Id)`, `Content` = the serialized text, `Catalog` = the provider's catalog.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetJsonNoteSerializeWriteTests.cs`:
 
@@ -1549,13 +1549,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeWriteTests"`
 
 Expected: FAIL — several assertions fail because the inherited base implementations return `string.Empty` / a `Fail` result, e.g. `Assert.Equal() Failure` on the envelope test and `Assert.True(result.Success)` failing with "GetNote must be overridden to serialize CheatsheetCard to JSON".
 
-- [ ] **Step 3: Add the write members**
+- [x] **Step 3: Add the write members**
 
 Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/NoteSerialize/CheatsheetJsonNoteSerialize.cs`, immediately after the `GetEntity` method and before `SubjectToCardId`. Also add `using System.Linq;` to the file's using block.
 
@@ -1701,19 +1701,19 @@ Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/NoteSerialize/
         }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetJsonNoteSerializeWriteTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 11`.
 
-- [ ] **Step 5: Run the whole module's tests to confirm the read path still passes**
+- [x] **Step 5: Run the whole module's tests to confirm the read path still passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 36`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -1735,7 +1735,7 @@ This task adds no production code unless the tests find a hole. It is the execut
 - Consumes: `CheatsheetJsonNoteSerialize` (Tasks 3 and 4).
 - Produces: no new public API.
 
-- [ ] **Step 1: Write the round-trip test**
+- [x] **Step 1: Write the round-trip test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetRoundTripTests.cs`:
 
@@ -1971,7 +1971,7 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run the round-trip tests**
+- [x] **Step 2: Run the round-trip tests**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetRoundTripTests"`
 
@@ -1981,7 +1981,7 @@ If any test fails, the read/write pair from Tasks 3 and 4 has a hole. Fix it in 
 - a key present in the input but missing from the output → a read helper consumed it without a typed home, or `CopyExtras` skipped it;
 - a key present with a changed value → a fabricated default overwrote a preserved extra, meaning `CopyExtras` ran before the typed writes instead of after.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -2003,7 +2003,7 @@ Card-level rules only. Rows are deliberately **not** validated: rejecting a card
 - Consumes: `CheatsheetCard` (Task 1); `Hmm.Utility.Validation.ValidatorBase<T>` (a FluentValidation `AbstractValidator<T>` that also implements `IHmmValidator<T>`, exposing `Task<ProcessingResult<T>> ValidateEntityAsync(T entity)`; it throws `ArgumentNullException` on a null entity); `IEntityLookup.GetEntityAsync<T>(int id) where T : Entity`.
 - Produces: `Hmm.Cheatsheet.Validator.CheatsheetValidator(IEntityLookup lookupRepo)` implementing `IHmmValidator<CheatsheetCard>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetValidatorTests.cs`:
 
@@ -2146,13 +2146,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetValidatorTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetValidator' could not be found`.
 
-- [ ] **Step 3: Write the validator**
+- [x] **Step 3: Write the validator**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/Validator/CheatsheetValidator.cs`:
 
@@ -2224,13 +2224,13 @@ namespace Hmm.Cheatsheet.Validator
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetValidatorTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 9`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -2253,7 +2253,7 @@ Loads every card in the catalog for the current author, filters by `walletGroup`
 - Consumes: `INoteSerializer<CheatsheetCard>` (`Task<ProcessingResult<CheatsheetCard>> GetEntity(HmmNote)`, `Task<ProcessingResult<HmmNote>> GetNote(in CheatsheetCard)`); `IHmmValidator<CheatsheetCard>`; `Hmm.Core.IHmmNoteManager` (`GetNotesAsync(Expression<Func<HmmNote,bool>>, bool includeDeleted, ResourceCollectionParameters)`, `CreateAsync(HmmNote, bool)`, `UpdateAsync(HmmNote, bool)`, `DeleteAsync(int)` → `ProcessingResult<Unit>`); `IEntityLookup`; `Hmm.Core.IAuthorProvider` (`Task<ProcessingResult<Author>> GetAuthorAsync()`, `Author CachedAuthor`); `ResourceCollectionParameters.GetPaginationTuple()` from `Hmm.Utility.Dal.Query`.
 - Produces: `Hmm.Cheatsheet.ICheatsheetManager` with `Task<ProcessingResult<PageList<CheatsheetCard>>> GetCardsAsync(string walletGroup = null, string tag = null, ResourceCollectionParameters resourceCollectionParameters = null)` and `Task<ProcessingResult<CheatsheetCard>> GetCardByIdAsync(string cardId)`; `Hmm.Cheatsheet.CheatsheetManager(INoteSerializer<CheatsheetCard>, IHmmValidator<CheatsheetCard>, IHmmNoteManager, IEntityLookup, IAuthorProvider)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetManagerReadTests.cs`:
 
@@ -2550,13 +2550,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerReadTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetManager' could not be found`.
 
-- [ ] **Step 3: Write the interface (read half)**
+- [x] **Step 3: Write the interface (read half)**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetManager.cs`:
 
@@ -2593,7 +2593,7 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 4: Write the manager (read half)**
+- [x] **Step 4: Write the manager (read half)**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetManager.cs`:
 
@@ -2836,13 +2836,13 @@ namespace Hmm.Cheatsheet
 
 Note: `_validator` is unused until Task 8; the compiler emits no warning for an assigned private field that is read nowhere in this file yet, and Task 8 adds its only use.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerReadTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 13`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -2866,7 +2866,7 @@ git commit -m "feat(cheatsheet): add cheatsheet manager read operations"
   - `Task<ProcessingResult<CheatsheetCard>> UpdateAsync(CheatsheetCard card, bool commitChanges = true)`
   - `Task<ProcessingResult<Unit>> DeleteAsync(string cardId)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetManagerWriteTests.cs`:
 
@@ -3173,13 +3173,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerWriteTests"`
 
 Expected: FAIL — build errors `CS1061: 'CheatsheetManager' does not contain a definition for 'CreateAsync'` (and the same for `UpdateAsync`, `DeleteAsync`).
 
-- [ ] **Step 3: Extend the interface**
+- [x] **Step 3: Extend the interface**
 
 Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetManager.cs`, inside the interface, after `GetCardByIdAsync`:
 
@@ -3201,7 +3201,7 @@ Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetMan
         Task<ProcessingResult<Unit>> DeleteAsync(string cardId);
 ```
 
-- [ ] **Step 4: Implement the write operations**
+- [x] **Step 4: Implement the write operations**
 
 Add these methods to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetManager.cs`, immediately after `GetCardByIdAsync` and before `FindNoteForCardAsync`:
 
@@ -3364,19 +3364,19 @@ Add these methods to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetMana
         }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerWriteTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 14`.
 
-- [ ] **Step 6: Run the whole module**
+- [x] **Step 6: Run the whole module**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 81`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -3406,7 +3406,7 @@ The API formatter is Newtonsoft (`Startup.cs` calls `.AddNewtonsoftJson()`), and
 - Consumes: `CheatsheetCard`/`CheatsheetRow`/`CheatsheetSource` (Task 1); `Hmm.ServiceApi.DtoEntity.ApiEntity` (abstract, exposes `IEnumerable<Link> Links`); `Hmm.ServiceApi.DtoEntity.Profiles.PageListConverter<TSource, TDest>`.
 - Produces: `ApiCheatsheet` (+ `CreateLinks(ResultExecutingContext, LinkGenerator)`), `ApiCheatsheetForCreate`, `ApiCheatsheetForUpdate`, `ApiCheatsheetRow`, `ApiCheatsheetSource`, `CheatsheetJsonInterop.ToJTokens` / `ToJsonElements` / `ToJToken` / `ToJsonElement`, and `CheatsheetMappingProfile`.
 
-- [ ] **Step 1: Reference the module from the API project**
+- [x] **Step 1: Reference the module from the API project**
 
 In `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Hmm.ServiceApi.csproj`, add to the `ItemGroup` that already holds `<ProjectReference Include="..\Hmm.Automobile\Hmm.Automobile.csproj" />`:
 
@@ -3414,7 +3414,7 @@ In `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Hmm.ServiceApi.csproj`, add to t
     <ProjectReference Include="..\Hmm.Cheatsheet\Hmm.Cheatsheet.csproj" />
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.Core.Tests/CheatsheetMappingTests.cs`:
 
@@ -3619,13 +3619,13 @@ namespace Hmm.ServiceApi.Core.Tests
 }
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetMappingTests"`
 
 Expected: FAIL — build errors `CS0246: The type or namespace name 'ApiCheatsheet' could not be found` and `CS0246: ... 'CheatsheetMappingProfile' ...`.
 
-- [ ] **Step 4: Write the source and row DTOs plus the row converter**
+- [x] **Step 4: Write the source and row DTOs plus the row converter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.DtoEntity/Cheatsheets/ApiCheatsheetSource.cs`:
 
@@ -3811,7 +3811,7 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 }
 ```
 
-- [ ] **Step 5: Write the card DTOs**
+- [x] **Step 5: Write the card DTOs**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.DtoEntity/Cheatsheets/ApiCheatsheet.cs`:
 
@@ -3956,7 +3956,7 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 }
 ```
 
-- [ ] **Step 6: Write the JSON interop helper**
+- [x] **Step 6: Write the JSON interop helper**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.DtoEntity/Cheatsheets/CheatsheetJsonInterop.cs`:
 
@@ -4021,7 +4021,7 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 }
 ```
 
-- [ ] **Step 7: Write the mapping profile**
+- [x] **Step 7: Write the mapping profile**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Infrastructure/CheatsheetMappingProfile.cs`:
 
@@ -4106,13 +4106,13 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 }
 ```
 
-- [ ] **Step 8: Run test to verify it passes**
+- [x] **Step 8: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetMappingTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 8`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -4134,7 +4134,7 @@ git commit -m "feat(cheatsheet): add API DTOs and lossless domain/DTO mapping"
 - Consumes: `ICheatsheetManager` (Tasks 7–8); `CheatsheetMappingProfile` (Task 9); `Hmm.ServiceApi.Filters.ResultFilterBase(IMapper mapper, LinkGenerator linkGenerator)` with `protected abstract Task TransformResultAsync(ResultExecutingContext, ObjectResult, ResultExecutionDelegate)`, `protected IMapper Mapper`, `protected LinkGenerator LinkGenerator`; `Hmm.ServiceApi.Models.ApiBadRequestResponse(string)`.
 - Produces: `CheatsheetResultFilter`, `CheatsheetsResultFilter`, and `CheatsheetsController` with routes named `GetCheatsheets`, `GetCheatsheetById`, `AddCheatsheet`, `UpdateCheatsheet`, `DeleteCheatsheet`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.Core.Tests/CheatsheetsControllerTests.cs`:
 
@@ -4366,13 +4366,13 @@ namespace Hmm.ServiceApi.Core.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetsControllerTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetsController' could not be found`.
 
-- [ ] **Step 3: Write the single-item result filter**
+- [x] **Step 3: Write the single-item result filter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Filters/CheatsheetResultFilterAttribute.cs`:
 
@@ -4416,7 +4416,7 @@ public class CheatsheetResultFilter : ResultFilterBase
 }
 ```
 
-- [ ] **Step 4: Write the collection result filter**
+- [x] **Step 4: Write the collection result filter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Filters/CheatsheetsResultFilterAttribute.cs`:
 
@@ -4493,7 +4493,7 @@ public class CheatsheetsResultFilter : ResultFilterBase
 }
 ```
 
-- [ ] **Step 5: Write the controller**
+- [x] **Step 5: Write the controller**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Controllers/CheatsheetsController.cs`:
 
@@ -4704,13 +4704,13 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Controllers
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetsControllerTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 13`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
@@ -4733,7 +4733,7 @@ git commit -m "feat(cheatsheet): add /v1/cheatsheets controller and result filte
 - Consumes: `ICheatsheetCatalogProvider`/`CheatsheetCatalogProvider` (Task 2), `CheatsheetJsonNoteSerialize` (Tasks 3–4), `CheatsheetValidator` (Task 6), `ICheatsheetManager`/`CheatsheetManager` (Tasks 7–8), `CheatsheetMappingProfile` (Task 9); `Hmm.Core.INoteCatalogManager` (`GetEntitiesAsync(Expression<Func<NoteCatalog,bool>>)`, `CreateAsync(NoteCatalog)`).
 - Produces: `CheatsheetServiceStartup(IServiceCollection services)` with `void ConfigureServices()`; `CheatsheetAppStartupFilter` implementing `IStartupFilter`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.Core.Tests/CheatsheetServiceStartupTests.cs`:
 
@@ -4797,13 +4797,13 @@ namespace Hmm.ServiceApi.Core.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetServiceStartupTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetServiceStartup' could not be found`.
 
-- [ ] **Step 3: Write the module DI registration**
+- [x] **Step 3: Write the module DI registration**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Infrastructure/CheatsheetServiceStartup.cs`:
 
@@ -4856,7 +4856,7 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 }
 ```
 
-- [ ] **Step 4: Write the catalog-seeding startup filter**
+- [x] **Step 4: Write the catalog-seeding startup filter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Infrastructure/CheatsheetAppStartupFilter.cs`:
 
@@ -4959,13 +4959,13 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetServiceStartupTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 5`.
 
-- [ ] **Step 6: Wire the module into `Startup.cs`**
+- [x] **Step 6: Wire the module into `Startup.cs`**
 
 In `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Startup.cs`, add this using immediately after `using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;` (line 9):
 
@@ -5028,19 +5028,19 @@ to:
             utilityStartup.ConfigureServices();
 ```
 
-- [ ] **Step 7: Build the whole solution**
+- [x] **Step 7: Build the whole solution**
 
 Run: `dotnet build Hmm.sln`
 
 Expected: `Build succeeded.` with `0 Error(s)`.
 
-- [ ] **Step 8: Run the whole test suite**
+- [x] **Step 8: Run the whole test suite**
 
 Run: `cd /Users/fchy/Projects/Hmm && dotnet test Hmm.sln`
 
 Expected: every test project reports `Passed!`, `Failed: 0`. In particular `Hmm.Cheatsheet.Tests` reports 81 passed and `Hmm.ServiceApi.Core.Tests` gains 26 new passing tests (8 mapping + 13 controller + 5 startup).
 
-- [ ] **Step 9: Prove no EF migration is needed**
+- [x] **Step 9: Prove no EF migration is needed**
 
 Run:
 
@@ -5054,7 +5054,7 @@ Expected: `No changes have been made to the model since the last migration.`
 
 If this reports pending changes, they are **not** from this feature — nothing in Tasks 1–11 touches `HmmDataContext`, adds a `DbSet`, or adds a DAO entity. Investigate as pre-existing drift (see the *Working with Migrations* section of `CLAUDE.md`); do **not** add a migration as part of this work.
 
-- [ ] **Step 10: Document the endpoints**
+- [x] **Step 10: Document the endpoints**
 
 In `/Users/fchy/Projects/Hmm/CLAUDE.md`, in the *API Versioning* section, add a new endpoint group immediately after the **ProfileService endpoints** block:
 
@@ -5066,7 +5066,7 @@ In `/Users/fchy/Projects/Hmm/CLAUDE.md`, in the *API Versioning* section, add a 
   - **Round-tripping is lossless by contract**: unknown card/row/source fields, non-object rows, and mistyped known fields are preserved verbatim, matching the Flutter client's `unreadableRows` behaviour. See `docs/superpowers/plans/2026-08-10-backend-cheatsheets-api.md`.
 ```
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm

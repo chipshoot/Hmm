@@ -7,6 +7,7 @@ using Hmm.Core.Map;
 using Hmm.Core.Map.DbEntity;
 using Hmm.Core.Map.DomainEntity;
 using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;
+using Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure;
 using Hmm.ServiceApi.Areas.UtilityService.Infrastructure;
 using Hmm.ServiceApi.Configuration;
 using Hmm.ServiceApi.DtoEntity.Profiles;
@@ -231,6 +232,7 @@ namespace Hmm.ServiceApi
                     cfg.AddProfile<ApiMappingProfile>();
                     cfg.AddProfile<HmmMappingProfile>();
                     cfg.AddProfile<AutomobileMappingProfile>();
+                    cfg.AddProfile<CheatsheetMappingProfile>();
                     cfg.AddProfile<UtilityServiceMappingProfile>();
                 })
                 .AddSwaggerGen(options =>
@@ -279,6 +281,12 @@ namespace Hmm.ServiceApi
             // Register Automobile module services (managers, validators, serializers)
             var automobileStartup = new AutomobileInfoServiceStartup(services);
             automobileStartup.ConfigureServices();
+
+            // Register Cheatsheet module services (manager, validator, serializer).
+            // Must follow the automobile registration: it reuses the author
+            // providers and INoteCatalogProvider registered there.
+            var cheatsheetStartup = new CheatsheetServiceStartup(services);
+            cheatsheetStartup.ConfigureServices();
 
             // Register Utility module services (geocoding, etc.)
             var utilityStartup = new UtilityServiceStartup(services, Configuration);
