@@ -446,5 +446,48 @@ namespace Hmm.Cheatsheet.Tests
             _noteManager.Verify(m => m.DeleteAsync(It.IsAny<int>()), Times.Never);
         }
 
+
+        [Fact]
+        public async Task CreateAsync_AtTheCardLimit_IsRefused()
+        {
+            for (var i = 0; i < CheatsheetManager.MaxCardsPerAuthor; i++)
+            {
+                _notes.Add(NoteFor(i + 1, "bulk-" + i));
+            }
+
+            var result = await _manager.CreateAsync(NewCard("one-too-many"));
+
+            Assert.False(result.Success);
+            Assert.Contains(
+                CheatsheetManager.MaxCardsPerAuthor.ToString(),
+                result.GetWholeMessage());
+            _noteManager.Verify(m => m.CreateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateAsync_BelowTheCardLimit_IsAllowed()
+        {
+            for (var i = 0; i < CheatsheetManager.MaxCardsPerAuthor - 1; i++)
+            {
+                _notes.Add(NoteFor(i + 1, "bulk-" + i));
+            }
+
+            var result = await _manager.CreateAsync(NewCard("just-fits"));
+
+            Assert.True(result.Success);
+        }
+
+        private static HmmNote NoteFor(int id, string cardId) => new()
+        {
+            Id = id,
+            Uuid = "uuid-" + id,
+            Subject = CheatsheetCard.GetNoteSubject(cardId),
+            Content = "{\"note\":{\"content\":{\"Cheatsheet\":{\"schemaVersion\":1,\"id\":\""
+                      + cardId + "\",\"title\":\"Bulk\",\"walletGroup\":\"Travel\",\"tags\":[],"
+                      + "\"templateId\":\"blank\",\"protected\":false,\"rows\":[]}}}}",
+            Author = TestAuthor,
+            Catalog = TestCatalog
+        };
+
     }
 }

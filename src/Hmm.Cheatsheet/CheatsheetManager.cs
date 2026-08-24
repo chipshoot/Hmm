@@ -26,6 +26,16 @@ namespace Hmm.Cheatsheet
         /// <summary>Note-store page size for the internal read-everything loop.</summary>
         private const int NotePageSize = 100;
 
+        /// <summary>
+        /// Upper bound on cards per author. Every read and write loads the
+        /// author's whole card set and filters in memory, because the card body
+        /// is opaque JSON that SQL cannot filter - so an unbounded set makes
+        /// each of that author's own requests progressively more expensive.
+        /// Deliberately generous: a wallet is a personal artefact, and this is a
+        /// runaway guard, not a product limit.
+        /// </summary>
+        public const int MaxCardsPerAuthor = 1000;
+
         private readonly INoteSerializer<CheatsheetCard> _noteSerializer;
         private readonly IHmmValidator<CheatsheetCard> _validator;
         private readonly IHmmNoteManager _noteManager;
@@ -156,6 +166,13 @@ namespace Hmm.Cheatsheet
                     $"Cheatsheet card '{card.Id}' already exists");
             }
 
+            var allNotesResult = await GetAllNotesAsync();
+            if (allNotesResult.Success && allNotesResult.Value.Count >= MaxCardsPerAuthor)
+            {
+                return ProcessingResult<CheatsheetCard>.Invalid(
+                    $"Cannot hold more than {MaxCardsPerAuthor} cheatsheet cards");
+            }
+
             // Only "no such card" means the id is free. Any other failure means
             // the uniqueness check never ran, and creating anyway would put a
             // second note under the same subject - the exact duplicate this
@@ -166,6 +183,11 @@ namespace Hmm.Cheatsheet
                     existingResult.ErrorMessage, existingResult.ErrorType);
             }
 
+            // NOTE: the check above and the create below are not atomic, so two
+            // concurrent creates carrying the same client-supplied id can both
+            // pass it. Closing that properly needs a unique constraint on
+            // (Author, Catalog, Subject) in the note store, which spans every
+            // note type - not just cheatsheets - and so is not decided here.
             var noteResult = await _noteSerializer.GetNote(card);
             if (!noteResult.Success)
             {
