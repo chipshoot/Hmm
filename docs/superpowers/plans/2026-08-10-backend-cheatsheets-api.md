@@ -2866,7 +2866,7 @@ git commit -m "feat(cheatsheet): add cheatsheet manager read operations"
   - `Task<ProcessingResult<CheatsheetCard>> UpdateAsync(CheatsheetCard card, bool commitChanges = true)`
   - `Task<ProcessingResult<Unit>> DeleteAsync(string cardId)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetManagerWriteTests.cs`:
 
@@ -3173,13 +3173,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerWriteTests"`
 
 Expected: FAIL — build errors `CS1061: 'CheatsheetManager' does not contain a definition for 'CreateAsync'` (and the same for `UpdateAsync`, `DeleteAsync`).
 
-- [ ] **Step 3: Extend the interface**
+- [x] **Step 3: Extend the interface**
 
 Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetManager.cs`, inside the interface, after `GetCardByIdAsync`:
 
@@ -3201,7 +3201,7 @@ Add these members to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetMan
         Task<ProcessingResult<Unit>> DeleteAsync(string cardId);
 ```
 
-- [ ] **Step 4: Implement the write operations**
+- [x] **Step 4: Implement the write operations**
 
 Add these methods to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetManager.cs`, immediately after `GetCardByIdAsync` and before `FindNoteForCardAsync`:
 
@@ -3364,19 +3364,19 @@ Add these methods to `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetMana
         }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerWriteTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 14`.
 
-- [ ] **Step 6: Run the whole module**
+- [x] **Step 6: Run the whole module**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 81`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm

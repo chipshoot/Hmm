@@ -114,6 +114,163 @@ namespace Hmm.Cheatsheet
         /// JSON invisible, so a save would create a duplicate note under the
         /// same subject and a delete could never reach the original.
         /// </summary>
+        public async Task<ProcessingResult<CheatsheetCard>> CreateAsync(
+            CheatsheetCard card,
+            bool commitChanges = true)
+        {
+            if (card == null)
+            {
+                return ProcessingResult<CheatsheetCard>.Invalid("Cheatsheet card cannot be null");
+            }
+
+            var authorResult = await _authorProvider.GetAuthorAsync();
+            if (!authorResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Fail(
+                    authorResult.ErrorMessage, authorResult.ErrorType);
+            }
+
+            if (string.IsNullOrWhiteSpace(card.Id))
+            {
+                // Guid format (8-4-4-4-12) matches the Dart uuid package's v4
+                // output, so client- and server-minted ids are indistinguishable.
+                card.Id = Guid.NewGuid().ToString();
+            }
+
+            card.AuthorId = authorResult.Value.Id;
+
+            var validationResult = await _validator.ValidateEntityAsync(card);
+            if (!validationResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Invalid(validationResult.GetWholeMessage());
+            }
+
+            var existingResult = await FindNoteForCardAsync(card.Id);
+            if (existingResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Conflict(
+                    $"Cheatsheet card '{card.Id}' already exists");
+            }
+
+            var noteResult = await _noteSerializer.GetNote(card);
+            if (!noteResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
+            }
+
+            var note = noteResult.Value;
+            note.Id = 0;
+            note.Author = authorResult.Value;
+
+            var createdResult = await _noteManager.CreateAsync(note, commitChanges);
+            if (!createdResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Fail(
+                    createdResult.ErrorMessage, createdResult.ErrorType);
+            }
+
+            return await ReadBackAsync(createdResult.Value, authorResult.Value.Id);
+        }
+
+        public async Task<ProcessingResult<CheatsheetCard>> UpdateAsync(
+            CheatsheetCard card,
+            bool commitChanges = true)
+        {
+            if (card == null)
+            {
+                return ProcessingResult<CheatsheetCard>.Invalid("Cheatsheet card cannot be null");
+            }
+
+            if (string.IsNullOrWhiteSpace(card.Id))
+            {
+                return ProcessingResult<CheatsheetCard>.Invalid("Cheatsheet card id cannot be empty");
+            }
+
+            var authorResult = await _authorProvider.GetAuthorAsync();
+            if (!authorResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Fail(
+                    authorResult.ErrorMessage, authorResult.ErrorType);
+            }
+
+            var existingNoteResult = await FindNoteForCardAsync(card.Id);
+            if (!existingNoteResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.NotFound(
+                    $"Cannot find cheatsheet card '{card.Id}'");
+            }
+
+            var existingNote = existingNoteResult.Value;
+            card.AuthorId = authorResult.Value.Id;
+            card.NoteId = existingNote.Id;
+
+            var validationResult = await _validator.ValidateEntityAsync(card);
+            if (!validationResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Invalid(validationResult.GetWholeMessage());
+            }
+
+            var noteResult = await _noteSerializer.GetNote(card);
+            if (!noteResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
+            }
+
+            var note = noteResult.Value;
+            note.Author = authorResult.Value;
+
+            // The serializer builds a FRESH note, so the stored row's identity
+            // has to be carried across by hand. HmmNoteManager.UpdateAsync mints
+            // a new Uuid whenever the incoming note has none - which would
+            // silently re-identify the card on every save.
+            note.Uuid = existingNote.Uuid;
+            note.CreateDate = existingNote.CreateDate;
+            note.NoteDate = existingNote.NoteDate;
+            note.Version = existingNote.Version;
+            note.Tags = existingNote.Tags;
+            note.Catalog ??= existingNote.Catalog;
+
+            var updatedResult = await _noteManager.UpdateAsync(note, commitChanges);
+            if (!updatedResult.Success)
+            {
+                return ProcessingResult<CheatsheetCard>.Fail(
+                    updatedResult.ErrorMessage, updatedResult.ErrorType);
+            }
+
+            return await ReadBackAsync(updatedResult.Value, authorResult.Value.Id);
+        }
+
+        public async Task<ProcessingResult<Unit>> DeleteAsync(string cardId)
+        {
+            if (string.IsNullOrWhiteSpace(cardId))
+            {
+                return ProcessingResult<Unit>.Invalid("Cheatsheet card id cannot be empty");
+            }
+
+            var noteResult = await FindNoteForCardAsync(cardId);
+            if (!noteResult.Success)
+            {
+                return ProcessingResult<Unit>.NotFound($"Cannot find cheatsheet card '{cardId}'");
+            }
+
+            return await _noteManager.DeleteAsync(noteResult.Value.Id);
+        }
+
+        /// <summary>
+        /// Re-reads the persisted note so callers always get exactly what was
+        /// stored, and stamps the author id the persisted note may not carry.
+        /// </summary>
+        private async Task<ProcessingResult<CheatsheetCard>> ReadBackAsync(HmmNote note, int authorId)
+        {
+            var cardResult = await _noteSerializer.GetEntity(note);
+            if (cardResult.Success && cardResult.Value != null)
+            {
+                cardResult.Value.AuthorId = authorId;
+            }
+
+            return cardResult;
+        }
+
         private async Task<ProcessingResult<HmmNote>> FindNoteForCardAsync(string cardId)
         {
             var notesResult = await GetAllNotesAsync();

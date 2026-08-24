@@ -26,5 +26,21 @@ namespace Hmm.Cheatsheet
         /// Returns one card by its stable card id (not the note's int id).
         /// </summary>
         Task<ProcessingResult<CheatsheetCard>> GetCardByIdAsync(string cardId);
+
+        /// <summary>
+        /// Stores a new card. A blank <see cref="CheatsheetCard.Id"/> is filled
+        /// with a fresh v4 GUID; a card id that already exists conflicts rather
+        /// than creating a second note under the same subject.
+        /// </summary>
+        Task<ProcessingResult<CheatsheetCard>> CreateAsync(CheatsheetCard card, bool commitChanges = true);
+
+        /// <summary>
+        /// Replaces the stored card. The backing note's cross-device identity
+        /// (Uuid), audit dates and concurrency token are carried forward.
+        /// </summary>
+        Task<ProcessingResult<CheatsheetCard>> UpdateAsync(CheatsheetCard card, bool commitChanges = true);
+
+        /// <summary>Soft-deletes the card's backing note.</summary>
+        Task<ProcessingResult<Unit>> DeleteAsync(string cardId);
     }
 }
