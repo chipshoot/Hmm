@@ -2003,7 +2003,7 @@ Card-level rules only. Rows are deliberately **not** validated: rejecting a card
 - Consumes: `CheatsheetCard` (Task 1); `Hmm.Utility.Validation.ValidatorBase<T>` (a FluentValidation `AbstractValidator<T>` that also implements `IHmmValidator<T>`, exposing `Task<ProcessingResult<T>> ValidateEntityAsync(T entity)`; it throws `ArgumentNullException` on a null entity); `IEntityLookup.GetEntityAsync<T>(int id) where T : Entity`.
 - Produces: `Hmm.Cheatsheet.Validator.CheatsheetValidator(IEntityLookup lookupRepo)` implementing `IHmmValidator<CheatsheetCard>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetValidatorTests.cs`:
 
@@ -2146,13 +2146,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetValidatorTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetValidator' could not be found`.
 
-- [ ] **Step 3: Write the validator**
+- [x] **Step 3: Write the validator**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/Validator/CheatsheetValidator.cs`:
 
@@ -2224,13 +2224,13 @@ namespace Hmm.Cheatsheet.Validator
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetValidatorTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 9`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
