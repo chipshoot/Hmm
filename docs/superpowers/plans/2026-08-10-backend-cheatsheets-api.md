@@ -4733,7 +4733,7 @@ git commit -m "feat(cheatsheet): add /v1/cheatsheets controller and result filte
 - Consumes: `ICheatsheetCatalogProvider`/`CheatsheetCatalogProvider` (Task 2), `CheatsheetJsonNoteSerialize` (Tasks 3–4), `CheatsheetValidator` (Task 6), `ICheatsheetManager`/`CheatsheetManager` (Tasks 7–8), `CheatsheetMappingProfile` (Task 9); `Hmm.Core.INoteCatalogManager` (`GetEntitiesAsync(Expression<Func<NoteCatalog,bool>>)`, `CreateAsync(NoteCatalog)`).
 - Produces: `CheatsheetServiceStartup(IServiceCollection services)` with `void ConfigureServices()`; `CheatsheetAppStartupFilter` implementing `IStartupFilter`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.Core.Tests/CheatsheetServiceStartupTests.cs`:
 
@@ -4797,13 +4797,13 @@ namespace Hmm.ServiceApi.Core.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetServiceStartupTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetServiceStartup' could not be found`.
 
-- [ ] **Step 3: Write the module DI registration**
+- [x] **Step 3: Write the module DI registration**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Infrastructure/CheatsheetServiceStartup.cs`:
 
@@ -4856,7 +4856,7 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 }
 ```
 
-- [ ] **Step 4: Write the catalog-seeding startup filter**
+- [x] **Step 4: Write the catalog-seeding startup filter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Infrastructure/CheatsheetAppStartupFilter.cs`:
 
@@ -4959,13 +4959,13 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetServiceStartupTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 5`.
 
-- [ ] **Step 6: Wire the module into `Startup.cs`**
+- [x] **Step 6: Wire the module into `Startup.cs`**
 
 In `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Startup.cs`, add this using immediately after `using Hmm.ServiceApi.Areas.AutomobileInfoService.Infrastructure;` (line 9):
 
@@ -5028,19 +5028,19 @@ to:
             utilityStartup.ConfigureServices();
 ```
 
-- [ ] **Step 7: Build the whole solution**
+- [x] **Step 7: Build the whole solution**
 
 Run: `dotnet build Hmm.sln`
 
 Expected: `Build succeeded.` with `0 Error(s)`.
 
-- [ ] **Step 8: Run the whole test suite**
+- [x] **Step 8: Run the whole test suite**
 
 Run: `cd /Users/fchy/Projects/Hmm && dotnet test Hmm.sln`
 
 Expected: every test project reports `Passed!`, `Failed: 0`. In particular `Hmm.Cheatsheet.Tests` reports 81 passed and `Hmm.ServiceApi.Core.Tests` gains 26 new passing tests (8 mapping + 13 controller + 5 startup).
 
-- [ ] **Step 9: Prove no EF migration is needed**
+- [x] **Step 9: Prove no EF migration is needed**
 
 Run:
 
@@ -5054,7 +5054,7 @@ Expected: `No changes have been made to the model since the last migration.`
 
 If this reports pending changes, they are **not** from this feature — nothing in Tasks 1–11 touches `HmmDataContext`, adds a `DbSet`, or adds a DAO entity. Investigate as pre-existing drift (see the *Working with Migrations* section of `CLAUDE.md`); do **not** add a migration as part of this work.
 
-- [ ] **Step 10: Document the endpoints**
+- [x] **Step 10: Document the endpoints**
 
 In `/Users/fchy/Projects/Hmm/CLAUDE.md`, in the *API Versioning* section, add a new endpoint group immediately after the **ProfileService endpoints** block:
 
@@ -5066,7 +5066,7 @@ In `/Users/fchy/Projects/Hmm/CLAUDE.md`, in the *API Versioning* section, add a 
   - **Round-tripping is lossless by contract**: unknown card/row/source fields, non-object rows, and mistyped known fields are preserved verbatim, matching the Flutter client's `unreadableRows` behaviour. See `docs/superpowers/plans/2026-08-10-backend-cheatsheets-api.md`.
 ```
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
