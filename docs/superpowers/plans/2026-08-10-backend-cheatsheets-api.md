@@ -2253,7 +2253,7 @@ Loads every card in the catalog for the current author, filters by `walletGroup`
 - Consumes: `INoteSerializer<CheatsheetCard>` (`Task<ProcessingResult<CheatsheetCard>> GetEntity(HmmNote)`, `Task<ProcessingResult<HmmNote>> GetNote(in CheatsheetCard)`); `IHmmValidator<CheatsheetCard>`; `Hmm.Core.IHmmNoteManager` (`GetNotesAsync(Expression<Func<HmmNote,bool>>, bool includeDeleted, ResourceCollectionParameters)`, `CreateAsync(HmmNote, bool)`, `UpdateAsync(HmmNote, bool)`, `DeleteAsync(int)` → `ProcessingResult<Unit>`); `IEntityLookup`; `Hmm.Core.IAuthorProvider` (`Task<ProcessingResult<Author>> GetAuthorAsync()`, `Author CachedAuthor`); `ResourceCollectionParameters.GetPaginationTuple()` from `Hmm.Utility.Dal.Query`.
 - Produces: `Hmm.Cheatsheet.ICheatsheetManager` with `Task<ProcessingResult<PageList<CheatsheetCard>>> GetCardsAsync(string walletGroup = null, string tag = null, ResourceCollectionParameters resourceCollectionParameters = null)` and `Task<ProcessingResult<CheatsheetCard>> GetCardByIdAsync(string cardId)`; `Hmm.Cheatsheet.CheatsheetManager(INoteSerializer<CheatsheetCard>, IHmmValidator<CheatsheetCard>, IHmmNoteManager, IEntityLookup, IAuthorProvider)`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetManagerReadTests.cs`:
 
@@ -2550,13 +2550,13 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerReadTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetManager' could not be found`.
 
-- [ ] **Step 3: Write the interface (read half)**
+- [x] **Step 3: Write the interface (read half)**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/ICheatsheetManager.cs`:
 
@@ -2593,7 +2593,7 @@ namespace Hmm.Cheatsheet
 }
 ```
 
-- [ ] **Step 4: Write the manager (read half)**
+- [x] **Step 4: Write the manager (read half)**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet/CheatsheetManager.cs`:
 
@@ -2836,13 +2836,13 @@ namespace Hmm.Cheatsheet
 
 Note: `_validator` is unused until Task 8; the compiler emits no warning for an assigned private field that is read nowhere in this file yet, and Task 8 adds its only use.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetManagerReadTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 13`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
