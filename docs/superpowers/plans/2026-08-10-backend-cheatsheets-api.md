@@ -3406,7 +3406,7 @@ The API formatter is Newtonsoft (`Startup.cs` calls `.AddNewtonsoftJson()`), and
 - Consumes: `CheatsheetCard`/`CheatsheetRow`/`CheatsheetSource` (Task 1); `Hmm.ServiceApi.DtoEntity.ApiEntity` (abstract, exposes `IEnumerable<Link> Links`); `Hmm.ServiceApi.DtoEntity.Profiles.PageListConverter<TSource, TDest>`.
 - Produces: `ApiCheatsheet` (+ `CreateLinks(ResultExecutingContext, LinkGenerator)`), `ApiCheatsheetForCreate`, `ApiCheatsheetForUpdate`, `ApiCheatsheetRow`, `ApiCheatsheetSource`, `CheatsheetJsonInterop.ToJTokens` / `ToJsonElements` / `ToJToken` / `ToJsonElement`, and `CheatsheetMappingProfile`.
 
-- [ ] **Step 1: Reference the module from the API project**
+- [x] **Step 1: Reference the module from the API project**
 
 In `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Hmm.ServiceApi.csproj`, add to the `ItemGroup` that already holds `<ProjectReference Include="..\Hmm.Automobile\Hmm.Automobile.csproj" />`:
 
@@ -3414,7 +3414,7 @@ In `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Hmm.ServiceApi.csproj`, add to t
     <ProjectReference Include="..\Hmm.Cheatsheet\Hmm.Cheatsheet.csproj" />
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.Core.Tests/CheatsheetMappingTests.cs`:
 
@@ -3619,13 +3619,13 @@ namespace Hmm.ServiceApi.Core.Tests
 }
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetMappingTests"`
 
 Expected: FAIL — build errors `CS0246: The type or namespace name 'ApiCheatsheet' could not be found` and `CS0246: ... 'CheatsheetMappingProfile' ...`.
 
-- [ ] **Step 4: Write the source and row DTOs plus the row converter**
+- [x] **Step 4: Write the source and row DTOs plus the row converter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.DtoEntity/Cheatsheets/ApiCheatsheetSource.cs`:
 
@@ -3811,7 +3811,7 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 }
 ```
 
-- [ ] **Step 5: Write the card DTOs**
+- [x] **Step 5: Write the card DTOs**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.DtoEntity/Cheatsheets/ApiCheatsheet.cs`:
 
@@ -3956,7 +3956,7 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 }
 ```
 
-- [ ] **Step 6: Write the JSON interop helper**
+- [x] **Step 6: Write the JSON interop helper**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.DtoEntity/Cheatsheets/CheatsheetJsonInterop.cs`:
 
@@ -4021,7 +4021,7 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 }
 ```
 
-- [ ] **Step 7: Write the mapping profile**
+- [x] **Step 7: Write the mapping profile**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Infrastructure/CheatsheetMappingProfile.cs`:
 
@@ -4106,13 +4106,13 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 }
 ```
 
-- [ ] **Step 8: Run test to verify it passes**
+- [x] **Step 8: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetMappingTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 8`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
