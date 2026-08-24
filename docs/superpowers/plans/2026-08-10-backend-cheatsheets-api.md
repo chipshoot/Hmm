@@ -4134,7 +4134,7 @@ git commit -m "feat(cheatsheet): add API DTOs and lossless domain/DTO mapping"
 - Consumes: `ICheatsheetManager` (Tasks 7–8); `CheatsheetMappingProfile` (Task 9); `Hmm.ServiceApi.Filters.ResultFilterBase(IMapper mapper, LinkGenerator linkGenerator)` with `protected abstract Task TransformResultAsync(ResultExecutingContext, ObjectResult, ResultExecutionDelegate)`, `protected IMapper Mapper`, `protected LinkGenerator LinkGenerator`; `Hmm.ServiceApi.Models.ApiBadRequestResponse(string)`.
 - Produces: `CheatsheetResultFilter`, `CheatsheetsResultFilter`, and `CheatsheetsController` with routes named `GetCheatsheets`, `GetCheatsheetById`, `AddCheatsheet`, `UpdateCheatsheet`, `DeleteCheatsheet`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi.Core.Tests/CheatsheetsControllerTests.cs`:
 
@@ -4366,13 +4366,13 @@ namespace Hmm.ServiceApi.Core.Tests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetsControllerTests"`
 
 Expected: FAIL — build error `CS0246: The type or namespace name 'CheatsheetsController' could not be found`.
 
-- [ ] **Step 3: Write the single-item result filter**
+- [x] **Step 3: Write the single-item result filter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Filters/CheatsheetResultFilterAttribute.cs`:
 
@@ -4416,7 +4416,7 @@ public class CheatsheetResultFilter : ResultFilterBase
 }
 ```
 
-- [ ] **Step 4: Write the collection result filter**
+- [x] **Step 4: Write the collection result filter**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Filters/CheatsheetsResultFilterAttribute.cs`:
 
@@ -4493,7 +4493,7 @@ public class CheatsheetsResultFilter : ResultFilterBase
 }
 ```
 
-- [ ] **Step 5: Write the controller**
+- [x] **Step 5: Write the controller**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.ServiceApi/Areas/CheatsheetService/Controllers/CheatsheetsController.cs`:
 
@@ -4704,13 +4704,13 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Controllers
 }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test src/Hmm.ServiceApi.Core.Tests/Hmm.ServiceApi.Core.Tests.csproj --filter "FullyQualifiedName~CheatsheetsControllerTests"`
 
 Expected: PASS — `Passed!  - Failed: 0, Passed: 13`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
