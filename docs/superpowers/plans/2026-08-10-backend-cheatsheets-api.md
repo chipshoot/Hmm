@@ -5074,7 +5074,7 @@ git add src/Hmm.ServiceApi src/Hmm.ServiceApi.Core.Tests CLAUDE.md
 git commit -m "feat(cheatsheet): wire cheatsheet module into the API and seed its catalog"
 ```
 
-- [ ] **Step 12: Close out tracker row #33**
+- [x] **Step 12: Close out tracker row #33**
 
 Mark tracker row #33 ✅ finished with today's date via the feature-tracker workflow described in `CLAUDE.md`.
 
