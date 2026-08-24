@@ -5,6 +5,10 @@ using Hmm.ServiceApi.DtoEntity.Profiles;
 using Hmm.Utility.Dal.Query;
 using Newtonsoft.Json.Linq;
 
+using System.Collections.Generic;
+
+using System.Text.Json;
+
 namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 {
     /// <summary>
@@ -69,10 +73,36 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
                 .ForMember(d => d.NoteId, opt => opt.Ignore())
                 .ForMember(d => d.AuthorId, opt => opt.Ignore())
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
-                    (src, dest) => CheatsheetJsonInterop.ToJsonElements(src.ExtraFields)));
+                    (src, dest) => MergeExtras(dest.ExtraFields, src.ExtraFields)));
 
             CreateMap<PageList<CheatsheetCard>, PageList<ApiCheatsheet>>()
                 .ConvertUsing(new PageListConverter<CheatsheetCard, ApiCheatsheet>());
         }
+
+        /// <summary>
+        /// Merges request extras over the stored ones instead of replacing them.
+        /// This map runs ONTO a card already loaded from storage, so replacing
+        /// meant any client that does not model card-level extras deleted them
+        /// simply by not mentioning them - the exact silent loss the rest of
+        /// this module works to prevent. The trade-off is that an unknown field
+        /// cannot be removed through the API; keeping data the server cannot
+        /// interpret beats deleting it on a client's silence.
+        /// </summary>
+        private static IDictionary<string, JsonElement> MergeExtras(
+            IDictionary<string, JsonElement> stored,
+            IDictionary<string, JToken> incoming)
+        {
+            var merged = stored == null
+                ? new Dictionary<string, JsonElement>()
+                : new Dictionary<string, JsonElement>(stored);
+
+            foreach (var extra in CheatsheetJsonInterop.ToJsonElements(incoming))
+            {
+                merged[extra.Key] = extra.Value;
+            }
+
+            return merged;
+        }
+
     }
 }

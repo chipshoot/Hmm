@@ -194,5 +194,30 @@ namespace Hmm.ServiceApi.Core.Tests
             Assert.Equal(12, back.Rows[0].Source!.ExtraFields["revision"].Value<int>());
             Assert.Equal("corrupt", back.Rows[1].Raw!.Value<string>());
         }
+        [Fact]
+        public void ForUpdate_WithNoExtras_DoesNotWipeStoredExtras()
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse("{\"future\":42}");
+            var stored = new CheatsheetCard
+            {
+                Id = "c-1",
+                Title = "Passport",
+                WalletGroup = "Travel",
+                TemplateId = "blank",
+                ExtraFields = new Dictionary<string, JsonElement>
+                {
+                    ["future"] = doc.RootElement.GetProperty("future").Clone()
+                }
+            };
+
+            // A client that does not model card-level extras sends none.
+            var request = new ApiCheatsheetForUpdate { Title = "Renewed" };
+
+            _mapper.Map(request, stored);
+
+            Assert.True(stored.ExtraFields.ContainsKey("future"),
+                "stored extras were wiped by an update that simply did not mention them");
+        }
+
     }
 }
