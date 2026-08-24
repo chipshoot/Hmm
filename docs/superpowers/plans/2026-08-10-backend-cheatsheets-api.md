@@ -1735,7 +1735,7 @@ This task adds no production code unless the tests find a hole. It is the execut
 - Consumes: `CheatsheetJsonNoteSerialize` (Tasks 3 and 4).
 - Produces: no new public API.
 
-- [ ] **Step 1: Write the round-trip test**
+- [x] **Step 1: Write the round-trip test**
 
 Write `/Users/fchy/Projects/Hmm/src/Hmm.Cheatsheet.Tests/CheatsheetRoundTripTests.cs`:
 
@@ -1971,7 +1971,7 @@ namespace Hmm.Cheatsheet.Tests
 }
 ```
 
-- [ ] **Step 2: Run the round-trip tests**
+- [x] **Step 2: Run the round-trip tests**
 
 Run: `dotnet test src/Hmm.Cheatsheet.Tests/Hmm.Cheatsheet.Tests.csproj --filter "FullyQualifiedName~CheatsheetRoundTripTests"`
 
@@ -1981,7 +1981,7 @@ If any test fails, the read/write pair from Tasks 3 and 4 has a hole. Fix it in 
 - a key present in the input but missing from the output → a read helper consumed it without a typed home, or `CopyExtras` skipped it;
 - a key present with a changed value → a fabricated default overwrote a preserved extra, meaning `CopyExtras` ran before the typed writes instead of after.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 cd /Users/fchy/Projects/Hmm
