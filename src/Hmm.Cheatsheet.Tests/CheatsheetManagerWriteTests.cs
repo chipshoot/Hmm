@@ -110,7 +110,7 @@ namespace Hmm.Cheatsheet.Tests
                 new CheatsheetJsonNoteSerialize(catalogProvider.Object, NullLogger<CheatsheetCard>.Instance),
                 _validator.Object,
                 _noteManager.Object,
-                lookup.Object,
+                catalogProvider.Object,
                 authorProvider.Object);
         }
 
@@ -352,26 +352,23 @@ namespace Hmm.Cheatsheet.Tests
         /// </summary>
         private CheatsheetManager CreateManagerWithoutCatalog()
         {
-            var lookup = new Mock<IEntityLookup>();
-            lookup
-                .Setup(l => l.GetEntitiesAsync(
-                    It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
-                    It.IsAny<ResourceCollectionParameters>()))
-                .ReturnsAsync(ProcessingResult<PageList<NoteCatalog>>.Ok(
-                    new PageList<NoteCatalog>(new List<NoteCatalog>(), 0, 1, 10)));
-
             var authorProvider = new Mock<IAuthorProvider>();
             authorProvider.Setup(p => p.GetAuthorAsync()).ReturnsAsync(ProcessingResult<Author>.Ok(TestAuthor));
             authorProvider.Setup(p => p.CachedAuthor).Returns(TestAuthor);
 
-            var catalogProvider = new Mock<ICheatsheetCatalogProvider>();
-            catalogProvider.Setup(p => p.GetCatalogAsync()).ReturnsAsync(TestCatalog);
+            // The serializer keeps a working catalog; only the manager's own
+            // resolution comes back empty, which is what models the fault.
+            var serializerCatalog = new Mock<ICheatsheetCatalogProvider>();
+            serializerCatalog.Setup(p => p.GetCatalogAsync()).ReturnsAsync(TestCatalog);
+
+            var missingCatalog = new Mock<ICheatsheetCatalogProvider>();
+            missingCatalog.Setup(p => p.GetCatalogAsync()).ReturnsAsync((NoteCatalog)null);
 
             return new CheatsheetManager(
-                new CheatsheetJsonNoteSerialize(catalogProvider.Object, NullLogger<CheatsheetCard>.Instance),
+                new CheatsheetJsonNoteSerialize(serializerCatalog.Object, NullLogger<CheatsheetCard>.Instance),
                 _validator.Object,
                 _noteManager.Object,
-                lookup.Object,
+                missingCatalog.Object,
                 authorProvider.Object);
         }
 

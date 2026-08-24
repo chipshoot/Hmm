@@ -17,11 +17,17 @@ namespace Hmm.Cheatsheet.Tests
         private static CheatsheetValidator CreateValidator(bool authorExists = true)
         {
             var lookup = new Mock<IEntityLookup>();
+            // Scoped to id 9, not It.IsAny<int>(). Answering identically for every
+            // id meant a validator that checked a hardcoded author instead of
+            // card.AuthorId would pass both tests below unchanged.
             lookup
-                .Setup(l => l.GetEntityAsync<Author>(It.IsAny<int>()))
+                .Setup(l => l.GetEntityAsync<Author>(9))
                 .ReturnsAsync(authorExists
                     ? ProcessingResult<Author>.Ok(new Author { Id = 9 })
                     : ProcessingResult<Author>.NotFound());
+            lookup
+                .Setup(l => l.GetEntityAsync<Author>(It.Is<int>(id => id != 9)))
+                .ReturnsAsync(ProcessingResult<Author>.NotFound());
 
             return new CheatsheetValidator(lookup.Object);
         }
@@ -73,6 +79,7 @@ namespace Hmm.Cheatsheet.Tests
             var result = await CreateValidator().ValidateEntityAsync(card);
 
             Assert.False(result.Success);
+            Assert.Contains("title", result.GetWholeMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -84,6 +91,7 @@ namespace Hmm.Cheatsheet.Tests
             var result = await CreateValidator().ValidateEntityAsync(card);
 
             Assert.False(result.Success);
+            Assert.Contains("title", result.GetWholeMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -95,6 +103,7 @@ namespace Hmm.Cheatsheet.Tests
             var result = await CreateValidator().ValidateEntityAsync(card);
 
             Assert.False(result.Success);
+            Assert.Contains("wallet group", result.GetWholeMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -106,6 +115,7 @@ namespace Hmm.Cheatsheet.Tests
             var result = await CreateValidator().ValidateEntityAsync(card);
 
             Assert.False(result.Success);
+            Assert.Contains("template", result.GetWholeMessage(), StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -132,5 +142,18 @@ namespace Hmm.Cheatsheet.Tests
         {
             Assert.Throws<ArgumentNullException>(() => new CheatsheetValidator(null));
         }
+
+        [Fact]
+        public async Task ValidateEntityAsync_ChecksTheCardsOwnAuthor_NotAFixedOne()
+        {
+            var card = ValidCard();
+            card.AuthorId = 999;
+
+            var result = await CreateValidator().ValidateEntityAsync(card);
+
+            Assert.False(result.Success);
+            Assert.Contains("author", result.GetWholeMessage(), StringComparison.OrdinalIgnoreCase);
+        }
+
     }
 }

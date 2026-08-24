@@ -252,5 +252,20 @@ namespace Hmm.Cheatsheet.Tests
             Assert.Equal("{\"a\":1}", result.Value.ExtraFields["futureBag"].GetRawText());
             Assert.Equal("42", result.Value.Rows.Single().RawJson.Value.GetRawText());
         }
+
+        [Fact]
+        public async Task GetEntity_KeepsFractionalSchemaVersion()
+        {
+            // 1.7 used to be narrowed to 1 and consumed, so the value the client
+            // sent was gone. ReadInt was the one reader that did not require an
+            // exact type match.
+            var note = NoteWith("{\"id\":\"card-1\",\"schemaVersion\":1.7}");
+
+            var result = await CreateSerializer().GetEntity(note);
+
+            Assert.True(result.Success);
+            Assert.Equal("1.7", result.Value.ExtraFields["schemaVersion"].GetRawText());
+        }
+
     }
 }

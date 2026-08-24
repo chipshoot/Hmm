@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,26 +29,29 @@ namespace Hmm.Cheatsheet
         private readonly INoteSerializer<CheatsheetCard> _noteSerializer;
         private readonly IHmmValidator<CheatsheetCard> _validator;
         private readonly IHmmNoteManager _noteManager;
-        private readonly IEntityLookup _lookupRepo;
+        private readonly ICheatsheetCatalogProvider _catalogProvider;
+        private readonly ILogger<CheatsheetManager> _logger;
         private readonly IAuthorProvider _authorProvider;
 
         public CheatsheetManager(
             INoteSerializer<CheatsheetCard> noteSerializer,
             IHmmValidator<CheatsheetCard> validator,
             IHmmNoteManager noteManager,
-            IEntityLookup lookupRepo,
-            IAuthorProvider authorProvider)
+            ICheatsheetCatalogProvider catalogProvider,
+            IAuthorProvider authorProvider,
+            ILogger<CheatsheetManager> logger = null)
         {
             ArgumentNullException.ThrowIfNull(noteSerializer);
             ArgumentNullException.ThrowIfNull(validator);
             ArgumentNullException.ThrowIfNull(noteManager);
-            ArgumentNullException.ThrowIfNull(lookupRepo);
+            ArgumentNullException.ThrowIfNull(catalogProvider);
             ArgumentNullException.ThrowIfNull(authorProvider);
 
             _noteSerializer = noteSerializer;
             _validator = validator;
             _noteManager = noteManager;
-            _lookupRepo = lookupRepo;
+            _catalogProvider = catalogProvider;
+            _logger = logger;
             _authorProvider = authorProvider;
         }
 
@@ -326,6 +330,18 @@ namespace Hmm.Cheatsheet
                     // with it; it stays reachable by id for repair or delete.
                     cards.Add(cardResult.Value);
                 }
+                else
+                {
+                    // The card vanishes from the user's wallet here, so say so
+                    // with the note's identity attached. The serializer logs the
+                    // parse error, but nothing recorded which note was dropped
+                    // or that a list had silently shrunk.
+                    _logger?.LogWarning(
+                        "Dropping unreadable cheatsheet note {NoteId} ({Subject}) from list results: {Error}",
+                        note.Id,
+                        note.Subject,
+                        cardResult.ErrorMessage);
+                }
             }
 
             return ProcessingResult<IList<CheatsheetCard>>.Ok(cards);
@@ -401,15 +417,13 @@ namespace Hmm.Cheatsheet
 
         private async Task<int> GetCatalogIdAsync()
         {
-            var catalogsResult = await _lookupRepo.GetEntitiesAsync<NoteCatalog>(
-                c => c.Name == CheatsheetConstant.CheatsheetCatalogName);
-
-            if (!catalogsResult.Success || catalogsResult.Value == null)
-            {
-                return 0;
-            }
-
-            return catalogsResult.Value.FirstOrDefault()?.Id ?? 0;
+            // Reuse the shared provider rather than re-querying. This lookup ran
+            // uncached on every read and write, alongside the serializer's own
+            // (blocking) catalog fetch - two round-trips per call for one value.
+            // The provider caches on success only, so a transient failure still
+            // retries rather than being remembered as "missing".
+            var catalog = await _catalogProvider.GetCatalogAsync();
+            return catalog?.Id ?? 0;
         }
     }
 }

@@ -58,19 +58,11 @@ namespace Hmm.Cheatsheet.Tests
             return new CheatsheetJsonNoteSerialize(catalogProvider.Object, NullLogger<CheatsheetCard>.Instance);
         }
 
-        private static Mock<IEntityLookup> CreateLookup()
+        private static Mock<ICheatsheetCatalogProvider> CreateCatalogProvider(NoteCatalog catalog = null)
         {
-            var lookup = new Mock<IEntityLookup>();
-            lookup
-                .Setup(l => l.GetEntitiesAsync(
-                    It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
-                    It.IsAny<ResourceCollectionParameters>()))
-                .ReturnsAsync(ProcessingResult<PageList<NoteCatalog>>.Ok(
-                    new PageList<NoteCatalog>(new[] { TestCatalog }, 1, 1, 10)));
-            lookup
-                .Setup(l => l.GetEntityAsync<Author>(It.IsAny<int>()))
-                .ReturnsAsync(ProcessingResult<Author>.Ok(TestAuthor));
-            return lookup;
+            var provider = new Mock<ICheatsheetCatalogProvider>();
+            provider.Setup(p => p.GetCatalogAsync()).ReturnsAsync(catalog ?? TestCatalog);
+            return provider;
         }
 
         private static Mock<IAuthorProvider> CreateAuthorProvider()
@@ -114,7 +106,7 @@ namespace Hmm.Cheatsheet.Tests
                 CreateSerializer(),
                 Mock.Of<IHmmValidator<CheatsheetCard>>(),
                 CreateNoteManager(notes).Object,
-                CreateLookup().Object,
+                CreateCatalogProvider().Object,
                 CreateAuthorProvider().Object);
 
         private static IList<HmmNote> SampleNotes() =>
@@ -222,19 +214,14 @@ namespace Hmm.Cheatsheet.Tests
         [Fact]
         public async Task GetCardsAsync_Fails_WhenCatalogMissing()
         {
-            var lookup = new Mock<IEntityLookup>();
-            lookup
-                .Setup(l => l.GetEntitiesAsync(
-                    It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
-                    It.IsAny<ResourceCollectionParameters>()))
-                .ReturnsAsync(ProcessingResult<PageList<NoteCatalog>>.Ok(
-                    new PageList<NoteCatalog>(Array.Empty<NoteCatalog>(), 0, 1, 10)));
+            var catalogProvider = CreateCatalogProvider(catalog: null);
+            catalogProvider.Setup(p => p.GetCatalogAsync()).ReturnsAsync((NoteCatalog)null);
 
             var manager = new CheatsheetManager(
                 CreateSerializer(),
                 Mock.Of<IHmmValidator<CheatsheetCard>>(),
                 CreateNoteManager(SampleNotes()).Object,
-                lookup.Object,
+                catalogProvider.Object,
                 CreateAuthorProvider().Object);
 
             var result = await manager.GetCardsAsync();

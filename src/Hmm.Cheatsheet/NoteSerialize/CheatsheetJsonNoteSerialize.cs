@@ -435,12 +435,16 @@ namespace Hmm.Cheatsheet.NoteSerialize
 
         private static int ReadInt(JsonElement element, string name, int defaultValue, HashSet<string> consumed)
         {
+            // TryGetInt32, not TryGetDouble-then-cast: the latter accepted 1.7 and
+            // silently narrowed it to 1, discarding what the client sent. Every
+            // other reader here consumes only on an exact type match and leaves
+            // anything else to ExtraFields; this one was the exception.
             if (element.TryGetProperty(name, out var property) &&
                 property.ValueKind == JsonValueKind.Number &&
-                property.TryGetDouble(out var value))
+                property.TryGetInt32(out var value))
             {
                 consumed.Add(name);
-                return (int)value;
+                return value;
             }
 
             return defaultValue;

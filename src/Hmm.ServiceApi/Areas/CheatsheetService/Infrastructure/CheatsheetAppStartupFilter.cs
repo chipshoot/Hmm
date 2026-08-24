@@ -58,7 +58,19 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
                     .GetAwaiter()
                     .GetResult();
 
-                if (existingResult.Success && existingResult.Value != null && existingResult.Value.Any())
+                // A failed lookup is not the same as "no catalog yet". Treating
+                // them alike meant a DB that was not ready at boot fell straight
+                // through to CreateAsync, and the real error was discarded.
+                if (!existingResult.Success)
+                {
+                    _logger?.LogError(
+                        "Cannot determine whether NoteCatalog {CatalogName} exists, skipping seeding: {Error}",
+                        CheatsheetConstant.CheatsheetCatalogName,
+                        existingResult.ErrorMessage);
+                    return;
+                }
+
+                if (existingResult.Value != null && existingResult.Value.Any())
                 {
                     return;
                 }
