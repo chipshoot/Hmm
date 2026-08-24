@@ -152,6 +152,16 @@ namespace Hmm.Cheatsheet
                     $"Cheatsheet card '{card.Id}' already exists");
             }
 
+            // Only "no such card" means the id is free. Any other failure means
+            // the uniqueness check never ran, and creating anyway would put a
+            // second note under the same subject - the exact duplicate this
+            // check exists to prevent.
+            if (!existingResult.IsNotFound)
+            {
+                return ProcessingResult<CheatsheetCard>.Fail(
+                    existingResult.ErrorMessage, existingResult.ErrorType);
+            }
+
             var noteResult = await _noteSerializer.GetNote(card);
             if (!noteResult.Success)
             {
@@ -196,8 +206,14 @@ namespace Hmm.Cheatsheet
             var existingNoteResult = await FindNoteForCardAsync(card.Id);
             if (!existingNoteResult.Success)
             {
-                return ProcessingResult<CheatsheetCard>.NotFound(
-                    $"Cannot find cheatsheet card '{card.Id}'");
+                // Preserve the real cause. Collapsing every failure into 404 told
+                // a user their card no longer existed when the truth was a
+                // transient read fault, and pointed operators at the wrong thing.
+                return existingNoteResult.IsNotFound
+                    ? ProcessingResult<CheatsheetCard>.NotFound(
+                        $"Cannot find cheatsheet card '{card.Id}'")
+                    : ProcessingResult<CheatsheetCard>.Fail(
+                        existingNoteResult.ErrorMessage, existingNoteResult.ErrorType);
             }
 
             var existingNote = existingNoteResult.Value;
@@ -250,7 +266,10 @@ namespace Hmm.Cheatsheet
             var noteResult = await FindNoteForCardAsync(cardId);
             if (!noteResult.Success)
             {
-                return ProcessingResult<Unit>.NotFound($"Cannot find cheatsheet card '{cardId}'");
+                // Same reasoning as UpdateAsync: only a genuine miss is a 404.
+                return noteResult.IsNotFound
+                    ? ProcessingResult<Unit>.NotFound($"Cannot find cheatsheet card '{cardId}'")
+                    : ProcessingResult<Unit>.Fail(noteResult.ErrorMessage, noteResult.ErrorType);
             }
 
             return await _noteManager.DeleteAsync(noteResult.Value.Id);
@@ -329,9 +348,14 @@ namespace Hmm.Cheatsheet
             var catalogId = await GetCatalogIdAsync();
             if (catalogId <= 0)
             {
+                // ServerError, not NotFound: the catalog is seeded at boot, so its
+                // absence is a server fault. Reporting NotFound made it
+                // indistinguishable from "this card does not exist", which let
+                // CreateAsync below mistake a failed uniqueness check for a
+                // clear field and create a duplicate note.
                 return ProcessingResult<IList<HmmNote>>.Fail(
                     $"Cannot find note catalog '{CheatsheetConstant.CheatsheetCatalogName}'",
-                    ErrorCategory.NotFound);
+                    ErrorCategory.ServerError);
             }
 
             var notes = new List<HmmNote>();

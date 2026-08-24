@@ -16,13 +16,6 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
     /// </summary>
     public class ApiCheatsheetRowConverter : JsonConverter<ApiCheatsheetRow>
     {
-        private static readonly HashSet<string> KnownKeys = new(StringComparer.Ordinal)
-        {
-            nameof(ApiCheatsheetRow.Label),
-            nameof(ApiCheatsheetRow.ValueAction),
-            nameof(ApiCheatsheetRow.OpenSource),
-            nameof(ApiCheatsheetRow.Source)
-        };
 
         public override void WriteJson(JsonWriter writer, ApiCheatsheetRow value, JsonSerializer serializer)
         {
@@ -76,21 +69,36 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
             }
 
             var source = (JObject)token;
+
+            // Consume a known key ONLY when it carries the expected JSON type.
+            // Anything else falls through to ExtraFields below and is written
+            // back verbatim. Reading these with JToken.Value<T>() instead threw
+            // InvalidCastException on an object/array and FormatException on an
+            // unparsable scalar, and silently coerced a number to its string
+            // form - so a row from a newer client schema was either rejected
+            // with a 500 or quietly rewritten. This mirrors ReadString/ReadBool
+            // in CheatsheetJsonNoteSerialize, which already gets this right one
+            // layer down.
+            var consumed = new HashSet<string>(StringComparer.Ordinal);
             var row = new ApiCheatsheetRow
             {
-                Label = source.Value<string>(nameof(ApiCheatsheetRow.Label)) ?? string.Empty,
-                ValueAction = source.Value<string>(nameof(ApiCheatsheetRow.ValueAction)) ?? "none",
-                OpenSource = source.Value<bool?>(nameof(ApiCheatsheetRow.OpenSource)) ?? true
+                Label = ReadString(source, nameof(ApiCheatsheetRow.Label), consumed) ?? string.Empty,
+                ValueAction = ReadString(source, nameof(ApiCheatsheetRow.ValueAction), consumed) ?? "none",
+                OpenSource = ReadBool(source, nameof(ApiCheatsheetRow.OpenSource), true, consumed)
             };
 
             if (source[nameof(ApiCheatsheetRow.Source)] is JObject sourceObject)
             {
+                consumed.Add(nameof(ApiCheatsheetRow.Source));
                 row.Source = sourceObject.ToObject<ApiCheatsheetSource>(serializer);
             }
 
             foreach (var property in source.Properties())
             {
-                if (KnownKeys.Contains(property.Name))
+                // Keyed on what was actually consumed, NOT on KnownKeys: a
+                // mistyped known field is unconsumed, so it is preserved here
+                // rather than dropped on the floor.
+                if (consumed.Contains(property.Name))
                 {
                     continue;
                 }
@@ -99,6 +107,28 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
             }
 
             return row;
+        }
+
+        private static string ReadString(JObject source, string name, HashSet<string> consumed)
+        {
+            if (source[name] is JValue value && value.Type == JTokenType.String)
+            {
+                consumed.Add(name);
+                return (string)value.Value;
+            }
+
+            return null;
+        }
+
+        private static bool ReadBool(JObject source, string name, bool defaultValue, HashSet<string> consumed)
+        {
+            if (source[name] is JValue value && value.Type == JTokenType.Boolean)
+            {
+                consumed.Add(name);
+                return (bool)value.Value;
+            }
+
+            return defaultValue;
         }
     }
 }

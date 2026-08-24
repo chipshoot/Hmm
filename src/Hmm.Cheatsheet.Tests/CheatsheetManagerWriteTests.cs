@@ -39,12 +39,20 @@ namespace Hmm.Cheatsheet.Tests
                     It.IsAny<Expression<Func<HmmNote, bool>>>(),
                     It.IsAny<bool>(),
                     It.IsAny<ResourceCollectionParameters>()))
-                .ReturnsAsync((Expression<Func<HmmNote, bool>> _, bool __, ResourceCollectionParameters parameters) =>
+                .ReturnsAsync((Expression<Func<HmmNote, bool>> query, bool __, ResourceCollectionParameters parameters) =>
                 {
+                    // Apply the predicate. Discarding it made the author + catalog
+                    // scoping on the WRITE path unobservable: deleting that filter
+                    // left all 16 write tests green, so a refactor giving the write
+                    // path its own unscoped query could have shipped cross-author
+                    // UPDATE and DELETE without a single failure.
+                    IList<HmmNote> matched = query == null
+                        ? _notes
+                        : _notes.Where(query.Compile()).ToList();
                     var (pageIndex, pageSize) = parameters.GetPaginationTuple();
-                    var items = _notes.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+                    var items = matched.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
                     return ProcessingResult<PageList<HmmNote>>.Ok(
-                        new PageList<HmmNote>(items, _notes.Count, pageIndex, pageSize));
+                        new PageList<HmmNote>(items, matched.Count, pageIndex, pageSize));
                 });
 
             _noteManager
@@ -320,6 +328,125 @@ namespace Hmm.Cheatsheet.Tests
 
             _noteManager.Verify(m => m.UpdateAsync(It.IsAny<HmmNote>(), false), Times.Once);
             _noteManager.Verify(m => m.UpdateAsync(It.IsAny<HmmNote>(), true), Times.Never);
+        }
+
+
+        private static readonly Author OtherAuthor = new() { Id = 42, AccountName = "someone-else" };
+
+        private static HmmNote ForeignNote(string cardId) => new()
+        {
+            Id = 900,
+            Uuid = "uuid-900",
+            Subject = CheatsheetCard.GetNoteSubject(cardId),
+            Content = "{\"note\":{\"content\":{\"Cheatsheet\":{\"schemaVersion\":1,\"id\":\""
+                      + cardId + "\",\"title\":\"Theirs\",\"walletGroup\":\"Travel\",\"tags\":[],"
+                      + "\"templateId\":\"blank\",\"protected\":false,\"rows\":[]}}}}",
+            Author = OtherAuthor,
+            Catalog = TestCatalog
+        };
+
+        /// <summary>
+        /// A manager whose catalog lookup comes back empty, so every note query
+        /// fails before it reaches the store. Models an infrastructure fault
+        /// rather than a missing card.
+        /// </summary>
+        private CheatsheetManager CreateManagerWithoutCatalog()
+        {
+            var lookup = new Mock<IEntityLookup>();
+            lookup
+                .Setup(l => l.GetEntitiesAsync(
+                    It.IsAny<Expression<Func<NoteCatalog, bool>>>(),
+                    It.IsAny<ResourceCollectionParameters>()))
+                .ReturnsAsync(ProcessingResult<PageList<NoteCatalog>>.Ok(
+                    new PageList<NoteCatalog>(new List<NoteCatalog>(), 0, 1, 10)));
+
+            var authorProvider = new Mock<IAuthorProvider>();
+            authorProvider.Setup(p => p.GetAuthorAsync()).ReturnsAsync(ProcessingResult<Author>.Ok(TestAuthor));
+            authorProvider.Setup(p => p.CachedAuthor).Returns(TestAuthor);
+
+            var catalogProvider = new Mock<ICheatsheetCatalogProvider>();
+            catalogProvider.Setup(p => p.GetCatalogAsync()).ReturnsAsync(TestCatalog);
+
+            return new CheatsheetManager(
+                new CheatsheetJsonNoteSerialize(catalogProvider.Object, NullLogger<CheatsheetCard>.Instance),
+                _validator.Object,
+                _noteManager.Object,
+                lookup.Object,
+                authorProvider.Object);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_OtherAuthorsCard_IsNotFound_AndLeavesItAlone()
+        {
+            var theirs = ForeignNote("c-1");
+            _notes.Add(theirs);
+            var before = theirs.Content;
+
+            var result = await _manager.UpdateAsync(NewCard("c-1"));
+
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+            Assert.Equal(before, theirs.Content);
+            _noteManager.Verify(m => m.UpdateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_OtherAuthorsCard_IsNotFound_AndLeavesItAlone()
+        {
+            _notes.Add(ForeignNote("c-1"));
+
+            var result = await _manager.DeleteAsync("c-1");
+
+            Assert.False(result.Success);
+            Assert.True(result.IsNotFound);
+            Assert.Single(_notes);
+            _noteManager.Verify(m => m.DeleteAsync(It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateAsync_SameCardId_DifferentAuthor_DoesNotConflict()
+        {
+            // Card ids are namespaced per author, so another author holding this
+            // id must not block this one. Unprovable while the fake ignored the
+            // author filter - it would have reported a false Conflict.
+            _notes.Add(ForeignNote("c-1"));
+
+            var result = await _manager.CreateAsync(NewCard("c-1"));
+
+            Assert.True(result.Success);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WhenUniquenessCheckFails_DoesNotCreate()
+        {
+            // The check never ran, so the id is not known to be free. Creating
+            // anyway would put a second note under the same subject.
+            var result = await CreateManagerWithoutCatalog().CreateAsync(NewCard());
+
+            Assert.False(result.Success);
+            Assert.False(result.IsNotFound);
+            Assert.Contains("catalog", result.GetWholeMessage(), StringComparison.OrdinalIgnoreCase);
+            _noteManager.Verify(m => m.CreateAsync(It.IsAny<HmmNote>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenLookupFails_ReportsTheRealCause_NotNotFound()
+        {
+            var result = await CreateManagerWithoutCatalog().UpdateAsync(NewCard());
+
+            Assert.False(result.Success);
+            Assert.False(result.IsNotFound);
+            Assert.Contains("catalog", result.GetWholeMessage(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_WhenLookupFails_ReportsTheRealCause_NotNotFound()
+        {
+            var result = await CreateManagerWithoutCatalog().DeleteAsync("c-1");
+
+            Assert.False(result.Success);
+            Assert.False(result.IsNotFound);
+            _noteManager.Verify(m => m.DeleteAsync(It.IsAny<int>()), Times.Never);
         }
 
     }

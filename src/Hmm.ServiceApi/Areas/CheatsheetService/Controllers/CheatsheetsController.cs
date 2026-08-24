@@ -163,6 +163,13 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Controllers
             var card = getResult.Value;
             _mapper.Map(apiCard, card);
 
+            // Write back to the note this request actually found. The card's Id
+            // comes from the note CONTENT, while the GET matched on the note
+            // SUBJECT, and the serializer notes content may lag the subject. When
+            // they diverge, UpdateAsync would re-resolve by the content id, miss,
+            // and 404 a card the caller just fetched - losing the edit.
+            card.Id = id;
+
             var updateResult = await _cheatsheetManager.UpdateAsync(card);
             if (!updateResult.Success)
             {
