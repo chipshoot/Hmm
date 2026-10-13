@@ -22,6 +22,9 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
         /// <summary>Null = unbound.</summary>
         public ApiCheatsheetSource Source { get; set; }
 
+        /// <summary>Optional emoji for the client's Key points layout. Verbatim.</summary>
+        public string Emoji { get; set; }
+
         /// <summary>
         /// Row fields this API version does not model. Note the class-level
         /// <see cref="ApiCheatsheetRowConverter"/> intercepts serialization, so

@@ -24,6 +24,12 @@ namespace Hmm.Cheatsheet.DomainEntity
         public CheatsheetSource Source { get; set; }
 
         /// <summary>
+        /// Optional emoji the client shows beside the row in its Key points
+        /// layout. Verbatim; null = none (nothing written).
+        /// </summary>
+        public string Emoji { get; set; }
+
+        /// <summary>
         /// Every row property this version did not consume as a typed field,
         /// cloned verbatim and re-emitted on write.
         /// </summary>

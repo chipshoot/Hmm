@@ -50,28 +50,40 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
 
             CreateMap<CheatsheetCard, ApiCheatsheet>()
                 .ForMember(d => d.Links, opt => opt.Ignore())
+                .ForMember(d => d.Style, opt => opt.MapFrom(
+                    (src, dest) => CheatsheetJsonInterop.ToJTokenOrNull(src.Style)))
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
                     (src, dest) => CheatsheetJsonInterop.ToJTokens(src.ExtraFields)));
 
             CreateMap<ApiCheatsheet, CheatsheetCard>()
                 .ForMember(d => d.NoteId, opt => opt.Ignore())
                 .ForMember(d => d.AuthorId, opt => opt.Ignore())
+                .ForMember(d => d.Style, opt => opt.MapFrom(
+                    (src, dest) => CheatsheetJsonInterop.ToJsonElementOrNull(src.Style)))
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
                     (src, dest) => CheatsheetJsonInterop.ToJsonElements(src.ExtraFields)));
 
             CreateMap<ApiCheatsheetForCreate, CheatsheetCard>()
                 .ForMember(d => d.NoteId, opt => opt.Ignore())
                 .ForMember(d => d.AuthorId, opt => opt.Ignore())
+                .ForMember(d => d.Style, opt => opt.MapFrom(
+                    (src, dest) => CheatsheetJsonInterop.ToJsonElementOrNull(src.Style)))
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
                     (src, dest) => CheatsheetJsonInterop.ToJsonElements(src.ExtraFields)));
 
             // PUT replaces content only. Id, NoteId and AuthorId are identity:
             // they come from the route and the authenticated author, never from
-            // a request body that could disagree with them.
+            // a request body that could disagree with them. Style follows the
+            // MergeExtras philosophy: a body that never mentions it (an older
+            // client) keeps the stored one; an explicit null clears it.
             CreateMap<ApiCheatsheetForUpdate, CheatsheetCard>()
                 .ForMember(d => d.Id, opt => opt.Ignore())
                 .ForMember(d => d.NoteId, opt => opt.Ignore())
                 .ForMember(d => d.AuthorId, opt => opt.Ignore())
+                .ForMember(d => d.Style, opt => opt.MapFrom(
+                    (src, dest) => src.StyleSpecified
+                        ? CheatsheetJsonInterop.ToJsonElementOrNull(src.Style)
+                        : dest.Style))
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
                     (src, dest) => MergeExtras(dest.ExtraFields, src.ExtraFields)));
 

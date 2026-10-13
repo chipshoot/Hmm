@@ -43,6 +43,11 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
                 row[nameof(ApiCheatsheetRow.Source)] = JObject.FromObject(value.Source, serializer);
             }
 
+            if (value.Emoji != null)
+            {
+                row[nameof(ApiCheatsheetRow.Emoji)] = value.Emoji;
+            }
+
             if (value.ExtraFields != null)
             {
                 foreach (var extra in value.ExtraFields)
@@ -84,7 +89,8 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
             {
                 Label = ReadString(source, nameof(ApiCheatsheetRow.Label), consumed) ?? string.Empty,
                 ValueAction = ReadString(source, nameof(ApiCheatsheetRow.ValueAction), consumed) ?? "none",
-                OpenSource = ReadBool(source, nameof(ApiCheatsheetRow.OpenSource), true, consumed)
+                OpenSource = ReadBool(source, nameof(ApiCheatsheetRow.OpenSource), true, consumed),
+                Emoji = ReadString(source, nameof(ApiCheatsheetRow.Emoji), consumed)
             };
 
             if (source[nameof(ApiCheatsheetRow.Source)] is JObject sourceObject)

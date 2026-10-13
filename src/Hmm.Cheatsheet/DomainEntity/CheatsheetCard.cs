@@ -42,6 +42,13 @@ namespace Hmm.Cheatsheet.DomainEntity
         public IList<CheatsheetRow> Rows { get; set; } = new List<CheatsheetRow>();
 
         /// <summary>
+        /// The card's look ("style" in note content): theme, pattern, icon,
+        /// layout, cover path - all client concerns. Passed through verbatim;
+        /// the server never interprets it. Null = never styled (nothing written).
+        /// </summary>
+        public JsonElement? Style { get; set; }
+
+        /// <summary>
         /// Every card property this version did not consume as a typed field,
         /// cloned verbatim and re-emitted on write.
         /// </summary>

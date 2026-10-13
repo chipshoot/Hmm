@@ -23,6 +23,18 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
             return document.RootElement.Clone();
         }
 
+        /// <summary>No value (or an undefined one) maps to null.</summary>
+        public static JToken ToJTokenOrNull(JsonElement? element)
+            => element.HasValue && element.Value.ValueKind != JsonValueKind.Undefined
+                ? ToJToken(element.Value)
+                : null;
+
+        /// <summary>A C# null and a JSON null both mean "no value".</summary>
+        public static JsonElement? ToJsonElementOrNull(JToken token)
+            => token == null || token.Type == JTokenType.Null
+                ? null
+                : ToJsonElement(token);
+
         public static IDictionary<string, JToken> ToJTokens(IDictionary<string, JsonElement> source)
         {
             var result = new Dictionary<string, JToken>(StringComparer.Ordinal);

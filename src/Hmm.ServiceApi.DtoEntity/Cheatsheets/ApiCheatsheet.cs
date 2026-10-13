@@ -31,6 +31,13 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 
         public IList<ApiCheatsheetRow> Rows { get; set; } = new List<ApiCheatsheetRow>();
 
+        /// <summary>
+        /// The card's look ("style" in note content), passed through verbatim
+        /// so no data mode drops it. Null = never styled, and then omitted.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public JToken Style { get; set; }
+
         /// <summary>Card fields this API version does not model, inlined on the wire.</summary>
         [JsonExtensionData]
         public IDictionary<string, JToken> ExtraFields { get; set; } = new Dictionary<string, JToken>();

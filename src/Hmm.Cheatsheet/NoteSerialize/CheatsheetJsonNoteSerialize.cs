@@ -41,6 +41,8 @@ namespace Hmm.Cheatsheet.NoteSerialize
         private const string KeyNoteUuid = "noteUuid";
         private const string KeyKind = "kind";
         private const string KeyLocator = "locator";
+        private const string KeyStyle = "style";
+        private const string KeyEmoji = "emoji";
 
         private readonly ICheatsheetCatalogProvider _catalogProvider;
 
@@ -169,7 +171,17 @@ namespace Hmm.Cheatsheet.NoteSerialize
                     [KeyRows] = (entity.Rows ?? new List<CheatsheetRow>()).Select(WriteRow).ToList()
                 };
 
-                CopyExtras(entity.ExtraFields, cardData);
+                // Typed style sits after rows and before extras - the order the
+                // Flutter codec writes, so a card round-trips byte-identical on
+                // the client. A typed style beats a preserved raw "style".
+                var hasStyle = entity.Style.HasValue &&
+                               entity.Style.Value.ValueKind != JsonValueKind.Undefined;
+                if (hasStyle)
+                {
+                    cardData[KeyStyle] = entity.Style.Value;
+                }
+
+                CopyExtras(entity.ExtraFields, cardData, hasStyle ? KeyStyle : null);
 
                 var noteStructure = new
                 {
@@ -231,13 +243,19 @@ namespace Hmm.Cheatsheet.NoteSerialize
                 rowData[KeySource] = sourceData;
             }
 
-            CopyExtras(row.ExtraFields, rowData);
+            if (row.Emoji != null)
+            {
+                rowData[KeyEmoji] = row.Emoji;
+            }
+
+            CopyExtras(row.ExtraFields, rowData, row.Emoji != null ? KeyEmoji : null);
             return rowData;
         }
 
         private static void CopyExtras(
             IDictionary<string, JsonElement> extras,
-            IDictionary<string, object> target)
+            IDictionary<string, object> target,
+            string skipKey = null)
         {
             if (extras == null)
             {
@@ -246,6 +264,11 @@ namespace Hmm.Cheatsheet.NoteSerialize
 
             foreach (var extra in extras)
             {
+                if (skipKey != null && string.Equals(extra.Key, skipKey, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 target[extra.Key] = extra.Value;
             }
         }
@@ -299,7 +322,8 @@ namespace Hmm.Cheatsheet.NoteSerialize
                 TemplateId = ReadString(cardJson, KeyTemplateId, consumed) ?? CheatsheetConstant.DefaultTemplateId,
                 Protected = ReadBool(cardJson, KeyProtected, false, consumed),
                 Tags = ReadStringList(cardJson, KeyTags, consumed),
-                Rows = ReadRows(cardJson, consumed)
+                Rows = ReadRows(cardJson, consumed),
+                Style = ReadStyle(cardJson, consumed)
             };
 
             card.ExtraFields = ReadExtras(cardJson, consumed);
@@ -348,7 +372,10 @@ namespace Hmm.Cheatsheet.NoteSerialize
             {
                 Label = ReadString(rowJson, KeyLabel, consumed) ?? string.Empty,
                 ValueAction = ReadString(rowJson, KeyValueAction, consumed) ?? CheatsheetConstant.ValueActionNone,
-                OpenSource = ReadBool(rowJson, KeyOpenSource, true, consumed)
+                OpenSource = ReadBool(rowJson, KeyOpenSource, true, consumed),
+                // Consumed only when a string, like every typed read here: a
+                // mistyped emoji falls through to ExtraFields and survives.
+                Emoji = ReadString(rowJson, KeyEmoji, consumed)
             };
 
             if (rowJson.TryGetProperty(KeySource, out var sourceJson) &&
@@ -366,6 +393,23 @@ namespace Hmm.Cheatsheet.NoteSerialize
 
             row.ExtraFields = ReadExtras(rowJson, consumed);
             return row;
+        }
+
+        /// <summary>
+        /// Any JSON kind except null is consumed into the typed style and
+        /// re-emitted verbatim. An explicit null stays in ExtraFields, so it is
+        /// written back exactly as stored.
+        /// </summary>
+        private static JsonElement? ReadStyle(JsonElement cardJson, HashSet<string> consumed)
+        {
+            if (cardJson.TryGetProperty(KeyStyle, out var property) &&
+                property.ValueKind != JsonValueKind.Null)
+            {
+                consumed.Add(KeyStyle);
+                return property.Clone();
+            }
+
+            return null;
         }
 
         private static CheatsheetSource ReadSource(JsonElement sourceJson)

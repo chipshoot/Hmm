@@ -27,6 +27,9 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
 
         public IList<ApiCheatsheetRow> Rows { get; set; } = new List<ApiCheatsheetRow>();
 
+        /// <summary>The card's look, verbatim. Null or absent = unstyled.</summary>
+        public JToken Style { get; set; }
+
         [JsonExtensionData]
         public IDictionary<string, JToken> ExtraFields { get; set; } = new Dictionary<string, JToken>();
     }
