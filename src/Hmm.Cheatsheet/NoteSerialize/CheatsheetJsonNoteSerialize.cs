@@ -44,6 +44,13 @@ namespace Hmm.Cheatsheet.NoteSerialize
         private const string KeyStyle = "style";
         private const string KeyEmoji = "emoji";
 
+        // A styling client that talked to a server predating typed Style had
+        // its PascalCase wire keys stored verbatim as unknown extras. They are
+        // promoted (typed key absent) or dropped (typed key present) on read so
+        // they are never written back to shadow the real look.
+        private const string LegacyKeyStyle = "Style";
+        private const string LegacyKeyEmoji = "Emoji";
+
         private readonly ICheatsheetCatalogProvider _catalogProvider;
 
         public CheatsheetJsonNoteSerialize(
@@ -327,6 +334,8 @@ namespace Hmm.Cheatsheet.NoteSerialize
             };
 
             card.ExtraFields = ReadExtras(cardJson, consumed);
+            card.Style = PromoteLegacy(
+                card.Style, cardJson, KeyStyle, LegacyKeyStyle, card.ExtraFields, _ => true);
             return card;
         }
 
@@ -392,6 +401,14 @@ namespace Hmm.Cheatsheet.NoteSerialize
             }
 
             row.ExtraFields = ReadExtras(rowJson, consumed);
+            var emoji = PromoteLegacy(
+                null, rowJson, KeyEmoji, LegacyKeyEmoji, row.ExtraFields,
+                value => value.ValueKind == JsonValueKind.String);
+            if (emoji.HasValue)
+            {
+                row.Emoji = emoji.Value.GetString();
+            }
+
             return row;
         }
 
@@ -410,6 +427,44 @@ namespace Hmm.Cheatsheet.NoteSerialize
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Resolves a legacy PascalCase extra (see <see cref="LegacyKeyStyle"/>).
+        /// When the camelCase key is absent from the stored JSON and the legacy
+        /// value is acceptable, it is returned for promotion; in every case the
+        /// legacy extra is removed whenever a typed value exists or is promoted,
+        /// so it cannot be re-emitted beside it. A legacy value that cannot be
+        /// promoted while nothing typed exists is left alone - still lossless.
+        /// </summary>
+        private static JsonElement? PromoteLegacy(
+            JsonElement? typed,
+            JsonElement owner,
+            string key,
+            string legacyKey,
+            IDictionary<string, JsonElement> extras,
+            Func<JsonElement, bool> canPromote)
+        {
+            if (!extras.TryGetValue(legacyKey, out var legacy))
+            {
+                return typed;
+            }
+
+            if (owner.TryGetProperty(key, out _))
+            {
+                // The camelCase key is newer by construction (only the current
+                // server and the client codec write it): the legacy one is stale.
+                extras.Remove(legacyKey);
+                return typed;
+            }
+
+            if (legacy.ValueKind == JsonValueKind.Null || !canPromote(legacy))
+            {
+                return typed;
+            }
+
+            extras.Remove(legacyKey);
+            return legacy;
         }
 
         private static CheatsheetSource ReadSource(JsonElement sourceJson)

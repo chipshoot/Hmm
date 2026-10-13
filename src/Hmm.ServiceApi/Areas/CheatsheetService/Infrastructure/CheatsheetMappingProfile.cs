@@ -38,7 +38,27 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
                 .ForMember(d => d.Raw, opt => opt.MapFrom(
                     (src, dest) => src.RawJson.HasValue
                         ? CheatsheetJsonInterop.ToJToken(src.RawJson.Value)
-                        : null));
+                        : null))
+                .AfterMap((src, dest) =>
+                {
+                    if (dest.Raw != null)
+                    {
+                        return;
+                    }
+
+                    if (dest.Emoji == null &&
+                        dest.ExtraFields.TryGetValue(LegacyEmoji, out var legacy) &&
+                        legacy.Type == JTokenType.String)
+                    {
+                        dest.Emoji = legacy.Value<string>();
+                    }
+
+                    if (dest.Emoji != null)
+                    {
+                        dest.ExtraFields.Remove(LegacyEmoji);
+                        dest.ExtraFields.Remove(LegacyEmojiLower);
+                    }
+                });
 
             CreateMap<ApiCheatsheetRow, CheatsheetRow>()
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
@@ -48,12 +68,30 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
                         ? (System.Text.Json.JsonElement?)null
                         : CheatsheetJsonInterop.ToJsonElement(src.Raw)));
 
+            // Never a typed Style AND an extra keyed "Style" on the wire: the
+            // response would carry the key twice and a last-key-wins decoder
+            // (Dart's jsonDecode) would show the stale, extra one.
             CreateMap<CheatsheetCard, ApiCheatsheet>()
                 .ForMember(d => d.Links, opt => opt.Ignore())
                 .ForMember(d => d.Style, opt => opt.MapFrom(
                     (src, dest) => CheatsheetJsonInterop.ToJTokenOrNull(src.Style)))
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
-                    (src, dest) => CheatsheetJsonInterop.ToJTokens(src.ExtraFields)));
+                    (src, dest) => CheatsheetJsonInterop.ToJTokens(src.ExtraFields)))
+                .AfterMap((src, dest) =>
+                {
+                    if (dest.Style == null &&
+                        dest.ExtraFields.TryGetValue(LegacyStyle, out var legacy) &&
+                        legacy.Type != JTokenType.Null)
+                    {
+                        dest.Style = legacy;
+                    }
+
+                    if (dest.Style != null)
+                    {
+                        dest.ExtraFields.Remove(LegacyStyle);
+                        dest.ExtraFields.Remove(LegacyStyleLower);
+                    }
+                });
 
             CreateMap<ApiCheatsheet, CheatsheetCard>()
                 .ForMember(d => d.NoteId, opt => opt.Ignore())
@@ -85,10 +123,47 @@ namespace Hmm.ServiceApi.Areas.CheatsheetService.Infrastructure
                         ? CheatsheetJsonInterop.ToJsonElementOrNull(src.Style)
                         : dest.Style))
                 .ForMember(d => d.ExtraFields, opt => opt.MapFrom(
-                    (src, dest) => MergeExtras(dest.ExtraFields, src.ExtraFields)));
+                    (src, dest) => MergeExtras(dest.ExtraFields, src.ExtraFields)))
+                .AfterMap((src, dest) => DropLegacyStyle(src.StyleSpecified, dest));
 
             CreateMap<PageList<CheatsheetCard>, PageList<ApiCheatsheet>>()
                 .ConvertUsing(new PageListConverter<CheatsheetCard, ApiCheatsheet>());
+        }
+
+        // PascalCase keys an older server stored verbatim as unknown extras when
+        // a styling client sent them before typed Style/Emoji existed. The
+        // lower-case guards cover a camelCase writer's key surviving as extra.
+        private const string LegacyStyle = "Style";
+        private const string LegacyStyleLower = "style";
+        private const string LegacyEmoji = "Emoji";
+        private const string LegacyEmojiLower = "emoji";
+
+        /// <summary>
+        /// A stored card may still carry a legacy "Style" extra (written by the
+        /// pre-Style server). MergeExtras would otherwise keep it forever, so the
+        /// write that follows a PUT drops it: promoted into the typed Style when
+        /// the request said nothing about Style and none is stored, replaced
+        /// (dropped) when the request carried a Style - a value or a reset.
+        /// </summary>
+        private static void DropLegacyStyle(bool styleSpecified, CheatsheetCard dest)
+        {
+            if (dest.ExtraFields == null ||
+                !dest.ExtraFields.TryGetValue(LegacyStyle, out var legacy))
+            {
+                return;
+            }
+
+            if (!styleSpecified && !dest.Style.HasValue)
+            {
+                if (legacy.ValueKind == JsonValueKind.Null)
+                {
+                    return;
+                }
+
+                dest.Style = legacy;
+            }
+
+            dest.ExtraFields.Remove(LegacyStyle);
         }
 
         /// <summary>

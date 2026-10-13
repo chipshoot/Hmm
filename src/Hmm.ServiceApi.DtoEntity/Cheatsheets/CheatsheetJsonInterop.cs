@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -14,7 +15,19 @@ namespace Hmm.ServiceApi.DtoEntity.Cheatsheets
     /// </summary>
     public static class CheatsheetJsonInterop
     {
-        public static JToken ToJToken(JsonElement element) => JToken.Parse(element.GetRawText());
+        /// <summary>
+        /// DateParseHandling.None: JToken.Parse's default turns a date-like
+        /// string into a DateTime and re-serializes it in another format (and
+        /// possibly another offset), which would silently rewrite client data.
+        /// </summary>
+        public static JToken ToJToken(JsonElement element)
+        {
+            using var reader = new JsonTextReader(new StringReader(element.GetRawText()))
+            {
+                DateParseHandling = DateParseHandling.None
+            };
+            return JToken.ReadFrom(reader);
+        }
 
         public static JsonElement ToJsonElement(JToken token)
         {
